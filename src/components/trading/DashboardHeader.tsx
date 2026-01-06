@@ -2,6 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { VolumeControl } from '@/components/VolumeControl';
+import { NotificationToggle } from '@/components/NotificationToggle';
 import { StrategySettings, StrategyConfig } from '@/components/StrategySettings';
 import { RefreshCw, RotateCcw, Clock } from 'lucide-react';
 import { format } from 'date-fns';
@@ -13,6 +14,9 @@ interface DashboardHeaderProps {
   onReset: () => void;
   onConfigChange: (config: StrategyConfig) => void;
   strategyConfig: StrategyConfig;
+  notificationPermission: NotificationPermission;
+  notificationsSupported: boolean;
+  onRequestNotifications: () => void;
 }
 
 export function DashboardHeader({
@@ -22,6 +26,9 @@ export function DashboardHeader({
   onReset,
   onConfigChange,
   strategyConfig,
+  notificationPermission,
+  notificationsSupported,
+  onRequestNotifications,
 }: DashboardHeaderProps) {
   return (
     <header className="border-b border-border/50 bg-card/30 backdrop-blur">
@@ -39,6 +46,11 @@ export function DashboardHeader({
             {/* Mobile only: settings, theme and volume toggles */}
             <div className="flex items-center gap-2 md:hidden">
               <StrategySettings onConfigChange={onConfigChange} />
+              <NotificationToggle
+                permission={notificationPermission}
+                isSupported={notificationsSupported}
+                onRequestPermission={onRequestNotifications}
+              />
               <VolumeControl />
               <ThemeToggle />
             </div>
@@ -81,6 +93,11 @@ export function DashboardHeader({
           {/* Desktop only: settings, theme and volume toggles */}
           <div className="hidden items-center gap-2 md:flex">
             <StrategySettings onConfigChange={onConfigChange} />
+            <NotificationToggle
+              permission={notificationPermission}
+              isSupported={notificationsSupported}
+              onRequestPermission={onRequestNotifications}
+            />
             <VolumeControl />
             <ThemeToggle />
           </div>
