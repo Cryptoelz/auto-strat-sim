@@ -9,9 +9,26 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { DEFAULT_CONFIG } from '@/config/trading';
 
+export type Timeframe = '5m' | '15m' | '1h' | '4h';
+
+export const TIMEFRAME_OPTIONS: { value: Timeframe; label: string }[] = [
+  { value: '5m', label: '5 Minutes' },
+  { value: '15m', label: '15 Minutes' },
+  { value: '1h', label: '1 Hour' },
+  { value: '4h', label: '4 Hours' },
+];
+
 export interface StrategyConfig {
+  timeframe: Timeframe;
   fastSMA: number;
   slowSMA: number;
   positionSizePercent: number;
@@ -27,6 +44,7 @@ function loadConfig(): StrategyConfig {
     if (stored) {
       const parsed = JSON.parse(stored);
       return {
+        timeframe: parsed.timeframe ?? DEFAULT_CONFIG.timeframe,
         fastSMA: parsed.fastSMA ?? DEFAULT_CONFIG.indicators.fastSMA,
         slowSMA: parsed.slowSMA ?? DEFAULT_CONFIG.indicators.slowSMA,
         positionSizePercent: parsed.positionSizePercent ?? DEFAULT_CONFIG.risk.positionSizePercent,
@@ -38,6 +56,7 @@ function loadConfig(): StrategyConfig {
     // ignore
   }
   return {
+    timeframe: DEFAULT_CONFIG.timeframe as Timeframe,
     fastSMA: DEFAULT_CONFIG.indicators.fastSMA,
     slowSMA: DEFAULT_CONFIG.indicators.slowSMA,
     positionSizePercent: DEFAULT_CONFIG.risk.positionSizePercent,
@@ -56,6 +75,7 @@ interface StrategySettingsProps {
 
 export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
   const [config, setConfig] = useState<StrategyConfig>(loadConfig);
+  const [timeframeInput, setTimeframeInput] = useState<Timeframe>(config.timeframe);
   const [fastInput, setFastInput] = useState(config.fastSMA.toString());
   const [slowInput, setSlowInput] = useState(config.slowSMA.toString());
   const [positionSizeInput, setPositionSizeInput] = useState(config.positionSizePercent.toString());
@@ -106,7 +126,8 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
     }
 
     setError(null);
-    const newConfig = { 
+    const newConfig: StrategyConfig = { 
+      timeframe: timeframeInput,
       fastSMA: fast, 
       slowSMA: slow,
       positionSizePercent: positionSize,
@@ -120,13 +141,15 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
   };
 
   const handleReset = () => {
-    const defaultConfig = {
+    const defaultConfig: StrategyConfig = {
+      timeframe: DEFAULT_CONFIG.timeframe as Timeframe,
       fastSMA: DEFAULT_CONFIG.indicators.fastSMA,
       slowSMA: DEFAULT_CONFIG.indicators.slowSMA,
       positionSizePercent: DEFAULT_CONFIG.risk.positionSizePercent,
       stopLossPercent: DEFAULT_CONFIG.risk.stopLossPercent,
       takeProfitPercent: DEFAULT_CONFIG.risk.takeProfitPercent,
     };
+    setTimeframeInput(defaultConfig.timeframe);
     setFastInput(defaultConfig.fastSMA.toString());
     setSlowInput(defaultConfig.slowSMA.toString());
     setPositionSizeInput(defaultConfig.positionSizePercent.toString());
@@ -150,8 +173,29 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
         <div className="space-y-4">
           <div>
             <h4 className="font-medium text-sm">Strategy Settings</h4>
-            <p className="text-xs text-muted-foreground">Customize indicators & risk</p>
+            <p className="text-xs text-muted-foreground">Customize timeframe, indicators & risk</p>
           </div>
+
+          {/* Timeframe Setting */}
+          <div className="space-y-1">
+            <Label htmlFor="timeframe" className="text-xs">
+              Timeframe
+            </Label>
+            <Select value={timeframeInput} onValueChange={(value) => setTimeframeInput(value as Timeframe)}>
+              <SelectTrigger className="h-8">
+                <SelectValue placeholder="Select timeframe" />
+              </SelectTrigger>
+              <SelectContent>
+                {TIMEFRAME_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Separator />
 
           {/* SMA Settings */}
           <div className="space-y-3">
@@ -256,7 +300,7 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
           </div>
 
           <p className="text-xs text-muted-foreground">
-            SMA {config.fastSMA}/{config.slowSMA} • Size {config.positionSizePercent}% • SL {config.stopLossPercent}% / TP {config.takeProfitPercent}%
+            {config.timeframe} • SMA {config.fastSMA}/{config.slowSMA} • Size {config.positionSizePercent}% • SL {config.stopLossPercent}%/TP {config.takeProfitPercent}%
           </p>
         </div>
       </PopoverContent>

@@ -12,6 +12,7 @@ import { StrategyConfig } from '@/components/StrategySettings';
 
 const Index = () => {
   const [strategyConfig, setStrategyConfig] = useState<StrategyConfig>({
+    timeframe: DEFAULT_CONFIG.timeframe as '5m' | '15m' | '1h' | '4h',
     fastSMA: DEFAULT_CONFIG.indicators.fastSMA,
     slowSMA: DEFAULT_CONFIG.indicators.slowSMA,
     positionSizePercent: DEFAULT_CONFIG.risk.positionSizePercent,
@@ -21,6 +22,7 @@ const Index = () => {
 
   const config = useMemo(() => ({
     ...DEFAULT_CONFIG,
+    timeframe: strategyConfig.timeframe,
     indicators: {
       ...DEFAULT_CONFIG.indicators,
       fastSMA: strategyConfig.fastSMA,
