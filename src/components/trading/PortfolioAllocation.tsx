@@ -20,10 +20,11 @@ const ASSET_COLORS: Record<Asset, string> = {
 };
 
 export function PortfolioAllocation({ state, prices, enabledAssets }: PortfolioAllocationProps) {
+  // Create a stable price key to avoid re-renders when prices object reference changes
+  const priceKey = enabledAssets.map(a => `${a}:${prices[a] ?? 0}`).join(',');
+
   const allocationData = useMemo(() => {
     const data: { name: string; value: number; asset: Asset | 'cash'; color: string }[] = [];
-    
-    let totalPositionValue = 0;
     
     // Calculate position values
     enabledAssets.forEach((asset) => {
@@ -32,7 +33,6 @@ export function PortfolioAllocation({ state, prices, enabledAssets }: PortfolioA
       
       if (position && price) {
         const positionValue = position.size * price;
-        totalPositionValue += positionValue;
         data.push({
           name: ASSET_INFO[asset].symbol,
           value: positionValue,
@@ -53,7 +53,8 @@ export function PortfolioAllocation({ state, prices, enabledAssets }: PortfolioA
     }
     
     return data;
-  }, [state.positions, state.balance, prices, enabledAssets]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.positions, state.balance, priceKey, enabledAssets]);
 
   const totalPortfolioValue = useMemo(() => {
     return allocationData.reduce((sum, item) => sum + item.value, 0);
