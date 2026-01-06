@@ -25,10 +25,7 @@ export function useTradingEngine(config: TradingConfig = DEFAULT_CONFIG) {
     BTCUSDT: null,
     XRPUSDT: null,
   });
-  const prevSignalsRef = useRef<Record<Asset, Signal | null>>({
-    BTCUSDT: null,
-    XRPUSDT: null,
-  });
+  const prevSignalsRef = useRef<Record<Asset, Signal | null> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -72,7 +69,7 @@ export function useTradingEngine(config: TradingConfig = DEFAULT_CONFIG) {
       // Play sound for new actionable signals
       for (const asset of config.assets) {
         const newSig = newSignals[asset];
-        const prevSig = prevSignalsRef.current[asset];
+        const prevSig = prevSignalsRef.current?.[asset];
         
         if (newSig && (newSig.type === 'BUY' || newSig.type === 'SELL')) {
           // Play sound if this is a new signal or signal type changed
