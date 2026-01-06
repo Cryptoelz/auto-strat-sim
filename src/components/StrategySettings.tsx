@@ -3,6 +3,7 @@ import { Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import {
   Popover,
   PopoverContent,
@@ -10,9 +11,11 @@ import {
 } from '@/components/ui/popover';
 import { DEFAULT_CONFIG } from '@/config/trading';
 
-interface StrategyConfig {
+export interface StrategyConfig {
   fastSMA: number;
   slowSMA: number;
+  stopLossPercent: number;
+  takeProfitPercent: number;
 }
 
 const STORAGE_KEY = 'strategy-config';
@@ -25,6 +28,8 @@ function loadConfig(): StrategyConfig {
       return {
         fastSMA: parsed.fastSMA ?? DEFAULT_CONFIG.indicators.fastSMA,
         slowSMA: parsed.slowSMA ?? DEFAULT_CONFIG.indicators.slowSMA,
+        stopLossPercent: parsed.stopLossPercent ?? DEFAULT_CONFIG.risk.stopLossPercent,
+        takeProfitPercent: parsed.takeProfitPercent ?? DEFAULT_CONFIG.risk.takeProfitPercent,
       };
     }
   } catch {
@@ -33,6 +38,8 @@ function loadConfig(): StrategyConfig {
   return {
     fastSMA: DEFAULT_CONFIG.indicators.fastSMA,
     slowSMA: DEFAULT_CONFIG.indicators.slowSMA,
+    stopLossPercent: DEFAULT_CONFIG.risk.stopLossPercent,
+    takeProfitPercent: DEFAULT_CONFIG.risk.takeProfitPercent,
   };
 }
 
@@ -48,6 +55,8 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
   const [config, setConfig] = useState<StrategyConfig>(loadConfig);
   const [fastInput, setFastInput] = useState(config.fastSMA.toString());
   const [slowInput, setSlowInput] = useState(config.slowSMA.toString());
+  const [stopLossInput, setStopLossInput] = useState(config.stopLossPercent.toString());
+  const [takeProfitInput, setTakeProfitInput] = useState(config.takeProfitPercent.toString());
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
 
@@ -58,9 +67,11 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
   const handleApply = () => {
     const fast = parseInt(fastInput, 10);
     const slow = parseInt(slowInput, 10);
+    const stopLoss = parseFloat(stopLossInput);
+    const takeProfit = parseFloat(takeProfitInput);
 
     // Validation
-    if (isNaN(fast) || isNaN(slow)) {
+    if (isNaN(fast) || isNaN(slow) || isNaN(stopLoss) || isNaN(takeProfit)) {
       setError('Please enter valid numbers');
       return;
     }
@@ -76,9 +87,22 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
       setError('Fast SMA must be smaller than Slow SMA');
       return;
     }
+    if (stopLoss < 0.5 || stopLoss > 20) {
+      setError('Stop Loss must be between 0.5% and 20%');
+      return;
+    }
+    if (takeProfit < 0.5 || takeProfit > 50) {
+      setError('Take Profit must be between 0.5% and 50%');
+      return;
+    }
 
     setError(null);
-    const newConfig = { fastSMA: fast, slowSMA: slow };
+    const newConfig = { 
+      fastSMA: fast, 
+      slowSMA: slow,
+      stopLossPercent: stopLoss,
+      takeProfitPercent: takeProfit,
+    };
     setConfig(newConfig);
     saveConfig(newConfig);
     onConfigChange(newConfig);
@@ -89,9 +113,13 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
     const defaultConfig = {
       fastSMA: DEFAULT_CONFIG.indicators.fastSMA,
       slowSMA: DEFAULT_CONFIG.indicators.slowSMA,
+      stopLossPercent: DEFAULT_CONFIG.risk.stopLossPercent,
+      takeProfitPercent: DEFAULT_CONFIG.risk.takeProfitPercent,
     };
     setFastInput(defaultConfig.fastSMA.toString());
     setSlowInput(defaultConfig.slowSMA.toString());
+    setStopLossInput(defaultConfig.stopLossPercent.toString());
+    setTakeProfitInput(defaultConfig.takeProfitPercent.toString());
     setConfig(defaultConfig);
     saveConfig(defaultConfig);
     onConfigChange(defaultConfig);
@@ -106,42 +134,84 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
           <span className="sr-only">Strategy settings</span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-64" align="end">
+      <PopoverContent className="w-72" align="end">
         <div className="space-y-4">
           <div>
             <h4 className="font-medium text-sm">Strategy Settings</h4>
-            <p className="text-xs text-muted-foreground">Customize SMA periods</p>
+            <p className="text-xs text-muted-foreground">Customize indicators & risk</p>
           </div>
 
+          {/* SMA Settings */}
           <div className="space-y-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="fast-sma" className="text-xs">
-                Fast SMA Period
-              </Label>
-              <Input
-                id="fast-sma"
-                type="number"
-                min={2}
-                max={200}
-                value={fastInput}
-                onChange={(e) => setFastInput(e.target.value)}
-                className="h-8"
-              />
+            <p className="text-xs font-medium text-muted-foreground">SMA Indicators</p>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label htmlFor="fast-sma" className="text-xs">
+                  Fast SMA
+                </Label>
+                <Input
+                  id="fast-sma"
+                  type="number"
+                  min={2}
+                  max={200}
+                  value={fastInput}
+                  onChange={(e) => setFastInput(e.target.value)}
+                  className="h-8"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="slow-sma" className="text-xs">
+                  Slow SMA
+                </Label>
+                <Input
+                  id="slow-sma"
+                  type="number"
+                  min={2}
+                  max={200}
+                  value={slowInput}
+                  onChange={(e) => setSlowInput(e.target.value)}
+                  className="h-8"
+                />
+              </div>
             </div>
+          </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="slow-sma" className="text-xs">
-                Slow SMA Period
-              </Label>
-              <Input
-                id="slow-sma"
-                type="number"
-                min={2}
-                max={200}
-                value={slowInput}
-                onChange={(e) => setSlowInput(e.target.value)}
-                className="h-8"
-              />
+          <Separator />
+
+          {/* Risk Settings */}
+          <div className="space-y-3">
+            <p className="text-xs font-medium text-muted-foreground">Risk Management</p>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label htmlFor="stop-loss" className="text-xs">
+                  Stop Loss %
+                </Label>
+                <Input
+                  id="stop-loss"
+                  type="number"
+                  min={0.5}
+                  max={20}
+                  step={0.5}
+                  value={stopLossInput}
+                  onChange={(e) => setStopLossInput(e.target.value)}
+                  className="h-8"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="take-profit" className="text-xs">
+                  Take Profit %
+                </Label>
+                <Input
+                  id="take-profit"
+                  type="number"
+                  min={0.5}
+                  max={50}
+                  step={0.5}
+                  value={takeProfitInput}
+                  onChange={(e) => setTakeProfitInput(e.target.value)}
+                  className="h-8"
+                />
+              </div>
             </div>
           </div>
 
@@ -159,7 +229,7 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
           </div>
 
           <p className="text-xs text-muted-foreground">
-            Current: SMA {config.fastSMA} / {config.slowSMA}
+            SMA {config.fastSMA}/{config.slowSMA} • SL {config.stopLossPercent}% / TP {config.takeProfitPercent}%
           </p>
         </div>
       </PopoverContent>

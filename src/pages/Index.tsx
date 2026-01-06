@@ -8,21 +8,29 @@ import { TradeHistory } from '@/components/trading/TradeHistory';
 import { PerformanceStats } from '@/components/trading/PerformanceStats';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DEFAULT_CONFIG } from '@/config/trading';
+import { StrategyConfig } from '@/components/StrategySettings';
 
 const Index = () => {
-  const [smaConfig, setSmaConfig] = useState({
+  const [strategyConfig, setStrategyConfig] = useState<StrategyConfig>({
     fastSMA: DEFAULT_CONFIG.indicators.fastSMA,
     slowSMA: DEFAULT_CONFIG.indicators.slowSMA,
+    stopLossPercent: DEFAULT_CONFIG.risk.stopLossPercent,
+    takeProfitPercent: DEFAULT_CONFIG.risk.takeProfitPercent,
   });
 
   const config = useMemo(() => ({
     ...DEFAULT_CONFIG,
     indicators: {
       ...DEFAULT_CONFIG.indicators,
-      fastSMA: smaConfig.fastSMA,
-      slowSMA: smaConfig.slowSMA,
+      fastSMA: strategyConfig.fastSMA,
+      slowSMA: strategyConfig.slowSMA,
     },
-  }), [smaConfig.fastSMA, smaConfig.slowSMA]);
+    risk: {
+      ...DEFAULT_CONFIG.risk,
+      stopLossPercent: strategyConfig.stopLossPercent,
+      takeProfitPercent: strategyConfig.takeProfitPercent,
+    },
+  }), [strategyConfig]);
 
   const {
     state,
@@ -38,8 +46,8 @@ const Index = () => {
     refetch,
   } = useTradingEngine(config);
 
-  const handleConfigChange = (newConfig: { fastSMA: number; slowSMA: number }) => {
-    setSmaConfig(newConfig);
+  const handleConfigChange = (newConfig: StrategyConfig) => {
+    setStrategyConfig(newConfig);
   };
 
   if (isLoading) {
@@ -72,7 +80,7 @@ const Index = () => {
         onRefresh={refetch}
         onReset={reset}
         onConfigChange={handleConfigChange}
-        smaConfig={smaConfig}
+        strategyConfig={strategyConfig}
       />
 
       <main className="container mx-auto px-3 py-4 sm:px-4 sm:py-6">
@@ -96,8 +104,8 @@ const Index = () => {
               asset="BTCUSDT"
               candles={candles.BTCUSDT}
               position={state.positions.BTCUSDT}
-              fastSMA={smaConfig.fastSMA}
-              slowSMA={smaConfig.slowSMA}
+              fastSMA={strategyConfig.fastSMA}
+              slowSMA={strategyConfig.slowSMA}
             />
             <SignalAlert
               asset="BTCUSDT"
@@ -113,8 +121,8 @@ const Index = () => {
               asset="XRPUSDT"
               candles={candles.XRPUSDT}
               position={state.positions.XRPUSDT}
-              fastSMA={smaConfig.fastSMA}
-              slowSMA={smaConfig.slowSMA}
+              fastSMA={strategyConfig.fastSMA}
+              slowSMA={strategyConfig.slowSMA}
             />
             <SignalAlert
               asset="XRPUSDT"
