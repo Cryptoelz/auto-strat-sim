@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback, memo } from 'react';
 import { useTradingEngine } from '@/hooks/useTradingEngine';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
@@ -12,12 +12,17 @@ import { TradeJournal } from '@/components/trading/TradeJournal';
 import { PerformanceStats } from '@/components/trading/PerformanceStats';
 import { AssetBreakdown } from '@/components/trading/AssetBreakdown';
 import { PortfolioAllocation } from '@/components/trading/PortfolioAllocation';
-import { KeyboardShortcutsHelp } from '@/components/KeyboardShortcutsHelp';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DEFAULT_CONFIG } from '@/config/trading';
 import { StrategyConfig } from '@/components/StrategySettings';
-import { Asset } from '@/types/trading';
+import { Asset, TradingState } from '@/types/trading';
 import { toast } from 'sonner';
+
+// Memoized portfolio allocation wrapper to prevent re-renders
+const MemoizedPortfolioAllocation = memo(PortfolioAllocation);
+const MemoizedAssetBreakdown = memo(AssetBreakdown);
+const MemoizedTradeJournal = memo(TradeJournal);
+const MemoizedPerformanceStats = memo(PerformanceStats);
 
 const Index = () => {
   const [strategyConfig, setStrategyConfig] = useState<StrategyConfig>({
@@ -204,22 +209,22 @@ const Index = () => {
         {/* History and performance row */}
         <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
           <TradeHistory trades={state.trades} />
-          <PerformanceStats state={state} />
+          <MemoizedPerformanceStats state={state} />
         </div>
 
         {/* Portfolio and Asset breakdown */}
         <div className="mt-4 grid gap-4 sm:mt-6 sm:gap-6 lg:grid-cols-2">
-          <PortfolioAllocation 
+          <MemoizedPortfolioAllocation 
             state={state} 
             prices={prices} 
             enabledAssets={strategyConfig.enabledAssets} 
           />
-          <AssetBreakdown trades={state.trades} />
+          <MemoizedAssetBreakdown trades={state.trades} />
         </div>
 
         {/* Trading Journal */}
         <div className="mt-4 sm:mt-6">
-          <TradeJournal trades={state.trades} />
+          <MemoizedTradeJournal trades={state.trades} />
         </div>
 
         {/* Footer disclaimer */}

@@ -246,10 +246,12 @@ export function useTradingEngine(config: TradingConfig = DEFAULT_CONFIG) {
     };
   }, [fetchData]);
 
-  // Process auto signals when data changes
+  // Process auto signals when data changes - debounced to prevent rapid updates
   useEffect(() => {
-    processAutoSignals();
-  }, [signals, processAutoSignals]);
+    if (state.mode !== 'auto' || !state.isRunning) return;
+    const timeoutId = setTimeout(processAutoSignals, 100);
+    return () => clearTimeout(timeoutId);
+  }, [signals, state.mode, state.isRunning, processAutoSignals]);
 
   return {
     state,
