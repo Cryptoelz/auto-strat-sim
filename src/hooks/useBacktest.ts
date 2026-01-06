@@ -39,6 +39,8 @@ export interface BacktestResult {
   losingTrades: number;
   maxDrawdown: number;
   sharpeRatio: number;
+  sortinoRatio: number;
+  calmarRatio: number;
   profitFactor: number;
   averageWin: number;
   averageLoss: number;
@@ -343,13 +345,28 @@ export function useBacktest() {
         ? losingTrades.reduce((sum, t) => sum + t.pnl, 0) / losingTrades.length 
         : 0;
 
-      // Simple Sharpe ratio approximation (using daily returns would be more accurate)
+      // Calculate risk-adjusted return metrics
       const returns = allTrades.map(t => t.pnlPercent);
       const avgReturn = returns.length > 0 ? returns.reduce((a, b) => a + b, 0) / returns.length : 0;
       const stdDev = returns.length > 1 
         ? Math.sqrt(returns.reduce((sum, r) => sum + Math.pow(r - avgReturn, 2), 0) / (returns.length - 1))
         : 0;
+      
+      // Sharpe Ratio (annualized)
       const sharpeRatio = stdDev > 0 ? (avgReturn / stdDev) * Math.sqrt(252) : 0;
+
+      // Sortino Ratio - uses downside deviation (only negative returns)
+      const negativeReturns = returns.filter(r => r < 0);
+      const downsideDeviation = negativeReturns.length > 1
+        ? Math.sqrt(negativeReturns.reduce((sum, r) => sum + Math.pow(r, 2), 0) / negativeReturns.length)
+        : 0;
+      const sortinoRatio = downsideDeviation > 0 ? (avgReturn / downsideDeviation) * Math.sqrt(252) : 0;
+
+      // Calmar Ratio - annualized return / max drawdown
+      // Estimate annualized return based on test period
+      const testPeriodDays = (config.endDate.getTime() - config.startDate.getTime()) / (1000 * 60 * 60 * 24);
+      const annualizedReturn = testPeriodDays > 0 ? (totalPnlPercent / testPeriodDays) * 365 : 0;
+      const calmarRatio = maxDrawdown > 0 ? annualizedReturn / maxDrawdown : 0;
 
       setResult({
         trades: allTrades,
@@ -362,6 +379,8 @@ export function useBacktest() {
         losingTrades: losingTrades.length,
         maxDrawdown,
         sharpeRatio,
+        sortinoRatio,
+        calmarRatio,
         profitFactor,
         averageWin,
         averageLoss,
