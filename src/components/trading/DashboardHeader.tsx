@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { VolumeControl } from '@/components/VolumeControl';
 import { NotificationToggle } from '@/components/NotificationToggle';
+import { KeyboardShortcutsHelp } from '@/components/KeyboardShortcutsHelp';
 import { StrategySettings, StrategyConfig } from '@/components/StrategySettings';
 import { RefreshCw, RotateCcw, Clock } from 'lucide-react';
 import { format } from 'date-fns';
@@ -17,6 +18,8 @@ interface DashboardHeaderProps {
   notificationPermission: NotificationPermission;
   notificationsSupported: boolean;
   onRequestNotifications: () => void;
+  keyboardEnabled: boolean;
+  onToggleKeyboard: () => void;
 }
 
 export function DashboardHeader({
@@ -29,6 +32,8 @@ export function DashboardHeader({
   notificationPermission,
   notificationsSupported,
   onRequestNotifications,
+  keyboardEnabled,
+  onToggleKeyboard,
 }: DashboardHeaderProps) {
   return (
     <header className="border-b border-border/50 bg-card/30 backdrop-blur">
@@ -46,6 +51,7 @@ export function DashboardHeader({
             {/* Mobile only: settings, theme and volume toggles */}
             <div className="flex items-center gap-2 md:hidden">
               <StrategySettings onConfigChange={onConfigChange} />
+              <KeyboardShortcutsHelp enabled={keyboardEnabled} onToggle={onToggleKeyboard} />
               <NotificationToggle
                 permission={notificationPermission}
                 isSupported={notificationsSupported}
@@ -93,6 +99,7 @@ export function DashboardHeader({
           {/* Desktop only: settings, theme and volume toggles */}
           <div className="hidden items-center gap-2 md:flex">
             <StrategySettings onConfigChange={onConfigChange} />
+            <KeyboardShortcutsHelp enabled={keyboardEnabled} onToggle={onToggleKeyboard} />
             <NotificationToggle
               permission={notificationPermission}
               isSupported={notificationsSupported}

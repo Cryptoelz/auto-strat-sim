@@ -1,6 +1,7 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useTradingEngine } from '@/hooks/useTradingEngine';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { DashboardHeader } from '@/components/trading/DashboardHeader';
 import { BalanceCard, PriceCard, ModeCard } from '@/components/trading/DashboardCards';
 import { PriceChart } from '@/components/trading/PriceChart';
@@ -9,10 +10,12 @@ import { TradeHistory } from '@/components/trading/TradeHistory';
 import { PerformanceStats } from '@/components/trading/PerformanceStats';
 import { AssetBreakdown } from '@/components/trading/AssetBreakdown';
 import { PortfolioAllocation } from '@/components/trading/PortfolioAllocation';
+import { KeyboardShortcutsHelp } from '@/components/KeyboardShortcutsHelp';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DEFAULT_CONFIG } from '@/config/trading';
 import { StrategyConfig } from '@/components/StrategySettings';
 import { Asset } from '@/types/trading';
+import { toast } from 'sonner';
 
 const Index = () => {
   const [strategyConfig, setStrategyConfig] = useState<StrategyConfig>({
@@ -59,6 +62,36 @@ const Index = () => {
   const handleConfigChange = (newConfig: StrategyConfig) => {
     setStrategyConfig(newConfig);
   };
+
+  // Keyboard shortcuts
+  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
+  const [keyboardEnabled, setKeyboardEnabled] = useState(true);
+
+  const handleKeyboardBuy = useCallback((asset: Asset) => {
+    if (!state.positions[asset]) {
+      executeTrade(asset, 'buy');
+    } else {
+      toast.info(`Already have a ${asset} position`);
+    }
+  }, [state.positions, executeTrade]);
+
+  const handleKeyboardSell = useCallback((asset: Asset) => {
+    if (state.positions[asset]) {
+      executeTrade(asset, 'sell');
+    } else {
+      toast.info(`No ${asset} position to sell`);
+    }
+  }, [state.positions, executeTrade]);
+
+  useKeyboardShortcuts({
+    enabled: keyboardEnabled,
+    selectedAsset,
+    onBuy: handleKeyboardBuy,
+    onSell: handleKeyboardSell,
+    onToggleMode: toggleMode,
+    onToggleRunning: toggleRunning,
+    onRefresh: refetch,
+  });
 
   const { permission, isSupported, requestPermission, sendSignalNotification } = useNotifications();
   const prevSignalsRef = useRef<Record<Asset, string | null>>({ BTCUSDT: null, XRPUSDT: null, FETUSDT: null, XLMUSDT: null });
@@ -113,6 +146,8 @@ const Index = () => {
         notificationPermission={permission}
         notificationsSupported={isSupported}
         onRequestNotifications={requestPermission}
+        keyboardEnabled={keyboardEnabled}
+        onToggleKeyboard={() => setKeyboardEnabled(!keyboardEnabled)}
       />
 
       <main className="container mx-auto px-3 py-4 sm:px-4 sm:py-6">
@@ -140,6 +175,8 @@ const Index = () => {
                 position={state.positions[asset]}
                 fastSMA={strategyConfig.fastSMA}
                 slowSMA={strategyConfig.slowSMA}
+                isSelected={selectedAsset === asset}
+                onSelect={() => setSelectedAsset(selectedAsset === asset ? null : asset)}
               />
               <SignalAlert
                 asset={asset}
