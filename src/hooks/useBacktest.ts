@@ -22,6 +22,12 @@ export interface BacktestTrade extends Trade {
   entryReason: 'signal';
 }
 
+export interface EquityPoint {
+  timestamp: number;
+  balance: number;
+  drawdown: number;
+}
+
 export interface BacktestResult {
   trades: BacktestTrade[];
   finalBalance: number;
@@ -36,6 +42,7 @@ export interface BacktestResult {
   profitFactor: number;
   averageWin: number;
   averageLoss: number;
+  equityCurve: EquityPoint[];
   assetResults: Record<Asset, {
     trades: number;
     pnl: number;
@@ -301,10 +308,13 @@ export function useBacktest() {
       const totalPnl = totalBalance - config.initialBalance;
       const totalPnlPercent = (totalPnl / config.initialBalance) * 100;
 
-      // Calculate max drawdown
+      // Calculate max drawdown and build equity curve
       let peak = config.initialBalance;
       let maxDrawdown = 0;
       let runningBalance = config.initialBalance;
+      const equityCurve: EquityPoint[] = [
+        { timestamp: config.startDate.getTime(), balance: config.initialBalance, drawdown: 0 }
+      ];
       
       allTrades.sort((a, b) => a.exitTime - b.exitTime);
       for (const trade of allTrades) {
@@ -312,6 +322,12 @@ export function useBacktest() {
         if (runningBalance > peak) peak = runningBalance;
         const drawdown = ((peak - runningBalance) / peak) * 100;
         if (drawdown > maxDrawdown) maxDrawdown = drawdown;
+        
+        equityCurve.push({
+          timestamp: trade.exitTime,
+          balance: runningBalance,
+          drawdown,
+        });
       }
 
       // Calculate profit factor
@@ -349,6 +365,7 @@ export function useBacktest() {
         profitFactor,
         averageWin,
         averageLoss,
+        equityCurve,
         assetResults,
       });
     } catch (err) {
