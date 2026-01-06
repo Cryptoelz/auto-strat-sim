@@ -8,6 +8,7 @@ import { BalanceCard, PriceCard, ModeCard } from '@/components/trading/Dashboard
 import { PriceChart } from '@/components/trading/PriceChart';
 import { SignalAlert } from '@/components/trading/SignalAlert';
 import { TradeHistory } from '@/components/trading/TradeHistory';
+import { TradeJournal } from '@/components/trading/TradeJournal';
 import { PerformanceStats } from '@/components/trading/PerformanceStats';
 import { AssetBreakdown } from '@/components/trading/AssetBreakdown';
 import { PortfolioAllocation } from '@/components/trading/PortfolioAllocation';
@@ -214,6 +215,11 @@ const Index = () => {
             enabledAssets={strategyConfig.enabledAssets} 
           />
           <AssetBreakdown trades={state.trades} />
+        </div>
+
+        {/* Trading Journal */}
+        <div className="mt-4 sm:mt-6">
+          <TradeJournal trades={state.trades} />
         </div>
 
         {/* Footer disclaimer */}
