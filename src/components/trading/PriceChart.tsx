@@ -101,26 +101,27 @@ export function PriceChart({ asset, candles, position }: PriceChartProps) {
           </span>
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="h-[280px] w-full">
+      <CardContent className="px-2 sm:px-6">
+        <div className="h-[200px] w-full sm:h-[280px]">
           <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <ComposedChart data={chartData} margin={{ top: 10, right: 5, left: -10, bottom: 0 }}>
               <XAxis
                 dataKey="time"
                 tickFormatter={(time) => format(new Date(time), 'HH:mm')}
                 stroke="hsl(var(--muted-foreground))"
-                fontSize={10}
+                fontSize={9}
                 tickLine={false}
                 axisLine={false}
+                interval="preserveStartEnd"
               />
               <YAxis
                 domain={[minPrice, maxPrice]}
                 tickFormatter={(value) => `$${value.toLocaleString()}`}
                 stroke="hsl(var(--muted-foreground))"
-                fontSize={10}
+                fontSize={9}
                 tickLine={false}
                 axisLine={false}
-                width={70}
+                width={55}
               />
               <Tooltip
                 contentStyle={{
