@@ -14,6 +14,7 @@ import { DEFAULT_CONFIG } from '@/config/trading';
 export interface StrategyConfig {
   fastSMA: number;
   slowSMA: number;
+  positionSizePercent: number;
   stopLossPercent: number;
   takeProfitPercent: number;
 }
@@ -28,6 +29,7 @@ function loadConfig(): StrategyConfig {
       return {
         fastSMA: parsed.fastSMA ?? DEFAULT_CONFIG.indicators.fastSMA,
         slowSMA: parsed.slowSMA ?? DEFAULT_CONFIG.indicators.slowSMA,
+        positionSizePercent: parsed.positionSizePercent ?? DEFAULT_CONFIG.risk.positionSizePercent,
         stopLossPercent: parsed.stopLossPercent ?? DEFAULT_CONFIG.risk.stopLossPercent,
         takeProfitPercent: parsed.takeProfitPercent ?? DEFAULT_CONFIG.risk.takeProfitPercent,
       };
@@ -38,6 +40,7 @@ function loadConfig(): StrategyConfig {
   return {
     fastSMA: DEFAULT_CONFIG.indicators.fastSMA,
     slowSMA: DEFAULT_CONFIG.indicators.slowSMA,
+    positionSizePercent: DEFAULT_CONFIG.risk.positionSizePercent,
     stopLossPercent: DEFAULT_CONFIG.risk.stopLossPercent,
     takeProfitPercent: DEFAULT_CONFIG.risk.takeProfitPercent,
   };
@@ -55,6 +58,7 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
   const [config, setConfig] = useState<StrategyConfig>(loadConfig);
   const [fastInput, setFastInput] = useState(config.fastSMA.toString());
   const [slowInput, setSlowInput] = useState(config.slowSMA.toString());
+  const [positionSizeInput, setPositionSizeInput] = useState(config.positionSizePercent.toString());
   const [stopLossInput, setStopLossInput] = useState(config.stopLossPercent.toString());
   const [takeProfitInput, setTakeProfitInput] = useState(config.takeProfitPercent.toString());
   const [error, setError] = useState<string | null>(null);
@@ -67,11 +71,12 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
   const handleApply = () => {
     const fast = parseInt(fastInput, 10);
     const slow = parseInt(slowInput, 10);
+    const positionSize = parseFloat(positionSizeInput);
     const stopLoss = parseFloat(stopLossInput);
     const takeProfit = parseFloat(takeProfitInput);
 
     // Validation
-    if (isNaN(fast) || isNaN(slow) || isNaN(stopLoss) || isNaN(takeProfit)) {
+    if (isNaN(fast) || isNaN(slow) || isNaN(positionSize) || isNaN(stopLoss) || isNaN(takeProfit)) {
       setError('Please enter valid numbers');
       return;
     }
@@ -87,6 +92,10 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
       setError('Fast SMA must be smaller than Slow SMA');
       return;
     }
+    if (positionSize < 1 || positionSize > 100) {
+      setError('Position Size must be between 1% and 100%');
+      return;
+    }
     if (stopLoss < 0.5 || stopLoss > 20) {
       setError('Stop Loss must be between 0.5% and 20%');
       return;
@@ -100,6 +109,7 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
     const newConfig = { 
       fastSMA: fast, 
       slowSMA: slow,
+      positionSizePercent: positionSize,
       stopLossPercent: stopLoss,
       takeProfitPercent: takeProfit,
     };
@@ -113,11 +123,13 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
     const defaultConfig = {
       fastSMA: DEFAULT_CONFIG.indicators.fastSMA,
       slowSMA: DEFAULT_CONFIG.indicators.slowSMA,
+      positionSizePercent: DEFAULT_CONFIG.risk.positionSizePercent,
       stopLossPercent: DEFAULT_CONFIG.risk.stopLossPercent,
       takeProfitPercent: DEFAULT_CONFIG.risk.takeProfitPercent,
     };
     setFastInput(defaultConfig.fastSMA.toString());
     setSlowInput(defaultConfig.slowSMA.toString());
+    setPositionSizeInput(defaultConfig.positionSizePercent.toString());
     setStopLossInput(defaultConfig.stopLossPercent.toString());
     setTakeProfitInput(defaultConfig.takeProfitPercent.toString());
     setConfig(defaultConfig);
@@ -181,6 +193,21 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
           {/* Risk Settings */}
           <div className="space-y-3">
             <p className="text-xs font-medium text-muted-foreground">Risk Management</p>
+            <div className="space-y-1">
+              <Label htmlFor="position-size" className="text-xs">
+                Position Size %
+              </Label>
+              <Input
+                id="position-size"
+                type="number"
+                min={1}
+                max={100}
+                step={1}
+                value={positionSizeInput}
+                onChange={(e) => setPositionSizeInput(e.target.value)}
+                className="h-8"
+              />
+            </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
                 <Label htmlFor="stop-loss" className="text-xs">
@@ -229,7 +256,7 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
           </div>
 
           <p className="text-xs text-muted-foreground">
-            SMA {config.fastSMA}/{config.slowSMA} • SL {config.stopLossPercent}% / TP {config.takeProfitPercent}%
+            SMA {config.fastSMA}/{config.slowSMA} • Size {config.positionSizePercent}% • SL {config.stopLossPercent}% / TP {config.takeProfitPercent}%
           </p>
         </div>
       </PopoverContent>
