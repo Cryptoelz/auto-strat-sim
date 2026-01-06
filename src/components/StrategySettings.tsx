@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Popover,
   PopoverContent,
@@ -16,7 +17,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { DEFAULT_CONFIG } from '@/config/trading';
+import { DEFAULT_CONFIG, ASSET_INFO } from '@/config/trading';
+import { Asset } from '@/types/trading';
 
 export type Timeframe = '5m' | '15m' | '1h' | '4h';
 
@@ -27,8 +29,11 @@ export const TIMEFRAME_OPTIONS: { value: Timeframe; label: string }[] = [
   { value: '4h', label: '4 Hours' },
 ];
 
+const ALL_ASSETS: Asset[] = ['BTCUSDT', 'XRPUSDT', 'FETUSDT', 'XLMUSDT'];
+
 export interface StrategyConfig {
   timeframe: Timeframe;
+  enabledAssets: Asset[];
   fastSMA: number;
   slowSMA: number;
   positionSizePercent: number;
@@ -45,6 +50,7 @@ function loadConfig(): StrategyConfig {
       const parsed = JSON.parse(stored);
       return {
         timeframe: parsed.timeframe ?? DEFAULT_CONFIG.timeframe,
+        enabledAssets: parsed.enabledAssets ?? ALL_ASSETS,
         fastSMA: parsed.fastSMA ?? DEFAULT_CONFIG.indicators.fastSMA,
         slowSMA: parsed.slowSMA ?? DEFAULT_CONFIG.indicators.slowSMA,
         positionSizePercent: parsed.positionSizePercent ?? DEFAULT_CONFIG.risk.positionSizePercent,
@@ -57,6 +63,7 @@ function loadConfig(): StrategyConfig {
   }
   return {
     timeframe: DEFAULT_CONFIG.timeframe as Timeframe,
+    enabledAssets: ALL_ASSETS,
     fastSMA: DEFAULT_CONFIG.indicators.fastSMA,
     slowSMA: DEFAULT_CONFIG.indicators.slowSMA,
     positionSizePercent: DEFAULT_CONFIG.risk.positionSizePercent,
@@ -76,6 +83,7 @@ interface StrategySettingsProps {
 export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
   const [config, setConfig] = useState<StrategyConfig>(loadConfig);
   const [timeframeInput, setTimeframeInput] = useState<Timeframe>(config.timeframe);
+  const [enabledAssetsInput, setEnabledAssetsInput] = useState<Asset[]>(config.enabledAssets);
   const [fastInput, setFastInput] = useState(config.fastSMA.toString());
   const [slowInput, setSlowInput] = useState(config.slowSMA.toString());
   const [positionSizeInput, setPositionSizeInput] = useState(config.positionSizePercent.toString());
@@ -87,6 +95,17 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
   useEffect(() => {
     onConfigChange(config);
   }, []);
+
+  const toggleAsset = (asset: Asset) => {
+    setEnabledAssetsInput((prev) => {
+      if (prev.includes(asset)) {
+        // Don't allow disabling all assets
+        if (prev.length === 1) return prev;
+        return prev.filter((a) => a !== asset);
+      }
+      return [...prev, asset];
+    });
+  };
 
   const handleApply = () => {
     const fast = parseInt(fastInput, 10);
@@ -128,6 +147,7 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
     setError(null);
     const newConfig: StrategyConfig = { 
       timeframe: timeframeInput,
+      enabledAssets: enabledAssetsInput,
       fastSMA: fast, 
       slowSMA: slow,
       positionSizePercent: positionSize,
@@ -143,6 +163,7 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
   const handleReset = () => {
     const defaultConfig: StrategyConfig = {
       timeframe: DEFAULT_CONFIG.timeframe as Timeframe,
+      enabledAssets: ALL_ASSETS,
       fastSMA: DEFAULT_CONFIG.indicators.fastSMA,
       slowSMA: DEFAULT_CONFIG.indicators.slowSMA,
       positionSizePercent: DEFAULT_CONFIG.risk.positionSizePercent,
@@ -150,6 +171,7 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
       takeProfitPercent: DEFAULT_CONFIG.risk.takeProfitPercent,
     };
     setTimeframeInput(defaultConfig.timeframe);
+    setEnabledAssetsInput(defaultConfig.enabledAssets);
     setFastInput(defaultConfig.fastSMA.toString());
     setSlowInput(defaultConfig.slowSMA.toString());
     setPositionSizeInput(defaultConfig.positionSizePercent.toString());
@@ -193,6 +215,30 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <Separator />
+
+          {/* Asset Toggles */}
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-muted-foreground">Trading Pairs</p>
+            <div className="grid grid-cols-2 gap-2">
+              {ALL_ASSETS.map((asset) => {
+                const info = ASSET_INFO[asset];
+                return (
+                  <div key={asset} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={asset}
+                      checked={enabledAssetsInput.includes(asset)}
+                      onCheckedChange={() => toggleAsset(asset)}
+                    />
+                    <Label htmlFor={asset} className="text-xs cursor-pointer">
+                      {info.symbol}
+                    </Label>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           <Separator />

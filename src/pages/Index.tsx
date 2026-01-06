@@ -16,6 +16,7 @@ import { Asset } from '@/types/trading';
 const Index = () => {
   const [strategyConfig, setStrategyConfig] = useState<StrategyConfig>({
     timeframe: DEFAULT_CONFIG.timeframe as '5m' | '15m' | '1h' | '4h',
+    enabledAssets: DEFAULT_CONFIG.assets as Asset[],
     fastSMA: DEFAULT_CONFIG.indicators.fastSMA,
     slowSMA: DEFAULT_CONFIG.indicators.slowSMA,
     positionSizePercent: DEFAULT_CONFIG.risk.positionSizePercent,
@@ -26,6 +27,7 @@ const Index = () => {
   const config = useMemo(() => ({
     ...DEFAULT_CONFIG,
     timeframe: strategyConfig.timeframe,
+    assets: strategyConfig.enabledAssets,
     indicators: {
       ...DEFAULT_CONFIG.indicators,
       fastSMA: strategyConfig.fastSMA,
@@ -64,7 +66,7 @@ const Index = () => {
   useEffect(() => {
     if (permission !== 'granted') return;
 
-    (['BTCUSDT', 'XRPUSDT', 'FETUSDT', 'XLMUSDT'] as Asset[]).forEach((asset) => {
+    strategyConfig.enabledAssets.forEach((asset) => {
       const signal = signals[asset];
       if (signal && signal.type !== 'HOLD') {
         const signalKey = `${signal.type}-${signal.timestamp}`;
@@ -74,7 +76,7 @@ const Index = () => {
         }
       }
     });
-  }, [signals, permission, sendSignalNotification]);
+  }, [signals, permission, sendSignalNotification, strategyConfig.enabledAssets]);
 
   if (isLoading) {
     return (
@@ -116,10 +118,9 @@ const Index = () => {
         {/* Top cards row */}
         <div className="mb-4 grid grid-cols-2 gap-2 sm:mb-6 sm:gap-4 lg:grid-cols-3 xl:grid-cols-6">
           <BalanceCard state={state} prices={prices} />
-          <PriceCard asset="BTCUSDT" price={prices.BTCUSDT} />
-          <PriceCard asset="XRPUSDT" price={prices.XRPUSDT} />
-          <PriceCard asset="FETUSDT" price={prices.FETUSDT} />
-          <PriceCard asset="XLMUSDT" price={prices.XLMUSDT} />
+          {strategyConfig.enabledAssets.map((asset) => (
+            <PriceCard key={asset} asset={asset} price={prices[asset]} />
+          ))}
           <ModeCard
             mode={state.mode}
             isRunning={state.isRunning}
@@ -130,7 +131,7 @@ const Index = () => {
 
         {/* Charts and signals grid */}
         <div className="mb-4 grid gap-4 sm:mb-6 sm:gap-6 md:grid-cols-2">
-          {(['BTCUSDT', 'XRPUSDT', 'FETUSDT', 'XLMUSDT'] as Asset[]).map((asset) => (
+          {strategyConfig.enabledAssets.map((asset) => (
             <div key={asset} className="space-y-3 sm:space-y-4">
               <PriceChart
                 asset={asset}
