@@ -6,6 +6,7 @@ import { PriceChart } from '@/components/trading/PriceChart';
 import { SignalAlert } from '@/components/trading/SignalAlert';
 import { TradeHistory } from '@/components/trading/TradeHistory';
 import { PerformanceStats } from '@/components/trading/PerformanceStats';
+import { AssetBreakdown } from '@/components/trading/AssetBreakdown';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DEFAULT_CONFIG } from '@/config/trading';
 import { StrategyConfig } from '@/components/StrategySettings';
@@ -143,6 +144,11 @@ const Index = () => {
         <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
           <TradeHistory trades={state.trades} />
           <PerformanceStats state={state} />
+        </div>
+
+        {/* Asset breakdown */}
+        <div className="mt-4 sm:mt-6">
+          <AssetBreakdown trades={state.trades} />
         </div>
 
         {/* Footer disclaimer */}
