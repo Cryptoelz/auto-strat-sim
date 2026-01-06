@@ -8,10 +8,42 @@ import { format } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { History, Download } from 'lucide-react';
 
+interface TradeNote {
+  tradeId: string;
+  note: string;
+  updatedAt: number;
+}
+
+function loadJournalNotes(): Record<string, TradeNote> {
+  try {
+    const saved = localStorage.getItem('trade-journal-notes');
+    if (saved) {
+      const notes: TradeNote[] = JSON.parse(saved);
+      return notes.reduce((acc, note) => {
+        acc[note.tradeId] = note;
+        return acc;
+      }, {} as Record<string, TradeNote>);
+    }
+  } catch (error) {
+    console.error('Failed to load journal notes:', error);
+  }
+  return {};
+}
+
+function escapeCSVField(value: string): string {
+  // If the value contains comma, quote, or newline, wrap in quotes and escape existing quotes
+  if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+    return `"${value.replace(/"/g, '""')}"`;
+  }
+  return value;
+}
+
 function exportToCSV(trades: Trade[]) {
-  const headers = ['ID', 'Asset', 'Symbol', 'Type', 'Entry Price', 'Exit Price', 'Entry Time', 'Exit Time', 'PnL', 'PnL %', 'Exit Reason'];
+  const notes = loadJournalNotes();
+  const headers = ['ID', 'Asset', 'Symbol', 'Type', 'Entry Price', 'Exit Price', 'Entry Time', 'Exit Time', 'PnL', 'PnL %', 'Exit Reason', 'Journal Note'];
   const rows = trades.map(trade => {
     const info = ASSET_INFO[trade.asset];
+    const journalNote = notes[trade.id]?.note || '';
     return [
       trade.id,
       trade.asset,
@@ -23,7 +55,8 @@ function exportToCSV(trades: Trade[]) {
       format(new Date(trade.exitTime), 'yyyy-MM-dd HH:mm:ss'),
       trade.pnl.toFixed(2),
       (trade.pnlPercent * 100).toFixed(2) + '%',
-      trade.exitReason
+      trade.exitReason,
+      escapeCSVField(journalNote)
     ].join(',');
   });
   
