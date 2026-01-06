@@ -8,6 +8,7 @@ import { SignalAlert } from '@/components/trading/SignalAlert';
 import { TradeHistory } from '@/components/trading/TradeHistory';
 import { PerformanceStats } from '@/components/trading/PerformanceStats';
 import { AssetBreakdown } from '@/components/trading/AssetBreakdown';
+import { PortfolioAllocation } from '@/components/trading/PortfolioAllocation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DEFAULT_CONFIG } from '@/config/trading';
 import { StrategyConfig } from '@/components/StrategySettings';
@@ -158,8 +159,13 @@ const Index = () => {
           <PerformanceStats state={state} />
         </div>
 
-        {/* Asset breakdown */}
-        <div className="mt-4 sm:mt-6">
+        {/* Portfolio and Asset breakdown */}
+        <div className="mt-4 grid gap-4 sm:mt-6 sm:gap-6 lg:grid-cols-2">
+          <PortfolioAllocation 
+            state={state} 
+            prices={prices} 
+            enabledAssets={strategyConfig.enabledAssets} 
+          />
           <AssetBreakdown trades={state.trades} />
         </div>
 
