@@ -21,9 +21,18 @@ interface PriceChartProps {
   position?: { entryPrice: number } | null;
   fastSMA?: number;
   slowSMA?: number;
+  isSelected?: boolean;
+  onSelect?: () => void;
 }
 
-export function PriceChart({ asset, candles, position, fastSMA, slowSMA }: PriceChartProps) {
+const ASSET_COLORS: Record<Asset, string> = {
+  BTCUSDT: 'hsl(43, 96%, 56%)',
+  XRPUSDT: 'hsl(220, 100%, 60%)',
+  FETUSDT: 'hsl(280, 80%, 55%)',
+  XLMUSDT: 'hsl(170, 70%, 50%)',
+};
+
+export function PriceChart({ asset, candles, position, fastSMA, slowSMA, isSelected, onSelect }: PriceChartProps) {
   const info = ASSET_INFO[asset];
   const fastPeriod = fastSMA ?? DEFAULT_CONFIG.indicators.fastSMA;
   const slowPeriod = slowSMA ?? DEFAULT_CONFIG.indicators.slowSMA;
@@ -78,16 +87,22 @@ export function PriceChart({ asset, candles, position, fastSMA, slowSMA }: Price
   }
 
   return (
-    <Card className="border-border/50 bg-card/50 backdrop-blur">
+    <Card 
+      className={`border-border/50 bg-card/50 backdrop-blur cursor-pointer transition-all ${
+        isSelected ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : 'hover:border-primary/50'
+      }`}
+      onClick={onSelect}
+    >
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base">
           <span
             className="h-2 w-2 rounded-full"
-            style={{
-              backgroundColor: asset === 'BTCUSDT' ? 'hsl(43, 96%, 56%)' : 'hsl(220, 100%, 60%)',
-            }}
+            style={{ backgroundColor: ASSET_COLORS[asset] }}
           ></span>
           {info.name} ({info.symbol})
+          {isSelected && (
+            <span className="ml-1 text-xs font-normal text-primary">[Selected]</span>
+          )}
           {position && (
             <span className="ml-2 text-sm font-normal text-trading-profit">
               Position @ ${position.entryPrice.toFixed(2)}
