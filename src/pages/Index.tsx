@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useTradingEngine } from '@/hooks/useTradingEngine';
+import { useNotifications } from '@/hooks/useNotifications';
 import { DashboardHeader } from '@/components/trading/DashboardHeader';
 import { BalanceCard, PriceCard, ModeCard } from '@/components/trading/DashboardCards';
 import { PriceChart } from '@/components/trading/PriceChart';
@@ -10,6 +11,7 @@ import { AssetBreakdown } from '@/components/trading/AssetBreakdown';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DEFAULT_CONFIG } from '@/config/trading';
 import { StrategyConfig } from '@/components/StrategySettings';
+import { Asset } from '@/types/trading';
 
 const Index = () => {
   const [strategyConfig, setStrategyConfig] = useState<StrategyConfig>({
@@ -55,6 +57,25 @@ const Index = () => {
     setStrategyConfig(newConfig);
   };
 
+  const { permission, isSupported, requestPermission, sendSignalNotification } = useNotifications();
+  const prevSignalsRef = useRef<Record<Asset, string | null>>({ BTCUSDT: null, XRPUSDT: null });
+
+  // Send notifications when signals change
+  useEffect(() => {
+    if (permission !== 'granted') return;
+
+    (['BTCUSDT', 'XRPUSDT'] as Asset[]).forEach((asset) => {
+      const signal = signals[asset];
+      if (signal && signal.type !== 'HOLD') {
+        const signalKey = `${signal.type}-${signal.timestamp}`;
+        if (prevSignalsRef.current[asset] !== signalKey) {
+          sendSignalNotification(signal);
+          prevSignalsRef.current[asset] = signalKey;
+        }
+      }
+    });
+  }, [signals, permission, sendSignalNotification]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -86,6 +107,9 @@ const Index = () => {
         onReset={reset}
         onConfigChange={handleConfigChange}
         strategyConfig={strategyConfig}
+        notificationPermission={permission}
+        notificationsSupported={isSupported}
+        onRequestNotifications={requestPermission}
       />
 
       <main className="container mx-auto px-3 py-4 sm:px-4 sm:py-6">
