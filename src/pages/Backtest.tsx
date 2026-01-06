@@ -32,7 +32,11 @@ import {
   Trophy,
   Percent,
   DollarSign,
-  LineChart
+  LineChart,
+  Save,
+  Trash2,
+  GitCompare,
+  X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -52,6 +56,49 @@ const TIMEFRAME_OPTIONS = [
   { value: '1h', label: '1 Hour' },
   { value: '4h', label: '4 Hours' },
 ];
+
+const SAVED_RUNS_KEY = 'backtest-saved-runs';
+
+interface SavedRun {
+  id: string;
+  name: string;
+  savedAt: number;
+  config: {
+    assets: Asset[];
+    startDate: string;
+    endDate: string;
+    timeframe: string;
+    fastSMA: number;
+    slowSMA: number;
+    initialBalance: number;
+    positionSizePercent: number;
+    stopLossPercent: number;
+    takeProfitPercent: number;
+  };
+  result: {
+    finalBalance: number;
+    totalPnl: number;
+    totalPnlPercent: number;
+    winRate: number;
+    totalTrades: number;
+    maxDrawdown: number;
+    profitFactor: number;
+    sharpeRatio: number;
+  };
+}
+
+function loadSavedRuns(): SavedRun[] {
+  try {
+    const saved = localStorage.getItem(SAVED_RUNS_KEY);
+    return saved ? JSON.parse(saved) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveSavedRuns(runs: SavedRun[]) {
+  localStorage.setItem(SAVED_RUNS_KEY, JSON.stringify(runs));
+}
 
 function StatCard({ 
   title, 
@@ -484,6 +531,96 @@ function ResultsDisplay({ result }: { result: BacktestResult }) {
   );
 }
 
+function ComparisonTable({ runs, onRemove }: { runs: SavedRun[]; onRemove: (id: string) => void }) {
+  if (runs.length === 0) return null;
+
+  const metrics = [
+    { key: 'totalPnlPercent', label: 'Return', format: (v: number) => `${v >= 0 ? '+' : ''}${v.toFixed(2)}%`, best: 'high' },
+    { key: 'winRate', label: 'Win Rate', format: (v: number) => `${v.toFixed(1)}%`, best: 'high' },
+    { key: 'totalTrades', label: 'Trades', format: (v: number) => v.toString(), best: 'neutral' },
+    { key: 'maxDrawdown', label: 'Max DD', format: (v: number) => `-${v.toFixed(2)}%`, best: 'low' },
+    { key: 'profitFactor', label: 'Profit Factor', format: (v: number) => v === Infinity ? '∞' : v.toFixed(2), best: 'high' },
+    { key: 'sharpeRatio', label: 'Sharpe', format: (v: number) => v.toFixed(2), best: 'high' },
+  ] as const;
+
+  const getBestValue = (key: string, best: string) => {
+    const values = runs.map(r => r.result[key as keyof typeof r.result] as number);
+    if (best === 'high') return Math.max(...values);
+    if (best === 'low') return Math.min(...values);
+    return null;
+  };
+
+  return (
+    <Card className="border-border/50 bg-card/50 backdrop-blur">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base flex items-center gap-2">
+          <GitCompare className="h-4 w-4" />
+          Strategy Comparison
+          <Badge variant="secondary" className="ml-auto">{runs.length} runs</Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border/50">
+                <th className="text-left py-2 px-2 text-muted-foreground font-medium">Strategy</th>
+                {metrics.map(m => (
+                  <th key={m.key} className="text-right py-2 px-2 text-muted-foreground font-medium">{m.label}</th>
+                ))}
+                <th className="w-8"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {runs.map((run) => (
+                <tr key={run.id} className="border-b border-border/30 hover:bg-secondary/20">
+                  <td className="py-2 px-2">
+                    <div>
+                      <span className="font-medium">{run.name}</span>
+                      <div className="text-xs text-muted-foreground">
+                        SMA {run.config.fastSMA}/{run.config.slowSMA} • {run.config.timeframe}
+                      </div>
+                    </div>
+                  </td>
+                  {metrics.map(m => {
+                    const value = run.result[m.key as keyof typeof run.result] as number;
+                    const bestValue = getBestValue(m.key, m.best);
+                    const isBest = bestValue !== null && value === bestValue && runs.length > 1;
+                    return (
+                      <td 
+                        key={m.key} 
+                        className={cn(
+                          "text-right py-2 px-2",
+                          isBest && m.best === 'high' && "text-trading-profit font-medium",
+                          isBest && m.best === 'low' && "text-trading-profit font-medium",
+                          m.key === 'totalPnlPercent' && value >= 0 && "text-trading-profit",
+                          m.key === 'totalPnlPercent' && value < 0 && "text-trading-loss",
+                        )}
+                      >
+                        {m.format(value)}
+                      </td>
+                    );
+                  })}
+                  <td className="py-2 px-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                      onClick={() => onRemove(run.id)}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function Backtest() {
   const { isRunning, progress, result, error, runBacktest, reset } = useBacktest();
   
@@ -498,6 +635,59 @@ export default function Backtest() {
   const [positionSizePercent, setPositionSizePercent] = useState(5);
   const [stopLossPercent, setStopLossPercent] = useState(2);
   const [takeProfitPercent, setTakeProfitPercent] = useState(4);
+
+  // Saved runs state
+  const [savedRuns, setSavedRuns] = useState<SavedRun[]>(() => loadSavedRuns());
+  const [showComparison, setShowComparison] = useState(false);
+
+  const saveCurrentRun = () => {
+    if (!result) return;
+    
+    const runName = `SMA ${fastSMA}/${slowSMA} ${timeframe}`;
+    const newRun: SavedRun = {
+      id: `run-${Date.now()}`,
+      name: runName,
+      savedAt: Date.now(),
+      config: {
+        assets: enabledAssets,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        timeframe,
+        fastSMA,
+        slowSMA,
+        initialBalance,
+        positionSizePercent,
+        stopLossPercent,
+        takeProfitPercent,
+      },
+      result: {
+        finalBalance: result.finalBalance,
+        totalPnl: result.totalPnl,
+        totalPnlPercent: result.totalPnlPercent,
+        winRate: result.winRate,
+        totalTrades: result.totalTrades,
+        maxDrawdown: result.maxDrawdown,
+        profitFactor: result.profitFactor,
+        sharpeRatio: result.sharpeRatio,
+      },
+    };
+
+    const updatedRuns = [...savedRuns, newRun];
+    setSavedRuns(updatedRuns);
+    saveSavedRuns(updatedRuns);
+  };
+
+  const deleteRun = (id: string) => {
+    const updatedRuns = savedRuns.filter(r => r.id !== id);
+    setSavedRuns(updatedRuns);
+    saveSavedRuns(updatedRuns);
+  };
+
+  const clearAllRuns = () => {
+    setSavedRuns([]);
+    saveSavedRuns([]);
+    setShowComparison(false);
+  };
 
   const toggleAsset = (asset: Asset) => {
     setEnabledAssets(prev => 
@@ -705,27 +895,68 @@ export default function Backtest() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-2 pt-2">
-                <Button
-                  onClick={handleRunBacktest}
-                  disabled={isRunning || enabledAssets.length === 0}
-                  className="flex-1"
-                >
-                  {isRunning ? (
-                    <>Running...</>
-                  ) : (
-                    <>
-                      <Play className="h-4 w-4 mr-2" />
-                      Run Backtest
-                    </>
+              <div className="space-y-2 pt-2">
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleRunBacktest}
+                    disabled={isRunning || enabledAssets.length === 0}
+                    className="flex-1"
+                  >
+                    {isRunning ? (
+                      <>Running...</>
+                    ) : (
+                      <>
+                        <Play className="h-4 w-4 mr-2" />
+                        Run Backtest
+                      </>
+                    )}
+                  </Button>
+                  {result && (
+                    <Button variant="outline" onClick={reset}>
+                      <RotateCcw className="h-4 w-4" />
+                    </Button>
                   )}
-                </Button>
+                </div>
+                
                 {result && (
-                  <Button variant="outline" onClick={reset}>
-                    <RotateCcw className="h-4 w-4" />
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={saveCurrentRun}
+                    className="w-full"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    Save for Comparison
                   </Button>
                 )}
               </div>
+
+              {/* Saved Runs */}
+              {savedRuns.length > 0 && (
+                <div className="space-y-2 pt-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium">Saved Runs ({savedRuns.length})</Label>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 px-2 text-xs text-muted-foreground hover:text-destructive"
+                      onClick={clearAllRuns}
+                    >
+                      <Trash2 className="h-3 w-3 mr-1" />
+                      Clear All
+                    </Button>
+                  </div>
+                  <Button
+                    variant={showComparison ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setShowComparison(!showComparison)}
+                    className="w-full"
+                  >
+                    <GitCompare className="h-4 w-4 mr-2" />
+                    {showComparison ? 'Hide Comparison' : 'Compare Runs'}
+                  </Button>
+                </div>
+              )}
 
               {/* Progress Bar */}
               {isRunning && (
@@ -750,7 +981,7 @@ export default function Backtest() {
               </Card>
             )}
 
-            {!result && !isRunning && !error && (
+            {!result && !isRunning && !error && !showComparison && (
               <Card className="border-border/50 bg-card/50 backdrop-blur">
                 <CardContent className="flex flex-col items-center justify-center py-16 text-center">
                   <BarChart3 className="h-12 w-12 text-muted-foreground/50 mb-4" />
@@ -763,7 +994,11 @@ export default function Backtest() {
               </Card>
             )}
 
-            {result && <ResultsDisplay result={result} />}
+            {showComparison && savedRuns.length > 0 && (
+              <ComparisonTable runs={savedRuns} onRemove={deleteRun} />
+            )}
+
+            {result && !showComparison && <ResultsDisplay result={result} />}
           </div>
         </div>
       </main>
