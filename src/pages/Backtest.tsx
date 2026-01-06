@@ -2257,6 +2257,7 @@ function ResultsDisplay({ result, fastSMA, slowSMA }: { result: BacktestResult; 
                 {result.profitFactor === Infinity ? '∞' : result.profitFactor.toFixed(2)}
               </span>
             </div>
+            <Separator />
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Sharpe Ratio</span>
               <span className={cn(
@@ -2264,6 +2265,24 @@ function ResultsDisplay({ result, fastSMA, slowSMA }: { result: BacktestResult; 
                 result.sharpeRatio >= 1 ? "text-trading-profit" : result.sharpeRatio >= 0 ? "text-foreground" : "text-trading-loss"
               )}>
                 {result.sharpeRatio.toFixed(2)}
+              </span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Sortino Ratio</span>
+              <span className={cn(
+                "font-medium",
+                result.sortinoRatio >= 1 ? "text-trading-profit" : result.sortinoRatio >= 0 ? "text-foreground" : "text-trading-loss"
+              )}>
+                {result.sortinoRatio.toFixed(2)}
+              </span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Calmar Ratio</span>
+              <span className={cn(
+                "font-medium",
+                result.calmarRatio >= 1 ? "text-trading-profit" : result.calmarRatio >= 0 ? "text-foreground" : "text-trading-loss"
+              )}>
+                {result.calmarRatio.toFixed(2)}
               </span>
             </div>
             <Separator />
