@@ -39,7 +39,8 @@ import {
   X,
   Download,
   Zap,
-  Flame
+  Flame,
+  Shuffle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -715,6 +716,255 @@ function StreakAnalysisCard({ trades }: { trades: BacktestResult['trades'] }) {
   );
 }
 
+interface MonteCarloResult {
+  simulations: number[];
+  mean: number;
+  median: number;
+  std: number;
+  percentile5: number;
+  percentile25: number;
+  percentile75: number;
+  percentile95: number;
+  probabilityOfProfit: number;
+  histogram: { bin: string; count: number; isPositive: boolean }[];
+}
+
+function runMonteCarloSimulation(trades: BacktestResult['trades'], initialBalance: number, numSimulations: number = 1000): MonteCarloResult {
+  const pnls = trades.map(t => t.pnl);
+  const results: number[] = [];
+
+  for (let sim = 0; sim < numSimulations; sim++) {
+    let balance = initialBalance;
+    // Randomly resample trades with replacement
+    for (let i = 0; i < pnls.length; i++) {
+      const randomIndex = Math.floor(Math.random() * pnls.length);
+      balance += pnls[randomIndex];
+    }
+    results.push(((balance - initialBalance) / initialBalance) * 100);
+  }
+
+  results.sort((a, b) => a - b);
+
+  const mean = results.reduce((a, b) => a + b, 0) / results.length;
+  const median = results[Math.floor(results.length / 2)];
+  const variance = results.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / results.length;
+  const std = Math.sqrt(variance);
+
+  const getPercentile = (p: number) => results[Math.floor(results.length * p / 100)];
+
+  // Create histogram bins
+  const minReturn = Math.min(...results);
+  const maxReturn = Math.max(...results);
+  const binCount = 20;
+  const binWidth = (maxReturn - minReturn) / binCount;
+  const bins: Record<string, number> = {};
+  
+  for (let i = 0; i < binCount; i++) {
+    const binStart = minReturn + i * binWidth;
+    const binLabel = `${binStart.toFixed(0)}%`;
+    bins[binLabel] = 0;
+  }
+
+  results.forEach(r => {
+    const binIndex = Math.min(Math.floor((r - minReturn) / binWidth), binCount - 1);
+    const binStart = minReturn + binIndex * binWidth;
+    const binLabel = `${binStart.toFixed(0)}%`;
+    bins[binLabel] = (bins[binLabel] || 0) + 1;
+  });
+
+  const histogram = Object.entries(bins).map(([bin, count]) => ({
+    bin,
+    count,
+    isPositive: parseFloat(bin) >= 0
+  }));
+
+  const probabilityOfProfit = results.filter(r => r > 0).length / results.length * 100;
+
+  return {
+    simulations: results,
+    mean,
+    median,
+    std,
+    percentile5: getPercentile(5),
+    percentile25: getPercentile(25),
+    percentile75: getPercentile(75),
+    percentile95: getPercentile(95),
+    probabilityOfProfit,
+    histogram
+  };
+}
+
+function MonteCarloCard({ trades, initialBalance }: { trades: BacktestResult['trades']; initialBalance: number }) {
+  const [result, setResult] = useState<MonteCarloResult | null>(null);
+  const [isRunning, setIsRunning] = useState(false);
+
+  const runSimulation = () => {
+    setIsRunning(true);
+    // Use setTimeout to allow UI to update
+    setTimeout(() => {
+      const simResult = runMonteCarloSimulation(trades, initialBalance, 1000);
+      setResult(simResult);
+      setIsRunning(false);
+    }, 50);
+  };
+
+  if (trades.length < 5) return null;
+
+  return (
+    <Card className="border-border/50 bg-card/50 backdrop-blur">
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Shuffle className="h-4 w-4 text-purple-500" />
+              Monte Carlo Simulation
+            </CardTitle>
+            <CardDescription>1,000 random resamples of trade outcomes</CardDescription>
+          </div>
+          <Button
+            variant={result ? "outline" : "default"}
+            size="sm"
+            onClick={runSimulation}
+            disabled={isRunning}
+          >
+            {isRunning ? 'Running...' : result ? 'Re-run' : 'Run Simulation'}
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {!result ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <Shuffle className="h-8 w-8 mx-auto mb-2 opacity-50" />
+            <p className="text-sm">Click "Run Simulation" to estimate return distribution</p>
+            <p className="text-xs mt-1">Based on {trades.length} historical trades</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {/* Key Stats */}
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              <div className="p-2 rounded-lg bg-secondary/30 text-center">
+                <p className="text-xs text-muted-foreground">Prob. of Profit</p>
+                <p className={cn(
+                  "text-lg font-bold",
+                  result.probabilityOfProfit >= 50 ? "text-trading-profit" : "text-trading-loss"
+                )}>
+                  {result.probabilityOfProfit.toFixed(1)}%
+                </p>
+              </div>
+              <div className="p-2 rounded-lg bg-secondary/30 text-center">
+                <p className="text-xs text-muted-foreground">Mean Return</p>
+                <p className={cn(
+                  "text-lg font-bold",
+                  result.mean >= 0 ? "text-trading-profit" : "text-trading-loss"
+                )}>
+                  {result.mean >= 0 ? '+' : ''}{result.mean.toFixed(1)}%
+                </p>
+              </div>
+              <div className="p-2 rounded-lg bg-secondary/30 text-center">
+                <p className="text-xs text-muted-foreground">Median Return</p>
+                <p className={cn(
+                  "text-lg font-bold",
+                  result.median >= 0 ? "text-trading-profit" : "text-trading-loss"
+                )}>
+                  {result.median >= 0 ? '+' : ''}{result.median.toFixed(1)}%
+                </p>
+              </div>
+              <div className="p-2 rounded-lg bg-secondary/30 text-center">
+                <p className="text-xs text-muted-foreground">Std Deviation</p>
+                <p className="text-lg font-bold text-muted-foreground">
+                  ±{result.std.toFixed(1)}%
+                </p>
+              </div>
+            </div>
+
+            {/* Confidence Intervals */}
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Confidence Intervals</Label>
+              <div className="relative h-16 bg-secondary/20 rounded-lg overflow-hidden">
+                {/* 90% CI */}
+                <div 
+                  className="absolute top-2 h-4 bg-purple-500/30 rounded"
+                  style={{
+                    left: `${Math.max(0, (result.percentile5 - result.simulations[0]) / (result.simulations[result.simulations.length - 1] - result.simulations[0]) * 100)}%`,
+                    width: `${Math.min(100, (result.percentile95 - result.percentile5) / (result.simulations[result.simulations.length - 1] - result.simulations[0]) * 100)}%`
+                  }}
+                />
+                {/* 50% CI */}
+                <div 
+                  className="absolute top-2 h-4 bg-purple-500/60 rounded"
+                  style={{
+                    left: `${Math.max(0, (result.percentile25 - result.simulations[0]) / (result.simulations[result.simulations.length - 1] - result.simulations[0]) * 100)}%`,
+                    width: `${Math.min(100, (result.percentile75 - result.percentile25) / (result.simulations[result.simulations.length - 1] - result.simulations[0]) * 100)}%`
+                  }}
+                />
+                {/* Median line */}
+                <div 
+                  className="absolute top-1 h-6 w-0.5 bg-purple-500"
+                  style={{
+                    left: `${(result.median - result.simulations[0]) / (result.simulations[result.simulations.length - 1] - result.simulations[0]) * 100}%`
+                  }}
+                />
+                {/* Labels */}
+                <div className="absolute bottom-1 left-0 right-0 flex justify-between text-[10px] text-muted-foreground px-2">
+                  <span>{result.percentile5.toFixed(1)}%</span>
+                  <span className="font-medium text-purple-400">{result.median.toFixed(1)}%</span>
+                  <span>{result.percentile95.toFixed(1)}%</span>
+                </div>
+              </div>
+              <div className="flex justify-center gap-4 text-xs text-muted-foreground">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3 h-3 rounded bg-purple-500/30" />
+                  <span>90% CI</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3 h-3 rounded bg-purple-500/60" />
+                  <span>50% CI</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Distribution Histogram */}
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Return Distribution</Label>
+              <div className="h-24 flex items-end gap-0.5">
+                {result.histogram.map((bar, i) => {
+                  const maxCount = Math.max(...result.histogram.map(h => h.count));
+                  const height = (bar.count / maxCount) * 100;
+                  return (
+                    <div
+                      key={i}
+                      className={cn(
+                        "flex-1 rounded-t transition-all",
+                        bar.isPositive ? "bg-trading-profit/60" : "bg-trading-loss/60"
+                      )}
+                      style={{ height: `${height}%` }}
+                      title={`${bar.bin}: ${bar.count} simulations`}
+                    />
+                  );
+                })}
+              </div>
+              <div className="flex justify-between text-[10px] text-muted-foreground">
+                <span>{result.histogram[0]?.bin}</span>
+                <span>0%</span>
+                <span>{result.histogram[result.histogram.length - 1]?.bin}</span>
+              </div>
+            </div>
+
+            {/* Summary */}
+            <div className="text-xs text-muted-foreground bg-secondary/20 rounded-lg p-3">
+              <p>
+                Based on 1,000 random resamples, there's a <strong className={result.probabilityOfProfit >= 50 ? "text-trading-profit" : "text-trading-loss"}>{result.probabilityOfProfit.toFixed(0)}%</strong> chance 
+                of profit. The expected return is <strong className={result.mean >= 0 ? "text-trading-profit" : "text-trading-loss"}>{result.mean >= 0 ? '+' : ''}{result.mean.toFixed(1)}%</strong> with 
+                90% of outcomes between <strong>{result.percentile5.toFixed(1)}%</strong> and <strong>{result.percentile95.toFixed(1)}%</strong>.
+              </p>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 function ResultsDisplay({ result }: { result: BacktestResult }) {
   const pnlTrend = result.totalPnl >= 0 ? 'up' : 'down';
   const initialBalance = result.equityCurve.length > 0 ? result.equityCurve[0].balance : 10000;
@@ -765,6 +1015,11 @@ function ResultsDisplay({ result }: { result: BacktestResult }) {
       {/* Streak Analysis */}
       {result.trades.length > 0 && (
         <StreakAnalysisCard trades={result.trades} />
+      )}
+
+      {/* Monte Carlo Simulation */}
+      {result.trades.length >= 5 && (
+        <MonteCarloCard trades={result.trades} initialBalance={initialBalance} />
       )}
 
       {/* Detailed Stats */}
