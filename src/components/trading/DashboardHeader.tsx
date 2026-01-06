@@ -2,7 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { VolumeControl } from '@/components/VolumeControl';
-import { StrategySettings } from '@/components/StrategySettings';
+import { StrategySettings, StrategyConfig } from '@/components/StrategySettings';
 import { RefreshCw, RotateCcw, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -11,8 +11,8 @@ interface DashboardHeaderProps {
   isLoading: boolean;
   onRefresh: () => void;
   onReset: () => void;
-  onConfigChange: (config: { fastSMA: number; slowSMA: number }) => void;
-  smaConfig: { fastSMA: number; slowSMA: number };
+  onConfigChange: (config: StrategyConfig) => void;
+  strategyConfig: StrategyConfig;
 }
 
 export function DashboardHeader({
@@ -21,7 +21,7 @@ export function DashboardHeader({
   onRefresh,
   onReset,
   onConfigChange,
-  smaConfig,
+  strategyConfig,
 }: DashboardHeaderProps) {
   return (
     <header className="border-b border-border/50 bg-card/30 backdrop-blur">
@@ -32,17 +32,17 @@ export function DashboardHeader({
           <div className="flex items-center justify-between md:block">
             <div>
               <h1 className="text-lg font-bold md:text-2xl">Crypto Trading Simulator</h1>
-            <p className="text-xs text-muted-foreground md:text-sm">
-              SMA {smaConfig.fastSMA}/{smaConfig.slowSMA} Crossover • SIMULATION ONLY
-            </p>
+              <p className="text-xs text-muted-foreground md:text-sm">
+                SMA {strategyConfig.fastSMA}/{strategyConfig.slowSMA} • SL {strategyConfig.stopLossPercent}% / TP {strategyConfig.takeProfitPercent}%
+              </p>
+            </div>
+            {/* Mobile only: settings, theme and volume toggles */}
+            <div className="flex items-center gap-2 md:hidden">
+              <StrategySettings onConfigChange={onConfigChange} />
+              <VolumeControl />
+              <ThemeToggle />
+            </div>
           </div>
-          {/* Mobile only: settings, theme and volume toggles */}
-          <div className="flex items-center gap-2 md:hidden">
-            <StrategySettings onConfigChange={onConfigChange} />
-            <VolumeControl />
-            <ThemeToggle />
-          </div>
-        </div>
 
         {/* Controls section */}
         <div className="flex flex-wrap items-center gap-2 md:gap-4">
