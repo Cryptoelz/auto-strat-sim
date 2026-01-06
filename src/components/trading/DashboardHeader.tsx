@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { VolumeControl } from '@/components/VolumeControl';
 import { RefreshCw, RotateCcw, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -59,6 +60,7 @@ export function DashboardHeader({
             Reset
           </Button>
 
+          <VolumeControl />
           <ThemeToggle />
         </div>
       </div>
