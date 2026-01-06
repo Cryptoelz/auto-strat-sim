@@ -65,6 +65,8 @@ export default {
           neutral: "hsl(var(--trading-neutral))",
           btc: "hsl(var(--trading-btc))",
           xrp: "hsl(var(--trading-xrp))",
+          fet: "hsl(var(--trading-fet))",
+          xlm: "hsl(var(--trading-xlm))",
           "sma-fast": "hsl(var(--trading-sma-fast))",
           "sma-slow": "hsl(var(--trading-sma-slow))",
         },
