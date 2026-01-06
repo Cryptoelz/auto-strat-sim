@@ -43,7 +43,8 @@ import {
   Shuffle,
   Clock,
   Layers,
-  Grid3X3
+  Grid3X3,
+  CalendarDays
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
