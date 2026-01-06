@@ -13,6 +13,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Asset } from '@/types/trading';
 import { ASSET_INFO } from '@/config/trading';
@@ -2259,7 +2260,18 @@ function ResultsDisplay({ result, fastSMA, slowSMA }: { result: BacktestResult; 
             </div>
             <Separator />
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Sharpe Ratio</span>
+              <TooltipProvider>
+                <UITooltip>
+                  <TooltipTrigger asChild>
+                    <span className="text-muted-foreground cursor-help underline decoration-dotted underline-offset-2">Sharpe Ratio</span>
+                  </TooltipTrigger>
+                  <TooltipContent side="left" className="max-w-[280px]">
+                    <p className="font-medium mb-1">Sharpe Ratio</p>
+                    <p className="text-xs text-muted-foreground">Measures risk-adjusted return using total volatility. Higher is better.</p>
+                    <p className="text-xs mt-1"><span className="text-trading-profit">≥1.0:</span> Good | <span className="text-yellow-500">0.5-1.0:</span> OK | <span className="text-trading-loss">&lt;0.5:</span> Poor</p>
+                  </TooltipContent>
+                </UITooltip>
+              </TooltipProvider>
               <span className={cn(
                 "font-medium",
                 result.sharpeRatio >= 1 ? "text-trading-profit" : result.sharpeRatio >= 0 ? "text-foreground" : "text-trading-loss"
@@ -2268,7 +2280,18 @@ function ResultsDisplay({ result, fastSMA, slowSMA }: { result: BacktestResult; 
               </span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Sortino Ratio</span>
+              <TooltipProvider>
+                <UITooltip>
+                  <TooltipTrigger asChild>
+                    <span className="text-muted-foreground cursor-help underline decoration-dotted underline-offset-2">Sortino Ratio</span>
+                  </TooltipTrigger>
+                  <TooltipContent side="left" className="max-w-[280px]">
+                    <p className="font-medium mb-1">Sortino Ratio</p>
+                    <p className="text-xs text-muted-foreground">Like Sharpe but only penalizes downside volatility. Better for asymmetric returns.</p>
+                    <p className="text-xs mt-1"><span className="text-trading-profit">≥2.0:</span> Excellent | <span className="text-trading-profit">≥1.0:</span> Good | <span className="text-trading-loss">&lt;1.0:</span> Below avg</p>
+                  </TooltipContent>
+                </UITooltip>
+              </TooltipProvider>
               <span className={cn(
                 "font-medium",
                 result.sortinoRatio >= 1 ? "text-trading-profit" : result.sortinoRatio >= 0 ? "text-foreground" : "text-trading-loss"
@@ -2277,7 +2300,18 @@ function ResultsDisplay({ result, fastSMA, slowSMA }: { result: BacktestResult; 
               </span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Calmar Ratio</span>
+              <TooltipProvider>
+                <UITooltip>
+                  <TooltipTrigger asChild>
+                    <span className="text-muted-foreground cursor-help underline decoration-dotted underline-offset-2">Calmar Ratio</span>
+                  </TooltipTrigger>
+                  <TooltipContent side="left" className="max-w-[280px]">
+                    <p className="font-medium mb-1">Calmar Ratio</p>
+                    <p className="text-xs text-muted-foreground">Annualized return divided by max drawdown. Shows return per unit of drawdown risk.</p>
+                    <p className="text-xs mt-1"><span className="text-trading-profit">≥3.0:</span> Excellent | <span className="text-trading-profit">≥1.0:</span> Good | <span className="text-trading-loss">&lt;1.0:</span> Risky</p>
+                  </TooltipContent>
+                </UITooltip>
+              </TooltipProvider>
               <span className={cn(
                 "font-medium",
                 result.calmarRatio >= 1 ? "text-trading-profit" : result.calmarRatio >= 0 ? "text-foreground" : "text-trading-loss"
