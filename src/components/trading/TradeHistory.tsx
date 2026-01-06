@@ -41,6 +41,13 @@ interface TradeHistoryProps {
   trades: Trade[];
 }
 
+const ASSET_COLORS: Record<string, string> = {
+  BTCUSDT: 'hsl(43, 96%, 56%)',
+  XRPUSDT: 'hsl(220, 100%, 60%)',
+  FETUSDT: 'hsl(280, 80%, 55%)',
+  XLMUSDT: 'hsl(170, 70%, 50%)',
+};
+
 export function TradeHistory({ trades }: TradeHistoryProps) {
   const sortedTrades = [...trades].reverse(); // Most recent first
 
@@ -87,10 +94,7 @@ export function TradeHistory({ trades }: TradeHistoryProps) {
                         <span
                           className="h-2 w-2 rounded-full"
                           style={{
-                            backgroundColor:
-                              trade.asset === 'BTCUSDT'
-                                ? 'hsl(43, 96%, 56%)'
-                                : 'hsl(220, 100%, 60%)',
+                            backgroundColor: ASSET_COLORS[trade.asset] || 'hsl(220, 10%, 50%)',
                           }}
                         ></span>
                         <span className="font-medium">{info.symbol}</span>

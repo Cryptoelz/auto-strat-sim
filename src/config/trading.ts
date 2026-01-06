@@ -3,7 +3,7 @@ import { TradingConfig, TradingState, Asset } from '@/types/trading';
 export const DEFAULT_CONFIG: TradingConfig = {
   mode: 'manual',
   timeframe: '15m',
-  assets: ['BTCUSDT', 'XRPUSDT'],
+  assets: ['BTCUSDT', 'XRPUSDT', 'FETUSDT', 'XLMUSDT'],
   indicators: {
     fastSMA: 20,
     slowSMA: 50,
@@ -28,15 +28,21 @@ export const getInitialState = (): TradingState => ({
   positions: {
     BTCUSDT: null,
     XRPUSDT: null,
+    FETUSDT: null,
+    XLMUSDT: null,
   },
   trades: [],
   lastSignal: {
     BTCUSDT: null,
     XRPUSDT: null,
+    FETUSDT: null,
+    XLMUSDT: null,
   },
   lastTradeTime: {
     BTCUSDT: 0,
     XRPUSDT: 0,
+    FETUSDT: 0,
+    XLMUSDT: 0,
   },
   mode: 'manual',
   isRunning: false,
@@ -45,6 +51,8 @@ export const getInitialState = (): TradingState => ({
 export const ASSET_INFO: Record<Asset, { name: string; symbol: string; color: string }> = {
   BTCUSDT: { name: 'Bitcoin', symbol: 'BTC', color: 'trading-btc' },
   XRPUSDT: { name: 'Ripple', symbol: 'XRP', color: 'trading-xrp' },
+  FETUSDT: { name: 'Fetch.ai', symbol: 'FET', color: 'trading-fet' },
+  XLMUSDT: { name: 'Stellar', symbol: 'XLM', color: 'trading-xlm' },
 };
 
 export const CANDLE_LIMIT = 100; // Number of candles to fetch

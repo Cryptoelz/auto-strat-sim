@@ -16,14 +16,20 @@ export function useTradingEngine(config: TradingConfig = DEFAULT_CONFIG) {
   const [candles, setCandles] = useState<Record<Asset, Candle[]>>({
     BTCUSDT: [],
     XRPUSDT: [],
+    FETUSDT: [],
+    XLMUSDT: [],
   });
   const [prices, setPrices] = useState<Record<Asset, number | null>>({
     BTCUSDT: null,
     XRPUSDT: null,
+    FETUSDT: null,
+    XLMUSDT: null,
   });
   const [signals, setSignals] = useState<Record<Asset, Signal | null>>({
     BTCUSDT: null,
     XRPUSDT: null,
+    FETUSDT: null,
+    XLMUSDT: null,
   });
   const prevSignalsRef = useRef<Record<Asset, Signal | null> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,38 +39,47 @@ export function useTradingEngine(config: TradingConfig = DEFAULT_CONFIG) {
   // Fetch market data
   const fetchData = useCallback(async () => {
     try {
-      const [btcCandles, xrpCandles, currentPrices] = await Promise.all([
+      const [btcCandles, xrpCandles, fetCandles, xlmCandles, currentPrices] = await Promise.all([
         fetchCandles('BTCUSDT', config.timeframe),
         fetchCandles('XRPUSDT', config.timeframe),
+        fetchCandles('FETUSDT', config.timeframe),
+        fetchCandles('XLMUSDT', config.timeframe),
         fetchAllPrices(config.assets),
       ]);
 
       setCandles({
         BTCUSDT: btcCandles,
         XRPUSDT: xrpCandles,
+        FETUSDT: fetCandles,
+        XLMUSDT: xlmCandles,
       });
       setPrices(currentPrices);
       setLastUpdate(new Date());
 
-      // Generate signals
-      const btcSignal = generateSignal(
-        'BTCUSDT',
-        btcCandles,
-        config.indicators.fastSMA,
-        config.indicators.slowSMA
-      );
-      const xrpSignal = generateSignal(
-        'XRPUSDT',
-        xrpCandles,
-        config.indicators.fastSMA,
-        config.indicators.slowSMA
-      );
-
-      // Check for new signals and play sounds
-      const newSignals = {
-        BTCUSDT: btcSignal.signal,
-        XRPUSDT: xrpSignal.signal,
+      // Generate signals for all assets
+      const allCandles: Record<Asset, Candle[]> = {
+        BTCUSDT: btcCandles,
+        XRPUSDT: xrpCandles,
+        FETUSDT: fetCandles,
+        XLMUSDT: xlmCandles,
       };
+
+      const newSignals: Record<Asset, Signal | null> = {
+        BTCUSDT: null,
+        XRPUSDT: null,
+        FETUSDT: null,
+        XLMUSDT: null,
+      };
+
+      for (const asset of config.assets) {
+        const result = generateSignal(
+          asset,
+          allCandles[asset],
+          config.indicators.fastSMA,
+          config.indicators.slowSMA
+        );
+        newSignals[asset] = result.signal;
+      }
 
       // Play sound for new actionable signals
       for (const asset of config.assets) {

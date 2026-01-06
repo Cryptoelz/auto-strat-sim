@@ -58,13 +58,13 @@ const Index = () => {
   };
 
   const { permission, isSupported, requestPermission, sendSignalNotification } = useNotifications();
-  const prevSignalsRef = useRef<Record<Asset, string | null>>({ BTCUSDT: null, XRPUSDT: null });
+  const prevSignalsRef = useRef<Record<Asset, string | null>>({ BTCUSDT: null, XRPUSDT: null, FETUSDT: null, XLMUSDT: null });
 
   // Send notifications when signals change
   useEffect(() => {
     if (permission !== 'granted') return;
 
-    (['BTCUSDT', 'XRPUSDT'] as Asset[]).forEach((asset) => {
+    (['BTCUSDT', 'XRPUSDT', 'FETUSDT', 'XLMUSDT'] as Asset[]).forEach((asset) => {
       const signal = signals[asset];
       if (signal && signal.type !== 'HOLD') {
         const signalKey = `${signal.type}-${signal.timestamp}`;
@@ -114,10 +114,12 @@ const Index = () => {
 
       <main className="container mx-auto px-3 py-4 sm:px-4 sm:py-6">
         {/* Top cards row */}
-        <div className="mb-4 grid grid-cols-2 gap-2 sm:mb-6 sm:gap-4 lg:grid-cols-4">
+        <div className="mb-4 grid grid-cols-2 gap-2 sm:mb-6 sm:gap-4 lg:grid-cols-3 xl:grid-cols-6">
           <BalanceCard state={state} prices={prices} />
           <PriceCard asset="BTCUSDT" price={prices.BTCUSDT} />
           <PriceCard asset="XRPUSDT" price={prices.XRPUSDT} />
+          <PriceCard asset="FETUSDT" price={prices.FETUSDT} />
+          <PriceCard asset="XLMUSDT" price={prices.XLMUSDT} />
           <ModeCard
             mode={state.mode}
             isRunning={state.isRunning}
@@ -126,42 +128,27 @@ const Index = () => {
           />
         </div>
 
-        {/* Charts and signals row */}
-        <div className="mb-4 grid gap-4 sm:mb-6 sm:gap-6 lg:grid-cols-2">
-          <div className="space-y-3 sm:space-y-4">
-            <PriceChart
-              asset="BTCUSDT"
-              candles={candles.BTCUSDT}
-              position={state.positions.BTCUSDT}
-              fastSMA={strategyConfig.fastSMA}
-              slowSMA={strategyConfig.slowSMA}
-            />
-            <SignalAlert
-              asset="BTCUSDT"
-              signal={signals.BTCUSDT}
-              position={state.positions.BTCUSDT}
-              currentPrice={prices.BTCUSDT}
-              mode={state.mode}
-              onExecute={executeTrade}
-            />
-          </div>
-          <div className="space-y-3 sm:space-y-4">
-            <PriceChart
-              asset="XRPUSDT"
-              candles={candles.XRPUSDT}
-              position={state.positions.XRPUSDT}
-              fastSMA={strategyConfig.fastSMA}
-              slowSMA={strategyConfig.slowSMA}
-            />
-            <SignalAlert
-              asset="XRPUSDT"
-              signal={signals.XRPUSDT}
-              position={state.positions.XRPUSDT}
-              currentPrice={prices.XRPUSDT}
-              mode={state.mode}
-              onExecute={executeTrade}
-            />
-          </div>
+        {/* Charts and signals grid */}
+        <div className="mb-4 grid gap-4 sm:mb-6 sm:gap-6 md:grid-cols-2">
+          {(['BTCUSDT', 'XRPUSDT', 'FETUSDT', 'XLMUSDT'] as Asset[]).map((asset) => (
+            <div key={asset} className="space-y-3 sm:space-y-4">
+              <PriceChart
+                asset={asset}
+                candles={candles[asset]}
+                position={state.positions[asset]}
+                fastSMA={strategyConfig.fastSMA}
+                slowSMA={strategyConfig.slowSMA}
+              />
+              <SignalAlert
+                asset={asset}
+                signal={signals[asset]}
+                position={state.positions[asset]}
+                currentPrice={prices[asset]}
+                mode={state.mode}
+                onExecute={executeTrade}
+              />
+            </div>
+          ))}
         </div>
 
         {/* History and performance row */}
