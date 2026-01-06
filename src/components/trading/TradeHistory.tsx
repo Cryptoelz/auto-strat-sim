@@ -11,6 +11,7 @@ import { History, Download } from 'lucide-react';
 interface TradeNote {
   tradeId: string;
   note: string;
+  tags?: string[];
   updatedAt: number;
 }
 
@@ -18,11 +19,15 @@ function loadJournalNotes(): Record<string, TradeNote> {
   try {
     const saved = localStorage.getItem('trade-journal-notes');
     if (saved) {
-      const notes: TradeNote[] = JSON.parse(saved);
-      return notes.reduce((acc, note) => {
-        acc[note.tradeId] = note;
-        return acc;
-      }, {} as Record<string, TradeNote>);
+      const parsed = JSON.parse(saved);
+      // Handle both array format and object format
+      if (Array.isArray(parsed)) {
+        return parsed.reduce((acc, note) => {
+          acc[note.tradeId] = note;
+          return acc;
+        }, {} as Record<string, TradeNote>);
+      }
+      return parsed;
     }
   } catch (error) {
     console.error('Failed to load journal notes:', error);
@@ -40,10 +45,12 @@ function escapeCSVField(value: string): string {
 
 function exportToCSV(trades: Trade[]) {
   const notes = loadJournalNotes();
-  const headers = ['ID', 'Asset', 'Symbol', 'Type', 'Entry Price', 'Exit Price', 'Entry Time', 'Exit Time', 'PnL', 'PnL %', 'Exit Reason', 'Journal Note'];
+  const headers = ['ID', 'Asset', 'Symbol', 'Type', 'Entry Price', 'Exit Price', 'Entry Time', 'Exit Time', 'PnL', 'PnL %', 'Exit Reason', 'Tags', 'Journal Note'];
   const rows = trades.map(trade => {
     const info = ASSET_INFO[trade.asset];
-    const journalNote = notes[trade.id]?.note || '';
+    const tradeNote = notes[trade.id];
+    const journalNote = tradeNote?.note || '';
+    const tags = tradeNote?.tags?.join('; ') || '';
     return [
       trade.id,
       trade.asset,
@@ -56,6 +63,7 @@ function exportToCSV(trades: Trade[]) {
       trade.pnl.toFixed(2),
       (trade.pnlPercent * 100).toFixed(2) + '%',
       trade.exitReason,
+      escapeCSVField(tags),
       escapeCSVField(journalNote)
     ].join(',');
   });
