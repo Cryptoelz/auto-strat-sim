@@ -14,6 +14,7 @@ const Index = () => {
   const [strategyConfig, setStrategyConfig] = useState<StrategyConfig>({
     fastSMA: DEFAULT_CONFIG.indicators.fastSMA,
     slowSMA: DEFAULT_CONFIG.indicators.slowSMA,
+    positionSizePercent: DEFAULT_CONFIG.risk.positionSizePercent,
     stopLossPercent: DEFAULT_CONFIG.risk.stopLossPercent,
     takeProfitPercent: DEFAULT_CONFIG.risk.takeProfitPercent,
   });
@@ -27,6 +28,7 @@ const Index = () => {
     },
     risk: {
       ...DEFAULT_CONFIG.risk,
+      positionSizePercent: strategyConfig.positionSizePercent,
       stopLossPercent: strategyConfig.stopLossPercent,
       takeProfitPercent: strategyConfig.takeProfitPercent,
     },
