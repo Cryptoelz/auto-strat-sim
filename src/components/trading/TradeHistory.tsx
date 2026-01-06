@@ -1,11 +1,41 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Trade } from '@/types/trading';
 import { ASSET_INFO } from '@/config/trading';
 import { formatCurrency, formatPercent } from '@/lib/performance';
 import { format } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { History } from 'lucide-react';
+import { History, Download } from 'lucide-react';
+
+function exportToCSV(trades: Trade[]) {
+  const headers = ['ID', 'Asset', 'Symbol', 'Type', 'Entry Price', 'Exit Price', 'Entry Time', 'Exit Time', 'PnL', 'PnL %', 'Exit Reason'];
+  const rows = trades.map(trade => {
+    const info = ASSET_INFO[trade.asset];
+    return [
+      trade.id,
+      trade.asset,
+      info.symbol,
+      trade.type,
+      trade.entryPrice.toFixed(2),
+      trade.exitPrice.toFixed(2),
+      format(new Date(trade.entryTime), 'yyyy-MM-dd HH:mm:ss'),
+      format(new Date(trade.exitTime), 'yyyy-MM-dd HH:mm:ss'),
+      trade.pnl.toFixed(2),
+      (trade.pnlPercent * 100).toFixed(2) + '%',
+      trade.exitReason
+    ].join(',');
+  });
+  
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `trade-history-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
 
 interface TradeHistoryProps {
   trades: Trade[];
@@ -20,9 +50,21 @@ export function TradeHistory({ trades }: TradeHistoryProps) {
         <CardTitle className="flex items-center gap-2 text-base">
           <History className="h-4 w-4" />
           Trade History
-          <Badge variant="secondary" className="ml-auto">
-            {trades.length} trades
-          </Badge>
+          <div className="ml-auto flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => exportToCSV(trades)}
+              disabled={trades.length === 0}
+              className="h-6 px-2"
+            >
+              <Download className="h-3 w-3 mr-1" />
+              CSV
+            </Button>
+            <Badge variant="secondary">
+              {trades.length} trades
+            </Badge>
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent>
