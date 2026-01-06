@@ -1,5 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { RefreshCw, RotateCcw, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -57,6 +58,8 @@ export function DashboardHeader({
             <RotateCcw className="mr-2 h-4 w-4" />
             Reset
           </Button>
+
+          <ThemeToggle />
         </div>
       </div>
     </header>
