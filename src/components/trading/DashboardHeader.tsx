@@ -2,6 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { VolumeControl } from '@/components/VolumeControl';
+import { StrategySettings } from '@/components/StrategySettings';
 import { RefreshCw, RotateCcw, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -10,6 +11,8 @@ interface DashboardHeaderProps {
   isLoading: boolean;
   onRefresh: () => void;
   onReset: () => void;
+  onConfigChange: (config: { fastSMA: number; slowSMA: number }) => void;
+  smaConfig: { fastSMA: number; slowSMA: number };
 }
 
 export function DashboardHeader({
@@ -17,6 +20,8 @@ export function DashboardHeader({
   isLoading,
   onRefresh,
   onReset,
+  onConfigChange,
+  smaConfig,
 }: DashboardHeaderProps) {
   return (
     <header className="border-b border-border/50 bg-card/30 backdrop-blur">
@@ -27,25 +32,26 @@ export function DashboardHeader({
           <div className="flex items-center justify-between md:block">
             <div>
               <h1 className="text-lg font-bold md:text-2xl">Crypto Trading Simulator</h1>
-              <p className="text-xs text-muted-foreground md:text-sm">
-                SMA Crossover Strategy • SIMULATION ONLY
-              </p>
-            </div>
-            {/* Mobile only: theme and volume toggles */}
-            <div className="flex items-center gap-2 md:hidden">
-              <VolumeControl />
-              <ThemeToggle />
-            </div>
+            <p className="text-xs text-muted-foreground md:text-sm">
+              SMA {smaConfig.fastSMA}/{smaConfig.slowSMA} Crossover • SIMULATION ONLY
+            </p>
           </div>
+          {/* Mobile only: settings, theme and volume toggles */}
+          <div className="flex items-center gap-2 md:hidden">
+            <StrategySettings onConfigChange={onConfigChange} />
+            <VolumeControl />
+            <ThemeToggle />
+          </div>
+        </div>
 
-          {/* Controls section */}
-          <div className="flex flex-wrap items-center gap-2 md:gap-4">
-            {lastUpdate && (
-              <div className="hidden items-center gap-2 text-sm text-muted-foreground sm:flex">
-                <Clock className="h-4 w-4" />
-                <span>Updated {format(lastUpdate, 'HH:mm:ss')}</span>
-              </div>
-            )}
+        {/* Controls section */}
+        <div className="flex flex-wrap items-center gap-2 md:gap-4">
+          {lastUpdate && (
+            <div className="hidden items-center gap-2 text-sm text-muted-foreground sm:flex">
+              <Clock className="h-4 w-4" />
+              <span>Updated {format(lastUpdate, 'HH:mm:ss')}</span>
+            </div>
+          )}
 
             <Badge variant="outline" className="border-primary/50 bg-primary/10 text-primary text-xs">
               PAPER TRADING
@@ -72,14 +78,15 @@ export function DashboardHeader({
               <span className="hidden md:inline">Reset</span>
             </Button>
 
-            {/* Desktop only: theme and volume toggles */}
-            <div className="hidden items-center gap-2 md:flex">
-              <VolumeControl />
-              <ThemeToggle />
-            </div>
+          {/* Desktop only: settings, theme and volume toggles */}
+          <div className="hidden items-center gap-2 md:flex">
+            <StrategySettings onConfigChange={onConfigChange} />
+            <VolumeControl />
+            <ThemeToggle />
           </div>
         </div>
       </div>
-    </header>
-  );
+    </div>
+  </header>
+);
 }

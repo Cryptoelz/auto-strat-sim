@@ -1,3 +1,4 @@
+import { useState, useMemo } from 'react';
 import { useTradingEngine } from '@/hooks/useTradingEngine';
 import { DashboardHeader } from '@/components/trading/DashboardHeader';
 import { BalanceCard, PriceCard, ModeCard } from '@/components/trading/DashboardCards';
@@ -6,8 +7,23 @@ import { SignalAlert } from '@/components/trading/SignalAlert';
 import { TradeHistory } from '@/components/trading/TradeHistory';
 import { PerformanceStats } from '@/components/trading/PerformanceStats';
 import { Skeleton } from '@/components/ui/skeleton';
+import { DEFAULT_CONFIG } from '@/config/trading';
 
 const Index = () => {
+  const [smaConfig, setSmaConfig] = useState({
+    fastSMA: DEFAULT_CONFIG.indicators.fastSMA,
+    slowSMA: DEFAULT_CONFIG.indicators.slowSMA,
+  });
+
+  const config = useMemo(() => ({
+    ...DEFAULT_CONFIG,
+    indicators: {
+      ...DEFAULT_CONFIG.indicators,
+      fastSMA: smaConfig.fastSMA,
+      slowSMA: smaConfig.slowSMA,
+    },
+  }), [smaConfig.fastSMA, smaConfig.slowSMA]);
+
   const {
     state,
     candles,
@@ -20,7 +36,11 @@ const Index = () => {
     toggleRunning,
     reset,
     refetch,
-  } = useTradingEngine();
+  } = useTradingEngine(config);
+
+  const handleConfigChange = (newConfig: { fastSMA: number; slowSMA: number }) => {
+    setSmaConfig(newConfig);
+  };
 
   if (isLoading) {
     return (
@@ -51,6 +71,8 @@ const Index = () => {
         isLoading={isLoading}
         onRefresh={refetch}
         onReset={reset}
+        onConfigChange={handleConfigChange}
+        smaConfig={smaConfig}
       />
 
       <main className="container mx-auto px-3 py-4 sm:px-4 sm:py-6">
@@ -74,6 +96,8 @@ const Index = () => {
               asset="BTCUSDT"
               candles={candles.BTCUSDT}
               position={state.positions.BTCUSDT}
+              fastSMA={smaConfig.fastSMA}
+              slowSMA={smaConfig.slowSMA}
             />
             <SignalAlert
               asset="BTCUSDT"
@@ -89,6 +113,8 @@ const Index = () => {
               asset="XRPUSDT"
               candles={candles.XRPUSDT}
               position={state.positions.XRPUSDT}
+              fastSMA={smaConfig.fastSMA}
+              slowSMA={smaConfig.slowSMA}
             />
             <SignalAlert
               asset="XRPUSDT"

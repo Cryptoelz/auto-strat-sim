@@ -19,16 +19,20 @@ interface PriceChartProps {
   asset: Asset;
   candles: Candle[];
   position?: { entryPrice: number } | null;
+  fastSMA?: number;
+  slowSMA?: number;
 }
 
-export function PriceChart({ asset, candles, position }: PriceChartProps) {
+export function PriceChart({ asset, candles, position, fastSMA, slowSMA }: PriceChartProps) {
   const info = ASSET_INFO[asset];
+  const fastPeriod = fastSMA ?? DEFAULT_CONFIG.indicators.fastSMA;
+  const slowPeriod = slowSMA ?? DEFAULT_CONFIG.indicators.slowSMA;
 
   const chartData = useMemo(() => {
     if (candles.length === 0) return [];
 
-    const fastSMA = calculateSMASeries(candles, DEFAULT_CONFIG.indicators.fastSMA);
-    const slowSMA = calculateSMASeries(candles, DEFAULT_CONFIG.indicators.slowSMA);
+    const fastSMAValues = calculateSMASeries(candles, fastPeriod);
+    const slowSMAValues = calculateSMASeries(candles, slowPeriod);
 
     return candles.map((candle, index) => ({
       time: candle.timestamp,
@@ -37,14 +41,14 @@ export function PriceChart({ asset, candles, position }: PriceChartProps) {
       low: candle.low,
       close: candle.close,
       volume: candle.volume,
-      smaFast: fastSMA[index],
-      smaSlow: slowSMA[index],
+      smaFast: fastSMAValues[index],
+      smaSlow: slowSMAValues[index],
       // For candlestick visualization
       isUp: candle.close >= candle.open,
       body: Math.abs(candle.close - candle.open),
       bodyBottom: Math.min(candle.open, candle.close),
     }));
-  }, [candles]);
+  }, [candles, fastPeriod, slowPeriod]);
 
   // Calculate domain for Y axis
   const [minPrice, maxPrice] = useMemo(() => {
@@ -93,11 +97,11 @@ export function PriceChart({ asset, candles, position }: PriceChartProps) {
         <div className="flex gap-4 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
             <span className="h-2 w-2 rounded-full bg-trading-sma-fast"></span>
-            SMA 20
+            SMA {fastPeriod}
           </span>
           <span className="flex items-center gap-1">
             <span className="h-2 w-2 rounded-full bg-trading-sma-slow"></span>
-            SMA 50
+            SMA {slowPeriod}
           </span>
         </div>
       </CardHeader>
@@ -132,8 +136,8 @@ export function PriceChart({ asset, candles, position }: PriceChartProps) {
                 }}
                 labelFormatter={(time) => format(new Date(time), 'MMM dd, HH:mm')}
                 formatter={(value: number, name: string) => {
-                  if (name === 'smaFast') return [`$${value?.toFixed(2)}`, 'SMA 20'];
-                  if (name === 'smaSlow') return [`$${value?.toFixed(2)}`, 'SMA 50'];
+                  if (name === 'smaFast') return [`$${value?.toFixed(2)}`, `SMA ${fastPeriod}`];
+                  if (name === 'smaSlow') return [`$${value?.toFixed(2)}`, `SMA ${slowPeriod}`];
                   return [`$${value?.toFixed(2)}`, name];
                 }}
               />
