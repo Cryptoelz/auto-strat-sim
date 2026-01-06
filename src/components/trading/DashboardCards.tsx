@@ -29,20 +29,20 @@ export function BalanceCard({ state, prices }: BalanceCardProps) {
   return (
     <Card className="border-border/50 bg-card/50 backdrop-blur">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
+        <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
           Portfolio Value
         </CardTitle>
         <Wallet className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
-      <CardContent>
-        <div className="text-3xl font-bold">{formatCurrency(totalValue)}</div>
-        <div className="mt-2 flex items-center gap-2">
+      <CardContent className="pt-0">
+        <div className="text-xl font-bold sm:text-2xl md:text-3xl">{formatCurrency(totalValue)}</div>
+        <div className="mt-1.5 flex flex-wrap items-center gap-1.5 sm:mt-2 sm:gap-2">
           <Badge
             variant="outline"
             className={
               isProfit
-                ? 'border-trading-profit/50 bg-trading-profit/10 text-trading-profit'
-                : 'border-trading-loss/50 bg-trading-loss/10 text-trading-loss'
+                ? 'border-trading-profit/50 bg-trading-profit/10 text-trading-profit text-xs'
+                : 'border-trading-loss/50 bg-trading-loss/10 text-trading-loss text-xs'
             }
           >
             {isProfit ? (
@@ -52,11 +52,11 @@ export function BalanceCard({ state, prices }: BalanceCardProps) {
             )}
             {formatPercent(pnlPercent)}
           </Badge>
-          <span className="text-sm text-muted-foreground">
+          <span className="text-xs text-muted-foreground sm:text-sm">
             ({isProfit ? '+' : ''}{formatCurrency(pnl)})
           </span>
         </div>
-        <div className="mt-4 text-sm text-muted-foreground">
+        <div className="mt-3 text-xs text-muted-foreground sm:mt-4 sm:text-sm">
           Available: {formatCurrency(state.balance)}
         </div>
       </CardContent>
@@ -78,15 +78,15 @@ export function PriceCard({ asset, price, previousPrice }: PriceCardProps) {
   return (
     <Card className="border-border/50 bg-card/50 backdrop-blur">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
+        <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
           {info.name}
         </CardTitle>
-        <Badge variant="outline" className={`text-${info.color}`}>
+        <Badge variant="outline" className={`text-${info.color} text-xs`}>
           {info.symbol}
         </Badge>
       </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">
+      <CardContent className="pt-0">
+        <div className="text-lg font-bold sm:text-xl md:text-2xl">
           {price ? formatCurrency(price) : '---'}
         </div>
         {previousPrice && price && (
@@ -97,7 +97,7 @@ export function PriceCard({ asset, price, previousPrice }: PriceCardProps) {
               <TrendingDown className="h-3 w-3 text-trading-loss" />
             )}
             <span
-              className={isUp ? 'text-trading-profit text-sm' : 'text-trading-loss text-sm'}
+              className={isUp ? 'text-trading-profit text-xs sm:text-sm' : 'text-trading-loss text-xs sm:text-sm'}
             >
               {formatPercent(priceChange)}
             </span>
@@ -119,16 +119,16 @@ export function ModeCard({ mode, isRunning, onToggleMode, onToggleRunning }: Mod
   return (
     <Card className="border-border/50 bg-card/50 backdrop-blur">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
+        <CardTitle className="text-xs font-medium text-muted-foreground sm:text-sm">
           Trading Mode
         </CardTitle>
         <Activity className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
-      <CardContent>
-        <div className="flex items-center gap-3">
+      <CardContent className="pt-0">
+        <div className="flex items-center gap-2">
           <button
             onClick={onToggleMode}
-            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-4 sm:py-2 sm:text-sm ${
               mode === 'auto'
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
@@ -138,7 +138,7 @@ export function ModeCard({ mode, isRunning, onToggleMode, onToggleRunning }: Mod
           </button>
           <button
             onClick={onToggleMode}
-            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-4 sm:py-2 sm:text-sm ${
               mode === 'manual'
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
@@ -150,13 +150,13 @@ export function ModeCard({ mode, isRunning, onToggleMode, onToggleRunning }: Mod
         {mode === 'auto' && (
           <button
             onClick={onToggleRunning}
-            className={`mt-3 w-full rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            className={`mt-2.5 w-full rounded-lg px-3 py-1.5 text-xs font-medium transition-colors sm:mt-3 sm:px-4 sm:py-2 sm:text-sm ${
               isRunning
                 ? 'bg-trading-loss text-trading-loss-foreground'
                 : 'bg-trading-profit text-trading-profit-foreground'
             }`}
           >
-            {isRunning ? 'Pause Simulation' : 'Start Simulation'}
+            {isRunning ? 'Pause' : 'Start'}
           </button>
         )}
       </CardContent>
