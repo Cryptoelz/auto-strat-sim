@@ -6,6 +6,7 @@ import { generateSignal, isInCooldown, CANDLE_INTERVAL_MS } from '@/lib/signalEn
 import { checkAndExecuteRiskLimits, openPosition, closePosition } from '@/lib/executionSimulator';
 import { saveState, loadState, resetState } from '@/lib/stateManager';
 import { canExecuteTrade } from '@/lib/riskManager';
+import { playSignalSound } from '@/lib/sounds';
 import { toast } from 'sonner';
 
 const POLL_INTERVAL = 60000; // 1 minute
@@ -21,6 +22,10 @@ export function useTradingEngine(config: TradingConfig = DEFAULT_CONFIG) {
     XRPUSDT: null,
   });
   const [signals, setSignals] = useState<Record<Asset, Signal | null>>({
+    BTCUSDT: null,
+    XRPUSDT: null,
+  });
+  const prevSignalsRef = useRef<Record<Asset, Signal | null>>({
     BTCUSDT: null,
     XRPUSDT: null,
   });
@@ -58,10 +63,27 @@ export function useTradingEngine(config: TradingConfig = DEFAULT_CONFIG) {
         config.indicators.slowSMA
       );
 
-      setSignals({
+      // Check for new signals and play sounds
+      const newSignals = {
         BTCUSDT: btcSignal.signal,
         XRPUSDT: xrpSignal.signal,
-      });
+      };
+
+      // Play sound for new actionable signals
+      for (const asset of config.assets) {
+        const newSig = newSignals[asset];
+        const prevSig = prevSignalsRef.current[asset];
+        
+        if (newSig && (newSig.type === 'BUY' || newSig.type === 'SELL')) {
+          // Play sound if this is a new signal or signal type changed
+          if (!prevSig || prevSig.type !== newSig.type) {
+            playSignalSound(newSig.type);
+          }
+        }
+      }
+
+      prevSignalsRef.current = newSignals;
+      setSignals(newSignals);
 
       // Check risk limits (stop loss / take profit)
       setState((prev) => {
