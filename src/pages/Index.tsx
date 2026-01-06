@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useTradingEngine } from '@/hooks/useTradingEngine';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { usePnlAlerts } from '@/hooks/usePnlAlerts';
 import { DashboardHeader } from '@/components/trading/DashboardHeader';
 import { BalanceCard, PriceCard, ModeCard } from '@/components/trading/DashboardCards';
 import { PriceChart } from '@/components/trading/PriceChart';
@@ -26,6 +27,8 @@ const Index = () => {
     positionSizePercent: DEFAULT_CONFIG.risk.positionSizePercent,
     stopLossPercent: DEFAULT_CONFIG.risk.stopLossPercent,
     takeProfitPercent: DEFAULT_CONFIG.risk.takeProfitPercent,
+    pnlAlertProfit: null,
+    pnlAlertLoss: null,
   });
 
   const config = useMemo(() => ({
@@ -62,6 +65,13 @@ const Index = () => {
   const handleConfigChange = (newConfig: StrategyConfig) => {
     setStrategyConfig(newConfig);
   };
+
+  // P&L Alerts
+  usePnlAlerts({
+    state,
+    profitTarget: strategyConfig.pnlAlertProfit,
+    lossLimit: strategyConfig.pnlAlertLoss,
+  });
 
   // Keyboard shortcuts
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);

@@ -39,6 +39,8 @@ export interface StrategyConfig {
   positionSizePercent: number;
   stopLossPercent: number;
   takeProfitPercent: number;
+  pnlAlertProfit: number | null;
+  pnlAlertLoss: number | null;
 }
 
 const STORAGE_KEY = 'strategy-config';
@@ -56,6 +58,8 @@ function loadConfig(): StrategyConfig {
         positionSizePercent: parsed.positionSizePercent ?? DEFAULT_CONFIG.risk.positionSizePercent,
         stopLossPercent: parsed.stopLossPercent ?? DEFAULT_CONFIG.risk.stopLossPercent,
         takeProfitPercent: parsed.takeProfitPercent ?? DEFAULT_CONFIG.risk.takeProfitPercent,
+        pnlAlertProfit: parsed.pnlAlertProfit ?? null,
+        pnlAlertLoss: parsed.pnlAlertLoss ?? null,
       };
     }
   } catch {
@@ -69,6 +73,8 @@ function loadConfig(): StrategyConfig {
     positionSizePercent: DEFAULT_CONFIG.risk.positionSizePercent,
     stopLossPercent: DEFAULT_CONFIG.risk.stopLossPercent,
     takeProfitPercent: DEFAULT_CONFIG.risk.takeProfitPercent,
+    pnlAlertProfit: null,
+    pnlAlertLoss: null,
   };
 }
 
@@ -89,6 +95,8 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
   const [positionSizeInput, setPositionSizeInput] = useState(config.positionSizePercent.toString());
   const [stopLossInput, setStopLossInput] = useState(config.stopLossPercent.toString());
   const [takeProfitInput, setTakeProfitInput] = useState(config.takeProfitPercent.toString());
+  const [pnlAlertProfitInput, setPnlAlertProfitInput] = useState(config.pnlAlertProfit?.toString() ?? '');
+  const [pnlAlertLossInput, setPnlAlertLossInput] = useState(config.pnlAlertLoss?.toString() ?? '');
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
 
@@ -113,10 +121,20 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
     const positionSize = parseFloat(positionSizeInput);
     const stopLoss = parseFloat(stopLossInput);
     const takeProfit = parseFloat(takeProfitInput);
+    const pnlProfit = pnlAlertProfitInput.trim() ? parseFloat(pnlAlertProfitInput) : null;
+    const pnlLoss = pnlAlertLossInput.trim() ? parseFloat(pnlAlertLossInput) : null;
 
     // Validation
     if (isNaN(fast) || isNaN(slow) || isNaN(positionSize) || isNaN(stopLoss) || isNaN(takeProfit)) {
       setError('Please enter valid numbers');
+      return;
+    }
+    if (pnlProfit !== null && isNaN(pnlProfit)) {
+      setError('Profit target must be a valid number');
+      return;
+    }
+    if (pnlLoss !== null && isNaN(pnlLoss)) {
+      setError('Loss limit must be a valid number');
       return;
     }
     if (fast < 2 || fast > 200) {
@@ -153,6 +171,8 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
       positionSizePercent: positionSize,
       stopLossPercent: stopLoss,
       takeProfitPercent: takeProfit,
+      pnlAlertProfit: pnlProfit,
+      pnlAlertLoss: pnlLoss,
     };
     setConfig(newConfig);
     saveConfig(newConfig);
@@ -169,6 +189,8 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
       positionSizePercent: DEFAULT_CONFIG.risk.positionSizePercent,
       stopLossPercent: DEFAULT_CONFIG.risk.stopLossPercent,
       takeProfitPercent: DEFAULT_CONFIG.risk.takeProfitPercent,
+      pnlAlertProfit: null,
+      pnlAlertLoss: null,
     };
     setTimeframeInput(defaultConfig.timeframe);
     setEnabledAssetsInput(defaultConfig.enabledAssets);
@@ -177,6 +199,8 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
     setPositionSizeInput(defaultConfig.positionSizePercent.toString());
     setStopLossInput(defaultConfig.stopLossPercent.toString());
     setTakeProfitInput(defaultConfig.takeProfitPercent.toString());
+    setPnlAlertProfitInput('');
+    setPnlAlertLossInput('');
     setConfig(defaultConfig);
     saveConfig(defaultConfig);
     onConfigChange(defaultConfig);
@@ -332,6 +356,45 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
             </div>
           </div>
 
+          <Separator />
+
+          {/* P&L Alerts */}
+          <div className="space-y-3">
+            <p className="text-xs font-medium text-muted-foreground">P&L Alerts (optional)</p>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label htmlFor="pnl-profit" className="text-xs">
+                  Profit Target $
+                </Label>
+                <Input
+                  id="pnl-profit"
+                  type="number"
+                  min={0}
+                  step={100}
+                  placeholder="e.g. 500"
+                  value={pnlAlertProfitInput}
+                  onChange={(e) => setPnlAlertProfitInput(e.target.value)}
+                  className="h-8"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="pnl-loss" className="text-xs">
+                  Loss Limit $
+                </Label>
+                <Input
+                  id="pnl-loss"
+                  type="number"
+                  min={0}
+                  step={100}
+                  placeholder="e.g. 200"
+                  value={pnlAlertLossInput}
+                  onChange={(e) => setPnlAlertLossInput(e.target.value)}
+                  className="h-8"
+                />
+              </div>
+            </div>
+          </div>
+
           {error && (
             <p className="text-xs text-destructive">{error}</p>
           )}
@@ -346,7 +409,7 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
           </div>
 
           <p className="text-xs text-muted-foreground">
-            {config.timeframe} • SMA {config.fastSMA}/{config.slowSMA} • Size {config.positionSizePercent}% • SL {config.stopLossPercent}%/TP {config.takeProfitPercent}%
+            {config.timeframe} • SMA {config.fastSMA}/{config.slowSMA} • Size {config.positionSizePercent}%
           </p>
         </div>
       </PopoverContent>
