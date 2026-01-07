@@ -21,6 +21,7 @@ import { DrawdownRecoveryCard } from '@/components/backtest/DrawdownRecoveryCard
 import { StreakImpactCard } from '@/components/backtest/StreakImpactCard';
 import { TradeQualityScoreCard } from '@/components/backtest/TradeQualityScoreCard';
 import { OptimalTradeFilterCard } from '@/components/backtest/OptimalTradeFilterCard';
+import { StrategyOptimizer } from '@/components/backtest/StrategyOptimizer';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -4016,6 +4017,24 @@ export default function Backtest() {
               )}
             </CardContent>
           </Card>
+
+          {/* Strategy Optimizer */}
+          <StrategyOptimizer
+            assets={enabledAssets}
+            startDate={startDate}
+            endDate={endDate}
+            timeframe={timeframe}
+            initialBalance={initialBalance}
+            positionSizePercent={positionSizePercent}
+            stopLossPercent={stopLossPercent}
+            takeProfitPercent={takeProfitPercent}
+            currentFastSMA={fastSMA}
+            currentSlowSMA={slowSMA}
+            onApplyOptimal={(fast, slow) => {
+              setFastSMA(fast);
+              setSlowSMA(slow);
+            }}
+          />
 
           {/* Results Panel */}
           <div className="lg:col-span-2">
