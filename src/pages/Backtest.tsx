@@ -10,6 +10,7 @@ import { ProfitFactorCard } from '@/components/backtest/ProfitFactorCard';
 import { TradeExpectancyCard } from '@/components/backtest/TradeExpectancyCard';
 import { RecoveryFactorCard } from '@/components/backtest/RecoveryFactorCard';
 import { PayoffRatioCard } from '@/components/backtest/PayoffRatioCard';
+import { TradeSizeAnalysisCard } from '@/components/backtest/TradeSizeAnalysisCard';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -3010,6 +3011,11 @@ function ResultsDisplay({ result, fastSMA, slowSMA }: { result: BacktestResult; 
       {/* Payoff Ratio */}
       {result.trades.length >= 2 && (
         <PayoffRatioCard trades={result.trades} />
+      )}
+
+      {/* Trade Size Analysis */}
+      {result.trades.length >= 5 && (
+        <TradeSizeAnalysisCard trades={result.trades} />
       )}
 
       {/* Detailed Stats */}
