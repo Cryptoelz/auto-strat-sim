@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { EquityPoint } from '@/hooks/useBacktest';
+import { EquityPoint } from '@/types/backtest';
 import { format } from 'date-fns';
 import { TrendingDown } from 'lucide-react';
 import {

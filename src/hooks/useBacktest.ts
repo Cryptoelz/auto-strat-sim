@@ -3,8 +3,6 @@ import { Asset, Candle } from '@/types/trading';
 import { BacktestConfig, BacktestTrade, BacktestResult, EquityPoint } from '@/types/backtest';
 import { calculateSMASeries, detectCrossover } from '@/lib/indicators';
 
-export type { BacktestConfig, BacktestTrade, BacktestResult, EquityPoint } from '@/types/backtest';
-
 const BINANCE_API = 'https://api.binance.com/api/v3';
 
 // Timeframe to milliseconds mapping
