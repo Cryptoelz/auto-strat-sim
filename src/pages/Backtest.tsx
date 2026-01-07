@@ -6,6 +6,7 @@ import { RiskOfRuinCard } from '@/components/backtest/RiskOfRuinCard';
 import { PnLDistributionChart } from '@/components/backtest/PnLDistributionChart';
 import { RiskAdjustedReturnsCard } from '@/components/backtest/RiskAdjustedReturnsCard';
 import { StreakProbabilityCard } from '@/components/backtest/StreakProbabilityCard';
+import { ProfitFactorCard } from '@/components/backtest/ProfitFactorCard';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -2986,6 +2987,11 @@ function ResultsDisplay({ result, fastSMA, slowSMA }: { result: BacktestResult; 
       {/* Streak Probability Analysis */}
       {result.trades.length >= 5 && (
         <StreakProbabilityCard trades={result.trades} />
+      )}
+
+      {/* Profit Factor */}
+      {result.trades.length >= 2 && (
+        <ProfitFactorCard trades={result.trades} />
       )}
 
       {/* Detailed Stats */}
