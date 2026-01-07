@@ -22,6 +22,7 @@ import { StreakImpactCard } from '@/components/backtest/StreakImpactCard';
 import { TradeQualityScoreCard } from '@/components/backtest/TradeQualityScoreCard';
 import { OptimalTradeFilterCard } from '@/components/backtest/OptimalTradeFilterCard';
 import { StrategyOptimizer } from '@/components/backtest/StrategyOptimizer';
+import { WalkForwardAnalysis } from '@/components/backtest/WalkForwardAnalysis';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -4034,6 +4035,20 @@ export default function Backtest() {
               setFastSMA(fast);
               setSlowSMA(slow);
             }}
+          />
+
+          {/* Walk-Forward Analysis */}
+          <WalkForwardAnalysis
+            assets={enabledAssets}
+            startDate={startDate}
+            endDate={endDate}
+            timeframe={timeframe}
+            initialBalance={initialBalance}
+            positionSizePercent={positionSizePercent}
+            stopLossPercent={stopLossPercent}
+            takeProfitPercent={takeProfitPercent}
+            fastSMARange={{ min: 5, max: 30, step: 5 }}
+            slowSMARange={{ min: 20, max: 100, step: 10 }}
           />
 
           {/* Results Panel */}
