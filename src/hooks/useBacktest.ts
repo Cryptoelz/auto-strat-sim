@@ -1,56 +1,11 @@
 import { useState, useCallback } from 'react';
-import { Asset, Candle, Trade } from '@/types/trading';
+import { Asset, Candle } from '@/types/trading';
+import { BacktestConfig, BacktestTrade, BacktestResult, EquityPoint } from '@/types/backtest';
 import { calculateSMASeries, detectCrossover } from '@/lib/indicators';
 
+export type { BacktestConfig, BacktestTrade, BacktestResult, EquityPoint } from '@/types/backtest';
+
 const BINANCE_API = 'https://api.binance.com/api/v3';
-
-export interface BacktestConfig {
-  assets: Asset[];
-  startDate: Date;
-  endDate: Date;
-  timeframe: '5m' | '15m' | '1h' | '4h';
-  fastSMA: number;
-  slowSMA: number;
-  initialBalance: number;
-  positionSizePercent: number;
-  stopLossPercent: number;
-  takeProfitPercent: number;
-  feePercent: number;
-}
-
-export interface BacktestTrade extends Trade {
-  entryReason: 'signal';
-}
-
-export interface EquityPoint {
-  timestamp: number;
-  balance: number;
-  drawdown: number;
-}
-
-export interface BacktestResult {
-  trades: BacktestTrade[];
-  finalBalance: number;
-  totalPnl: number;
-  totalPnlPercent: number;
-  winRate: number;
-  totalTrades: number;
-  winningTrades: number;
-  losingTrades: number;
-  maxDrawdown: number;
-  sharpeRatio: number;
-  sortinoRatio: number;
-  calmarRatio: number;
-  profitFactor: number;
-  averageWin: number;
-  averageLoss: number;
-  equityCurve: EquityPoint[];
-  assetResults: Record<Asset, {
-    trades: number;
-    pnl: number;
-    winRate: number;
-  }>;
-}
 
 // Timeframe to milliseconds mapping
 const TIMEFRAME_MS: Record<string, number> = {

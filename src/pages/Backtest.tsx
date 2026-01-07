@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useBacktest, BacktestConfig, BacktestResult } from '@/hooks/useBacktest';
+import { useBacktest } from '@/hooks/useBacktest';
+import { BacktestConfig, SavedRun } from '@/types/backtest';
 import { StrategyOptimizer } from '@/components/backtest/StrategyOptimizer';
 import { WalkForwardAnalysis } from '@/components/backtest/WalkForwardAnalysis';
 import { ResultsDisplay } from '@/components/backtest/ResultsDisplay';
 import { ComparisonTable } from '@/components/backtest/ComparisonTable';
 import { 
-  SavedRun, 
   loadSavedRuns, 
   saveSavedRuns, 
   exportResultToCSV, 
