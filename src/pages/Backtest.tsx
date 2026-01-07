@@ -16,6 +16,7 @@ import { VolatilityAnalysisCard } from '@/components/backtest/VolatilityAnalysis
 import { AssetCorrelationCard } from '@/components/backtest/AssetCorrelationCard';
 import { MaeMfeAnalysisCard } from '@/components/backtest/MaeMfeAnalysisCard';
 import { TradeTimingCard } from '@/components/backtest/TradeTimingCard';
+import { PositionSizingCard } from '@/components/backtest/PositionSizingCard';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -2872,7 +2873,7 @@ function ParameterSensitivityCard({
   );
 }
 
-function ResultsDisplay({ result, fastSMA, slowSMA, stopLossPercent, takeProfitPercent }: { result: BacktestResult; fastSMA: number; slowSMA: number; stopLossPercent: number; takeProfitPercent: number }) {
+function ResultsDisplay({ result, fastSMA, slowSMA, stopLossPercent, takeProfitPercent, positionSizePercent }: { result: BacktestResult; fastSMA: number; slowSMA: number; stopLossPercent: number; takeProfitPercent: number; positionSizePercent: number }) {
   const pnlTrend = result.totalPnl >= 0 ? 'up' : 'down';
   const initialBalance = result.equityCurve.length > 0 ? result.equityCurve[0].balance : 10000;
 
@@ -3050,6 +3051,15 @@ function ResultsDisplay({ result, fastSMA, slowSMA, stopLossPercent, takeProfitP
       {/* Trade Timing Optimization */}
       {result.trades.length >= 5 && (
         <TradeTimingCard trades={result.trades} />
+      )}
+
+      {/* Position Sizing Analysis */}
+      {result.trades.length >= 5 && (
+        <PositionSizingCard 
+          trades={result.trades} 
+          initialBalance={initialBalance} 
+          currentPositionSize={positionSizePercent} 
+        />
       )}
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -3760,7 +3770,7 @@ export default function Backtest() {
               <ComparisonTable runs={savedRuns} onRemove={deleteRun} />
             )}
 
-            {result && !showComparison && <ResultsDisplay result={result} fastSMA={fastSMA} slowSMA={slowSMA} stopLossPercent={stopLossPercent} takeProfitPercent={takeProfitPercent} />}
+            {result && !showComparison && <ResultsDisplay result={result} fastSMA={fastSMA} slowSMA={slowSMA} stopLossPercent={stopLossPercent} takeProfitPercent={takeProfitPercent} positionSizePercent={positionSizePercent} />}
           </div>
         </div>
       </main>
