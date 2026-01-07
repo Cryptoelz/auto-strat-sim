@@ -15,6 +15,7 @@ import { MarketRegimeCard } from '@/components/backtest/MarketRegimeCard';
 import { VolatilityAnalysisCard } from '@/components/backtest/VolatilityAnalysisCard';
 import { AssetCorrelationCard } from '@/components/backtest/AssetCorrelationCard';
 import { MaeMfeAnalysisCard } from '@/components/backtest/MaeMfeAnalysisCard';
+import { TradeTimingCard } from '@/components/backtest/TradeTimingCard';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -3046,7 +3047,11 @@ function ResultsDisplay({ result, fastSMA, slowSMA, stopLossPercent, takeProfitP
         />
       )}
 
-      {/* Detailed Stats */}
+      {/* Trade Timing Optimization */}
+      {result.trades.length >= 5 && (
+        <TradeTimingCard trades={result.trades} />
+      )}
+
       <div className="grid gap-4 md:grid-cols-2">
         <Card className="border-border/50 bg-card/50 backdrop-blur">
           <CardHeader className="pb-2">
