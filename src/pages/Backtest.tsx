@@ -14,6 +14,7 @@ import { TradeSizeAnalysisCard } from '@/components/backtest/TradeSizeAnalysisCa
 import { MarketRegimeCard } from '@/components/backtest/MarketRegimeCard';
 import { VolatilityAnalysisCard } from '@/components/backtest/VolatilityAnalysisCard';
 import { AssetCorrelationCard } from '@/components/backtest/AssetCorrelationCard';
+import { MaeMfeAnalysisCard } from '@/components/backtest/MaeMfeAnalysisCard';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -2870,7 +2871,7 @@ function ParameterSensitivityCard({
   );
 }
 
-function ResultsDisplay({ result, fastSMA, slowSMA }: { result: BacktestResult; fastSMA: number; slowSMA: number }) {
+function ResultsDisplay({ result, fastSMA, slowSMA, stopLossPercent, takeProfitPercent }: { result: BacktestResult; fastSMA: number; slowSMA: number; stopLossPercent: number; takeProfitPercent: number }) {
   const pnlTrend = result.totalPnl >= 0 ? 'up' : 'down';
   const initialBalance = result.equityCurve.length > 0 ? result.equityCurve[0].balance : 10000;
 
@@ -3034,6 +3035,15 @@ function ResultsDisplay({ result, fastSMA, slowSMA }: { result: BacktestResult; 
       {/* Asset Correlation Matrix */}
       {result.trades.length >= 5 && (
         <AssetCorrelationCard trades={result.trades} />
+      )}
+
+      {/* MAE/MFE Analysis */}
+      {result.trades.length >= 5 && (
+        <MaeMfeAnalysisCard 
+          trades={result.trades} 
+          stopLossPercent={stopLossPercent} 
+          takeProfitPercent={takeProfitPercent} 
+        />
       )}
 
       {/* Detailed Stats */}
@@ -3745,7 +3755,7 @@ export default function Backtest() {
               <ComparisonTable runs={savedRuns} onRemove={deleteRun} />
             )}
 
-            {result && !showComparison && <ResultsDisplay result={result} fastSMA={fastSMA} slowSMA={slowSMA} />}
+            {result && !showComparison && <ResultsDisplay result={result} fastSMA={fastSMA} slowSMA={slowSMA} stopLossPercent={stopLossPercent} takeProfitPercent={takeProfitPercent} />}
           </div>
         </div>
       </main>
