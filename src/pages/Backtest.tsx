@@ -11,6 +11,7 @@ import { TradeExpectancyCard } from '@/components/backtest/TradeExpectancyCard';
 import { RecoveryFactorCard } from '@/components/backtest/RecoveryFactorCard';
 import { PayoffRatioCard } from '@/components/backtest/PayoffRatioCard';
 import { TradeSizeAnalysisCard } from '@/components/backtest/TradeSizeAnalysisCard';
+import { MarketRegimeCard } from '@/components/backtest/MarketRegimeCard';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -3016,6 +3017,11 @@ function ResultsDisplay({ result, fastSMA, slowSMA }: { result: BacktestResult; 
       {/* Trade Size Analysis */}
       {result.trades.length >= 5 && (
         <TradeSizeAnalysisCard trades={result.trades} />
+      )}
+
+      {/* Market Regime Analysis */}
+      {result.trades.length >= 5 && (
+        <MarketRegimeCard trades={result.trades} />
       )}
 
       {/* Detailed Stats */}
