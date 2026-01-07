@@ -13,6 +13,7 @@ import { PayoffRatioCard } from '@/components/backtest/PayoffRatioCard';
 import { TradeSizeAnalysisCard } from '@/components/backtest/TradeSizeAnalysisCard';
 import { MarketRegimeCard } from '@/components/backtest/MarketRegimeCard';
 import { VolatilityAnalysisCard } from '@/components/backtest/VolatilityAnalysisCard';
+import { AssetCorrelationCard } from '@/components/backtest/AssetCorrelationCard';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -3028,6 +3029,11 @@ function ResultsDisplay({ result, fastSMA, slowSMA }: { result: BacktestResult; 
       {/* Volatility Analysis */}
       {result.trades.length >= 5 && (
         <VolatilityAnalysisCard trades={result.trades} />
+      )}
+
+      {/* Asset Correlation Matrix */}
+      {result.trades.length >= 5 && (
+        <AssetCorrelationCard trades={result.trades} />
       )}
 
       {/* Detailed Stats */}
