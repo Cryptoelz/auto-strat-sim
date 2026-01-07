@@ -5,6 +5,7 @@ import { DurationVsProfitabilityChart } from '@/components/backtest/DurationVsPr
 import { RiskOfRuinCard } from '@/components/backtest/RiskOfRuinCard';
 import { PnLDistributionChart } from '@/components/backtest/PnLDistributionChart';
 import { RiskAdjustedReturnsCard } from '@/components/backtest/RiskAdjustedReturnsCard';
+import { StreakProbabilityCard } from '@/components/backtest/StreakProbabilityCard';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -2980,6 +2981,11 @@ function ResultsDisplay({ result, fastSMA, slowSMA }: { result: BacktestResult; 
       {/* Risk-Adjusted Returns (Sharpe, Sortino, Calmar) */}
       {result.trades.length >= 5 && (
         <RiskAdjustedReturnsCard trades={result.trades} />
+      )}
+
+      {/* Streak Probability Analysis */}
+      {result.trades.length >= 5 && (
+        <StreakProbabilityCard trades={result.trades} />
       )}
 
       {/* Detailed Stats */}
