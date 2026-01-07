@@ -20,6 +20,7 @@ import { PositionSizingCard } from '@/components/backtest/PositionSizingCard';
 import { DrawdownRecoveryCard } from '@/components/backtest/DrawdownRecoveryCard';
 import { StreakImpactCard } from '@/components/backtest/StreakImpactCard';
 import { TradeQualityScoreCard } from '@/components/backtest/TradeQualityScoreCard';
+import { OptimalTradeFilterCard } from '@/components/backtest/OptimalTradeFilterCard';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -3329,6 +3330,11 @@ function ResultsDisplay({ result, fastSMA, slowSMA, stopLossPercent, takeProfitP
           stopLossPercent={stopLossPercent} 
           takeProfitPercent={takeProfitPercent} 
         />
+      )}
+
+      {/* Optimal Trade Filter Analysis */}
+      {result.trades.length >= 5 && (
+        <OptimalTradeFilterCard trades={result.trades} />
       )}
 
       <div className="grid gap-4 md:grid-cols-2">
