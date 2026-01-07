@@ -17,6 +17,7 @@ import { AssetCorrelationCard } from '@/components/backtest/AssetCorrelationCard
 import { MaeMfeAnalysisCard } from '@/components/backtest/MaeMfeAnalysisCard';
 import { TradeTimingCard } from '@/components/backtest/TradeTimingCard';
 import { PositionSizingCard } from '@/components/backtest/PositionSizingCard';
+import { DrawdownRecoveryCard } from '@/components/backtest/DrawdownRecoveryCard';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -3060,6 +3061,11 @@ function ResultsDisplay({ result, fastSMA, slowSMA, stopLossPercent, takeProfitP
           initialBalance={initialBalance} 
           currentPositionSize={positionSizePercent} 
         />
+      )}
+
+      {/* Drawdown Recovery Analysis */}
+      {result.trades.length >= 5 && (
+        <DrawdownRecoveryCard trades={result.trades} initialBalance={initialBalance} />
       )}
 
       <div className="grid gap-4 md:grid-cols-2">
