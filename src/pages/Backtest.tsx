@@ -7,6 +7,7 @@ import { PnLDistributionChart } from '@/components/backtest/PnLDistributionChart
 import { RiskAdjustedReturnsCard } from '@/components/backtest/RiskAdjustedReturnsCard';
 import { StreakProbabilityCard } from '@/components/backtest/StreakProbabilityCard';
 import { ProfitFactorCard } from '@/components/backtest/ProfitFactorCard';
+import { TradeExpectancyCard } from '@/components/backtest/TradeExpectancyCard';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -2992,6 +2993,11 @@ function ResultsDisplay({ result, fastSMA, slowSMA }: { result: BacktestResult; 
       {/* Profit Factor */}
       {result.trades.length >= 2 && (
         <ProfitFactorCard trades={result.trades} />
+      )}
+
+      {/* Trade Expectancy */}
+      {result.trades.length >= 5 && (
+        <TradeExpectancyCard trades={result.trades} />
       )}
 
       {/* Detailed Stats */}
