@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useBacktest, BacktestConfig, BacktestResult, EquityPoint } from '@/hooks/useBacktest';
+import { DurationVsProfitabilityChart } from '@/components/backtest/DurationVsProfitabilityChart';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -2956,6 +2957,11 @@ function ResultsDisplay({ result, fastSMA, slowSMA }: { result: BacktestResult; 
       {/* Kelly Criterion & Expected Value */}
       {result.trades.length >= 5 && (
         <KellyCriterionCard trades={result.trades} />
+      )}
+
+      {/* Duration vs Profitability Scatter Plot */}
+      {result.trades.length >= 2 && (
+        <DurationVsProfitabilityChart trades={result.trades} />
       )}
 
       {/* Detailed Stats */}
