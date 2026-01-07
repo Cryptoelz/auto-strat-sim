@@ -9,6 +9,7 @@ import { StreakProbabilityCard } from '@/components/backtest/StreakProbabilityCa
 import { ProfitFactorCard } from '@/components/backtest/ProfitFactorCard';
 import { TradeExpectancyCard } from '@/components/backtest/TradeExpectancyCard';
 import { RecoveryFactorCard } from '@/components/backtest/RecoveryFactorCard';
+import { PayoffRatioCard } from '@/components/backtest/PayoffRatioCard';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -3004,6 +3005,11 @@ function ResultsDisplay({ result, fastSMA, slowSMA }: { result: BacktestResult; 
       {/* Recovery Factor */}
       {result.trades.length >= 2 && (
         <RecoveryFactorCard trades={result.trades} initialBalance={initialBalance} />
+      )}
+
+      {/* Payoff Ratio */}
+      {result.trades.length >= 2 && (
+        <PayoffRatioCard trades={result.trades} />
       )}
 
       {/* Detailed Stats */}
