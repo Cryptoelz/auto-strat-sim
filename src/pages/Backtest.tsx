@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useBacktest, BacktestConfig, BacktestResult, EquityPoint } from '@/hooks/useBacktest';
 import { DurationVsProfitabilityChart } from '@/components/backtest/DurationVsProfitabilityChart';
 import { RiskOfRuinCard } from '@/components/backtest/RiskOfRuinCard';
+import { PnLDistributionChart } from '@/components/backtest/PnLDistributionChart';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -2968,6 +2969,11 @@ function ResultsDisplay({ result, fastSMA, slowSMA }: { result: BacktestResult; 
       {/* Risk of Ruin Analysis */}
       {result.trades.length >= 5 && (
         <RiskOfRuinCard trades={result.trades} />
+      )}
+
+      {/* P&L Distribution Histogram */}
+      {result.trades.length >= 2 && (
+        <PnLDistributionChart trades={result.trades} />
       )}
 
       {/* Detailed Stats */}
