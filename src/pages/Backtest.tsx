@@ -4,6 +4,7 @@ import { useBacktest, BacktestConfig, BacktestResult, EquityPoint } from '@/hook
 import { DurationVsProfitabilityChart } from '@/components/backtest/DurationVsProfitabilityChart';
 import { RiskOfRuinCard } from '@/components/backtest/RiskOfRuinCard';
 import { PnLDistributionChart } from '@/components/backtest/PnLDistributionChart';
+import { RiskAdjustedReturnsCard } from '@/components/backtest/RiskAdjustedReturnsCard';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -2974,6 +2975,11 @@ function ResultsDisplay({ result, fastSMA, slowSMA }: { result: BacktestResult; 
       {/* P&L Distribution Histogram */}
       {result.trades.length >= 2 && (
         <PnLDistributionChart trades={result.trades} />
+      )}
+
+      {/* Risk-Adjusted Returns (Sharpe, Sortino, Calmar) */}
+      {result.trades.length >= 5 && (
+        <RiskAdjustedReturnsCard trades={result.trades} />
       )}
 
       {/* Detailed Stats */}
