@@ -8,6 +8,7 @@ import { RiskAdjustedReturnsCard } from '@/components/backtest/RiskAdjustedRetur
 import { StreakProbabilityCard } from '@/components/backtest/StreakProbabilityCard';
 import { ProfitFactorCard } from '@/components/backtest/ProfitFactorCard';
 import { TradeExpectancyCard } from '@/components/backtest/TradeExpectancyCard';
+import { RecoveryFactorCard } from '@/components/backtest/RecoveryFactorCard';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -2998,6 +2999,11 @@ function ResultsDisplay({ result, fastSMA, slowSMA }: { result: BacktestResult; 
       {/* Trade Expectancy */}
       {result.trades.length >= 5 && (
         <TradeExpectancyCard trades={result.trades} />
+      )}
+
+      {/* Recovery Factor */}
+      {result.trades.length >= 2 && (
+        <RecoveryFactorCard trades={result.trades} initialBalance={initialBalance} />
       )}
 
       {/* Detailed Stats */}
