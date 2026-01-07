@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { BacktestResult } from '@/hooks/useBacktest';
+import { BacktestResult } from '@/types/backtest';
 import { formatCurrency } from '@/lib/performance';
 import { cn } from '@/lib/utils';
 import { Calculator, Zap, Scale, Target, AlertTriangle } from 'lucide-react';

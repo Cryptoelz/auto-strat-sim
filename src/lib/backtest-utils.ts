@@ -1,8 +1,6 @@
 import { format } from 'date-fns';
 import { BacktestResult, SavedRun } from '@/types/backtest';
 
-export type { SavedRun } from '@/types/backtest';
-
 const SAVED_RUNS_KEY = 'backtest-saved-runs';
 
 export function loadSavedRuns(): SavedRun[] {

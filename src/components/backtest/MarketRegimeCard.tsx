@@ -4,7 +4,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from 'recharts';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { HelpCircle, Activity, TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import type { BacktestTrade } from '@/hooks/useBacktest';
+import type { BacktestTrade } from '@/types/backtest';
 
 interface MarketRegimeCardProps {
   trades: BacktestTrade[];

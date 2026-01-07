@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { BacktestResult } from '@/hooks/useBacktest';
+import { BacktestResult } from '@/types/backtest';
 import { formatCurrency } from '@/lib/performance';
 import { format } from 'date-fns';
 import { Scale } from 'lucide-react';

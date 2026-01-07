@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, ReferenceLine, Cell } from 'recharts';
 import { BarChart3 } from 'lucide-react';
-import type { BacktestTrade } from '@/hooks/useBacktest';
+import type { BacktestTrade } from '@/types/backtest';
 
 interface PnLDistributionChartProps {
   trades: BacktestTrade[];

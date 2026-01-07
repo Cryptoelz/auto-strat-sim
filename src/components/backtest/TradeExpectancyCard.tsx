@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { HelpCircle, Calculator, DollarSign, TrendingUp, TrendingDown } from 'lucide-react';
-import type { BacktestTrade } from '@/hooks/useBacktest';
+import type { BacktestTrade } from '@/types/backtest';
 
 interface TradeExpectancyCardProps {
   trades: BacktestTrade[];

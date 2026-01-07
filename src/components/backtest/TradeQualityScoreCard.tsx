@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Star, TrendingUp, TrendingDown, Target, Clock, Scale, Zap } from 'lucide-react';
-import { BacktestTrade } from '@/hooks/useBacktest';
+import { BacktestTrade } from '@/types/backtest';
 import { formatCurrency } from '@/lib/performance';
 import {
   ResponsiveContainer,

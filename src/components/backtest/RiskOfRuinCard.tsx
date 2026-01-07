@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AlertTriangle, HelpCircle, Shield, ShieldAlert, ShieldCheck } from 'lucide-react';
-import type { BacktestTrade } from '@/hooks/useBacktest';
+import type { BacktestTrade } from '@/types/backtest';
 
 interface RiskOfRuinCardProps {
   trades: BacktestTrade[];

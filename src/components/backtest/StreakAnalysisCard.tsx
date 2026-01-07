@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { BacktestResult } from '@/hooks/useBacktest';
+import { BacktestResult } from '@/types/backtest';
 import { cn } from '@/lib/utils';
 import { Flame, Zap, TrendingDown } from 'lucide-react';
 

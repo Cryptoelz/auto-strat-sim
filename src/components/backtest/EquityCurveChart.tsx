@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { EquityPoint } from '@/hooks/useBacktest';
+import { EquityPoint } from '@/types/backtest';
 import { formatCurrency } from '@/lib/performance';
 import { format } from 'date-fns';
 import { LineChart } from 'lucide-react';

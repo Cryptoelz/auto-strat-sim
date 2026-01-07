@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { BacktestResult } from '@/hooks/useBacktest';
+import { BacktestResult } from '@/types/backtest';
 import { Clock, Trophy, TrendingDown } from 'lucide-react';
 
 interface DurationAnalysis {

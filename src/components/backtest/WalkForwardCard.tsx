@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BacktestResult } from '@/hooks/useBacktest';
+import { BacktestResult } from '@/types/backtest';
 import { formatCurrency } from '@/lib/performance';
 import { format } from 'date-fns';
 import { Layers, Trophy, TrendingDown } from 'lucide-react';

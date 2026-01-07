@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { BacktestResult } from '@/hooks/useBacktest';
+import { BacktestResult } from '@/types/backtest';
 import { formatCurrency } from '@/lib/performance';
 import { Grid3X3, Trophy, Target, TrendingDown } from 'lucide-react';
 import { cn } from '@/lib/utils';

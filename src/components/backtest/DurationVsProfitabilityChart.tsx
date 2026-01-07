@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { ScatterChart, Scatter, XAxis, YAxis, ResponsiveContainer, ReferenceLine, Cell } from 'recharts';
 import { Clock } from 'lucide-react';
-import type { BacktestTrade } from '@/hooks/useBacktest';
+import type { BacktestTrade } from '@/types/backtest';
 
 interface DurationVsProfitabilityChartProps {
   trades: BacktestTrade[];
