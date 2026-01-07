@@ -21,6 +21,7 @@ import { DrawdownRecoveryCard } from '@/components/backtest/DrawdownRecoveryCard
 import { StreakImpactCard } from '@/components/backtest/StreakImpactCard';
 import { TradeQualityScoreCard } from '@/components/backtest/TradeQualityScoreCard';
 import { OptimalTradeFilterCard } from '@/components/backtest/OptimalTradeFilterCard';
+import { TradePatternClusteringCard } from '@/components/backtest/TradePatternClusteringCard';
 import { StrategyOptimizer } from '@/components/backtest/StrategyOptimizer';
 import { WalkForwardAnalysis } from '@/components/backtest/WalkForwardAnalysis';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -3337,6 +3338,11 @@ function ResultsDisplay({ result, fastSMA, slowSMA, stopLossPercent, takeProfitP
       {/* Optimal Trade Filter Analysis */}
       {result.trades.length >= 5 && (
         <OptimalTradeFilterCard trades={result.trades} />
+      )}
+
+      {/* Trade Pattern Clustering Analysis */}
+      {result.trades.length >= 10 && (
+        <TradePatternClusteringCard trades={result.trades} />
       )}
 
       <div className="grid gap-4 md:grid-cols-2">
