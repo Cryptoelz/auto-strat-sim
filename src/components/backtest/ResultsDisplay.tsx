@@ -1,4 +1,4 @@
-import { BacktestResult } from '@/hooks/useBacktest';
+import { BacktestResult } from '@/types/backtest';
 import { DurationVsProfitabilityChart } from '@/components/backtest/DurationVsProfitabilityChart';
 import { RiskOfRuinCard } from '@/components/backtest/RiskOfRuinCard';
 import { PnLDistributionChart } from '@/components/backtest/PnLDistributionChart';

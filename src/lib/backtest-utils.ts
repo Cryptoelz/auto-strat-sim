@@ -1,36 +1,9 @@
 import { format } from 'date-fns';
-import { BacktestResult } from '@/hooks/useBacktest';
-import { Asset } from '@/types/trading';
+import { BacktestResult, SavedRun } from '@/types/backtest';
+
+export type { SavedRun } from '@/types/backtest';
 
 const SAVED_RUNS_KEY = 'backtest-saved-runs';
-
-export interface SavedRun {
-  id: string;
-  name: string;
-  savedAt: number;
-  config: {
-    assets: Asset[];
-    startDate: string;
-    endDate: string;
-    timeframe: string;
-    fastSMA: number;
-    slowSMA: number;
-    initialBalance: number;
-    positionSizePercent: number;
-    stopLossPercent: number;
-    takeProfitPercent: number;
-  };
-  result: {
-    finalBalance: number;
-    totalPnl: number;
-    totalPnlPercent: number;
-    winRate: number;
-    totalTrades: number;
-    maxDrawdown: number;
-    profitFactor: number;
-    sharpeRatio: number;
-  };
-}
 
 export function loadSavedRuns(): SavedRun[] {
   try {
