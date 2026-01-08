@@ -240,6 +240,22 @@ export function BacktestConfigForm({
     return errors;
   }, [enabledAssets, startDate, endDate, fastSMA, slowSMA, initialBalance, positionSizePercent, stopLossPercent, takeProfitPercent, feePercent]);
 
+  // Detect which preset matches current values
+  const activePreset = useMemo<RiskPreset | null>(() => {
+    for (const [key, preset] of Object.entries(RISK_PRESETS)) {
+      if (
+        positionSizePercent === preset.positionSizePercent &&
+        stopLossPercent === preset.stopLossPercent &&
+        takeProfitPercent === preset.takeProfitPercent &&
+        fastSMA === preset.fastSMA &&
+        slowSMA === preset.slowSMA
+      ) {
+        return key as RiskPreset;
+      }
+    }
+    return null;
+  }, [positionSizePercent, stopLossPercent, takeProfitPercent, fastSMA, slowSMA]);
+
   const hasErrors = Object.keys(fieldErrors).length > 0;
 
   const handleShare = async () => {
@@ -459,20 +475,39 @@ export function BacktestConfigForm({
                 className="text-sm font-medium"
               />
               {onApplyPreset && (
-                <Select onValueChange={(v) => onApplyPreset(v as RiskPreset)}>
-                  <SelectTrigger className="h-7 w-[130px] text-xs">
-                    <SelectValue placeholder="Apply preset" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(RISK_PRESETS).map(([key, preset]) => (
-                      <SelectItem key={key} value={key} className="text-xs">
-                        <div className="flex flex-col">
-                          <span>{preset.label}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex items-center gap-2">
+                  {activePreset && (
+                    <span className={cn(
+                      "text-xs px-2 py-0.5 rounded-full font-medium",
+                      activePreset === 'conservative' && "bg-blue-500/20 text-blue-400",
+                      activePreset === 'moderate' && "bg-yellow-500/20 text-yellow-400",
+                      activePreset === 'aggressive' && "bg-red-500/20 text-red-400"
+                    )}>
+                      {RISK_PRESETS[activePreset].label}
+                    </span>
+                  )}
+                  <Select onValueChange={(v) => onApplyPreset(v as RiskPreset)}>
+                    <SelectTrigger className="h-7 w-[130px] text-xs">
+                      <SelectValue placeholder="Apply preset" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(RISK_PRESETS).map(([key, preset]) => (
+                        <SelectItem key={key} value={key} className="text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className={cn(
+                              "w-2 h-2 rounded-full",
+                              key === 'conservative' && "bg-blue-500",
+                              key === 'moderate' && "bg-yellow-500",
+                              key === 'aggressive' && "bg-red-500"
+                            )} />
+                            <span>{preset.label}</span>
+                            {activePreset === key && <span className="text-muted-foreground">✓</span>}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               )}
             </div>
             <div className="grid grid-cols-2 gap-3">
