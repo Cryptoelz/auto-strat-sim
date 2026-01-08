@@ -1188,6 +1188,10 @@ export function BacktestConfigForm({
                           const val1 = v1.data[key as keyof typeof v1.data];
                           const val2 = v2.data[key as keyof typeof v2.data];
                           const isDifferent = val1 !== val2;
+                          const isNumeric = typeof val1 === 'number' && typeof val2 === 'number';
+                          const increased = isNumeric && (val2 as number) > (val1 as number);
+                          const decreased = isNumeric && (val2 as number) < (val1 as number);
+                          
                           return (
                             <div key={key} className={cn(
                               "grid grid-cols-3 gap-2 text-xs py-1.5 px-2 rounded",
@@ -1197,7 +1201,15 @@ export function BacktestConfigForm({
                               <div className={cn("text-center", isDifferent && "font-medium text-yellow-500")}>
                                 {val1}{suffix || ''}
                               </div>
-                              <div className={cn("text-center", isDifferent && "font-medium text-yellow-500")}>
+                              <div className={cn(
+                                "text-center flex items-center justify-center gap-1",
+                                isDifferent && "font-medium",
+                                increased && "text-green-500",
+                                decreased && "text-red-500",
+                                isDifferent && !isNumeric && "text-yellow-500"
+                              )}>
+                                {increased && <span className="text-[10px]">↑</span>}
+                                {decreased && <span className="text-[10px]">↓</span>}
                                 {val2}{suffix || ''}
                               </div>
                             </div>
