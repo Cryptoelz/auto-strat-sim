@@ -50,6 +50,7 @@ const BACKTEST_SHORTCUTS = [
   { key: '4-6', description: 'Load custom preset' },
   { key: 'Shift+4-6', description: 'Save to custom preset' },
   { key: 'Alt+4-6', description: 'Delete custom preset' },
+  { key: 'Alt+0', description: 'Clear all custom presets' },
   { key: '?', description: 'Show keyboard shortcuts' },
   { key: 'Esc', description: 'Close dialogs / unfocus' },
 ];
@@ -57,6 +58,7 @@ const BACKTEST_SHORTCUTS = [
 export default function Backtest() {
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [clearPresetsConfirmOpen, setClearPresetsConfirmOpen] = useState(false);
   const { isRunning, progress, result, error, runBacktest, reset } = useBacktest();
   const config = useBacktestConfig();
 
@@ -178,6 +180,17 @@ export default function Backtest() {
             }
           }
           break;
+        case '0':
+          if (e.altKey) {
+            e.preventDefault();
+            const hasAnyPreset = config.hasCustomPreset('4') || config.hasCustomPreset('5') || config.hasCustomPreset('6');
+            if (hasAnyPreset) {
+              setClearPresetsConfirmOpen(true);
+            } else {
+              toast.error('No custom presets to clear');
+            }
+          }
+          break;
         case '?':
           e.preventDefault();
           setShortcutsOpen(true);
@@ -292,6 +305,29 @@ export default function Backtest() {
               }}
             >
               Delete All
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={clearPresetsConfirmOpen} onOpenChange={setClearPresetsConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear all custom presets?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete all custom presets (slots 4-6). This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                config.clearAllCustomPresets();
+                toast.success('All custom presets cleared');
+              }}
+            >
+              Clear All
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
