@@ -58,6 +58,19 @@ export const RISK_PRESETS = {
 
 export type RiskPreset = keyof typeof RISK_PRESETS;
 
+/**
+ * Custom preset type for user-defined presets
+ */
+type CustomPreset = {
+  label: string;
+  description: string;
+  positionSizePercent: number;
+  stopLossPercent: number;
+  takeProfitPercent: number;
+  fastSMA: number;
+  slowSMA: number;
+} | null;
+
 const VALID_ASSETS: Asset[] = ['BTCUSDT', 'XRPUSDT', 'FETUSDT', 'XLMUSDT'];
 const VALID_TIMEFRAMES = ['5m', '15m', '1h', '4h'] as const;
 
@@ -150,15 +163,6 @@ export function useBacktestConfig() {
   const [showComparison, setShowComparison] = useState(false);
   
   // Custom presets state (slots 4-6)
-  type CustomPreset = {
-    label: string;
-    description: string;
-    positionSizePercent: number;
-    stopLossPercent: number;
-    takeProfitPercent: number;
-    fastSMA: number;
-    slowSMA: number;
-  } | null;
   
   const [customPresets, setCustomPresets] = useState<Record<'4' | '5' | '6', CustomPreset>>(() => {
     try {
@@ -514,6 +518,74 @@ export function useBacktestConfig() {
     localStorage.setItem('backtest-custom-presets', JSON.stringify(updated));
   }, [customPresets]);
 
+  /**
+   * Export all custom presets to JSON
+   */
+  const exportCustomPresets = useCallback((): boolean => {
+    const data = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      presets: customPresets,
+    };
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `backtest-presets-${format(new Date(), 'yyyy-MM-dd')}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    return true;
+  }, [customPresets]);
+
+  /**
+   * Import custom presets from JSON
+   */
+  const importCustomPresets = useCallback((jsonString: string): { success: boolean; message: string } => {
+    try {
+      const data = JSON.parse(jsonString);
+      if (!data.presets || typeof data.presets !== 'object') {
+        return { success: false, message: 'Invalid file format: missing presets data' };
+      }
+      const validSlots = ['4', '5', '6'] as const;
+      const newPresets: Record<'4' | '5' | '6', CustomPreset> = { '4': null, '5': null, '6': null };
+      
+      for (const slot of validSlots) {
+        const preset = data.presets[slot];
+        if (preset && typeof preset === 'object') {
+          // Validate preset structure
+          if (
+            typeof preset.positionSizePercent === 'number' &&
+            typeof preset.stopLossPercent === 'number' &&
+            typeof preset.takeProfitPercent === 'number' &&
+            typeof preset.fastSMA === 'number' &&
+            typeof preset.slowSMA === 'number'
+          ) {
+            newPresets[slot] = {
+              label: preset.label || `Custom ${slot}`,
+              description: preset.description || `Imported preset`,
+              positionSizePercent: preset.positionSizePercent,
+              stopLossPercent: preset.stopLossPercent,
+              takeProfitPercent: preset.takeProfitPercent,
+              fastSMA: preset.fastSMA,
+              slowSMA: preset.slowSMA,
+            };
+          }
+        }
+      }
+      
+      setCustomPresets(newPresets);
+      localStorage.setItem('backtest-custom-presets', JSON.stringify(newPresets));
+      
+      const importedCount = Object.values(newPresets).filter(Boolean).length;
+      return { success: true, message: `Imported ${importedCount} preset(s) successfully` };
+    } catch {
+      return { success: false, message: 'Invalid JSON file' };
+    }
+  }, []);
+
   return {
     // Date config
     startDate,
@@ -577,5 +649,7 @@ export function useBacktestConfig() {
     getCustomPreset,
     deleteCustomPreset,
     renameCustomPreset,
+    exportCustomPresets,
+    importCustomPresets,
   };
 }

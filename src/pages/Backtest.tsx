@@ -348,6 +348,8 @@ export default function Backtest() {
             onDeleteCustomPreset={config.deleteCustomPreset}
             onRenameCustomPreset={config.renameCustomPreset}
             getCustomPresetData={config.getCustomPreset}
+            onExportCustomPresets={config.exportCustomPresets}
+            onImportCustomPresets={config.importCustomPresets}
           />
 
           {/* Strategy Optimizer */}
