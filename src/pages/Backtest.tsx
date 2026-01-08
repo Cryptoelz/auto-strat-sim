@@ -409,6 +409,7 @@ export default function Backtest() {
             onClearDeleteBackup={config.clearDeleteBackup}
             onDuplicateVersion={config.duplicateVersion}
             onUpdateVersionNote={config.updateVersionNote}
+            onToggleVersionPin={config.toggleVersionPin}
           />
 
           {/* Strategy Optimizer */}

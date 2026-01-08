@@ -8,6 +8,8 @@ export interface PresetVersion {
   savedAt: number;
   /** Optional note/comment for this version */
   note?: string;
+  /** Whether this version is pinned (protected from auto-deletion) */
+  pinned?: boolean;
   /** The preset values at this version */
   data: {
     label: string;
