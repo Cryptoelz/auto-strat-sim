@@ -211,6 +211,33 @@ export function BacktestConfigForm({
   const [importConfirmOpen, setImportConfirmOpen] = useState(false);
   const [pendingImportJson, setPendingImportJson] = useState<string | null>(null);
 
+  // Parse pending import for preview
+  type PreviewPreset = { label: string; fastSMA: number; slowSMA: number; positionSizePercent: number; stopLossPercent: number; takeProfitPercent: number };
+  const importPreview = useMemo<Record<'4' | '5' | '6', PreviewPreset | null>>(() => {
+    if (!pendingImportJson) return { '4': null, '5': null, '6': null };
+    try {
+      const data = JSON.parse(pendingImportJson);
+      if (!data.presets) return { '4': null, '5': null, '6': null };
+      const result: Record<'4' | '5' | '6', PreviewPreset | null> = { '4': null, '5': null, '6': null };
+      for (const slot of ['4', '5', '6'] as const) {
+        const p = data.presets[slot];
+        if (p && typeof p.fastSMA === 'number' && typeof p.slowSMA === 'number') {
+          result[slot] = {
+            label: p.label || `Custom ${slot}`,
+            fastSMA: p.fastSMA,
+            slowSMA: p.slowSMA,
+            positionSizePercent: p.positionSizePercent,
+            stopLossPercent: p.stopLossPercent,
+            takeProfitPercent: p.takeProfitPercent,
+          };
+        }
+      }
+      return result;
+    } catch {
+      return { '4': null, '5': null, '6': null };
+    }
+  }, [pendingImportJson]);
+
   // Count existing presets
   const existingPresetCount = useMemo(() => {
     if (!customPresetSlots) return 0;
@@ -724,13 +751,76 @@ export function BacktestConfigForm({
             )}
 
             {/* Import Confirmation Dialog */}
-            <AlertDialog open={importConfirmOpen} onOpenChange={setImportConfirmOpen}>
-              <AlertDialogContent>
+            <AlertDialog open={importConfirmOpen} onOpenChange={(open) => {
+              setImportConfirmOpen(open);
+              if (!open) setPendingImportJson(null);
+            }}>
+              <AlertDialogContent className="sm:max-w-lg">
                 <AlertDialogHeader>
                   <AlertDialogTitle>Import Presets</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    You have {existingPresetCount} custom preset{existingPresetCount !== 1 ? 's' : ''} saved. 
-                    Choose how to handle the import:
+                  <AlertDialogDescription asChild>
+                    <div className="space-y-3">
+                      <p>
+                        {existingPresetCount > 0 
+                          ? `You have ${existingPresetCount} existing preset${existingPresetCount !== 1 ? 's' : ''}. Choose how to handle the import:`
+                          : 'Preview of presets to import:'
+                        }
+                      </p>
+                      
+                      {/* Preview Grid */}
+                      <div className="grid gap-2 pt-2">
+                        {(['4', '5', '6'] as const).map((slot) => {
+                          const incoming = importPreview[slot];
+                          const existing = getCustomPresetData?.(slot);
+                          const hasExisting = customPresetSlots?.[slot];
+                          
+                          if (!incoming && !hasExisting) return null;
+                          
+                          return (
+                            <div 
+                              key={slot} 
+                              className={cn(
+                                "rounded-lg border p-3 text-sm",
+                                incoming && hasExisting && "border-amber-500/50 bg-amber-500/10",
+                                incoming && !hasExisting && "border-green-500/50 bg-green-500/10",
+                                !incoming && hasExisting && "border-border bg-muted/30"
+                              )}
+                            >
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="font-medium">Slot {slot}</span>
+                                {incoming && hasExisting && (
+                                  <span className="text-xs text-amber-500 font-medium">Will overwrite</span>
+                                )}
+                                {incoming && !hasExisting && (
+                                  <span className="text-xs text-green-500 font-medium">New</span>
+                                )}
+                                {!incoming && hasExisting && (
+                                  <span className="text-xs text-muted-foreground">Not in file</span>
+                                )}
+                              </div>
+                              
+                              {incoming && (
+                                <div className="text-xs text-foreground">
+                                  <span className="font-medium">{incoming.label}</span>
+                                  <span className="text-muted-foreground ml-2">
+                                    SMA {incoming.fastSMA}/{incoming.slowSMA} · {incoming.positionSizePercent}% pos · {incoming.stopLossPercent}% SL
+                                  </span>
+                                </div>
+                              )}
+                              
+                              {hasExisting && existing && (
+                                <div className={cn("text-xs", incoming ? "text-muted-foreground line-through mt-1" : "text-foreground")}>
+                                  <span className={cn(!incoming && "font-medium")}>{existing.label}</span>
+                                  <span className="text-muted-foreground ml-2">
+                                    SMA {existing.fastSMA}/{existing.slowSMA} · {existing.positionSizePercent}% pos
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter className="flex-col sm:flex-row gap-2">
