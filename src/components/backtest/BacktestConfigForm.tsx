@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,7 +20,9 @@ import {
   Save,
   Trash2,
   GitCompare,
-  Download
+  Download,
+  Share2,
+  Check
 } from 'lucide-react';
 
 const TIMEFRAME_OPTIONS = [
@@ -77,6 +80,9 @@ interface BacktestConfigFormProps {
   onToggleComparison: () => void;
   onClearAllRuns: () => void;
   onExportComparison: () => void;
+  
+  // Share
+  onShareConfig?: () => Promise<boolean>;
 }
 
 export function BacktestConfigForm({
@@ -112,12 +118,46 @@ export function BacktestConfigForm({
   onToggleComparison,
   onClearAllRuns,
   onExportComparison,
+  onShareConfig,
 }: BacktestConfigFormProps) {
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = async () => {
+    if (!onShareConfig) return;
+    const success = await onShareConfig();
+    if (success) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
   return (
     <Card className="border-border/50 bg-card/50 backdrop-blur lg:col-span-1">
-      <CardHeader>
-        <CardTitle className="text-base">Backtest Configuration</CardTitle>
-        <CardDescription>Configure your strategy parameters</CardDescription>
+      <CardHeader className="flex flex-row items-start justify-between space-y-0">
+        <div>
+          <CardTitle className="text-base">Backtest Configuration</CardTitle>
+          <CardDescription>Configure your strategy parameters</CardDescription>
+        </div>
+        {onShareConfig && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleShare}
+            className="h-8 gap-1.5"
+          >
+            {copied ? (
+              <>
+                <Check className="h-3.5 w-3.5 text-green-500" />
+                Copied!
+              </>
+            ) : (
+              <>
+                <Share2 className="h-3.5 w-3.5" />
+                Share
+              </>
+            )}
+          </Button>
+        )}
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Date Range */}
