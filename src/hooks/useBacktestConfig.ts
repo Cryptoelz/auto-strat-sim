@@ -5,6 +5,8 @@ import { BacktestConfig, BacktestResult, SavedRun } from '@/types/backtest';
 import { loadSavedRuns, saveSavedRuns, exportResultToCSV, exportComparisonToCSV } from '@/lib/backtest-utils';
 import { validateBacktestConfig, ValidationResult } from '@/lib/backtest-validation';
 import { subDays, parseISO, format } from 'date-fns';
+import { usePresetVersioning } from '@/hooks/usePresetVersioning';
+import { PresetVersion } from '@/types/preset-version';
 
 /**
  * Default configuration values for backtesting
@@ -161,6 +163,9 @@ export function useBacktestConfig() {
   // Saved runs state
   const [savedRuns, setSavedRuns] = useState<SavedRun[]>(() => loadSavedRuns());
   const [showComparison, setShowComparison] = useState(false);
+  
+  // Preset versioning
+  const presetVersioning = usePresetVersioning();
   
   // Custom presets state (slots 4-6)
   
@@ -456,6 +461,7 @@ export function useBacktestConfig() {
 
   /**
    * Save current config to a custom preset slot (4, 5, or 6)
+   * Also saves a version to history for tracking changes
    */
   const saveCustomPreset = useCallback((slot: '4' | '5' | '6', name?: string) => {
     const preset = {
@@ -467,10 +473,14 @@ export function useBacktestConfig() {
       fastSMA,
       slowSMA,
     };
+    
+    // Save version to history
+    presetVersioning.addVersion(slot, preset);
+    
     const updated = { ...customPresets, [slot]: preset };
     setCustomPresets(updated);
     localStorage.setItem('backtest-custom-presets', JSON.stringify(updated));
-  }, [positionSizePercent, stopLossPercent, takeProfitPercent, fastSMA, slowSMA, customPresets]);
+  }, [positionSizePercent, stopLossPercent, takeProfitPercent, fastSMA, slowSMA, customPresets, presetVersioning]);
 
   /**
    * Load a custom preset from slot (4, 5, or 6)
@@ -667,6 +677,31 @@ export function useBacktestConfig() {
     setDeletedPresets(null);
   }, []);
 
+  /**
+   * Restore a preset to a previous version
+   */
+  const restorePresetVersion = useCallback((slot: '4' | '5' | '6', versionId: string): boolean => {
+    const version = presetVersioning.getVersion(slot, versionId);
+    if (!version) return false;
+    
+    const preset = {
+      ...version.data,
+    };
+    
+    const updated = { ...customPresets, [slot]: preset };
+    setCustomPresets(updated);
+    localStorage.setItem('backtest-custom-presets', JSON.stringify(updated));
+    
+    return true;
+  }, [customPresets, presetVersioning]);
+
+  /**
+   * Get version history for a preset slot
+   */
+  const getPresetVersionHistory = useCallback((slot: '4' | '5' | '6'): PresetVersion[] => {
+    return presetVersioning.getSlotHistory(slot);
+  }, [presetVersioning]);
+
   return {
     // Date config
     startDate,
@@ -737,5 +772,10 @@ export function useBacktestConfig() {
     clearUndoBackup,
     canUndoClearPresets: deletedPresets !== null,
     lastPresetSync,
+    
+    // Preset versioning
+    getPresetVersionHistory,
+    restorePresetVersion,
+    hasPresetHistory: presetVersioning.hasHistory,
   };
 }
