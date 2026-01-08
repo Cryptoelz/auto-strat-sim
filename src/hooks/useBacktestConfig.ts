@@ -629,13 +629,42 @@ export function useBacktestConfig() {
     }
   }, [customPresets]);
 
+  // Store recently deleted presets for undo
+  const [deletedPresets, setDeletedPresets] = useState<Record<'4' | '5' | '6', CustomPreset> | null>(null);
+
   /**
-   * Clear all custom presets
+   * Clear all custom presets (stores backup for undo)
    */
   const clearAllCustomPresets = useCallback(() => {
-    const cleared = { '4': null, '5': null, '6': null };
+    // Store current presets for undo
+    const hasAnyPreset = customPresets['4'] || customPresets['5'] || customPresets['6'];
+    if (hasAnyPreset) {
+      setDeletedPresets({ ...customPresets });
+    }
+    
+    const cleared: Record<'4' | '5' | '6', CustomPreset> = { '4': null, '5': null, '6': null };
     setCustomPresets(cleared);
     localStorage.setItem('backtest-custom-presets', JSON.stringify(cleared));
+  }, [customPresets]);
+
+  /**
+   * Undo clearing custom presets (restore from backup)
+   */
+  const undoClearPresets = useCallback(() => {
+    if (deletedPresets) {
+      setCustomPresets(deletedPresets);
+      localStorage.setItem('backtest-custom-presets', JSON.stringify(deletedPresets));
+      setDeletedPresets(null);
+      return true;
+    }
+    return false;
+  }, [deletedPresets]);
+
+  /**
+   * Clear the undo backup (call after undo timeout expires)
+   */
+  const clearUndoBackup = useCallback(() => {
+    setDeletedPresets(null);
   }, []);
 
   return {
@@ -704,6 +733,9 @@ export function useBacktestConfig() {
     exportCustomPresets,
     importCustomPresets,
     clearAllCustomPresets,
+    undoClearPresets,
+    clearUndoBackup,
+    canUndoClearPresets: deletedPresets !== null,
     lastPresetSync,
   };
 }
