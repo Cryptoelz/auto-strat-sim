@@ -66,10 +66,12 @@ export default function Backtest() {
             positionSizePercent={config.positionSizePercent}
             stopLossPercent={config.stopLossPercent}
             takeProfitPercent={config.takeProfitPercent}
+            feePercent={config.feePercent}
             onInitialBalanceChange={config.setInitialBalance}
             onPositionSizeChange={config.setPositionSizePercent}
             onStopLossChange={config.setStopLossPercent}
             onTakeProfitChange={config.setTakeProfitPercent}
+            onFeeChange={config.setFeePercent}
             isRunning={isRunning}
             progress={progress}
             result={result}

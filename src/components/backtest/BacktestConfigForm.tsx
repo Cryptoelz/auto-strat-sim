@@ -36,6 +36,7 @@ interface FieldErrors {
   positionSize?: string;
   stopLoss?: string;
   takeProfit?: string;
+  fee?: string;
 }
 
 function FieldError({ message }: { message?: string }) {
@@ -83,10 +84,12 @@ interface BacktestConfigFormProps {
   positionSizePercent: number;
   stopLossPercent: number;
   takeProfitPercent: number;
+  feePercent: number;
   onInitialBalanceChange: (value: number) => void;
   onPositionSizeChange: (value: number) => void;
   onStopLossChange: (value: number) => void;
   onTakeProfitChange: (value: number) => void;
+  onFeeChange: (value: number) => void;
   
   // Actions
   isRunning: boolean;
@@ -125,10 +128,12 @@ export function BacktestConfigForm({
   positionSizePercent,
   stopLossPercent,
   takeProfitPercent,
+  feePercent,
   onInitialBalanceChange,
   onPositionSizeChange,
   onStopLossChange,
   onTakeProfitChange,
+  onFeeChange,
   isRunning,
   progress,
   result,
@@ -196,8 +201,13 @@ export function BacktestConfigForm({
       errors.takeProfit = 'Must be between 0.1% and 100%';
     }
     
+    // Fee validation
+    if (feePercent < 0 || feePercent > 5) {
+      errors.fee = 'Must be between 0% and 5%';
+    }
+    
     return errors;
-  }, [enabledAssets, startDate, endDate, fastSMA, slowSMA, initialBalance, positionSizePercent, stopLossPercent, takeProfitPercent]);
+  }, [enabledAssets, startDate, endDate, fastSMA, slowSMA, initialBalance, positionSizePercent, stopLossPercent, takeProfitPercent, feePercent]);
 
   const hasErrors = Object.keys(fieldErrors).length > 0;
 
@@ -430,6 +440,21 @@ export function BacktestConfigForm({
                 className={cn(fieldErrors.takeProfit && "border-destructive")}
               />
               <FieldError message={fieldErrors.takeProfit} />
+            </div>
+            <div className="space-y-1">
+              <Label className={cn("text-xs", fieldErrors.fee ? "text-destructive" : "text-muted-foreground")}>
+                Trading Fee (%)
+              </Label>
+              <Input
+                type="number"
+                value={feePercent}
+                onChange={(e) => onFeeChange(parseFloat(e.target.value) || 0.1)}
+                min={0}
+                max={5}
+                step={0.01}
+                className={cn(fieldErrors.fee && "border-destructive")}
+              />
+              <FieldError message={fieldErrors.fee} />
             </div>
           </div>
         </div>
