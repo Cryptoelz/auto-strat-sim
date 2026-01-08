@@ -315,7 +315,7 @@ export default function Backtest() {
           <AlertDialogHeader>
             <AlertDialogTitle>Clear all custom presets?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete all custom presets (slots 4-6). This action cannot be undone.
+              This will delete all custom presets (slots 4-6). You can undo this action for a short time after clearing.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -324,7 +324,19 @@ export default function Backtest() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => {
                 config.clearAllCustomPresets();
-                toast.success('All custom presets cleared');
+                toast.success('All custom presets cleared', {
+                  action: {
+                    label: 'Undo',
+                    onClick: () => {
+                      if (config.undoClearPresets()) {
+                        toast.success('Presets restored');
+                      }
+                    },
+                  },
+                  duration: 10000,
+                  onDismiss: () => config.clearUndoBackup(),
+                  onAutoClose: () => config.clearUndoBackup(),
+                });
               }}
             >
               Clear All
