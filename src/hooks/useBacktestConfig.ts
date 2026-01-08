@@ -542,15 +542,24 @@ export function useBacktestConfig() {
 
   /**
    * Import custom presets from JSON
+   * @param jsonString - JSON string to import
+   * @param mode - 'replace' overwrites all, 'merge' only fills empty slots
    */
-  const importCustomPresets = useCallback((jsonString: string): { success: boolean; message: string } => {
+  const importCustomPresets = useCallback((jsonString: string, mode: 'replace' | 'merge' = 'replace'): { success: boolean; message: string; merged?: number; skipped?: number } => {
     try {
       const data = JSON.parse(jsonString);
       if (!data.presets || typeof data.presets !== 'object') {
         return { success: false, message: 'Invalid file format: missing presets data' };
       }
       const validSlots = ['4', '5', '6'] as const;
-      const newPresets: Record<'4' | '5' | '6', CustomPreset> = { '4': null, '5': null, '6': null };
+      
+      // Start with existing presets for merge mode, empty for replace mode
+      const newPresets: Record<'4' | '5' | '6', CustomPreset> = mode === 'merge' 
+        ? { ...customPresets }
+        : { '4': null, '5': null, '6': null };
+      
+      let merged = 0;
+      let skipped = 0;
       
       for (const slot of validSlots) {
         const preset = data.presets[slot];
@@ -563,6 +572,12 @@ export function useBacktestConfig() {
             typeof preset.fastSMA === 'number' &&
             typeof preset.slowSMA === 'number'
           ) {
+            // In merge mode, only fill empty slots
+            if (mode === 'merge' && customPresets[slot] !== null) {
+              skipped++;
+              continue;
+            }
+            
             newPresets[slot] = {
               label: preset.label || `Custom ${slot}`,
               description: preset.description || `Imported preset`,
@@ -572,6 +587,7 @@ export function useBacktestConfig() {
               fastSMA: preset.fastSMA,
               slowSMA: preset.slowSMA,
             };
+            merged++;
           }
         }
       }
@@ -579,12 +595,18 @@ export function useBacktestConfig() {
       setCustomPresets(newPresets);
       localStorage.setItem('backtest-custom-presets', JSON.stringify(newPresets));
       
-      const importedCount = Object.values(newPresets).filter(Boolean).length;
-      return { success: true, message: `Imported ${importedCount} preset(s) successfully` };
+      if (mode === 'merge') {
+        if (merged === 0 && skipped > 0) {
+          return { success: true, message: `All slots already filled, ${skipped} preset(s) skipped`, merged, skipped };
+        }
+        return { success: true, message: `Merged ${merged} preset(s)${skipped > 0 ? `, ${skipped} skipped (slot occupied)` : ''}`, merged, skipped };
+      }
+      
+      return { success: true, message: `Imported ${merged} preset(s) successfully`, merged, skipped: 0 };
     } catch {
       return { success: false, message: 'Invalid JSON file' };
     }
-  }, []);
+  }, [customPresets]);
 
   return {
     // Date config
