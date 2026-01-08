@@ -23,6 +23,41 @@ const DEFAULT_CONFIG = {
   feePercent: 0.1,
 };
 
+/**
+ * Risk profile presets
+ */
+export const RISK_PRESETS = {
+  conservative: {
+    label: 'Conservative',
+    description: 'Lower risk, smaller positions, tighter stops',
+    positionSizePercent: 2,
+    stopLossPercent: 1,
+    takeProfitPercent: 2,
+    fastSMA: 10,
+    slowSMA: 30,
+  },
+  moderate: {
+    label: 'Moderate',
+    description: 'Balanced risk/reward approach',
+    positionSizePercent: 5,
+    stopLossPercent: 2,
+    takeProfitPercent: 4,
+    fastSMA: 20,
+    slowSMA: 50,
+  },
+  aggressive: {
+    label: 'Aggressive',
+    description: 'Higher risk, larger positions, wider stops',
+    positionSizePercent: 10,
+    stopLossPercent: 4,
+    takeProfitPercent: 8,
+    fastSMA: 8,
+    slowSMA: 21,
+  },
+} as const;
+
+export type RiskPreset = keyof typeof RISK_PRESETS;
+
 const VALID_ASSETS: Asset[] = ['BTCUSDT', 'XRPUSDT', 'FETUSDT', 'XLMUSDT'];
 const VALID_TIMEFRAMES = ['5m', '15m', '1h', '4h'] as const;
 
@@ -368,6 +403,20 @@ export function useBacktestConfig() {
     setPositionSizePercentState(DEFAULT_CONFIG.positionSizePercent);
     setStopLossPercentState(DEFAULT_CONFIG.stopLossPercent);
     setTakeProfitPercentState(DEFAULT_CONFIG.takeProfitPercent);
+    setFeePercentState(DEFAULT_CONFIG.feePercent);
+    setValidationErrors([]);
+  }, []);
+
+  /**
+   * Apply a risk preset
+   */
+  const applyPreset = useCallback((preset: RiskPreset) => {
+    const config = RISK_PRESETS[preset];
+    setPositionSizePercentState(config.positionSizePercent);
+    setStopLossPercentState(config.stopLossPercent);
+    setTakeProfitPercentState(config.takeProfitPercent);
+    setFastSMAState(config.fastSMA);
+    setSlowSMAState(config.slowSMA);
     setValidationErrors([]);
   }, []);
 
@@ -425,5 +474,6 @@ export function useBacktestConfig() {
     exportCSV,
     exportComparison,
     resetConfig,
+    applyPreset,
   };
 }

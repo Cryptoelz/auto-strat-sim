@@ -13,6 +13,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Asset } from '@/types/trading';
 import { BacktestResult, SavedRun } from '@/types/backtest';
 import { ASSET_INFO } from '@/config/trading';
+import { RISK_PRESETS, RiskPreset } from '@/hooks/useBacktestConfig';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { 
@@ -136,6 +137,7 @@ interface BacktestConfigFormProps {
   // Share & Reset
   onShareConfig?: () => Promise<boolean>;
   onResetToDefaults?: () => void;
+  onApplyPreset?: (preset: RiskPreset) => void;
 }
 
 export function BacktestConfigForm({
@@ -175,6 +177,7 @@ export function BacktestConfigForm({
   onExportComparison,
   onShareConfig,
   onResetToDefaults,
+  onApplyPreset,
 }: BacktestConfigFormProps) {
   const [copied, setCopied] = useState(false);
 
@@ -449,11 +452,29 @@ export function BacktestConfigForm({
 
           {/* Risk Settings */}
           <div className="space-y-3">
-            <TooltipLabel 
-              label="Risk Management" 
-              tooltip="Control your exposure and protect capital. Conservative settings reduce risk but may limit potential returns."
-              className="text-sm font-medium"
-            />
+            <div className="flex items-center justify-between">
+              <TooltipLabel 
+                label="Risk Management" 
+                tooltip="Control your exposure and protect capital. Conservative settings reduce risk but may limit potential returns."
+                className="text-sm font-medium"
+              />
+              {onApplyPreset && (
+                <Select onValueChange={(v) => onApplyPreset(v as RiskPreset)}>
+                  <SelectTrigger className="h-7 w-[130px] text-xs">
+                    <SelectValue placeholder="Apply preset" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(RISK_PRESETS).map(([key, preset]) => (
+                      <SelectItem key={key} value={key} className="text-xs">
+                        <div className="flex flex-col">
+                          <span>{preset.label}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <TooltipLabel 
