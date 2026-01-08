@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 
 const BACKTEST_SHORTCUTS = [
+  { key: 'Enter', description: 'Run backtest' },
   { key: '1', description: 'Apply Conservative preset' },
   { key: '2', description: 'Apply Moderate preset' },
   { key: '3', description: 'Apply Aggressive preset' },
@@ -77,6 +78,12 @@ export default function Backtest() {
       }
 
       switch (e.key) {
+        case 'Enter':
+          e.preventDefault();
+          if (!isRunning) {
+            handleRunBacktest();
+          }
+          break;
         case '1':
           e.preventDefault();
           handlePresetShortcut('conservative');
@@ -98,7 +105,7 @@ export default function Backtest() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handlePresetShortcut]);
+  }, [handlePresetShortcut, isRunning, handleRunBacktest]);
 
   return (
     <div className="min-h-screen bg-background">
