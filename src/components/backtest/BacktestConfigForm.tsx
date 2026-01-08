@@ -476,16 +476,15 @@ export function BacktestConfigForm({
               />
               {onApplyPreset && (
                 <div className="flex items-center gap-2">
-                  {activePreset && (
-                    <span className={cn(
-                      "text-xs px-2 py-0.5 rounded-full font-medium",
-                      activePreset === 'conservative' && "bg-blue-500/20 text-blue-400",
-                      activePreset === 'moderate' && "bg-yellow-500/20 text-yellow-400",
-                      activePreset === 'aggressive' && "bg-red-500/20 text-red-400"
-                    )}>
-                      {RISK_PRESETS[activePreset].label}
-                    </span>
-                  )}
+                  <span className={cn(
+                    "text-xs px-2 py-0.5 rounded-full font-medium",
+                    activePreset === 'conservative' && "bg-blue-500/20 text-blue-400",
+                    activePreset === 'moderate' && "bg-yellow-500/20 text-yellow-400",
+                    activePreset === 'aggressive' && "bg-red-500/20 text-red-400",
+                    !activePreset && "bg-muted text-muted-foreground"
+                  )}>
+                    {activePreset ? RISK_PRESETS[activePreset].label : 'Custom'}
+                  </span>
                   <Select onValueChange={(v) => onApplyPreset(v as RiskPreset)}>
                     <SelectTrigger className="h-7 w-[130px] text-xs">
                       <SelectValue placeholder="Apply preset" />
