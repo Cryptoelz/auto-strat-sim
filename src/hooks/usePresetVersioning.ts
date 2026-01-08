@@ -58,6 +58,33 @@ export function usePresetVersioning() {
   }, [versionHistory]);
 
   /**
+   * Duplicate a version - creates a copy with a new ID and current timestamp
+   */
+  const duplicateVersion = useCallback((
+    slot: '4' | '5' | '6',
+    versionId: string
+  ): PresetVersion | null => {
+    const original = versionHistory[slot].find(v => v.id === versionId);
+    if (!original) return null;
+
+    const duplicate: PresetVersion = {
+      id: `v-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      savedAt: Date.now(),
+      data: {
+        ...original.data,
+        label: `${original.data.label} (Copy)`,
+      },
+    };
+
+    setVersionHistory(prev => {
+      const slotHistory = [duplicate, ...prev[slot]].slice(0, MAX_VERSIONS_PER_SLOT);
+      return { ...prev, [slot]: slotHistory };
+    });
+
+    return duplicate;
+  }, [versionHistory]);
+
+  /**
    * Clear version history for a slot
    */
   const clearSlotHistory = useCallback((slot: '4' | '5' | '6') => {
@@ -198,6 +225,7 @@ export function usePresetVersioning() {
     addVersion,
     getSlotHistory,
     getVersion,
+    duplicateVersion,
     clearSlotHistory,
     clearAllHistory,
     hasHistory,

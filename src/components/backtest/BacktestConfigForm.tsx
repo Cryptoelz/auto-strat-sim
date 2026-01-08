@@ -36,7 +36,8 @@ import {
   X,
   Pencil,
   Upload,
-  History
+  History,
+  Copy
 } from 'lucide-react';
 
 interface TooltipLabelProps {
@@ -167,6 +168,7 @@ interface BacktestConfigFormProps {
   onDeleteVersions?: (slot: '4' | '5' | '6', versionIds: string[]) => number;
   onUndoDeleteVersions?: () => boolean;
   onClearDeleteBackup?: () => void;
+  onDuplicateVersion?: (slot: '4' | '5' | '6', versionId: string) => PresetVersion | null;
 }
 
 export function BacktestConfigForm({
@@ -224,6 +226,7 @@ export function BacktestConfigForm({
   onDeleteVersions,
   onUndoDeleteVersions,
   onClearDeleteBackup,
+  onDuplicateVersion,
 }: BacktestConfigFormProps) {
   const [copied, setCopied] = useState(false);
   const [clearPresetsConfirmOpen, setClearPresetsConfirmOpen] = useState(false);
@@ -1647,6 +1650,30 @@ export function BacktestConfigForm({
                                               <RotateCcw className="h-3 w-3 mr-1" />
                                               Restore
                                             </Button>
+                                          )}
+                                          {onDuplicateVersion && !compareVersions[0] && (
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <Button
+                                                  variant="ghost"
+                                                  size="sm"
+                                                  className="h-7 w-7 p-0"
+                                                  onClick={() => {
+                                                    if (versionHistorySlot) {
+                                                      const duplicate = onDuplicateVersion(versionHistorySlot, version.id);
+                                                      if (duplicate) {
+                                                        toast.success('Version duplicated', {
+                                                          description: `Created "${duplicate.data.label}"`,
+                                                        });
+                                                      }
+                                                    }
+                                                  }}
+                                                >
+                                                  <Copy className="h-3 w-3" />
+                                                </Button>
+                                              </TooltipTrigger>
+                                              <TooltipContent>Duplicate version</TooltipContent>
+                                            </Tooltip>
                                           )}
                                         </div>
                                       )}
