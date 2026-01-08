@@ -1137,10 +1137,43 @@ export function BacktestConfigForm({
             }}>
               <DialogContent className="sm:max-w-2xl">
                 <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2">
-                    <History className="h-4 w-4" />
-                    Version History
-                  </DialogTitle>
+                  <div className="flex items-center justify-between">
+                    <DialogTitle className="flex items-center gap-2">
+                      <History className="h-4 w-4" />
+                      Version History
+                    </DialogTitle>
+                    {versionHistorySlot && getPresetVersionHistory && getPresetVersionHistory(versionHistorySlot).length > 0 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const versions = getPresetVersionHistory(versionHistorySlot);
+                          const presetLabel = getCustomPresetData?.(versionHistorySlot)?.label || `Custom ${versionHistorySlot}`;
+                          const exportData = {
+                            preset: presetLabel,
+                            slot: versionHistorySlot,
+                            exportedAt: new Date().toISOString(),
+                            versions: versions.map(v => ({
+                              id: v.id,
+                              savedAt: new Date(v.savedAt).toISOString(),
+                              data: v.data
+                            }))
+                          };
+                          const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = `preset-history-${versionHistorySlot}-${format(new Date(), 'yyyy-MM-dd')}.json`;
+                          a.click();
+                          URL.revokeObjectURL(url);
+                          toast.success('Version history exported');
+                        }}
+                      >
+                        <Download className="h-3.5 w-3.5 mr-1.5" />
+                        Export
+                      </Button>
+                    )}
+                  </div>
                   <DialogDescription>
                     {compareVersions[0] || compareVersions[1] 
                       ? 'Select two versions to compare side-by-side'
