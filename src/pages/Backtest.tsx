@@ -82,6 +82,7 @@ export default function Backtest() {
             onToggleComparison={config.toggleComparison}
             onClearAllRuns={config.clearAllRuns}
             onExportComparison={config.exportComparison}
+            onShareConfig={config.copyShareableUrl}
           />
 
           {/* Strategy Optimizer */}
