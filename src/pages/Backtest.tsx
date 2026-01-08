@@ -407,6 +407,7 @@ export default function Backtest() {
             onDeleteVersions={config.deleteVersions}
             onUndoDeleteVersions={config.undoDeleteVersions}
             onClearDeleteBackup={config.clearDeleteBackup}
+            onDuplicateVersion={config.duplicateVersion}
           />
 
           {/* Strategy Optimizer */}
