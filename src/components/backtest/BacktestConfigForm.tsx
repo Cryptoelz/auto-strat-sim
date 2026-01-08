@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -258,6 +259,15 @@ export function BacktestConfigForm({
 
   const hasErrors = Object.keys(fieldErrors).length > 0;
 
+  const handleApplyPreset = useCallback((preset: RiskPreset) => {
+    if (!onApplyPreset) return;
+    const config = RISK_PRESETS[preset];
+    onApplyPreset(preset);
+    toast.success(`${config.label} preset applied`, {
+      description: `Position: ${config.positionSizePercent}% · SL: ${config.stopLossPercent}% · TP: ${config.takeProfitPercent}% · SMA: ${config.fastSMA}/${config.slowSMA}`,
+    });
+  }, [onApplyPreset]);
+
   const handleShare = async () => {
     if (!onShareConfig) return;
     const success = await onShareConfig();
@@ -485,7 +495,7 @@ export function BacktestConfigForm({
                   )}>
                     {activePreset ? RISK_PRESETS[activePreset].label : 'Custom'}
                   </span>
-                  <Select onValueChange={(v) => onApplyPreset(v as RiskPreset)}>
+                  <Select onValueChange={(v) => handleApplyPreset(v as RiskPreset)}>
                     <SelectTrigger className="h-7 w-[130px] text-xs">
                       <SelectValue placeholder="Apply preset" />
                     </SelectTrigger>
