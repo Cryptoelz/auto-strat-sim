@@ -1,6 +1,8 @@
+import { useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 import { useBacktest } from '@/hooks/useBacktest';
-import { useBacktestConfig } from '@/hooks/useBacktestConfig';
+import { useBacktestConfig, RISK_PRESETS, RiskPreset } from '@/hooks/useBacktestConfig';
 import { StrategyOptimizer } from '@/components/backtest/StrategyOptimizer';
 import { WalkForwardAnalysis } from '@/components/backtest/WalkForwardAnalysis';
 import { ResultsDisplay } from '@/components/backtest/ResultsDisplay';
@@ -24,6 +26,46 @@ export default function Backtest() {
     if (!validation.success) return;
     runBacktest(config.buildConfig());
   };
+
+  // Keyboard shortcuts for presets
+  const handlePresetShortcut = useCallback((preset: RiskPreset) => {
+    const presetConfig = RISK_PRESETS[preset];
+    config.applyPreset(preset);
+    toast.success(`${presetConfig.label} preset applied`, {
+      description: `Position: ${presetConfig.positionSizePercent}% · SL: ${presetConfig.stopLossPercent}% · TP: ${presetConfig.takeProfitPercent}% · SMA: ${presetConfig.fastSMA}/${presetConfig.slowSMA}`,
+    });
+  }, [config]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if typing in an input
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        e.target instanceof HTMLSelectElement
+      ) {
+        return;
+      }
+
+      switch (e.key) {
+        case '1':
+          e.preventDefault();
+          handlePresetShortcut('conservative');
+          break;
+        case '2':
+          e.preventDefault();
+          handlePresetShortcut('moderate');
+          break;
+        case '3':
+          e.preventDefault();
+          handlePresetShortcut('aggressive');
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handlePresetShortcut]);
 
   return (
     <div className="min-h-screen bg-background">
