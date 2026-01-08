@@ -31,6 +31,7 @@ const BACKTEST_SHORTCUTS = [
   { key: 'R', description: 'Reset results' },
   { key: '⌘/Ctrl+S', description: 'Save run for comparison' },
   { key: '⌘/Ctrl+E', description: 'Export results to CSV' },
+  { key: 'C', description: 'Toggle comparison view' },
   { key: '1', description: 'Apply Conservative preset' },
   { key: '2', description: 'Apply Moderate preset' },
   { key: '3', description: 'Apply Aggressive preset' },
@@ -136,6 +137,17 @@ export default function Backtest() {
           if (result) {
             reset();
             toast.success('Results cleared');
+          }
+          break;
+        case 'c':
+          e.preventDefault();
+          if (config.savedRuns.length > 0) {
+            config.toggleComparison();
+            toast.success(config.showComparison ? 'Showing results' : 'Showing comparison');
+          } else {
+            toast.error('No saved runs', {
+              description: 'Save some runs first to compare',
+            });
           }
           break;
       }
