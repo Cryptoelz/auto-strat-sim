@@ -39,7 +39,8 @@ import {
   History,
   Copy,
   MessageSquare,
-  Pin
+  Pin,
+  Search
 } from 'lucide-react';
 
 interface TooltipLabelProps {
@@ -251,6 +252,7 @@ export function BacktestConfigForm({
   const [deleteVersionsConfirmOpen, setDeleteVersionsConfirmOpen] = useState(false);
   const [editingNoteVersionId, setEditingNoteVersionId] = useState<string | null>(null);
   const [editingNoteText, setEditingNoteText] = useState('');
+  const [versionSearchQuery, setVersionSearchQuery] = useState('');
 
   // Keyboard shortcuts for version history
   useEffect(() => {
@@ -1190,6 +1192,7 @@ export function BacktestConfigForm({
                 setVersionFieldFilter(null);
                 setBatchSelectMode(false);
                 setBatchSelectedVersions(new Set());
+                setVersionSearchQuery('');
               }
             }}>
               <DialogContent className="sm:max-w-2xl">
@@ -1428,15 +1431,33 @@ export function BacktestConfigForm({
                     {versionHistorySlot && getPresetVersionHistory && (() => {
                       const allVersions = getPresetVersionHistory(versionHistorySlot);
                       
-                      // Filter versions based on field changes compared to previous version
-                      const filteredVersions = versionFieldFilter && allVersions.length > 1
-                        ? allVersions.filter((version, index) => {
-                            if (index === allVersions.length - 1) return true; // Always show oldest
-                            const prevVersion = allVersions[index + 1];
+                      // Filter versions based on search query and field changes
+                      const searchFiltered = versionSearchQuery.trim()
+                        ? allVersions.filter(version => {
+                            const query = versionSearchQuery.toLowerCase();
+                            // Search in label
+                            if (version.data.label.toLowerCase().includes(query)) return true;
+                            // Search in note
+                            if (version.note?.toLowerCase().includes(query)) return true;
+                            // Search in parameter values
+                            if (version.data.fastSMA.toString().includes(query)) return true;
+                            if (version.data.slowSMA.toString().includes(query)) return true;
+                            if (version.data.positionSizePercent.toString().includes(query)) return true;
+                            if (version.data.stopLossPercent.toString().includes(query)) return true;
+                            if (version.data.takeProfitPercent.toString().includes(query)) return true;
+                            return false;
+                          })
+                        : allVersions;
+                      
+                      // Then filter by field changes
+                      const filteredVersions = versionFieldFilter && searchFiltered.length > 1
+                        ? searchFiltered.filter((version, index) => {
+                            if (index === searchFiltered.length - 1) return true; // Always show oldest
+                            const prevVersion = searchFiltered[index + 1];
                             const fieldKey = versionFieldFilter as keyof typeof version.data;
                             return version.data[fieldKey] !== prevVersion.data[fieldKey];
                           })
-                        : allVersions;
+                        : searchFiltered;
                       
                       const fieldOptions = [
                         { value: 'label', label: 'Name' },
@@ -1455,6 +1476,27 @@ export function BacktestConfigForm({
                             </p>
                           ) : (
                             <>
+                              {/* Search Input */}
+                              <div className="relative mb-3">
+                                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                                <Input
+                                  placeholder="Search by name, note, or values..."
+                                  value={versionSearchQuery}
+                                  onChange={(e) => setVersionSearchQuery(e.target.value)}
+                                  className="h-8 pl-8 text-xs"
+                                />
+                                {versionSearchQuery && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                                    onClick={() => setVersionSearchQuery('')}
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </Button>
+                                )}
+                              </div>
+                              
                               {/* Filter & Batch Mode Bar */}
                               {allVersions.length > 1 && !compareVersions[0] && (
                                 <div className="flex flex-col gap-2 mb-3 pb-3 border-b">
@@ -1545,9 +1587,17 @@ export function BacktestConfigForm({
                               )}
                               
                               {/* Filter Results Info */}
-                              {versionFieldFilter && filteredVersions.length !== allVersions.length && (
+                              {(versionSearchQuery || versionFieldFilter) && filteredVersions.length !== allVersions.length && (
                                 <p className="text-xs text-muted-foreground mb-2 text-center">
-                                  Showing {filteredVersions.length} of {allVersions.length} versions with {fieldOptions.find(f => f.value === versionFieldFilter)?.label} changes
+                                  Showing {filteredVersions.length} of {allVersions.length} versions
+                                  {versionSearchQuery && ` matching "${versionSearchQuery}"`}
+                                  {versionFieldFilter && ` with ${fieldOptions.find(f => f.value === versionFieldFilter)?.label} changes`}
+                                </p>
+                              )}
+                              
+                              {filteredVersions.length === 0 && versionSearchQuery && (
+                                <p className="text-sm text-muted-foreground text-center py-4">
+                                  No versions match your search
                                 </p>
                               )}
                               
