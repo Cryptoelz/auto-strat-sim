@@ -41,6 +41,7 @@ const BACKTEST_SHORTCUTS = [
   { key: 'R', description: 'Reset results' },
   { key: '⌘/Ctrl+S', description: 'Save run for comparison' },
   { key: '⌘/Ctrl+E', description: 'Export results to CSV' },
+  { key: '⌘/Ctrl+H', description: 'Open version history' },
   { key: 'C', description: 'Toggle comparison view' },
   { key: 'D', description: 'Delete all saved runs' },
   { key: 'Esc', description: 'Close comparison view' },
@@ -59,6 +60,7 @@ export default function Backtest() {
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [clearPresetsConfirmOpen, setClearPresetsConfirmOpen] = useState(false);
+  const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
   const { isRunning, progress, result, error, runBacktest, reset } = useBacktest();
   const config = useBacktestConfig();
 
@@ -113,6 +115,21 @@ export default function Backtest() {
         } else {
           toast.error('No result to export', {
             description: 'Run a backtest first before exporting',
+          });
+        }
+        return;
+      }
+
+      // Ctrl/Cmd+H to open version history
+      if ((e.ctrlKey || e.metaKey) && e.key === 'h') {
+        e.preventDefault();
+        // Check if any custom preset exists
+        const hasAnyPreset = config.hasCustomPreset('4') || config.hasCustomPreset('5') || config.hasCustomPreset('6');
+        if (hasAnyPreset) {
+          setVersionHistoryOpen(true);
+        } else {
+          toast.error('No custom presets', {
+            description: 'Save a custom preset first to view version history',
           });
         }
         return;
@@ -411,6 +428,8 @@ export default function Backtest() {
             onUpdateVersionNote={config.updateVersionNote}
             onToggleVersionPin={config.toggleVersionPin}
             onToggleVersionTag={config.toggleVersionTag}
+            versionHistoryOpen={versionHistoryOpen}
+            onVersionHistoryOpenChange={setVersionHistoryOpen}
           />
 
           {/* Strategy Optimizer */}
