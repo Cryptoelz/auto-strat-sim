@@ -405,6 +405,8 @@ export default function Backtest() {
             hasPresetHistory={config.hasPresetHistory}
             onImportVersionHistory={config.importVersionHistory}
             onDeleteVersions={config.deleteVersions}
+            onUndoDeleteVersions={config.undoDeleteVersions}
+            onClearDeleteBackup={config.clearDeleteBackup}
           />
 
           {/* Strategy Optimizer */}
