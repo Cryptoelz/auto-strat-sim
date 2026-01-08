@@ -235,6 +235,7 @@ export function BacktestConfigForm({
   const [versionFieldFilter, setVersionFieldFilter] = useState<string | null>(null);
   const [batchSelectMode, setBatchSelectMode] = useState(false);
   const [batchSelectedVersions, setBatchSelectedVersions] = useState<Set<string>>(new Set());
+  const [deleteVersionsConfirmOpen, setDeleteVersionsConfirmOpen] = useState(false);
 
   // Keyboard shortcuts for version history
   useEffect(() => {
@@ -250,17 +251,10 @@ export function BacktestConfigForm({
         }
       }
       
-      // Delete or Backspace to delete selected
+      // Delete or Backspace to open delete confirmation
       if ((e.key === 'Delete' || e.key === 'Backspace') && batchSelectedVersions.size > 0) {
         e.preventDefault();
-        if (onDeleteVersions) {
-          const ids = Array.from(batchSelectedVersions);
-          const deleted = onDeleteVersions(versionHistorySlot, ids);
-          if (deleted > 0) {
-            toast.success(`Deleted ${deleted} version${deleted !== 1 ? 's' : ''}`);
-            setBatchSelectedVersions(new Set());
-          }
-        }
+        setDeleteVersionsConfirmOpen(true);
       }
       
       // Escape to exit batch mode
@@ -1687,19 +1681,42 @@ export function BacktestConfigForm({
                     <Button 
                       variant="destructive" 
                       size="sm" 
-                      onClick={() => {
-                        const ids = Array.from(batchSelectedVersions);
-                        const deleted = onDeleteVersions(versionHistorySlot, ids);
-                        if (deleted > 0) {
-                          toast.success(`Deleted ${deleted} version${deleted !== 1 ? 's' : ''}`);
-                          setBatchSelectedVersions(new Set());
-                        }
-                      }}
+                      onClick={() => setDeleteVersionsConfirmOpen(true)}
                     >
                       <Trash2 className="h-3.5 w-3.5 mr-1.5" />
                       Delete ({batchSelectedVersions.size})
                     </Button>
                   )}
+                  
+                  {/* Delete Confirmation Dialog */}
+                  <AlertDialog open={deleteVersionsConfirmOpen} onOpenChange={setDeleteVersionsConfirmOpen}>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete {batchSelectedVersions.size} version{batchSelectedVersions.size !== 1 ? 's' : ''}?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. The selected version{batchSelectedVersions.size !== 1 ? 's' : ''} will be permanently removed from the history.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          onClick={() => {
+                            if (onDeleteVersions && versionHistorySlot) {
+                              const ids = Array.from(batchSelectedVersions);
+                              const deleted = onDeleteVersions(versionHistorySlot, ids);
+                              if (deleted > 0) {
+                                toast.success(`Deleted ${deleted} version${deleted !== 1 ? 's' : ''}`);
+                                setBatchSelectedVersions(new Set());
+                              }
+                            }
+                          }}
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                   {compareVersions[0] && !compareVersions[1] && (
                     <Button variant="ghost" size="sm" onClick={() => setCompareVersions([null, null])}>
                       Cancel Compare
