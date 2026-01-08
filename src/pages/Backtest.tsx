@@ -28,6 +28,7 @@ import {
 
 const BACKTEST_SHORTCUTS = [
   { key: 'Enter', description: 'Run backtest' },
+  { key: 'R', description: 'Reset results' },
   { key: '⌘/Ctrl+S', description: 'Save run for comparison' },
   { key: '1', description: 'Apply Conservative preset' },
   { key: '2', description: 'Apply Moderate preset' },
@@ -115,12 +116,19 @@ export default function Backtest() {
           e.preventDefault();
           setShortcutsOpen(true);
           break;
+        case 'r':
+          e.preventDefault();
+          if (result) {
+            reset();
+            toast.success('Results cleared');
+          }
+          break;
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handlePresetShortcut, isRunning, handleRunBacktest, result, config]);
+  }, [handlePresetShortcut, isRunning, handleRunBacktest, result, config, reset]);
 
   return (
     <div className="min-h-screen bg-background">
