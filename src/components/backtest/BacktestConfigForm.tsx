@@ -230,6 +230,7 @@ export function BacktestConfigForm({
   const [isDragging, setIsDragging] = useState(false);
   const [versionHistorySlot, setVersionHistorySlot] = useState<'4' | '5' | '6' | null>(null);
   const [compareVersions, setCompareVersions] = useState<[string | null, string | null]>([null, null]);
+  const [versionFieldFilter, setVersionFieldFilter] = useState<string | null>(null);
 
   // Count existing presets (moved up for use in handleFileDrop)
   const existingPresetCount = useMemo(() => {
@@ -1135,6 +1136,7 @@ export function BacktestConfigForm({
               if (!open) {
                 setVersionHistorySlot(null);
                 setCompareVersions([null, null]);
+                setVersionFieldFilter(null);
               }
             }}>
               <DialogContent className="sm:max-w-2xl">
@@ -1369,101 +1371,167 @@ export function BacktestConfigForm({
                 
                 {/* Version List */}
                 {!(compareVersions[0] && compareVersions[1]) && (
-                  <div className="py-4 max-h-[300px] overflow-y-auto">
-                    {versionHistorySlot && getPresetVersionHistory && (
-                      <div className="space-y-2">
-                        {getPresetVersionHistory(versionHistorySlot).length === 0 ? (
-                          <p className="text-sm text-muted-foreground text-center py-4">
-                            No version history available
-                          </p>
-                        ) : (
-                          <>
-                            {compareVersions[0] && !compareVersions[1] && (
-                              <p className="text-xs text-muted-foreground mb-2 text-center">
-                                Select another version to compare
-                              </p>
-                            )}
-                            {getPresetVersionHistory(versionHistorySlot).map((version, index) => {
-                              const isSelected = compareVersions[0] === version.id || compareVersions[1] === version.id;
-                              return (
-                                <div
-                                  key={version.id}
-                                  className={cn(
-                                    "flex items-center justify-between p-3 rounded-lg border transition-colors",
-                                    isSelected 
-                                      ? "border-primary bg-primary/10" 
-                                      : "border-border/50 hover:bg-muted/50"
-                                  )}
-                                >
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-xs font-medium">
-                                        {version.data.label}
-                                      </span>
-                                      {index === 0 && (
-                                        <span className="text-[10px] px-1.5 py-0.5 bg-primary/20 text-primary rounded">
-                                          Current
-                                        </span>
-                                      )}
-                                    </div>
-                                    <p className="text-xs text-muted-foreground mt-0.5">
-                                      {format(new Date(version.savedAt), 'MMM d, yyyy · HH:mm')}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">
-                                      SMA: {version.data.fastSMA}/{version.data.slowSMA} · 
-                                      Pos: {version.data.positionSizePercent}% · 
-                                      SL: {version.data.stopLossPercent}% · 
-                                      TP: {version.data.takeProfitPercent}%
-                                    </p>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <Button
-                                      variant={isSelected ? "secondary" : "ghost"}
-                                      size="sm"
-                                      className="h-7 text-xs"
-                                      onClick={() => {
-                                        if (isSelected) {
-                                          // Deselect
-                                          if (compareVersions[0] === version.id) {
-                                            setCompareVersions([compareVersions[1], null]);
-                                          } else {
-                                            setCompareVersions([compareVersions[0], null]);
-                                          }
-                                        } else if (!compareVersions[0]) {
-                                          setCompareVersions([version.id, null]);
-                                        } else if (!compareVersions[1]) {
-                                          setCompareVersions([compareVersions[0], version.id]);
-                                        }
-                                      }}
-                                    >
-                                      {isSelected ? <Check className="h-3 w-3" /> : <GitCompare className="h-3 w-3" />}
-                                    </Button>
-                                    {index > 0 && onRestorePresetVersion && !compareVersions[0] && (
+                  <div className="py-4">
+                    {versionHistorySlot && getPresetVersionHistory && (() => {
+                      const allVersions = getPresetVersionHistory(versionHistorySlot);
+                      
+                      // Filter versions based on field changes compared to previous version
+                      const filteredVersions = versionFieldFilter && allVersions.length > 1
+                        ? allVersions.filter((version, index) => {
+                            if (index === allVersions.length - 1) return true; // Always show oldest
+                            const prevVersion = allVersions[index + 1];
+                            const fieldKey = versionFieldFilter as keyof typeof version.data;
+                            return version.data[fieldKey] !== prevVersion.data[fieldKey];
+                          })
+                        : allVersions;
+                      
+                      const fieldOptions = [
+                        { value: 'label', label: 'Name' },
+                        { value: 'fastSMA', label: 'Fast SMA' },
+                        { value: 'slowSMA', label: 'Slow SMA' },
+                        { value: 'positionSizePercent', label: 'Position Size' },
+                        { value: 'stopLossPercent', label: 'Stop Loss' },
+                        { value: 'takeProfitPercent', label: 'Take Profit' },
+                      ];
+                      
+                      return (
+                        <div className="space-y-2">
+                          {allVersions.length === 0 ? (
+                            <p className="text-sm text-muted-foreground text-center py-4">
+                              No version history available
+                            </p>
+                          ) : (
+                            <>
+                              {/* Filter Bar */}
+                              {allVersions.length > 1 && !compareVersions[0] && (
+                                <div className="flex items-center gap-2 mb-3 pb-3 border-b">
+                                  <span className="text-xs text-muted-foreground">Filter by change:</span>
+                                  <div className="flex flex-wrap gap-1">
+                                    {fieldOptions.map(({ value, label }) => (
                                       <Button
-                                        variant="outline"
+                                        key={value}
+                                        variant={versionFieldFilter === value ? "secondary" : "ghost"}
                                         size="sm"
-                                        className="h-7 text-xs"
-                                        onClick={() => {
-                                          if (versionHistorySlot && onRestorePresetVersion(versionHistorySlot, version.id)) {
-                                            toast.success('Version restored', {
-                                              description: `Restored to "${version.data.label}" from ${format(new Date(version.savedAt), 'MMM d, HH:mm')}`,
-                                            });
-                                            setVersionHistorySlot(null);
-                                          }
-                                        }}
+                                        className="h-6 text-[10px] px-2"
+                                        onClick={() => setVersionFieldFilter(
+                                          versionFieldFilter === value ? null : value
+                                        )}
                                       >
-                                        <RotateCcw className="h-3 w-3 mr-1" />
-                                        Restore
+                                        {label}
                                       </Button>
-                                    )}
+                                    ))}
                                   </div>
+                                  {versionFieldFilter && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 text-[10px] px-1.5 ml-auto"
+                                      onClick={() => setVersionFieldFilter(null)}
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </Button>
+                                  )}
                                 </div>
-                              );
-                            })}
-                          </>
-                        )}
-                      </div>
-                    )}
+                              )}
+                              
+                              {/* Filter Results Info */}
+                              {versionFieldFilter && filteredVersions.length !== allVersions.length && (
+                                <p className="text-xs text-muted-foreground mb-2 text-center">
+                                  Showing {filteredVersions.length} of {allVersions.length} versions with {fieldOptions.find(f => f.value === versionFieldFilter)?.label} changes
+                                </p>
+                              )}
+                              
+                              {compareVersions[0] && !compareVersions[1] && (
+                                <p className="text-xs text-muted-foreground mb-2 text-center">
+                                  Select another version to compare
+                                </p>
+                              )}
+                              
+                              <div className="max-h-[250px] overflow-y-auto space-y-2">
+                                {filteredVersions.map((version) => {
+                                  const originalIndex = allVersions.findIndex(v => v.id === version.id);
+                                  const isSelected = compareVersions[0] === version.id || compareVersions[1] === version.id;
+                                  return (
+                                    <div
+                                      key={version.id}
+                                      className={cn(
+                                        "flex items-center justify-between p-3 rounded-lg border transition-colors",
+                                        isSelected 
+                                          ? "border-primary bg-primary/10" 
+                                          : "border-border/50 hover:bg-muted/50"
+                                      )}
+                                    >
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-xs font-medium">
+                                            {version.data.label}
+                                          </span>
+                                          {originalIndex === 0 && (
+                                            <span className="text-[10px] px-1.5 py-0.5 bg-primary/20 text-primary rounded">
+                                              Current
+                                            </span>
+                                          )}
+                                        </div>
+                                        <p className="text-xs text-muted-foreground mt-0.5">
+                                          {format(new Date(version.savedAt), 'MMM d, yyyy · HH:mm')}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                          SMA: {version.data.fastSMA}/{version.data.slowSMA} · 
+                                          Pos: {version.data.positionSizePercent}% · 
+                                          SL: {version.data.stopLossPercent}% · 
+                                          TP: {version.data.takeProfitPercent}%
+                                        </p>
+                                      </div>
+                                      <div className="flex items-center gap-1">
+                                        <Button
+                                          variant={isSelected ? "secondary" : "ghost"}
+                                          size="sm"
+                                          className="h-7 text-xs"
+                                          onClick={() => {
+                                            if (isSelected) {
+                                              // Deselect
+                                              if (compareVersions[0] === version.id) {
+                                                setCompareVersions([compareVersions[1], null]);
+                                              } else {
+                                                setCompareVersions([compareVersions[0], null]);
+                                              }
+                                            } else if (!compareVersions[0]) {
+                                              setCompareVersions([version.id, null]);
+                                            } else if (!compareVersions[1]) {
+                                              setCompareVersions([compareVersions[0], version.id]);
+                                            }
+                                          }}
+                                        >
+                                          {isSelected ? <Check className="h-3 w-3" /> : <GitCompare className="h-3 w-3" />}
+                                        </Button>
+                                        {originalIndex > 0 && onRestorePresetVersion && !compareVersions[0] && (
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-7 text-xs"
+                                            onClick={() => {
+                                              if (versionHistorySlot && onRestorePresetVersion(versionHistorySlot, version.id)) {
+                                                toast.success('Version restored', {
+                                                  description: `Restored to "${version.data.label}" from ${format(new Date(version.savedAt), 'MMM d, HH:mm')}`,
+                                                });
+                                                setVersionHistorySlot(null);
+                                              }
+                                            }}
+                                          >
+                                            <RotateCcw className="h-3 w-3 mr-1" />
+                                            Restore
+                                          </Button>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
                 <DialogFooter>
