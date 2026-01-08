@@ -336,6 +336,7 @@ export default function Backtest() {
             onLoadCustomPreset={config.loadCustomPreset}
             onSaveCustomPreset={config.saveCustomPreset}
             onDeleteCustomPreset={config.deleteCustomPreset}
+            onRenameCustomPreset={config.renameCustomPreset}
             getCustomPresetData={config.getCustomPreset}
           />
 

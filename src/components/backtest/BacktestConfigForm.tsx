@@ -31,7 +31,8 @@ import {
   AlertCircle,
   HelpCircle,
   RefreshCcw,
-  X
+  X,
+  Pencil
 } from 'lucide-react';
 
 interface TooltipLabelProps {
@@ -147,6 +148,7 @@ interface BacktestConfigFormProps {
   onLoadCustomPreset?: (slot: '4' | '5' | '6') => boolean;
   onSaveCustomPreset?: (slot: '4' | '5' | '6', name?: string) => void;
   onDeleteCustomPreset?: (slot: '4' | '5' | '6') => void;
+  onRenameCustomPreset?: (slot: '4' | '5' | '6', newName: string) => void;
   getCustomPresetData?: (slot: '4' | '5' | '6') => { label: string; positionSizePercent: number; stopLossPercent: number; takeProfitPercent: number; fastSMA: number; slowSMA: number } | null;
 }
 
@@ -192,12 +194,14 @@ export function BacktestConfigForm({
   onLoadCustomPreset,
   onSaveCustomPreset,
   onDeleteCustomPreset,
+  onRenameCustomPreset,
   getCustomPresetData,
 }: BacktestConfigFormProps) {
   const [copied, setCopied] = useState(false);
   const [presetDialogOpen, setPresetDialogOpen] = useState(false);
   const [pendingPresetSlot, setPendingPresetSlot] = useState<'4' | '5' | '6' | null>(null);
   const [presetName, setPresetName] = useState('');
+  const [isRenaming, setIsRenaming] = useState(false);
 
   // Real-time validation
   const fieldErrors = useMemo<FieldErrors>(() => {
@@ -552,9 +556,9 @@ export function BacktestConfigForm({
                             variant={hasData ? "secondary" : "ghost"}
                             size="sm"
                             className={cn(
-                              "h-7 min-w-7 px-1 text-xs font-mono",
-                              hasData && "ring-1 ring-primary/50 pr-6"
-                            )}
+                            "h-7 min-w-7 px-1 text-xs font-mono",
+                            hasData && "ring-1 ring-primary/50 pr-10"
+                          )}
                             onClick={() => {
                               if (hasData && onLoadCustomPreset) {
                                 if (onLoadCustomPreset(slot)) {
@@ -590,6 +594,27 @@ export function BacktestConfigForm({
                           )}
                         </TooltipContent>
                       </Tooltip>
+                      {hasData && onRenameCustomPreset && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              className="absolute right-5 top-1/2 -translate-y-1/2 h-5 w-5 rounded-sm flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPendingPresetSlot(slot);
+                                setPresetName(presetData?.label || '');
+                                setIsRenaming(true);
+                                setPresetDialogOpen(true);
+                              }}
+                            >
+                              <Pencil className="h-3 w-3" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-xs">Rename preset</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
                       {hasData && onDeleteCustomPreset && (
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -616,12 +641,22 @@ export function BacktestConfigForm({
             )}
 
             {/* Custom Preset Name Dialog */}
-            <Dialog open={presetDialogOpen} onOpenChange={setPresetDialogOpen}>
+            <Dialog open={presetDialogOpen} onOpenChange={(open) => {
+              setPresetDialogOpen(open);
+              if (!open) {
+                setIsRenaming(false);
+                setPendingPresetSlot(null);
+                setPresetName('');
+              }
+            }}>
               <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                  <DialogTitle>Name Your Preset</DialogTitle>
+                  <DialogTitle>{isRenaming ? 'Rename Preset' : 'Name Your Preset'}</DialogTitle>
                   <DialogDescription>
-                    Give your custom preset a memorable name for slot {pendingPresetSlot}.
+                    {isRenaming 
+                      ? `Enter a new name for this preset.`
+                      : `Give your custom preset a memorable name for slot ${pendingPresetSlot}.`
+                    }
                   </DialogDescription>
                 </DialogHeader>
                 <div className="py-4">
@@ -631,9 +666,15 @@ export function BacktestConfigForm({
                     onChange={(e) => setPresetName(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && pendingPresetSlot) {
-                        onSaveCustomPreset?.(pendingPresetSlot, presetName.trim() || undefined);
-                        toast.success(`Saved as "${presetName.trim() || `Custom ${pendingPresetSlot}`}"`);
+                        if (isRenaming) {
+                          onRenameCustomPreset?.(pendingPresetSlot, presetName.trim());
+                          toast.success(`Renamed to "${presetName.trim() || `Custom ${pendingPresetSlot}`}"`);
+                        } else {
+                          onSaveCustomPreset?.(pendingPresetSlot, presetName.trim() || undefined);
+                          toast.success(`Saved as "${presetName.trim() || `Custom ${pendingPresetSlot}`}"`);
+                        }
                         setPresetDialogOpen(false);
+                        setIsRenaming(false);
                         setPendingPresetSlot(null);
                         setPresetName('');
                       }
@@ -646,6 +687,7 @@ export function BacktestConfigForm({
                     variant="outline"
                     onClick={() => {
                       setPresetDialogOpen(false);
+                      setIsRenaming(false);
                       setPendingPresetSlot(null);
                     }}
                   >
@@ -654,16 +696,31 @@ export function BacktestConfigForm({
                   <Button
                     onClick={() => {
                       if (pendingPresetSlot) {
-                        onSaveCustomPreset?.(pendingPresetSlot, presetName.trim() || undefined);
-                        toast.success(`Saved as "${presetName.trim() || `Custom ${pendingPresetSlot}`}"`);
+                        if (isRenaming) {
+                          onRenameCustomPreset?.(pendingPresetSlot, presetName.trim());
+                          toast.success(`Renamed to "${presetName.trim() || `Custom ${pendingPresetSlot}`}"`);
+                        } else {
+                          onSaveCustomPreset?.(pendingPresetSlot, presetName.trim() || undefined);
+                          toast.success(`Saved as "${presetName.trim() || `Custom ${pendingPresetSlot}`}"`);
+                        }
                         setPresetDialogOpen(false);
+                        setIsRenaming(false);
                         setPendingPresetSlot(null);
                         setPresetName('');
                       }
                     }}
                   >
-                    <Save className="h-4 w-4 mr-2" />
-                    Save Preset
+                    {isRenaming ? (
+                      <>
+                        <Pencil className="h-4 w-4 mr-2" />
+                        Rename
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4 mr-2" />
+                        Save Preset
+                      </>
+                    )}
                   </Button>
                 </DialogFooter>
               </DialogContent>

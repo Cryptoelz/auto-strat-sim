@@ -496,6 +496,24 @@ export function useBacktestConfig() {
     localStorage.setItem('backtest-custom-presets', JSON.stringify(updated));
   }, [customPresets]);
 
+  /**
+   * Rename a custom preset in a slot
+   */
+  const renameCustomPreset = useCallback((slot: '4' | '5' | '6', newName: string) => {
+    const preset = customPresets[slot];
+    if (!preset) return;
+    const updated = {
+      ...customPresets,
+      [slot]: {
+        ...preset,
+        label: newName || `Custom ${slot}`,
+        description: newName ? `Custom preset: ${newName}` : `Saved preset in slot ${slot}`,
+      },
+    };
+    setCustomPresets(updated);
+    localStorage.setItem('backtest-custom-presets', JSON.stringify(updated));
+  }, [customPresets]);
+
   return {
     // Date config
     startDate,
@@ -558,5 +576,6 @@ export function useBacktestConfig() {
     hasCustomPreset,
     getCustomPreset,
     deleteCustomPreset,
+    renameCustomPreset,
   };
 }
