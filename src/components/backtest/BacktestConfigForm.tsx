@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Asset } from '@/types/trading';
 import { BacktestResult, SavedRun } from '@/types/backtest';
 import { ASSET_INFO } from '@/config/trading';
@@ -207,7 +208,14 @@ export function BacktestConfigForm({
   const [pendingPresetSlot, setPendingPresetSlot] = useState<'4' | '5' | '6' | null>(null);
   const [presetName, setPresetName] = useState('');
   const [isRenaming, setIsRenaming] = useState(false);
+  const [importConfirmOpen, setImportConfirmOpen] = useState(false);
+  const [pendingImportJson, setPendingImportJson] = useState<string | null>(null);
 
+  // Count existing presets
+  const existingPresetCount = useMemo(() => {
+    if (!customPresetSlots) return 0;
+    return Object.values(customPresetSlots).filter(Boolean).length;
+  }, [customPresetSlots]);
   // Real-time validation
   const fieldErrors = useMemo<FieldErrors>(() => {
     const errors: FieldErrors = {};
@@ -683,11 +691,18 @@ export function BacktestConfigForm({
                                 const reader = new FileReader();
                                 reader.onload = (event) => {
                                   const json = event.target?.result as string;
-                                  const result = onImportCustomPresets(json);
-                                  if (result.success) {
-                                    toast.success(result.message);
+                                  // If there are existing presets, show confirmation
+                                  if (existingPresetCount > 0) {
+                                    setPendingImportJson(json);
+                                    setImportConfirmOpen(true);
                                   } else {
-                                    toast.error('Import failed', { description: result.message });
+                                    // No existing presets, import directly
+                                    const result = onImportCustomPresets(json);
+                                    if (result.success) {
+                                      toast.success(result.message);
+                                    } else {
+                                      toast.error('Import failed', { description: result.message });
+                                    }
                                   }
                                 };
                                 reader.readAsText(file);
@@ -707,6 +722,39 @@ export function BacktestConfigForm({
                 )}
               </div>
             )}
+
+            {/* Import Confirmation Dialog */}
+            <AlertDialog open={importConfirmOpen} onOpenChange={setImportConfirmOpen}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Overwrite existing presets?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    You have {existingPresetCount} custom preset{existingPresetCount !== 1 ? 's' : ''} saved. 
+                    Importing will replace all existing presets with the ones from the file. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={() => setPendingImportJson(null)}>
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => {
+                      if (pendingImportJson && onImportCustomPresets) {
+                        const result = onImportCustomPresets(pendingImportJson);
+                        if (result.success) {
+                          toast.success(result.message);
+                        } else {
+                          toast.error('Import failed', { description: result.message });
+                        }
+                      }
+                      setPendingImportJson(null);
+                    }}
+                  >
+                    Overwrite Presets
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
 
             {/* Custom Preset Name Dialog */}
             <Dialog open={presetDialogOpen} onOpenChange={(open) => {
