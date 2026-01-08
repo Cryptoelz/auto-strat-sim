@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,7 @@ import { Asset } from '@/types/trading';
 import { BacktestResult, SavedRun } from '@/types/backtest';
 import { ASSET_INFO } from '@/config/trading';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 import { 
   Play, 
   RotateCcw, 
@@ -22,8 +23,30 @@ import {
   GitCompare,
   Download,
   Share2,
-  Check
+  Check,
+  AlertCircle
 } from 'lucide-react';
+
+interface FieldErrors {
+  assets?: string;
+  dateRange?: string;
+  fastSMA?: string;
+  slowSMA?: string;
+  initialBalance?: string;
+  positionSize?: string;
+  stopLoss?: string;
+  takeProfit?: string;
+}
+
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return (
+    <p className="flex items-center gap-1 text-xs text-destructive mt-1">
+      <AlertCircle className="h-3 w-3" />
+      {message}
+    </p>
+  );
+}
 
 const TIMEFRAME_OPTIONS = [
   { value: '5m', label: '5 Minutes' },
@@ -122,6 +145,62 @@ export function BacktestConfigForm({
 }: BacktestConfigFormProps) {
   const [copied, setCopied] = useState(false);
 
+  // Real-time validation
+  const fieldErrors = useMemo<FieldErrors>(() => {
+    const errors: FieldErrors = {};
+    
+    // Assets validation
+    if (enabledAssets.length === 0) {
+      errors.assets = 'Select at least one trading pair';
+    }
+    
+    // Date validation
+    if (startDate >= endDate) {
+      errors.dateRange = 'End date must be after start date';
+    }
+    if (startDate >= new Date()) {
+      errors.dateRange = 'Start date must be in the past';
+    }
+    
+    // SMA validation
+    if (fastSMA < 5 || fastSMA > 100) {
+      errors.fastSMA = 'Must be between 5 and 100';
+    }
+    if (slowSMA < 10 || slowSMA > 200) {
+      errors.slowSMA = 'Must be between 10 and 200';
+    }
+    if (slowSMA <= fastSMA) {
+      errors.slowSMA = 'Must be greater than Fast SMA';
+    }
+    
+    // Initial balance validation
+    if (initialBalance < 100) {
+      errors.initialBalance = 'Must be at least $100';
+    }
+    if (initialBalance > 100000000) {
+      errors.initialBalance = 'Must not exceed $100,000,000';
+    }
+    
+    // Position size validation
+    if (positionSizePercent < 1 || positionSizePercent > 100) {
+      errors.positionSize = 'Must be between 1% and 100%';
+    }
+    
+    // Stop loss validation
+    if (stopLossPercent < 0.1 || stopLossPercent > 50) {
+      errors.stopLoss = 'Must be between 0.1% and 50%';
+    }
+    
+    // Take profit validation
+    if (takeProfitPercent < 0.1 || takeProfitPercent > 100) {
+      errors.takeProfit = 'Must be between 0.1% and 100%';
+    }
+    
+    return errors;
+  }, [enabledAssets, startDate, endDate, fastSMA, slowSMA, initialBalance, positionSizePercent, stopLossPercent, takeProfitPercent]);
+
+  const hasErrors = Object.keys(fieldErrors).length > 0;
+
   const handleShare = async () => {
     if (!onShareConfig) return;
     const success = await onShareConfig();
@@ -166,7 +245,14 @@ export function BacktestConfigForm({
           <div className="grid grid-cols-2 gap-2">
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="justify-start text-left font-normal">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className={cn(
+                    "justify-start text-left font-normal",
+                    fieldErrors.dateRange && "border-destructive"
+                  )}
+                >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {format(startDate, 'MMM dd, yyyy')}
                 </Button>
@@ -182,7 +268,14 @@ export function BacktestConfigForm({
             </Popover>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="justify-start text-left font-normal">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className={cn(
+                    "justify-start text-left font-normal",
+                    fieldErrors.dateRange && "border-destructive"
+                  )}
+                >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {format(endDate, 'MMM dd, yyyy')}
                 </Button>
@@ -197,6 +290,7 @@ export function BacktestConfigForm({
               </PopoverContent>
             </Popover>
           </div>
+          <FieldError message={fieldErrors.dateRange} />
         </div>
 
         {/* Timeframe */}
@@ -216,10 +310,18 @@ export function BacktestConfigForm({
 
         {/* Assets */}
         <div className="space-y-2">
-          <Label className="text-sm font-medium">Trading Pairs</Label>
+          <Label className={cn("text-sm font-medium", fieldErrors.assets && "text-destructive")}>
+            Trading Pairs
+          </Label>
           <div className="grid grid-cols-2 gap-2">
             {AVAILABLE_ASSETS.map((asset) => (
-              <div key={asset} className="flex items-center justify-between rounded-lg border border-border/50 bg-secondary/20 px-3 py-2">
+              <div 
+                key={asset} 
+                className={cn(
+                  "flex items-center justify-between rounded-lg border bg-secondary/20 px-3 py-2",
+                  fieldErrors.assets ? "border-destructive/50" : "border-border/50"
+                )}
+              >
                 <span className="text-sm font-medium">{ASSET_INFO[asset].symbol}</span>
                 <Switch
                   checked={enabledAssets.includes(asset)}
@@ -228,6 +330,7 @@ export function BacktestConfigForm({
               </div>
             ))}
           </div>
+          <FieldError message={fieldErrors.assets} />
         </div>
 
         <Separator />
@@ -237,24 +340,32 @@ export function BacktestConfigForm({
           <Label className="text-sm font-medium">SMA Indicators</Label>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">Fast SMA</Label>
+              <Label className={cn("text-xs", fieldErrors.fastSMA ? "text-destructive" : "text-muted-foreground")}>
+                Fast SMA
+              </Label>
               <Input
                 type="number"
                 value={fastSMA}
                 onChange={(e) => onFastSMAChange(parseInt(e.target.value) || 20)}
                 min={5}
                 max={100}
+                className={cn(fieldErrors.fastSMA && "border-destructive")}
               />
+              <FieldError message={fieldErrors.fastSMA} />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">Slow SMA</Label>
+              <Label className={cn("text-xs", fieldErrors.slowSMA ? "text-destructive" : "text-muted-foreground")}>
+                Slow SMA
+              </Label>
               <Input
                 type="number"
                 value={slowSMA}
                 onChange={(e) => onSlowSMAChange(parseInt(e.target.value) || 50)}
                 min={10}
                 max={200}
+                className={cn(fieldErrors.slowSMA && "border-destructive")}
               />
+              <FieldError message={fieldErrors.slowSMA} />
             </div>
           </div>
         </div>
@@ -264,45 +375,61 @@ export function BacktestConfigForm({
           <Label className="text-sm font-medium">Risk Management</Label>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">Initial Balance ($)</Label>
+              <Label className={cn("text-xs", fieldErrors.initialBalance ? "text-destructive" : "text-muted-foreground")}>
+                Initial Balance ($)
+              </Label>
               <Input
                 type="number"
                 value={initialBalance}
                 onChange={(e) => onInitialBalanceChange(parseInt(e.target.value) || 10000)}
-                min={1000}
+                min={100}
+                className={cn(fieldErrors.initialBalance && "border-destructive")}
               />
+              <FieldError message={fieldErrors.initialBalance} />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">Position Size (%)</Label>
+              <Label className={cn("text-xs", fieldErrors.positionSize ? "text-destructive" : "text-muted-foreground")}>
+                Position Size (%)
+              </Label>
               <Input
                 type="number"
                 value={positionSizePercent}
                 onChange={(e) => onPositionSizeChange(parseInt(e.target.value) || 5)}
                 min={1}
                 max={100}
+                className={cn(fieldErrors.positionSize && "border-destructive")}
               />
+              <FieldError message={fieldErrors.positionSize} />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">Stop Loss (%)</Label>
+              <Label className={cn("text-xs", fieldErrors.stopLoss ? "text-destructive" : "text-muted-foreground")}>
+                Stop Loss (%)
+              </Label>
               <Input
                 type="number"
                 value={stopLossPercent}
                 onChange={(e) => onStopLossChange(parseFloat(e.target.value) || 2)}
-                min={0.5}
-                max={20}
-                step={0.5}
+                min={0.1}
+                max={50}
+                step={0.1}
+                className={cn(fieldErrors.stopLoss && "border-destructive")}
               />
+              <FieldError message={fieldErrors.stopLoss} />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">Take Profit (%)</Label>
+              <Label className={cn("text-xs", fieldErrors.takeProfit ? "text-destructive" : "text-muted-foreground")}>
+                Take Profit (%)
+              </Label>
               <Input
                 type="number"
                 value={takeProfitPercent}
                 onChange={(e) => onTakeProfitChange(parseFloat(e.target.value) || 4)}
-                min={0.5}
-                max={50}
-                step={0.5}
+                min={0.1}
+                max={100}
+                step={0.1}
+                className={cn(fieldErrors.takeProfit && "border-destructive")}
               />
+              <FieldError message={fieldErrors.takeProfit} />
             </div>
           </div>
         </div>
@@ -312,7 +439,7 @@ export function BacktestConfigForm({
           <div className="flex gap-2">
             <Button
               onClick={onRunBacktest}
-              disabled={isRunning || enabledAssets.length === 0}
+              disabled={isRunning || hasErrors}
               className="flex-1"
             >
               {isRunning ? (
