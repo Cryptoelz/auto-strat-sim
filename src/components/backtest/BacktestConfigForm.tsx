@@ -155,6 +155,7 @@ interface BacktestConfigFormProps {
   onExportCustomPresets?: () => boolean;
   onImportCustomPresets?: (json: string, mode?: 'replace' | 'merge') => { success: boolean; message: string };
   onClearAllCustomPresets?: () => void;
+  lastPresetSync?: { action: 'import' | 'export'; timestamp: number } | null;
 }
 
 export function BacktestConfigForm({
@@ -204,6 +205,7 @@ export function BacktestConfigForm({
   onExportCustomPresets,
   onImportCustomPresets,
   onClearAllCustomPresets,
+  lastPresetSync,
 }: BacktestConfigFormProps) {
   const [copied, setCopied] = useState(false);
   const [clearPresetsConfirmOpen, setClearPresetsConfirmOpen] = useState(false);
@@ -851,6 +853,22 @@ export function BacktestConfigForm({
                       </Tooltip>
                     )}
                   </div>
+                )}
+                
+                {/* Last Sync Indicator */}
+                {lastPresetSync && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="text-[10px] text-muted-foreground/60 ml-1 cursor-default whitespace-nowrap">
+                        {lastPresetSync.action === 'import' ? '↓' : '↑'} {format(new Date(lastPresetSync.timestamp), 'MMM d, HH:mm')}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs">
+                        Last {lastPresetSync.action}: {format(new Date(lastPresetSync.timestamp), 'PPpp')}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
                 )}
                 </>
               )}

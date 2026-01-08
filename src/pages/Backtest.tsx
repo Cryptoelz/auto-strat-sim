@@ -387,6 +387,7 @@ export default function Backtest() {
             onExportCustomPresets={config.exportCustomPresets}
             onImportCustomPresets={config.importCustomPresets}
             onClearAllCustomPresets={config.clearAllCustomPresets}
+            lastPresetSync={config.lastPresetSync}
           />
 
           {/* Strategy Optimizer */}
