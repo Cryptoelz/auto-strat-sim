@@ -2078,6 +2078,123 @@ export function BacktestConfigForm({
                     })()}
                   </div>
                 )}
+                
+                {/* Version Diff View */}
+                {compareVersions[0] && compareVersions[1] && versionHistorySlot && getPresetVersionHistory && (() => {
+                  const versions = getPresetVersionHistory(versionHistorySlot);
+                  const version1 = versions.find(v => v.id === compareVersions[0]);
+                  const version2 = versions.find(v => v.id === compareVersions[1]);
+                  
+                  if (!version1 || !version2) return null;
+                  
+                  const diffFields = [
+                    { key: 'label', label: 'Name', format: (v: string | number) => v },
+                    { key: 'fastSMA', label: 'Fast SMA', format: (v: string | number) => v },
+                    { key: 'slowSMA', label: 'Slow SMA', format: (v: string | number) => v },
+                    { key: 'positionSizePercent', label: 'Position Size', format: (v: string | number) => `${v}%` },
+                    { key: 'stopLossPercent', label: 'Stop Loss', format: (v: string | number) => `${v}%` },
+                    { key: 'takeProfitPercent', label: 'Take Profit', format: (v: string | number) => `${v}%` },
+                  ] as const;
+                  
+                  const changedFields = diffFields.filter(
+                    field => version1.data[field.key] !== version2.data[field.key]
+                  );
+                  const unchangedFields = diffFields.filter(
+                    field => version1.data[field.key] === version2.data[field.key]
+                  );
+                  
+                  return (
+                    <div className="border-t pt-4 mt-2 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-sm font-medium flex items-center gap-2">
+                          <GitCompare className="h-4 w-4" />
+                          Comparison
+                        </h4>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 text-xs"
+                          onClick={() => setCompareVersions([null, null])}
+                        >
+                          Clear
+                        </Button>
+                      </div>
+                      
+                      {/* Version headers */}
+                      <div className="grid grid-cols-3 gap-2 text-xs">
+                        <div className="font-medium text-muted-foreground">Parameter</div>
+                        <div className="font-medium text-center px-2 py-1 bg-red-500/10 rounded text-red-600 dark:text-red-400 truncate">
+                          {version1.data.label}
+                        </div>
+                        <div className="font-medium text-center px-2 py-1 bg-green-500/10 rounded text-green-600 dark:text-green-400 truncate">
+                          {version2.data.label}
+                        </div>
+                      </div>
+                      
+                      {/* Changed fields */}
+                      {changedFields.length > 0 && (
+                        <div className="space-y-1">
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Changed ({changedFields.length})</p>
+                          {changedFields.map(field => {
+                            const val1 = version1.data[field.key];
+                            const val2 = version2.data[field.key];
+                            const isNumeric = typeof val1 === 'number' && typeof val2 === 'number';
+                            const diff = isNumeric ? val2 - val1 : null;
+                            
+                            return (
+                              <div key={field.key} className="grid grid-cols-3 gap-2 text-xs items-center">
+                                <div className="text-muted-foreground">{field.label}</div>
+                                <div className="text-center px-2 py-1.5 bg-red-500/5 border border-red-500/20 rounded font-mono">
+                                  {field.format(val1)}
+                                </div>
+                                <div className="text-center px-2 py-1.5 bg-green-500/5 border border-green-500/20 rounded font-mono flex items-center justify-center gap-1">
+                                  {field.format(val2)}
+                                  {diff !== null && diff !== 0 && (
+                                    <span className={cn(
+                                      "text-[10px]",
+                                      diff > 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
+                                    )}>
+                                      ({diff > 0 ? '+' : ''}{diff})
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                      
+                      {/* Unchanged fields (collapsible) */}
+                      {unchangedFields.length > 0 && (
+                        <details className="text-xs">
+                          <summary className="text-[10px] text-muted-foreground uppercase tracking-wider cursor-pointer hover:text-foreground">
+                            Unchanged ({unchangedFields.length})
+                          </summary>
+                          <div className="mt-1 space-y-1">
+                            {unchangedFields.map(field => (
+                              <div key={field.key} className="grid grid-cols-3 gap-2 items-center opacity-60">
+                                <div className="text-muted-foreground">{field.label}</div>
+                                <div className="text-center px-2 py-1 bg-muted/30 rounded font-mono col-span-2">
+                                  {field.format(version1.data[field.key])}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </details>
+                      )}
+                      
+                      {/* Date comparison */}
+                      <div className="pt-2 border-t text-[10px] text-muted-foreground">
+                        <div className="flex justify-between">
+                          <span>{format(new Date(version1.savedAt), 'MMM d, yyyy HH:mm')}</span>
+                          <span>→</span>
+                          <span>{format(new Date(version2.savedAt), 'MMM d, yyyy HH:mm')}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+                
                 <DialogFooter className="flex-col sm:flex-row gap-2">
                   {batchSelectMode && batchSelectedVersions.size >= 2 && (
                     <Button 
