@@ -139,6 +139,12 @@ interface BacktestConfigFormProps {
   onShareConfig?: () => Promise<boolean>;
   onResetToDefaults?: () => void;
   onApplyPreset?: (preset: RiskPreset) => void;
+  
+  // Custom presets
+  customPresetSlots?: { '4': boolean; '5': boolean; '6': boolean };
+  onLoadCustomPreset?: (slot: '4' | '5' | '6') => boolean;
+  onSaveCustomPreset?: (slot: '4' | '5' | '6') => void;
+  getCustomPresetData?: (slot: '4' | '5' | '6') => { positionSizePercent: number; stopLossPercent: number; takeProfitPercent: number; fastSMA: number; slowSMA: number } | null;
 }
 
 export function BacktestConfigForm({
@@ -179,6 +185,10 @@ export function BacktestConfigForm({
   onShareConfig,
   onResetToDefaults,
   onApplyPreset,
+  customPresetSlots,
+  onLoadCustomPreset,
+  onSaveCustomPreset,
+  getCustomPresetData,
 }: BacktestConfigFormProps) {
   const [copied, setCopied] = useState(false);
 
@@ -519,6 +529,58 @@ export function BacktestConfigForm({
                 </div>
               )}
             </div>
+            
+            {/* Custom Preset Slots */}
+            {customPresetSlots && (
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-xs text-muted-foreground">Custom:</span>
+                {(['4', '5', '6'] as const).map((slot) => {
+                  const hasData = customPresetSlots[slot];
+                  const presetData = getCustomPresetData?.(slot);
+                  return (
+                    <Tooltip key={slot}>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant={hasData ? "secondary" : "ghost"}
+                          size="sm"
+                          className={cn(
+                            "h-7 w-7 p-0 text-xs font-mono",
+                            hasData && "ring-1 ring-primary/50"
+                          )}
+                          onClick={() => {
+                            if (hasData && onLoadCustomPreset) {
+                              if (onLoadCustomPreset(slot)) {
+                                toast.success(`Custom Preset ${slot} loaded`, {
+                                  description: presetData ? `Position: ${presetData.positionSizePercent}% · SL: ${presetData.stopLossPercent}% · TP: ${presetData.takeProfitPercent}%` : undefined,
+                                });
+                              }
+                            } else if (onSaveCustomPreset) {
+                              onSaveCustomPreset(slot);
+                              toast.success(`Saved to Custom Preset ${slot}`);
+                            }
+                          }}
+                        >
+                          {slot}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {hasData && presetData ? (
+                          <div className="text-xs">
+                            <p className="font-medium mb-1">Custom Preset {slot}</p>
+                            <p>SMA: {presetData.fastSMA}/{presetData.slowSMA}</p>
+                            <p>Position: {presetData.positionSizePercent}%</p>
+                            <p>SL: {presetData.stopLossPercent}% · TP: {presetData.takeProfitPercent}%</p>
+                            <p className="text-muted-foreground mt-1">Click to load · Shift+{slot} to overwrite</p>
+                          </div>
+                        ) : (
+                          <p className="text-xs">Empty slot · Click or press {slot} to save current config</p>
+                        )}
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <TooltipLabel 
