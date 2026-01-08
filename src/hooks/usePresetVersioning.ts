@@ -129,28 +129,68 @@ export function usePresetVersioning() {
     }
   }, []);
 
+  // Store deleted versions for undo
+  const [deletedVersionsBackup, setDeletedVersionsBackup] = useState<{
+    slot: '4' | '5' | '6';
+    versions: PresetVersion[];
+  } | null>(null);
+
   /**
    * Delete specific versions from a slot's history
+   * Returns the deleted count for potential undo
    */
   const deleteVersions = useCallback((
     slot: '4' | '5' | '6',
     versionIds: string[]
   ): number => {
     const idsToDelete = new Set(versionIds);
-    let deletedCount = 0;
+    const deletedVersions: PresetVersion[] = [];
     
     setVersionHistory(prev => {
-      const filtered = prev[slot].filter(v => {
+      const kept: PresetVersion[] = [];
+      prev[slot].forEach(v => {
         if (idsToDelete.has(v.id)) {
-          deletedCount++;
-          return false;
+          deletedVersions.push(v);
+        } else {
+          kept.push(v);
         }
-        return true;
       });
-      return { ...prev, [slot]: filtered };
+      return { ...prev, [slot]: kept };
     });
     
-    return deletedCount;
+    // Store backup for undo
+    if (deletedVersions.length > 0) {
+      setDeletedVersionsBackup({ slot, versions: deletedVersions });
+    }
+    
+    return deletedVersions.length;
+  }, []);
+
+  /**
+   * Undo the last delete operation
+   */
+  const undoDeleteVersions = useCallback((): boolean => {
+    if (!deletedVersionsBackup) return false;
+    
+    const { slot, versions } = deletedVersionsBackup;
+    
+    setVersionHistory(prev => {
+      // Merge back the deleted versions and sort by savedAt
+      const merged = [...versions, ...prev[slot]]
+        .sort((a, b) => b.savedAt - a.savedAt)
+        .slice(0, MAX_VERSIONS_PER_SLOT);
+      return { ...prev, [slot]: merged };
+    });
+    
+    setDeletedVersionsBackup(null);
+    return true;
+  }, [deletedVersionsBackup]);
+
+  /**
+   * Clear the delete backup (call after undo timeout expires)
+   */
+  const clearDeleteBackup = useCallback(() => {
+    setDeletedVersionsBackup(null);
   }, []);
 
   return {
@@ -164,5 +204,8 @@ export function usePresetVersioning() {
     getTotalVersionCount,
     importSlotHistory,
     deleteVersions,
+    undoDeleteVersions,
+    clearDeleteBackup,
+    canUndoDelete: deletedVersionsBackup !== null,
   };
 }

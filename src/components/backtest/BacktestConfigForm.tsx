@@ -165,6 +165,8 @@ interface BacktestConfigFormProps {
   hasPresetHistory?: (slot: '4' | '5' | '6') => boolean;
   onImportVersionHistory?: (slot: '4' | '5' | '6', versions: PresetVersion[], mode?: 'replace' | 'merge') => { success: boolean; imported: number };
   onDeleteVersions?: (slot: '4' | '5' | '6', versionIds: string[]) => number;
+  onUndoDeleteVersions?: () => boolean;
+  onClearDeleteBackup?: () => void;
 }
 
 export function BacktestConfigForm({
@@ -220,6 +222,8 @@ export function BacktestConfigForm({
   hasPresetHistory,
   onImportVersionHistory,
   onDeleteVersions,
+  onUndoDeleteVersions,
+  onClearDeleteBackup,
 }: BacktestConfigFormProps) {
   const [copied, setCopied] = useState(false);
   const [clearPresetsConfirmOpen, setClearPresetsConfirmOpen] = useState(false);
@@ -1720,7 +1724,19 @@ export function BacktestConfigForm({
                               const ids = Array.from(batchSelectedVersions);
                               const deleted = onDeleteVersions(versionHistorySlot, ids);
                               if (deleted > 0) {
-                                toast.success(`Deleted ${deleted} version${deleted !== 1 ? 's' : ''}`);
+                                toast.success(`Deleted ${deleted} version${deleted !== 1 ? 's' : ''}`, {
+                                  action: onUndoDeleteVersions ? {
+                                    label: 'Undo',
+                                    onClick: () => {
+                                      if (onUndoDeleteVersions()) {
+                                        toast.success('Versions restored');
+                                      }
+                                    },
+                                  } : undefined,
+                                  duration: 10000,
+                                  onDismiss: () => onClearDeleteBackup?.(),
+                                  onAutoClose: () => onClearDeleteBackup?.(),
+                                });
                                 setBatchSelectedVersions(new Set());
                               }
                             }

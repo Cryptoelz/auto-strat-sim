@@ -779,5 +779,7 @@ export function useBacktestConfig() {
     hasPresetHistory: presetVersioning.hasHistory,
     importVersionHistory: presetVersioning.importSlotHistory,
     deleteVersions: presetVersioning.deleteVersions,
+    undoDeleteVersions: presetVersioning.undoDeleteVersions,
+    clearDeleteBackup: presetVersioning.clearDeleteBackup,
   };
 }
