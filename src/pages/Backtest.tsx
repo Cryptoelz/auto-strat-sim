@@ -86,6 +86,7 @@ export default function Backtest() {
             onExportComparison={config.exportComparison}
             onShareConfig={config.copyShareableUrl}
             onResetToDefaults={config.resetConfig}
+            onApplyPreset={config.applyPreset}
           />
 
           {/* Strategy Optimizer */}
