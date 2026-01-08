@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useBacktest } from '@/hooks/useBacktest';
@@ -11,13 +11,30 @@ import { BacktestConfigForm } from '@/components/backtest/BacktestConfigForm';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { 
   ArrowLeft, 
   AlertTriangle,
   BarChart3,
+  Keyboard,
 } from 'lucide-react';
 
+const BACKTEST_SHORTCUTS = [
+  { key: '1', description: 'Apply Conservative preset' },
+  { key: '2', description: 'Apply Moderate preset' },
+  { key: '3', description: 'Apply Aggressive preset' },
+  { key: '?', description: 'Show keyboard shortcuts' },
+];
+
 export default function Backtest() {
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const { isRunning, progress, result, error, runBacktest, reset } = useBacktest();
   const config = useBacktestConfig();
 
@@ -60,6 +77,10 @@ export default function Backtest() {
           e.preventDefault();
           handlePresetShortcut('aggressive');
           break;
+        case '?':
+          e.preventDefault();
+          setShortcutsOpen(true);
+          break;
       }
     };
 
@@ -84,7 +105,39 @@ export default function Backtest() {
               <p className="text-xs text-muted-foreground">Test your SMA crossover strategy on historical data</p>
             </div>
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            <Dialog open={shortcutsOpen} onOpenChange={setShortcutsOpen}>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-9 w-9">
+                  <Keyboard className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[340px]">
+                <DialogHeader>
+                  <DialogTitle>Keyboard Shortcuts</DialogTitle>
+                  <DialogDescription>
+                    Quick actions for the backtest page
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-2 py-4">
+                  {BACKTEST_SHORTCUTS.map((shortcut) => (
+                    <div
+                      key={shortcut.key}
+                      className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/30 px-3 py-2"
+                    >
+                      <span className="text-sm text-muted-foreground">
+                        {shortcut.description}
+                      </span>
+                      <kbd className="pointer-events-none inline-flex h-6 select-none items-center gap-1 rounded border bg-muted px-2 font-mono text-xs font-medium text-muted-foreground">
+                        {shortcut.key}
+                      </kbd>
+                    </div>
+                  ))}
+                </div>
+              </DialogContent>
+            </Dialog>
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 
