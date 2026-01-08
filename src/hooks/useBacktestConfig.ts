@@ -785,5 +785,6 @@ export function useBacktestConfig() {
     updateVersionNote: presetVersioning.updateVersionNote,
     toggleVersionPin: presetVersioning.toggleVersionPin,
     toggleVersionTag: presetVersioning.toggleVersionTag,
+    bulkToggleVersionTag: presetVersioning.bulkToggleVersionTag,
   };
 }
