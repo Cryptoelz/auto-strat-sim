@@ -19,6 +19,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { 
   ArrowLeft, 
   AlertTriangle,
@@ -32,6 +42,7 @@ const BACKTEST_SHORTCUTS = [
   { key: '⌘/Ctrl+S', description: 'Save run for comparison' },
   { key: '⌘/Ctrl+E', description: 'Export results to CSV' },
   { key: 'C', description: 'Toggle comparison view' },
+  { key: 'D', description: 'Delete all saved runs' },
   { key: 'Esc', description: 'Close comparison view' },
   { key: '1', description: 'Apply Conservative preset' },
   { key: '2', description: 'Apply Moderate preset' },
@@ -42,6 +53,7 @@ const BACKTEST_SHORTCUTS = [
 
 export default function Backtest() {
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const { isRunning, progress, result, error, runBacktest, reset } = useBacktest();
   const config = useBacktestConfig();
 
@@ -158,6 +170,14 @@ export default function Backtest() {
             toast.success('Showing results');
           }
           break;
+        case 'd':
+          e.preventDefault();
+          if (config.savedRuns.length > 0) {
+            setDeleteConfirmOpen(true);
+          } else {
+            toast.error('No saved runs to delete');
+          }
+          break;
       }
     };
 
@@ -217,6 +237,28 @@ export default function Backtest() {
           </div>
         </div>
       </header>
+
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete all saved runs?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete {config.savedRuns.length} saved run{config.savedRuns.length !== 1 ? 's' : ''}. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                config.clearAllRuns();
+                toast.success('All saved runs deleted');
+              }}
+            >
+              Delete All
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <main className="container mx-auto px-4 py-6">
         <div className="grid gap-6 lg:grid-cols-3">
