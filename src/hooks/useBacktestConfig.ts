@@ -443,10 +443,10 @@ export function useBacktestConfig() {
   /**
    * Save current config to a custom preset slot (4, 5, or 6)
    */
-  const saveCustomPreset = useCallback((slot: '4' | '5' | '6') => {
+  const saveCustomPreset = useCallback((slot: '4' | '5' | '6', name?: string) => {
     const preset = {
-      label: `Custom ${slot}`,
-      description: `Saved preset in slot ${slot}`,
+      label: name || `Custom ${slot}`,
+      description: name ? `Custom preset: ${name}` : `Saved preset in slot ${slot}`,
       positionSizePercent,
       stopLossPercent,
       takeProfitPercent,
