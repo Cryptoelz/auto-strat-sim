@@ -30,7 +30,8 @@ import {
   Check,
   AlertCircle,
   HelpCircle,
-  RefreshCcw
+  RefreshCcw,
+  X
 } from 'lucide-react';
 
 interface TooltipLabelProps {
@@ -145,6 +146,7 @@ interface BacktestConfigFormProps {
   customPresetSlots?: { '4': boolean; '5': boolean; '6': boolean };
   onLoadCustomPreset?: (slot: '4' | '5' | '6') => boolean;
   onSaveCustomPreset?: (slot: '4' | '5' | '6', name?: string) => void;
+  onDeleteCustomPreset?: (slot: '4' | '5' | '6') => void;
   getCustomPresetData?: (slot: '4' | '5' | '6') => { label: string; positionSizePercent: number; stopLossPercent: number; takeProfitPercent: number; fastSMA: number; slowSMA: number } | null;
 }
 
@@ -189,6 +191,7 @@ export function BacktestConfigForm({
   customPresetSlots,
   onLoadCustomPreset,
   onSaveCustomPreset,
+  onDeleteCustomPreset,
   getCustomPresetData,
 }: BacktestConfigFormProps) {
   const [copied, setCopied] = useState(false);
@@ -542,50 +545,71 @@ export function BacktestConfigForm({
                   const hasData = customPresetSlots[slot];
                   const presetData = getCustomPresetData?.(slot);
                   return (
-                    <Tooltip key={slot}>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant={hasData ? "secondary" : "ghost"}
-                          size="sm"
-                          className={cn(
-                            "h-7 min-w-7 px-1 text-xs font-mono",
-                            hasData && "ring-1 ring-primary/50"
-                          )}
-                          onClick={() => {
-                            if (hasData && onLoadCustomPreset) {
-                              if (onLoadCustomPreset(slot)) {
-                                toast.success(`${presetData?.label || `Preset ${slot}`} loaded`, {
-                                  description: presetData ? `Position: ${presetData.positionSizePercent}% · SL: ${presetData.stopLossPercent}% · TP: ${presetData.takeProfitPercent}%` : undefined,
-                                });
+                    <div key={slot} className="relative group">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant={hasData ? "secondary" : "ghost"}
+                            size="sm"
+                            className={cn(
+                              "h-7 min-w-7 px-1 text-xs font-mono",
+                              hasData && "ring-1 ring-primary/50 pr-6"
+                            )}
+                            onClick={() => {
+                              if (hasData && onLoadCustomPreset) {
+                                if (onLoadCustomPreset(slot)) {
+                                  toast.success(`${presetData?.label || `Preset ${slot}`} loaded`, {
+                                    description: presetData ? `Position: ${presetData.positionSizePercent}% · SL: ${presetData.stopLossPercent}% · TP: ${presetData.takeProfitPercent}%` : undefined,
+                                  });
+                                }
+                              } else {
+                                setPendingPresetSlot(slot);
+                                setPresetName('');
+                                setPresetDialogOpen(true);
                               }
-                            } else {
-                              setPendingPresetSlot(slot);
-                              setPresetName('');
-                              setPresetDialogOpen(true);
-                            }
-                          }}
-                        >
+                            }}
+                          >
+                            {hasData && presetData ? (
+                              <span className="truncate max-w-16">{presetData.label}</span>
+                            ) : (
+                              slot
+                            )}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
                           {hasData && presetData ? (
-                            <span className="truncate max-w-16">{presetData.label}</span>
+                            <div className="text-xs">
+                              <p className="font-medium mb-1">{presetData.label}</p>
+                              <p>SMA: {presetData.fastSMA}/{presetData.slowSMA}</p>
+                              <p>Position: {presetData.positionSizePercent}%</p>
+                              <p>SL: {presetData.stopLossPercent}% · TP: {presetData.takeProfitPercent}%</p>
+                              <p className="text-muted-foreground mt-1">Click to load · Shift+{slot} to overwrite</p>
+                            </div>
                           ) : (
-                            slot
+                            <p className="text-xs">Empty slot · Click or press {slot} to save current config</p>
                           )}
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {hasData && presetData ? (
-                          <div className="text-xs">
-                            <p className="font-medium mb-1">{presetData.label}</p>
-                            <p>SMA: {presetData.fastSMA}/{presetData.slowSMA}</p>
-                            <p>Position: {presetData.positionSizePercent}%</p>
-                            <p>SL: {presetData.stopLossPercent}% · TP: {presetData.takeProfitPercent}%</p>
-                            <p className="text-muted-foreground mt-1">Click to load · Shift+{slot} to overwrite</p>
-                          </div>
-                        ) : (
-                          <p className="text-xs">Empty slot · Click or press {slot} to save current config</p>
-                        )}
-                      </TooltipContent>
-                    </Tooltip>
+                        </TooltipContent>
+                      </Tooltip>
+                      {hasData && onDeleteCustomPreset && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              className="absolute right-0.5 top-1/2 -translate-y-1/2 h-5 w-5 rounded-sm flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onDeleteCustomPreset(slot);
+                                toast.success(`${presetData?.label || `Preset ${slot}`} deleted`);
+                              }}
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-xs">Delete preset</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                    </div>
                   );
                 })}
               </div>

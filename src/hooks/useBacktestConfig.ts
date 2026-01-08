@@ -487,6 +487,15 @@ export function useBacktestConfig() {
     return customPresets[slot];
   }, [customPresets]);
 
+  /**
+   * Delete a custom preset from a slot
+   */
+  const deleteCustomPreset = useCallback((slot: '4' | '5' | '6') => {
+    const updated = { ...customPresets, [slot]: null };
+    setCustomPresets(updated);
+    localStorage.setItem('backtest-custom-presets', JSON.stringify(updated));
+  }, [customPresets]);
+
   return {
     // Date config
     startDate,
@@ -548,5 +557,6 @@ export function useBacktestConfig() {
     loadCustomPreset,
     hasCustomPreset,
     getCustomPreset,
+    deleteCustomPreset,
   };
 }
