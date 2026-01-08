@@ -25,6 +25,24 @@ export function usePresetVersioning() {
   /**
    * Add a new version to a slot's history
    */
+  /**
+   * Trim versions while preserving pinned ones
+   */
+  const trimVersions = useCallback((versions: PresetVersion[]): PresetVersion[] => {
+    if (versions.length <= MAX_VERSIONS_PER_SLOT) return versions;
+    
+    const pinned = versions.filter(v => v.pinned);
+    const unpinned = versions.filter(v => !v.pinned);
+    
+    // Keep all pinned + as many unpinned as possible up to the limit
+    const unpinnedToKeep = Math.max(0, MAX_VERSIONS_PER_SLOT - pinned.length);
+    return [...pinned, ...unpinned.slice(0, unpinnedToKeep)]
+      .sort((a, b) => b.savedAt - a.savedAt);
+  }, []);
+
+  /**
+   * Add a new version to a slot's history
+   */
   const addVersion = useCallback((
     slot: '4' | '5' | '6',
     data: PresetVersion['data']
@@ -36,12 +54,12 @@ export function usePresetVersioning() {
     };
 
     setVersionHistory(prev => {
-      const slotHistory = [version, ...prev[slot]].slice(0, MAX_VERSIONS_PER_SLOT);
+      const slotHistory = trimVersions([version, ...prev[slot]]);
       return { ...prev, [slot]: slotHistory };
     });
 
     return version;
-  }, []);
+  }, [trimVersions]);
 
   /**
    * Get version history for a specific slot
@@ -77,12 +95,12 @@ export function usePresetVersioning() {
     };
 
     setVersionHistory(prev => {
-      const slotHistory = [duplicate, ...prev[slot]].slice(0, MAX_VERSIONS_PER_SLOT);
+      const slotHistory = trimVersions([duplicate, ...prev[slot]]);
       return { ...prev, [slot]: slotHistory };
     });
 
     return duplicate;
-  }, [versionHistory]);
+  }, [versionHistory, trimVersions]);
 
   /**
    * Update a version's note
@@ -103,6 +121,26 @@ export function usePresetVersioning() {
     }));
 
     return true;
+  }, [versionHistory]);
+
+  /**
+   * Toggle a version's pinned state
+   */
+  const toggleVersionPin = useCallback((
+    slot: '4' | '5' | '6',
+    versionId: string
+  ): boolean => {
+    const version = versionHistory[slot].find(v => v.id === versionId);
+    if (!version) return false;
+
+    setVersionHistory(prev => ({
+      ...prev,
+      [slot]: prev[slot].map(v => 
+        v.id === versionId ? { ...v, pinned: !v.pinned } : v
+      ),
+    }));
+
+    return !version.pinned;
   }, [versionHistory]);
 
   /**
@@ -248,6 +286,7 @@ export function usePresetVersioning() {
     getVersion,
     duplicateVersion,
     updateVersionNote,
+    toggleVersionPin,
     clearSlotHistory,
     clearAllHistory,
     hasHistory,

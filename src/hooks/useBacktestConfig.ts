@@ -783,5 +783,6 @@ export function useBacktestConfig() {
     clearDeleteBackup: presetVersioning.clearDeleteBackup,
     duplicateVersion: presetVersioning.duplicateVersion,
     updateVersionNote: presetVersioning.updateVersionNote,
+    toggleVersionPin: presetVersioning.toggleVersionPin,
   };
 }

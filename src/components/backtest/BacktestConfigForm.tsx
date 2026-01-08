@@ -38,7 +38,8 @@ import {
   Upload,
   History,
   Copy,
-  MessageSquare
+  MessageSquare,
+  Pin
 } from 'lucide-react';
 
 interface TooltipLabelProps {
@@ -171,6 +172,7 @@ interface BacktestConfigFormProps {
   onClearDeleteBackup?: () => void;
   onDuplicateVersion?: (slot: '4' | '5' | '6', versionId: string) => PresetVersion | null;
   onUpdateVersionNote?: (slot: '4' | '5' | '6', versionId: string, note: string) => boolean;
+  onToggleVersionPin?: (slot: '4' | '5' | '6', versionId: string) => boolean;
 }
 
 export function BacktestConfigForm({
@@ -230,6 +232,7 @@ export function BacktestConfigForm({
   onClearDeleteBackup,
   onDuplicateVersion,
   onUpdateVersionNote,
+  onToggleVersionPin,
 }: BacktestConfigFormProps) {
   const [copied, setCopied] = useState(false);
   const [clearPresetsConfirmOpen, setClearPresetsConfirmOpen] = useState(false);
@@ -1598,6 +1601,9 @@ export function BacktestConfigForm({
                                           <span className="text-xs font-medium">
                                             {version.data.label}
                                           </span>
+                                          {version.pinned && (
+                                            <Pin className="h-3 w-3 text-primary" />
+                                          )}
                                           {originalIndex === 0 && (
                                             <span className="text-[10px] px-1.5 py-0.5 bg-primary/20 text-primary rounded">
                                               Current
@@ -1761,6 +1767,30 @@ export function BacktestConfigForm({
                                                 </Button>
                                               </TooltipTrigger>
                                               <TooltipContent>Duplicate version</TooltipContent>
+                                            </Tooltip>
+                                          )}
+                                          {onToggleVersionPin && !compareVersions[0] && (
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <Button
+                                                  variant={version.pinned ? "secondary" : "ghost"}
+                                                  size="sm"
+                                                  className="h-7 w-7 p-0"
+                                                  onClick={() => {
+                                                    if (versionHistorySlot) {
+                                                      const isPinned = onToggleVersionPin(versionHistorySlot, version.id);
+                                                      toast.success(isPinned ? 'Version pinned' : 'Version unpinned', {
+                                                        description: isPinned 
+                                                          ? 'This version will be protected from auto-deletion' 
+                                                          : 'This version can now be auto-deleted',
+                                                      });
+                                                    }
+                                                  }}
+                                                >
+                                                  <Pin className={cn("h-3 w-3", version.pinned && "text-primary")} />
+                                                </Button>
+                                              </TooltipTrigger>
+                                              <TooltipContent>{version.pinned ? 'Unpin version' : 'Pin version'}</TooltipContent>
                                             </Tooltip>
                                           )}
                                         </div>
