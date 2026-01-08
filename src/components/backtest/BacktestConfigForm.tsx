@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Asset } from '@/types/trading';
 import { BacktestResult, SavedRun } from '@/types/backtest';
+import { PresetVersion } from '@/types/preset-version';
 import { ASSET_INFO } from '@/config/trading';
 import { RISK_PRESETS, RiskPreset } from '@/hooks/useBacktestConfig';
 import { format } from 'date-fns';
@@ -34,7 +35,8 @@ import {
   RefreshCcw,
   X,
   Pencil,
-  Upload
+  Upload,
+  History
 } from 'lucide-react';
 
 interface TooltipLabelProps {
@@ -156,6 +158,11 @@ interface BacktestConfigFormProps {
   onImportCustomPresets?: (json: string, mode?: 'replace' | 'merge') => { success: boolean; message: string };
   onClearAllCustomPresets?: () => void;
   lastPresetSync?: { action: 'import' | 'export'; timestamp: number } | null;
+  
+  // Preset versioning
+  getPresetVersionHistory?: (slot: '4' | '5' | '6') => PresetVersion[];
+  onRestorePresetVersion?: (slot: '4' | '5' | '6', versionId: string) => boolean;
+  hasPresetHistory?: (slot: '4' | '5' | '6') => boolean;
 }
 
 export function BacktestConfigForm({
@@ -206,6 +213,9 @@ export function BacktestConfigForm({
   onImportCustomPresets,
   onClearAllCustomPresets,
   lastPresetSync,
+  getPresetVersionHistory,
+  onRestorePresetVersion,
+  hasPresetHistory,
 }: BacktestConfigFormProps) {
   const [copied, setCopied] = useState(false);
   const [clearPresetsConfirmOpen, setClearPresetsConfirmOpen] = useState(false);
@@ -216,6 +226,7 @@ export function BacktestConfigForm({
   const [importConfirmOpen, setImportConfirmOpen] = useState(false);
   const [pendingImportJson, setPendingImportJson] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [versionHistorySlot, setVersionHistorySlot] = useState<'4' | '5' | '6' | null>(null);
 
   // Count existing presets (moved up for use in handleFileDrop)
   const existingPresetCount = useMemo(() => {
@@ -687,7 +698,7 @@ export function BacktestConfigForm({
                             size="sm"
                             className={cn(
                             "h-7 min-w-7 px-1 text-xs font-mono",
-                            hasData && "ring-1 ring-primary/50 pr-10"
+                            hasData && "ring-1 ring-primary/50 pr-14"
                           )}
                             onClick={() => {
                               if (hasData && onLoadCustomPreset) {
@@ -724,6 +735,24 @@ export function BacktestConfigForm({
                           )}
                         </TooltipContent>
                       </Tooltip>
+                      {hasData && hasPresetHistory?.(slot) && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              className="absolute right-9 top-1/2 -translate-y-1/2 h-5 w-5 rounded-sm flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setVersionHistorySlot(slot);
+                              }}
+                            >
+                              <History className="h-3 w-3" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-xs">View version history</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
                       {hasData && onRenameCustomPreset && (
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -1093,6 +1122,88 @@ export function BacktestConfigForm({
                         Save Preset
                       </>
                     )}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* Version History Dialog */}
+            <Dialog open={versionHistorySlot !== null} onOpenChange={(open) => {
+              if (!open) setVersionHistorySlot(null);
+            }}>
+              <DialogContent className="sm:max-w-lg">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <History className="h-4 w-4" />
+                    Version History
+                  </DialogTitle>
+                  <DialogDescription>
+                    {versionHistorySlot && getCustomPresetData?.(versionHistorySlot)?.label 
+                      ? `Restore a previous version of "${getCustomPresetData(versionHistorySlot)?.label}"`
+                      : 'Restore a previous version of this preset'}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="py-4 max-h-[300px] overflow-y-auto">
+                  {versionHistorySlot && getPresetVersionHistory && (
+                    <div className="space-y-2">
+                      {getPresetVersionHistory(versionHistorySlot).length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">
+                          No version history available
+                        </p>
+                      ) : (
+                        getPresetVersionHistory(versionHistorySlot).map((version, index) => (
+                          <div
+                            key={version.id}
+                            className="flex items-center justify-between p-3 rounded-lg border border-border/50 hover:bg-muted/50 transition-colors"
+                          >
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-medium">
+                                  {version.data.label}
+                                </span>
+                                {index === 0 && (
+                                  <span className="text-[10px] px-1.5 py-0.5 bg-primary/20 text-primary rounded">
+                                    Current
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {format(new Date(version.savedAt), 'MMM d, yyyy · HH:mm')}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                SMA: {version.data.fastSMA}/{version.data.slowSMA} · 
+                                Pos: {version.data.positionSizePercent}% · 
+                                SL: {version.data.stopLossPercent}% · 
+                                TP: {version.data.takeProfitPercent}%
+                              </p>
+                            </div>
+                            {index > 0 && onRestorePresetVersion && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 text-xs"
+                                onClick={() => {
+                                  if (versionHistorySlot && onRestorePresetVersion(versionHistorySlot, version.id)) {
+                                    toast.success('Version restored', {
+                                      description: `Restored to "${version.data.label}" from ${format(new Date(version.savedAt), 'MMM d, HH:mm')}`,
+                                    });
+                                    setVersionHistorySlot(null);
+                                  }
+                                }}
+                              >
+                                <RotateCcw className="h-3 w-3 mr-1" />
+                                Restore
+                              </Button>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setVersionHistorySlot(null)}>
+                    Close
                   </Button>
                 </DialogFooter>
               </DialogContent>
