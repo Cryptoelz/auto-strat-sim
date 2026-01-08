@@ -172,6 +172,16 @@ export function useBacktestConfig() {
       return { '4': null, '5': null, '6': null };
     }
   });
+
+  // Track last sync timestamp for presets
+  const [lastPresetSync, setLastPresetSync] = useState<{ action: 'import' | 'export'; timestamp: number } | null>(() => {
+    try {
+      const saved = localStorage.getItem('backtest-presets-last-sync');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
   
   // Validation state
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
@@ -537,6 +547,12 @@ export function useBacktestConfig() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    
+    // Track export timestamp
+    const syncData = { action: 'export' as const, timestamp: Date.now() };
+    setLastPresetSync(syncData);
+    localStorage.setItem('backtest-presets-last-sync', JSON.stringify(syncData));
+    
     return true;
   }, [customPresets]);
 
@@ -594,6 +610,11 @@ export function useBacktestConfig() {
       
       setCustomPresets(newPresets);
       localStorage.setItem('backtest-custom-presets', JSON.stringify(newPresets));
+      
+      // Track import timestamp
+      const syncData = { action: 'import' as const, timestamp: Date.now() };
+      setLastPresetSync(syncData);
+      localStorage.setItem('backtest-presets-last-sync', JSON.stringify(syncData));
       
       if (mode === 'merge') {
         if (merged === 0 && skipped > 0) {
@@ -683,5 +704,6 @@ export function useBacktestConfig() {
     exportCustomPresets,
     importCustomPresets,
     clearAllCustomPresets,
+    lastPresetSync,
   };
 }
