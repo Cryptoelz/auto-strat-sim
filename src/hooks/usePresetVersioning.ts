@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { PresetVersion, PresetVersionHistory, MAX_VERSIONS_PER_SLOT } from '@/types/preset-version';
+import { PresetVersion, PresetVersionHistory, MAX_VERSIONS_PER_SLOT, PresetTagValue } from '@/types/preset-version';
 
 const STORAGE_KEY = 'backtest-preset-versions';
 
@@ -141,6 +141,33 @@ export function usePresetVersioning() {
     }));
 
     return !version.pinned;
+  }, [versionHistory]);
+
+  /**
+   * Toggle a tag on a version
+   */
+  const toggleVersionTag = useCallback((
+    slot: '4' | '5' | '6',
+    versionId: string,
+    tag: PresetTagValue
+  ): boolean => {
+    const version = versionHistory[slot].find(v => v.id === versionId);
+    if (!version) return false;
+
+    const currentTags = version.tags || [];
+    const hasTag = currentTags.includes(tag);
+    const newTags = hasTag 
+      ? currentTags.filter(t => t !== tag)
+      : [...currentTags, tag];
+
+    setVersionHistory(prev => ({
+      ...prev,
+      [slot]: prev[slot].map(v => 
+        v.id === versionId ? { ...v, tags: newTags.length > 0 ? newTags : undefined } : v
+      ),
+    }));
+
+    return !hasTag;
   }, [versionHistory]);
 
   /**
@@ -287,6 +314,7 @@ export function usePresetVersioning() {
     duplicateVersion,
     updateVersionNote,
     toggleVersionPin,
+    toggleVersionTag,
     clearSlotHistory,
     clearAllHistory,
     hasHistory,

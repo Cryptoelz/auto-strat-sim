@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Asset } from '@/types/trading';
 import { BacktestResult, SavedRun } from '@/types/backtest';
-import { PresetVersion } from '@/types/preset-version';
+import { PresetVersion, PRESET_TAGS, PresetTagValue } from '@/types/preset-version';
 import { ASSET_INFO } from '@/config/trading';
 import { RISK_PRESETS, RiskPreset } from '@/hooks/useBacktestConfig';
 import { format, formatDistanceToNow } from 'date-fns';
@@ -40,7 +40,8 @@ import {
   Copy,
   MessageSquare,
   Pin,
-  Search
+  Search,
+  Tag
 } from 'lucide-react';
 
 interface TooltipLabelProps {
@@ -174,6 +175,7 @@ interface BacktestConfigFormProps {
   onDuplicateVersion?: (slot: '4' | '5' | '6', versionId: string) => PresetVersion | null;
   onUpdateVersionNote?: (slot: '4' | '5' | '6', versionId: string, note: string) => boolean;
   onToggleVersionPin?: (slot: '4' | '5' | '6', versionId: string) => boolean;
+  onToggleVersionTag?: (slot: '4' | '5' | '6', versionId: string, tag: PresetTagValue) => boolean;
 }
 
 export function BacktestConfigForm({
@@ -234,6 +236,7 @@ export function BacktestConfigForm({
   onDuplicateVersion,
   onUpdateVersionNote,
   onToggleVersionPin,
+  onToggleVersionTag,
 }: BacktestConfigFormProps) {
   const [copied, setCopied] = useState(false);
   const [clearPresetsConfirmOpen, setClearPresetsConfirmOpen] = useState(false);
@@ -1660,6 +1663,23 @@ export function BacktestConfigForm({
                                             </span>
                                           )}
                                         </div>
+                                        {/* Tags display */}
+                                        {version.tags && version.tags.length > 0 && (
+                                          <div className="flex flex-wrap gap-1 mt-1">
+                                            {version.tags.map(tag => {
+                                              const tagInfo = PRESET_TAGS.find(t => t.value === tag);
+                                              if (!tagInfo) return null;
+                                              return (
+                                                <span 
+                                                  key={tag} 
+                                                  className={cn("text-[9px] px-1.5 py-0.5 rounded", tagInfo.color)}
+                                                >
+                                                  {tagInfo.label}
+                                                </span>
+                                              );
+                                            })}
+                                          </div>
+                                        )}
                                         <p className="text-xs text-muted-foreground mt-0.5">
                                           {format(new Date(version.savedAt), 'MMM d, yyyy · HH:mm')}
                                           <span className="text-muted-foreground/60"> · {formatDistanceToNow(new Date(version.savedAt), { addSuffix: true })}</span>
@@ -1842,6 +1862,44 @@ export function BacktestConfigForm({
                                               </TooltipTrigger>
                                               <TooltipContent>{version.pinned ? 'Unpin version' : 'Pin version'}</TooltipContent>
                                             </Tooltip>
+                                          )}
+                                          {onToggleVersionTag && !compareVersions[0] && (
+                                            <Popover>
+                                              <PopoverTrigger asChild>
+                                                <Button
+                                                  variant={(version.tags?.length ?? 0) > 0 ? "secondary" : "ghost"}
+                                                  size="sm"
+                                                  className="h-7 w-7 p-0"
+                                                >
+                                                  <Tag className={cn("h-3 w-3", (version.tags?.length ?? 0) > 0 && "text-primary")} />
+                                                </Button>
+                                              </PopoverTrigger>
+                                              <PopoverContent className="w-48 p-2" align="end">
+                                                <p className="text-xs font-medium mb-2">Add tags</p>
+                                                <div className="space-y-1">
+                                                  {PRESET_TAGS.map(tag => {
+                                                    const isActive = version.tags?.includes(tag.value);
+                                                    return (
+                                                      <button
+                                                        key={tag.value}
+                                                        className={cn(
+                                                          "w-full text-left px-2 py-1.5 rounded text-xs flex items-center gap-2 transition-colors",
+                                                          isActive ? tag.color : "hover:bg-muted"
+                                                        )}
+                                                        onClick={() => {
+                                                          if (versionHistorySlot) {
+                                                            onToggleVersionTag(versionHistorySlot, version.id, tag.value);
+                                                          }
+                                                        }}
+                                                      >
+                                                        {isActive && <Check className="h-3 w-3" />}
+                                                        <span className={!isActive ? "ml-5" : ""}>{tag.label}</span>
+                                                      </button>
+                                                    );
+                                                  })}
+                                                </div>
+                                              </PopoverContent>
+                                            </Popover>
                                           )}
                                         </div>
                                       )}
