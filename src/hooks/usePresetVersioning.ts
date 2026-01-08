@@ -85,6 +85,27 @@ export function usePresetVersioning() {
   }, [versionHistory]);
 
   /**
+   * Update a version's note
+   */
+  const updateVersionNote = useCallback((
+    slot: '4' | '5' | '6',
+    versionId: string,
+    note: string
+  ): boolean => {
+    const version = versionHistory[slot].find(v => v.id === versionId);
+    if (!version) return false;
+
+    setVersionHistory(prev => ({
+      ...prev,
+      [slot]: prev[slot].map(v => 
+        v.id === versionId ? { ...v, note: note.trim() || undefined } : v
+      ),
+    }));
+
+    return true;
+  }, [versionHistory]);
+
+  /**
    * Clear version history for a slot
    */
   const clearSlotHistory = useCallback((slot: '4' | '5' | '6') => {
@@ -226,6 +247,7 @@ export function usePresetVersioning() {
     getSlotHistory,
     getVersion,
     duplicateVersion,
+    updateVersionNote,
     clearSlotHistory,
     clearAllHistory,
     hasHistory,

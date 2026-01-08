@@ -6,6 +6,8 @@ export interface PresetVersion {
   id: string;
   /** Timestamp when this version was saved */
   savedAt: number;
+  /** Optional note/comment for this version */
+  note?: string;
   /** The preset values at this version */
   data: {
     label: string;
