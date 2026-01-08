@@ -2229,6 +2229,40 @@ export function BacktestConfigForm({
                       Restore Selected
                     </Button>
                   )}
+                  {batchSelectMode && batchSelectedVersions.size > 0 && getPresetVersionHistory && versionHistorySlot && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => {
+                        const versions = getPresetVersionHistory(versionHistorySlot);
+                        const selectedVersions = versions.filter(v => batchSelectedVersions.has(v.id));
+                        
+                        if (selectedVersions.length === 0) return;
+                        
+                        const exportData = {
+                          exportedAt: new Date().toISOString(),
+                          slot: versionHistorySlot,
+                          count: selectedVersions.length,
+                          versions: selectedVersions,
+                        };
+                        
+                        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `preset-${versionHistorySlot}-versions-${format(new Date(), 'yyyy-MM-dd')}.json`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        
+                        toast.success(`Exported ${selectedVersions.length} version${selectedVersions.length !== 1 ? 's' : ''}`);
+                      }}
+                    >
+                      <Download className="h-3.5 w-3.5 mr-1.5" />
+                      Export ({batchSelectedVersions.size})
+                    </Button>
+                  )}
                   {batchSelectMode && batchSelectedVersions.size > 0 && onDeleteVersions && versionHistorySlot && (
                     <Button 
                       variant="destructive" 
