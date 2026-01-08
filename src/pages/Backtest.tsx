@@ -410,6 +410,7 @@ export default function Backtest() {
             onDuplicateVersion={config.duplicateVersion}
             onUpdateVersionNote={config.updateVersionNote}
             onToggleVersionPin={config.toggleVersionPin}
+            onToggleVersionTag={config.toggleVersionTag}
           />
 
           {/* Strategy Optimizer */}
