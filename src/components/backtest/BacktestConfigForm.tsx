@@ -18,7 +18,7 @@ import { BacktestResult, SavedRun } from '@/types/backtest';
 import { PresetVersion } from '@/types/preset-version';
 import { ASSET_INFO } from '@/config/trading';
 import { RISK_PRESETS, RiskPreset } from '@/hooks/useBacktestConfig';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { 
   Play, 
@@ -1474,6 +1474,7 @@ export function BacktestConfigForm({
                                         </div>
                                         <p className="text-xs text-muted-foreground mt-0.5">
                                           {format(new Date(version.savedAt), 'MMM d, yyyy · HH:mm')}
+                                          <span className="text-muted-foreground/60"> · {formatDistanceToNow(new Date(version.savedAt), { addSuffix: true })}</span>
                                         </p>
                                         <p className="text-xs text-muted-foreground">
                                           SMA: {version.data.fastSMA}/{version.data.slowSMA} · 
