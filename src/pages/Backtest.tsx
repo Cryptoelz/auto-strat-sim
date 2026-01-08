@@ -47,6 +47,8 @@ const BACKTEST_SHORTCUTS = [
   { key: '1', description: 'Apply Conservative preset' },
   { key: '2', description: 'Apply Moderate preset' },
   { key: '3', description: 'Apply Aggressive preset' },
+  { key: '4-6', description: 'Load custom preset' },
+  { key: 'Shift+4-6', description: 'Save to custom preset' },
   { key: '?', description: 'Show keyboard shortcuts' },
   { key: 'Esc', description: 'Close dialogs / unfocus' },
 ];
@@ -140,6 +142,31 @@ export default function Backtest() {
         case '3':
           e.preventDefault();
           handlePresetShortcut('aggressive');
+          break;
+        case '4':
+        case '5':
+        case '6':
+          e.preventDefault();
+          if (e.shiftKey) {
+            // Shift+4/5/6 saves to custom preset
+            config.saveCustomPreset(e.key as '4' | '5' | '6');
+            const preset = config.getCustomPreset(e.key as '4' | '5' | '6');
+            toast.success(`Saved to Custom Preset ${e.key}`, {
+              description: preset ? `Position: ${preset.positionSizePercent}% · SL: ${preset.stopLossPercent}% · TP: ${preset.takeProfitPercent}% · SMA: ${preset.fastSMA}/${preset.slowSMA}` : undefined,
+            });
+          } else {
+            // 4/5/6 loads custom preset
+            if (config.loadCustomPreset(e.key as '4' | '5' | '6')) {
+              const preset = config.getCustomPreset(e.key as '4' | '5' | '6');
+              toast.success(`Custom Preset ${e.key} loaded`, {
+                description: preset ? `Position: ${preset.positionSizePercent}% · SL: ${preset.stopLossPercent}% · TP: ${preset.takeProfitPercent}% · SMA: ${preset.fastSMA}/${preset.slowSMA}` : undefined,
+              });
+            } else {
+              toast.error(`Custom Preset ${e.key} is empty`, {
+                description: `Press Shift+${e.key} to save current settings`,
+              });
+            }
+          }
           break;
         case '?':
           e.preventDefault();

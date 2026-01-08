@@ -149,6 +149,26 @@ export function useBacktestConfig() {
   const [savedRuns, setSavedRuns] = useState<SavedRun[]>(() => loadSavedRuns());
   const [showComparison, setShowComparison] = useState(false);
   
+  // Custom presets state (slots 4-6)
+  type CustomPreset = {
+    label: string;
+    description: string;
+    positionSizePercent: number;
+    stopLossPercent: number;
+    takeProfitPercent: number;
+    fastSMA: number;
+    slowSMA: number;
+  } | null;
+  
+  const [customPresets, setCustomPresets] = useState<Record<'4' | '5' | '6', CustomPreset>>(() => {
+    try {
+      const saved = localStorage.getItem('backtest-custom-presets');
+      return saved ? JSON.parse(saved) : { '4': null, '5': null, '6': null };
+    } catch {
+      return { '4': null, '5': null, '6': null };
+    }
+  });
+  
   // Validation state
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
@@ -420,6 +440,53 @@ export function useBacktestConfig() {
     setValidationErrors([]);
   }, []);
 
+  /**
+   * Save current config to a custom preset slot (4, 5, or 6)
+   */
+  const saveCustomPreset = useCallback((slot: '4' | '5' | '6') => {
+    const preset = {
+      label: `Custom ${slot}`,
+      description: `Saved preset in slot ${slot}`,
+      positionSizePercent,
+      stopLossPercent,
+      takeProfitPercent,
+      fastSMA,
+      slowSMA,
+    };
+    const updated = { ...customPresets, [slot]: preset };
+    setCustomPresets(updated);
+    localStorage.setItem('backtest-custom-presets', JSON.stringify(updated));
+  }, [positionSizePercent, stopLossPercent, takeProfitPercent, fastSMA, slowSMA, customPresets]);
+
+  /**
+   * Load a custom preset from slot (4, 5, or 6)
+   */
+  const loadCustomPreset = useCallback((slot: '4' | '5' | '6'): boolean => {
+    const preset = customPresets[slot];
+    if (!preset) return false;
+    setPositionSizePercentState(preset.positionSizePercent);
+    setStopLossPercentState(preset.stopLossPercent);
+    setTakeProfitPercentState(preset.takeProfitPercent);
+    setFastSMAState(preset.fastSMA);
+    setSlowSMAState(preset.slowSMA);
+    setValidationErrors([]);
+    return true;
+  }, [customPresets]);
+
+  /**
+   * Check if a custom preset slot has data
+   */
+  const hasCustomPreset = useCallback((slot: '4' | '5' | '6'): boolean => {
+    return customPresets[slot] !== null;
+  }, [customPresets]);
+
+  /**
+   * Get custom preset data for a slot
+   */
+  const getCustomPreset = useCallback((slot: '4' | '5' | '6') => {
+    return customPresets[slot];
+  }, [customPresets]);
+
   return {
     // Date config
     startDate,
@@ -475,5 +542,11 @@ export function useBacktestConfig() {
     exportComparison,
     resetConfig,
     applyPreset,
+    
+    // Custom presets
+    saveCustomPreset,
+    loadCustomPreset,
+    hasCustomPreset,
+    getCustomPreset,
   };
 }
