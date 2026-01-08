@@ -37,7 +37,8 @@ import {
   Pencil,
   Upload,
   History,
-  Copy
+  Copy,
+  MessageSquare
 } from 'lucide-react';
 
 interface TooltipLabelProps {
@@ -169,6 +170,7 @@ interface BacktestConfigFormProps {
   onUndoDeleteVersions?: () => boolean;
   onClearDeleteBackup?: () => void;
   onDuplicateVersion?: (slot: '4' | '5' | '6', versionId: string) => PresetVersion | null;
+  onUpdateVersionNote?: (slot: '4' | '5' | '6', versionId: string, note: string) => boolean;
 }
 
 export function BacktestConfigForm({
@@ -227,6 +229,7 @@ export function BacktestConfigForm({
   onUndoDeleteVersions,
   onClearDeleteBackup,
   onDuplicateVersion,
+  onUpdateVersionNote,
 }: BacktestConfigFormProps) {
   const [copied, setCopied] = useState(false);
   const [clearPresetsConfirmOpen, setClearPresetsConfirmOpen] = useState(false);
@@ -243,6 +246,8 @@ export function BacktestConfigForm({
   const [batchSelectMode, setBatchSelectMode] = useState(false);
   const [batchSelectedVersions, setBatchSelectedVersions] = useState<Set<string>>(new Set());
   const [deleteVersionsConfirmOpen, setDeleteVersionsConfirmOpen] = useState(false);
+  const [editingNoteVersionId, setEditingNoteVersionId] = useState<string | null>(null);
+  const [editingNoteText, setEditingNoteText] = useState('');
 
   // Keyboard shortcuts for version history
   useEffect(() => {
@@ -1609,9 +1614,92 @@ export function BacktestConfigForm({
                                           SL: {version.data.stopLossPercent}% · 
                                           TP: {version.data.takeProfitPercent}%
                                         </p>
+                                        {/* Version note display/edit */}
+                                        {!batchSelectMode && (
+                                          editingNoteVersionId === version.id ? (
+                                            <div className="flex items-center gap-1 mt-1">
+                                              <Input
+                                                value={editingNoteText}
+                                                onChange={(e) => setEditingNoteText(e.target.value)}
+                                                placeholder="Add a note..."
+                                                className="h-6 text-xs flex-1"
+                                                maxLength={200}
+                                                autoFocus
+                                                onKeyDown={(e) => {
+                                                  if (e.key === 'Enter') {
+                                                    if (versionHistorySlot && onUpdateVersionNote) {
+                                                      onUpdateVersionNote(versionHistorySlot, version.id, editingNoteText);
+                                                    }
+                                                    setEditingNoteVersionId(null);
+                                                    setEditingNoteText('');
+                                                  } else if (e.key === 'Escape') {
+                                                    setEditingNoteVersionId(null);
+                                                    setEditingNoteText('');
+                                                  }
+                                                }}
+                                              />
+                                              <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-6 w-6 p-0"
+                                                onClick={() => {
+                                                  if (versionHistorySlot && onUpdateVersionNote) {
+                                                    onUpdateVersionNote(versionHistorySlot, version.id, editingNoteText);
+                                                  }
+                                                  setEditingNoteVersionId(null);
+                                                  setEditingNoteText('');
+                                                }}
+                                              >
+                                                <Check className="h-3 w-3" />
+                                              </Button>
+                                              <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-6 w-6 p-0"
+                                                onClick={() => {
+                                                  setEditingNoteVersionId(null);
+                                                  setEditingNoteText('');
+                                                }}
+                                              >
+                                                <X className="h-3 w-3" />
+                                              </Button>
+                                            </div>
+                                          ) : version.note ? (
+                                            <p 
+                                              className="text-xs text-muted-foreground/80 italic mt-1 cursor-pointer hover:text-foreground transition-colors"
+                                              onClick={() => {
+                                                if (onUpdateVersionNote) {
+                                                  setEditingNoteVersionId(version.id);
+                                                  setEditingNoteText(version.note || '');
+                                                }
+                                              }}
+                                            >
+                                              <MessageSquare className="h-3 w-3 inline mr-1" />
+                                              {version.note}
+                                            </p>
+                                          ) : null
+                                        )}
                                       </div>
                                       {!batchSelectMode && (
                                         <div className="flex items-center gap-1">
+                                          {onUpdateVersionNote && !compareVersions[0] && !version.note && (
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <Button
+                                                  variant="ghost"
+                                                  size="sm"
+                                                  className="h-7 w-7 p-0"
+                                                  onClick={() => {
+                                                    setEditingNoteVersionId(version.id);
+                                                    setEditingNoteText('');
+                                                  }}
+                                                >
+                                                  <MessageSquare className="h-3 w-3" />
+                                                </Button>
+                                              </TooltipTrigger>
+                                              <TooltipContent>Add note</TooltipContent>
+                                            </Tooltip>
+                                          )}
                                           <Button
                                             variant={isSelected ? "secondary" : "ghost"}
                                             size="sm"
