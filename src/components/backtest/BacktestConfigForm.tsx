@@ -163,6 +163,7 @@ interface BacktestConfigFormProps {
   getPresetVersionHistory?: (slot: '4' | '5' | '6') => PresetVersion[];
   onRestorePresetVersion?: (slot: '4' | '5' | '6', versionId: string) => boolean;
   hasPresetHistory?: (slot: '4' | '5' | '6') => boolean;
+  onImportVersionHistory?: (slot: '4' | '5' | '6', versions: PresetVersion[], mode?: 'replace' | 'merge') => { success: boolean; imported: number };
 }
 
 export function BacktestConfigForm({
@@ -216,6 +217,7 @@ export function BacktestConfigForm({
   getPresetVersionHistory,
   onRestorePresetVersion,
   hasPresetHistory,
+  onImportVersionHistory,
 }: BacktestConfigFormProps) {
   const [copied, setCopied] = useState(false);
   const [clearPresetsConfirmOpen, setClearPresetsConfirmOpen] = useState(false);
@@ -1142,37 +1144,82 @@ export function BacktestConfigForm({
                       <History className="h-4 w-4" />
                       Version History
                     </DialogTitle>
-                    {versionHistorySlot && getPresetVersionHistory && getPresetVersionHistory(versionHistorySlot).length > 0 && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          const versions = getPresetVersionHistory(versionHistorySlot);
-                          const presetLabel = getCustomPresetData?.(versionHistorySlot)?.label || `Custom ${versionHistorySlot}`;
-                          const exportData = {
-                            preset: presetLabel,
-                            slot: versionHistorySlot,
-                            exportedAt: new Date().toISOString(),
-                            versions: versions.map(v => ({
-                              id: v.id,
-                              savedAt: new Date(v.savedAt).toISOString(),
-                              data: v.data
-                            }))
-                          };
-                          const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-                          const url = URL.createObjectURL(blob);
-                          const a = document.createElement('a');
-                          a.href = url;
-                          a.download = `preset-history-${versionHistorySlot}-${format(new Date(), 'yyyy-MM-dd')}.json`;
-                          a.click();
-                          URL.revokeObjectURL(url);
-                          toast.success('Version history exported');
-                        }}
-                      >
-                        <Download className="h-3.5 w-3.5 mr-1.5" />
-                        Export
-                      </Button>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {versionHistorySlot && onImportVersionHistory && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const input = document.createElement('input');
+                            input.type = 'file';
+                            input.accept = '.json';
+                            input.onchange = (e) => {
+                              const file = (e.target as HTMLInputElement).files?.[0];
+                              if (!file) return;
+                              const reader = new FileReader();
+                              reader.onload = (ev) => {
+                                try {
+                                  const json = JSON.parse(ev.target?.result as string);
+                                  if (!json.versions || !Array.isArray(json.versions)) {
+                                    toast.error('Invalid version history file');
+                                    return;
+                                  }
+                                  // Convert ISO date strings back to timestamps
+                                  const versions = json.versions.map((v: { id: string; savedAt: string; data: PresetVersion['data'] }) => ({
+                                    ...v,
+                                    savedAt: typeof v.savedAt === 'string' ? new Date(v.savedAt).getTime() : v.savedAt
+                                  }));
+                                  const result = onImportVersionHistory(versionHistorySlot, versions, 'merge');
+                                  if (result.success) {
+                                    toast.success(`Imported ${result.imported} version${result.imported !== 1 ? 's' : ''}`);
+                                  } else {
+                                    toast.error('No valid versions found in file');
+                                  }
+                                } catch {
+                                  toast.error('Failed to parse version history file');
+                                }
+                              };
+                              reader.readAsText(file);
+                            };
+                            input.click();
+                          }}
+                        >
+                          <Upload className="h-3.5 w-3.5 mr-1.5" />
+                          Import
+                        </Button>
+                      )}
+                      {versionHistorySlot && getPresetVersionHistory && getPresetVersionHistory(versionHistorySlot).length > 0 && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const versions = getPresetVersionHistory(versionHistorySlot);
+                            const presetLabel = getCustomPresetData?.(versionHistorySlot)?.label || `Custom ${versionHistorySlot}`;
+                            const exportData = {
+                              preset: presetLabel,
+                              slot: versionHistorySlot,
+                              exportedAt: new Date().toISOString(),
+                              versions: versions.map(v => ({
+                                id: v.id,
+                                savedAt: new Date(v.savedAt).toISOString(),
+                                data: v.data
+                              }))
+                            };
+                            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `preset-history-${versionHistorySlot}-${format(new Date(), 'yyyy-MM-dd')}.json`;
+                            a.click();
+                            URL.revokeObjectURL(url);
+                            toast.success('Version history exported');
+                          }}
+                        >
+                          <Download className="h-3.5 w-3.5 mr-1.5" />
+                          Export
+                        </Button>
+                      )}
+                    </div>
                   </div>
                   <DialogDescription>
                     {compareVersions[0] || compareVersions[1] 

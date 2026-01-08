@@ -85,6 +85,50 @@ export function usePresetVersioning() {
     return versionHistory['4'].length + versionHistory['5'].length + versionHistory['6'].length;
   }, [versionHistory]);
 
+  /**
+   * Import version history for a slot from JSON
+   */
+  const importSlotHistory = useCallback((
+    slot: '4' | '5' | '6',
+    versions: PresetVersion[],
+    mode: 'replace' | 'merge' = 'merge'
+  ): { success: boolean; imported: number } => {
+    try {
+      const validVersions = versions.filter(v => 
+        v.id && v.savedAt && v.data &&
+        typeof v.data.label === 'string' &&
+        typeof v.data.positionSizePercent === 'number' &&
+        typeof v.data.stopLossPercent === 'number' &&
+        typeof v.data.takeProfitPercent === 'number' &&
+        typeof v.data.fastSMA === 'number' &&
+        typeof v.data.slowSMA === 'number'
+      );
+
+      if (validVersions.length === 0) {
+        return { success: false, imported: 0 };
+      }
+
+      setVersionHistory(prev => {
+        let newHistory: PresetVersion[];
+        if (mode === 'replace') {
+          newHistory = validVersions.slice(0, MAX_VERSIONS_PER_SLOT);
+        } else {
+          // Merge: add new versions, avoid duplicates by ID
+          const existingIds = new Set(prev[slot].map(v => v.id));
+          const newVersions = validVersions.filter(v => !existingIds.has(v.id));
+          newHistory = [...newVersions, ...prev[slot]]
+            .sort((a, b) => b.savedAt - a.savedAt)
+            .slice(0, MAX_VERSIONS_PER_SLOT);
+        }
+        return { ...prev, [slot]: newHistory };
+      });
+
+      return { success: true, imported: validVersions.length };
+    } catch {
+      return { success: false, imported: 0 };
+    }
+  }, []);
+
   return {
     versionHistory,
     addVersion,
@@ -94,5 +138,6 @@ export function usePresetVersioning() {
     clearAllHistory,
     hasHistory,
     getTotalVersionCount,
+    importSlotHistory,
   };
 }
