@@ -25,6 +25,7 @@ import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger }
 import { Settings2, Play, Trophy, TrendingUp, TrendingDown, Zap, Target, AlertTriangle, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Asset, Candle } from '@/types/trading';
+import { OptimizationResult } from '@/types/backtest';
 import { calculateSMASeries, detectCrossover } from '@/lib/indicators';
 import { formatCurrency } from '@/lib/performance';
 
@@ -40,18 +41,6 @@ interface StrategyOptimizerProps {
   currentFastSMA: number;
   currentSlowSMA: number;
   onApplyOptimal?: (fastSMA: number, slowSMA: number) => void;
-}
-
-interface OptimizationResult {
-  fastSMA: number;
-  slowSMA: number;
-  totalPnl: number;
-  totalPnlPercent: number;
-  winRate: number;
-  totalTrades: number;
-  profitFactor: number;
-  maxDrawdown: number;
-  sharpeRatio: number;
 }
 
 const BINANCE_API = 'https://api.binance.com/api/v3';
