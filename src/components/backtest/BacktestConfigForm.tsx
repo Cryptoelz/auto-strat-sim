@@ -1246,8 +1246,39 @@ export function BacktestConfigForm({
                     { key: 'takeProfitPercent', label: 'Take Profit', suffix: '%' },
                   ];
                   
+                  // Count changes
+                  const changeCount = fields.filter(({ key }) => v1.data[key] !== v2.data[key]).length;
+                  const increasedCount = fields.filter(({ key }) => {
+                    const a = v1.data[key], b = v2.data[key];
+                    return typeof a === 'number' && typeof b === 'number' && b > a;
+                  }).length;
+                  const decreasedCount = fields.filter(({ key }) => {
+                    const a = v1.data[key], b = v2.data[key];
+                    return typeof a === 'number' && typeof b === 'number' && b < a;
+                  }).length;
+                  
                   return (
                     <div className="py-4">
+                      {/* Change Summary */}
+                      <div className="flex items-center justify-center gap-3 mb-4 text-xs">
+                        <span className={cn(
+                          "px-2 py-1 rounded-full",
+                          changeCount > 0 ? "bg-yellow-500/20 text-yellow-600" : "bg-muted text-muted-foreground"
+                        )}>
+                          {changeCount} change{changeCount !== 1 ? 's' : ''}
+                        </span>
+                        {increasedCount > 0 && (
+                          <span className="px-2 py-1 rounded-full bg-green-500/20 text-green-600">
+                            ↑ {increasedCount} increased
+                          </span>
+                        )}
+                        {decreasedCount > 0 && (
+                          <span className="px-2 py-1 rounded-full bg-red-500/20 text-red-600">
+                            ↓ {decreasedCount} decreased
+                          </span>
+                        )}
+                      </div>
+                      
                       <div className="grid grid-cols-3 gap-2 text-xs mb-3">
                         <div className="font-medium text-muted-foreground">Field</div>
                         <div className="text-center">
