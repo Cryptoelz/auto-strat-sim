@@ -171,6 +171,43 @@ export function usePresetVersioning() {
   }, [versionHistory]);
 
   /**
+   * Bulk apply or remove a tag on multiple versions
+   * @param action 'add' to add tag to all, 'remove' to remove from all, 'toggle' to toggle each
+   * @returns number of versions modified
+   */
+  const bulkToggleVersionTag = useCallback((
+    slot: '4' | '5' | '6',
+    versionIds: string[],
+    tag: PresetTagValue,
+    action: 'add' | 'remove' = 'add'
+  ): number => {
+    const idsSet = new Set(versionIds);
+    let modifiedCount = 0;
+
+    setVersionHistory(prev => ({
+      ...prev,
+      [slot]: prev[slot].map(v => {
+        if (!idsSet.has(v.id)) return v;
+        
+        const currentTags = v.tags || [];
+        const hasTag = currentTags.includes(tag);
+        
+        if (action === 'add' && !hasTag) {
+          modifiedCount++;
+          return { ...v, tags: [...currentTags, tag] };
+        } else if (action === 'remove' && hasTag) {
+          modifiedCount++;
+          const newTags = currentTags.filter(t => t !== tag);
+          return { ...v, tags: newTags.length > 0 ? newTags : undefined };
+        }
+        return v;
+      }),
+    }));
+
+    return modifiedCount;
+  }, []);
+
+  /**
    * Clear version history for a slot
    */
   const clearSlotHistory = useCallback((slot: '4' | '5' | '6') => {
@@ -315,6 +352,7 @@ export function usePresetVersioning() {
     updateVersionNote,
     toggleVersionPin,
     toggleVersionTag,
+    bulkToggleVersionTag,
     clearSlotHistory,
     clearAllHistory,
     hasHistory,

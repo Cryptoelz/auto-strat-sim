@@ -176,6 +176,7 @@ interface BacktestConfigFormProps {
   onUpdateVersionNote?: (slot: '4' | '5' | '6', versionId: string, note: string) => boolean;
   onToggleVersionPin?: (slot: '4' | '5' | '6', versionId: string) => boolean;
   onToggleVersionTag?: (slot: '4' | '5' | '6', versionId: string, tag: PresetTagValue) => boolean;
+  onBulkToggleVersionTag?: (slot: '4' | '5' | '6', versionIds: string[], tag: PresetTagValue, action: 'add' | 'remove') => number;
   
   // External version history dialog control
   versionHistoryOpen?: boolean;
@@ -241,6 +242,7 @@ export function BacktestConfigForm({
   onUpdateVersionNote,
   onToggleVersionPin,
   onToggleVersionTag,
+  onBulkToggleVersionTag,
   versionHistoryOpen: externalVersionHistoryOpen,
   onVersionHistoryOpenChange,
 }: BacktestConfigFormProps) {
@@ -1623,44 +1625,128 @@ export function BacktestConfigForm({
                                     </div>
                                   </div>
                                   {batchSelectMode && (
-                                    <div className="flex items-center gap-2 text-xs flex-wrap">
-                                      <span className="text-muted-foreground">
-                                        {batchSelectedVersions.size} selected
-                                      </span>
-                                      {batchSelectedVersions.size > 0 && (
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-5 text-[10px] px-1.5"
-                                          onClick={() => setBatchSelectedVersions(new Set())}
-                                        >
-                                          Clear
-                                        </Button>
-                                      )}
-                                      {filteredVersions.length > 0 && batchSelectedVersions.size < filteredVersions.length && (
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-5 text-[10px] px-1.5"
-                                          onClick={() => setBatchSelectedVersions(new Set(filteredVersions.map(v => v.id)))}
-                                        >
-                                          Select All
-                                        </Button>
-                                      )}
-                                      <div className="flex items-center gap-2 ml-auto text-[10px] text-muted-foreground/60">
-                                        <span className="flex items-center gap-1">
-                                          <kbd className="px-1 py-0.5 bg-muted rounded text-[9px] font-mono">⌘A</kbd>
-                                          <span>select all</span>
+                                    <div className="flex flex-col gap-2 text-xs">
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <span className="text-muted-foreground">
+                                          {batchSelectedVersions.size} selected
                                         </span>
-                                        <span className="flex items-center gap-1">
-                                          <kbd className="px-1 py-0.5 bg-muted rounded text-[9px] font-mono">Del</kbd>
-                                          <span>delete</span>
-                                        </span>
-                                        <span className="flex items-center gap-1">
-                                          <kbd className="px-1 py-0.5 bg-muted rounded text-[9px] font-mono">Esc</kbd>
-                                          <span>exit</span>
-                                        </span>
+                                        {batchSelectedVersions.size > 0 && (
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-5 text-[10px] px-1.5"
+                                            onClick={() => setBatchSelectedVersions(new Set())}
+                                          >
+                                            Clear
+                                          </Button>
+                                        )}
+                                        {filteredVersions.length > 0 && batchSelectedVersions.size < filteredVersions.length && (
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-5 text-[10px] px-1.5"
+                                            onClick={() => setBatchSelectedVersions(new Set(filteredVersions.map(v => v.id)))}
+                                          >
+                                            Select All
+                                          </Button>
+                                        )}
+                                        <div className="flex items-center gap-2 ml-auto text-[10px] text-muted-foreground/60">
+                                          <span className="flex items-center gap-1">
+                                            <kbd className="px-1 py-0.5 bg-muted rounded text-[9px] font-mono">⌘A</kbd>
+                                            <span>select all</span>
+                                          </span>
+                                          <span className="flex items-center gap-1">
+                                            <kbd className="px-1 py-0.5 bg-muted rounded text-[9px] font-mono">Del</kbd>
+                                            <span>delete</span>
+                                          </span>
+                                          <span className="flex items-center gap-1">
+                                            <kbd className="px-1 py-0.5 bg-muted rounded text-[9px] font-mono">Esc</kbd>
+                                            <span>exit</span>
+                                          </span>
+                                        </div>
                                       </div>
+                                      
+                                      {/* Bulk Tag Actions */}
+                                      {batchSelectedVersions.size > 0 && onBulkToggleVersionTag && versionHistorySlot && (
+                                        <div className="flex items-center gap-2 pt-2 border-t border-border/30">
+                                          <Tag className="h-3 w-3 text-muted-foreground" />
+                                          <span className="text-muted-foreground text-[10px]">Bulk tags:</span>
+                                          <div className="flex flex-wrap gap-1">
+                                            {PRESET_TAGS.map(tag => {
+                                              // Check how many selected versions have this tag
+                                              const selectedVersionsArray = Array.from(batchSelectedVersions);
+                                              const versionsWithTag = filteredVersions.filter(
+                                                v => batchSelectedVersions.has(v.id) && v.tags?.includes(tag.value)
+                                              ).length;
+                                              const allHaveTag = versionsWithTag === batchSelectedVersions.size;
+                                              const someHaveTag = versionsWithTag > 0 && !allHaveTag;
+                                              
+                                              return (
+                                                <Popover key={tag.value}>
+                                                  <PopoverTrigger asChild>
+                                                    <Button
+                                                      variant="ghost"
+                                                      size="sm"
+                                                      className={cn(
+                                                        "h-5 text-[9px] px-1.5 gap-1",
+                                                        allHaveTag && tag.color,
+                                                        someHaveTag && "border border-dashed"
+                                                      )}
+                                                    >
+                                                      {tag.label}
+                                                      {someHaveTag && <span className="opacity-60">({versionsWithTag})</span>}
+                                                    </Button>
+                                                  </PopoverTrigger>
+                                                  <PopoverContent className="w-auto p-2" align="start">
+                                                    <div className="flex flex-col gap-1">
+                                                      <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-6 text-xs justify-start"
+                                                        onClick={() => {
+                                                          const count = onBulkToggleVersionTag(
+                                                            versionHistorySlot,
+                                                            selectedVersionsArray,
+                                                            tag.value,
+                                                            'add'
+                                                          );
+                                                          if (count > 0) {
+                                                            toast.success(`Added "${tag.label}" to ${count} version${count !== 1 ? 's' : ''}`);
+                                                          }
+                                                        }}
+                                                        disabled={allHaveTag}
+                                                      >
+                                                        <Check className="h-3 w-3 mr-1.5" />
+                                                        Add to all selected
+                                                      </Button>
+                                                      <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-6 text-xs justify-start text-destructive hover:text-destructive"
+                                                        onClick={() => {
+                                                          const count = onBulkToggleVersionTag(
+                                                            versionHistorySlot,
+                                                            selectedVersionsArray,
+                                                            tag.value,
+                                                            'remove'
+                                                          );
+                                                          if (count > 0) {
+                                                            toast.success(`Removed "${tag.label}" from ${count} version${count !== 1 ? 's' : ''}`);
+                                                          }
+                                                        }}
+                                                        disabled={versionsWithTag === 0}
+                                                      >
+                                                        <X className="h-3 w-3 mr-1.5" />
+                                                        Remove from all selected
+                                                      </Button>
+                                                    </div>
+                                                  </PopoverContent>
+                                                </Popover>
+                                              );
+                                            })}
+                                          </div>
+                                        </div>
+                                      )}
                                     </div>
                                   )}
                                 </div>
