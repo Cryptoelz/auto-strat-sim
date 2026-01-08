@@ -77,6 +77,7 @@ function parseUrlConfig(searchParams: URLSearchParams) {
     positionSizePercent: parseNumber('posSize', DEFAULT_CONFIG.positionSizePercent, 1, 100),
     stopLossPercent: parseNumber('sl', DEFAULT_CONFIG.stopLossPercent, 0.1, 50),
     takeProfitPercent: parseNumber('tp', DEFAULT_CONFIG.takeProfitPercent, 0.1, 100),
+    feePercent: parseNumber('fee', DEFAULT_CONFIG.feePercent, 0, 5),
   };
 }
 
@@ -107,6 +108,7 @@ export function useBacktestConfig() {
   const [positionSizePercent, setPositionSizePercentState] = useState(initialConfig.positionSizePercent);
   const [stopLossPercent, setStopLossPercentState] = useState(initialConfig.stopLossPercent);
   const [takeProfitPercent, setTakeProfitPercentState] = useState(initialConfig.takeProfitPercent);
+  const [feePercent, setFeePercentState] = useState(initialConfig.feePercent);
 
   // Saved runs state
   const [savedRuns, setSavedRuns] = useState<SavedRun[]>(() => loadSavedRuns());
@@ -130,8 +132,9 @@ export function useBacktestConfig() {
     params.set('posSize', positionSizePercent.toString());
     params.set('sl', stopLossPercent.toString());
     params.set('tp', takeProfitPercent.toString());
+    params.set('fee', feePercent.toString());
     setSearchParams(params, { replace: true });
-  }, [startDate, endDate, timeframe, enabledAssets, fastSMA, slowSMA, initialBalance, positionSizePercent, stopLossPercent, takeProfitPercent, setSearchParams]);
+  }, [startDate, endDate, timeframe, enabledAssets, fastSMA, slowSMA, initialBalance, positionSizePercent, stopLossPercent, takeProfitPercent, feePercent, setSearchParams]);
 
   // Sync URL when config changes
   useEffect(() => {
@@ -184,6 +187,11 @@ export function useBacktestConfig() {
     setValidationErrors([]);
   }, []);
 
+  const setFeePercent = useCallback((value: number) => {
+    setFeePercentState(value);
+    setValidationErrors([]);
+  }, []);
+
   /**
    * Toggle an asset's inclusion in the backtest
    */
@@ -219,8 +227,8 @@ export function useBacktestConfig() {
     positionSizePercent,
     stopLossPercent,
     takeProfitPercent,
-    feePercent: DEFAULT_CONFIG.feePercent,
-  }), [enabledAssets, startDate, endDate, timeframe, fastSMA, slowSMA, initialBalance, positionSizePercent, stopLossPercent, takeProfitPercent]);
+    feePercent,
+  }), [enabledAssets, startDate, endDate, timeframe, fastSMA, slowSMA, initialBalance, positionSizePercent, stopLossPercent, takeProfitPercent, feePercent]);
 
   /**
    * Validate current configuration
@@ -388,10 +396,12 @@ export function useBacktestConfig() {
     positionSizePercent,
     stopLossPercent,
     takeProfitPercent,
+    feePercent,
     setInitialBalance,
     setPositionSizePercent,
     setStopLossPercent,
     setTakeProfitPercent,
+    setFeePercent,
     
     // Saved runs
     savedRuns,
