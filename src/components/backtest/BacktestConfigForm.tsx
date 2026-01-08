@@ -153,7 +153,7 @@ interface BacktestConfigFormProps {
   onRenameCustomPreset?: (slot: '4' | '5' | '6', newName: string) => void;
   getCustomPresetData?: (slot: '4' | '5' | '6') => { label: string; positionSizePercent: number; stopLossPercent: number; takeProfitPercent: number; fastSMA: number; slowSMA: number } | null;
   onExportCustomPresets?: () => boolean;
-  onImportCustomPresets?: (json: string) => { success: boolean; message: string };
+  onImportCustomPresets?: (json: string, mode?: 'replace' | 'merge') => { success: boolean; message: string };
 }
 
 export function BacktestConfigForm({
@@ -727,20 +727,37 @@ export function BacktestConfigForm({
             <AlertDialog open={importConfirmOpen} onOpenChange={setImportConfirmOpen}>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Overwrite existing presets?</AlertDialogTitle>
+                  <AlertDialogTitle>Import Presets</AlertDialogTitle>
                   <AlertDialogDescription>
                     You have {existingPresetCount} custom preset{existingPresetCount !== 1 ? 's' : ''} saved. 
-                    Importing will replace all existing presets with the ones from the file. This action cannot be undone.
+                    Choose how to handle the import:
                   </AlertDialogDescription>
                 </AlertDialogHeader>
-                <AlertDialogFooter>
+                <AlertDialogFooter className="flex-col sm:flex-row gap-2">
                   <AlertDialogCancel onClick={() => setPendingImportJson(null)}>
                     Cancel
                   </AlertDialogCancel>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      if (pendingImportJson && onImportCustomPresets) {
+                        const result = onImportCustomPresets(pendingImportJson, 'merge');
+                        if (result.success) {
+                          toast.success(result.message);
+                        } else {
+                          toast.error('Import failed', { description: result.message });
+                        }
+                      }
+                      setPendingImportJson(null);
+                      setImportConfirmOpen(false);
+                    }}
+                  >
+                    Fill Empty Slots Only
+                  </Button>
                   <AlertDialogAction
                     onClick={() => {
                       if (pendingImportJson && onImportCustomPresets) {
-                        const result = onImportCustomPresets(pendingImportJson);
+                        const result = onImportCustomPresets(pendingImportJson, 'replace');
                         if (result.success) {
                           toast.success(result.message);
                         } else {
@@ -750,7 +767,7 @@ export function BacktestConfigForm({
                       setPendingImportJson(null);
                     }}
                   >
-                    Overwrite Presets
+                    Replace All
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
