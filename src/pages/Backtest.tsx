@@ -403,6 +403,7 @@ export default function Backtest() {
             getPresetVersionHistory={config.getPresetVersionHistory}
             onRestorePresetVersion={config.restorePresetVersion}
             hasPresetHistory={config.hasPresetHistory}
+            onImportVersionHistory={config.importVersionHistory}
           />
 
           {/* Strategy Optimizer */}
