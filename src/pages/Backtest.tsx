@@ -28,6 +28,7 @@ import {
 
 const BACKTEST_SHORTCUTS = [
   { key: 'Enter', description: 'Run backtest' },
+  { key: '⌘/Ctrl+S', description: 'Save run for comparison' },
   { key: '1', description: 'Apply Conservative preset' },
   { key: '2', description: 'Apply Moderate preset' },
   { key: '3', description: 'Apply Aggressive preset' },
@@ -64,6 +65,20 @@ export default function Backtest() {
         // Blur any focused element
         if (document.activeElement instanceof HTMLElement) {
           document.activeElement.blur();
+        }
+        return;
+      }
+
+      // Ctrl/Cmd+S to save run - works everywhere
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        if (result) {
+          config.saveCurrentRun(result);
+          toast.success('Run saved for comparison');
+        } else {
+          toast.error('No result to save', {
+            description: 'Run a backtest first before saving',
+          });
         }
         return;
       }
@@ -105,7 +120,7 @@ export default function Backtest() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handlePresetShortcut, isRunning, handleRunBacktest]);
+  }, [handlePresetShortcut, isRunning, handleRunBacktest, result, config]);
 
   return (
     <div className="min-h-screen bg-background">
