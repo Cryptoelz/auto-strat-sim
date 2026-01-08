@@ -26,7 +26,8 @@ import {
   Share2,
   Check,
   AlertCircle,
-  HelpCircle
+  HelpCircle,
+  RefreshCcw
 } from 'lucide-react';
 
 interface TooltipLabelProps {
@@ -132,8 +133,9 @@ interface BacktestConfigFormProps {
   onClearAllRuns: () => void;
   onExportComparison: () => void;
   
-  // Share
+  // Share & Reset
   onShareConfig?: () => Promise<boolean>;
+  onResetToDefaults?: () => void;
 }
 
 export function BacktestConfigForm({
@@ -172,6 +174,7 @@ export function BacktestConfigForm({
   onClearAllRuns,
   onExportComparison,
   onShareConfig,
+  onResetToDefaults,
 }: BacktestConfigFormProps) {
   const [copied, setCopied] = useState(false);
 
@@ -246,35 +249,52 @@ export function BacktestConfigForm({
   };
 
   return (
-    <Card className="border-border/50 bg-card/50 backdrop-blur lg:col-span-1">
-      <CardHeader className="flex flex-row items-start justify-between space-y-0">
-        <div>
-          <CardTitle className="text-base">Backtest Configuration</CardTitle>
-          <CardDescription>Configure your strategy parameters</CardDescription>
-        </div>
-        {onShareConfig && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleShare}
-            className="h-8 gap-1.5"
-          >
-            {copied ? (
-              <>
-                <Check className="h-3.5 w-3.5 text-green-500" />
-                Copied!
-              </>
-            ) : (
-              <>
-                <Share2 className="h-3.5 w-3.5" />
-                Share
-              </>
+    <TooltipProvider delayDuration={300}>
+      <Card className="border-border/50 bg-card/50 backdrop-blur lg:col-span-1">
+        <CardHeader className="flex flex-row items-start justify-between space-y-0">
+          <div>
+            <CardTitle className="text-base">Backtest Configuration</CardTitle>
+            <CardDescription>Configure your strategy parameters</CardDescription>
+          </div>
+          <div className="flex items-center gap-2">
+            {onResetToDefaults && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onResetToDefaults}
+                    className="h-8 w-8 p-0"
+                  >
+                    <RefreshCcw className="h-3.5 w-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Reset to defaults</TooltipContent>
+              </Tooltip>
             )}
-          </Button>
-        )}
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <TooltipProvider delayDuration={300}>
+            {onShareConfig && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleShare}
+                className="h-8 gap-1.5"
+              >
+                {copied ? (
+                  <>
+                    <Check className="h-3.5 w-3.5 text-green-500" />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <Share2 className="h-3.5 w-3.5" />
+                    Share
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
           {/* Date Range */}
           <div className="space-y-3">
             <TooltipLabel 
@@ -524,9 +544,8 @@ export function BacktestConfigForm({
               </div>
             </div>
           </div>
-        </TooltipProvider>
 
-        {/* Action Buttons */}
+          {/* Action Buttons */}
         <div className="space-y-2 pt-2">
           <div className="flex gap-2">
             <Button
@@ -617,7 +636,8 @@ export function BacktestConfigForm({
             </p>
           </div>
         )}
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </TooltipProvider>
   );
 }
