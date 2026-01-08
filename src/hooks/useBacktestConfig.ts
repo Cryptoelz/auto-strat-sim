@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { Asset } from '@/types/trading';
 import { BacktestConfig, BacktestResult, SavedRun } from '@/types/backtest';
 import { loadSavedRuns, saveSavedRuns, exportResultToCSV, exportComparisonToCSV } from '@/lib/backtest-utils';
+import { validateBacktestConfig, ValidationResult } from '@/lib/backtest-validation';
 import { subDays } from 'date-fns';
 
 /**
@@ -47,6 +48,9 @@ export function useBacktestConfig() {
   // Saved runs state
   const [savedRuns, setSavedRuns] = useState<SavedRun[]>(() => loadSavedRuns());
   const [showComparison, setShowComparison] = useState(false);
+  
+  // Validation state
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
   /**
    * Toggle an asset's inclusion in the backtest
@@ -57,6 +61,7 @@ export function useBacktestConfig() {
         ? prev.filter(a => a !== asset)
         : [...prev, asset]
     );
+    setValidationErrors([]);
   }, []);
 
   /**
@@ -65,6 +70,7 @@ export function useBacktestConfig() {
   const applyOptimalSMA = useCallback((fast: number, slow: number) => {
     setFastSMA(fast);
     setSlowSMA(slow);
+    setValidationErrors([]);
   }, []);
 
   /**
@@ -83,6 +89,24 @@ export function useBacktestConfig() {
     takeProfitPercent,
     feePercent: DEFAULT_CONFIG.feePercent,
   }), [enabledAssets, startDate, endDate, timeframe, fastSMA, slowSMA, initialBalance, positionSizePercent, stopLossPercent, takeProfitPercent]);
+
+  /**
+   * Validate current configuration
+   * @returns Validation result with errors if any
+   */
+  const validateConfig = useCallback((): ValidationResult => {
+    const config = buildConfig();
+    const result = validateBacktestConfig(config);
+    setValidationErrors(result.errors);
+    return result;
+  }, [buildConfig]);
+
+  /**
+   * Clear validation errors
+   */
+  const clearValidationErrors = useCallback(() => {
+    setValidationErrors([]);
+  }, []);
 
   /**
    * Save current backtest result for comparison
@@ -175,6 +199,7 @@ export function useBacktestConfig() {
     setPositionSizePercent(DEFAULT_CONFIG.positionSizePercent);
     setStopLossPercent(DEFAULT_CONFIG.stopLossPercent);
     setTakeProfitPercent(DEFAULT_CONFIG.takeProfitPercent);
+    setValidationErrors([]);
   }, []);
 
   return {
@@ -214,6 +239,11 @@ export function useBacktestConfig() {
     deleteRun,
     clearAllRuns,
     toggleComparison,
+    
+    // Validation
+    validationErrors,
+    validateConfig,
+    clearValidationErrors,
     
     // Actions
     buildConfig,
