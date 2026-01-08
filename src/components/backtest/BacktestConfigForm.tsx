@@ -11,6 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Asset } from '@/types/trading';
 import { BacktestResult, SavedRun } from '@/types/backtest';
 import { ASSET_INFO } from '@/config/trading';
@@ -143,8 +144,8 @@ interface BacktestConfigFormProps {
   // Custom presets
   customPresetSlots?: { '4': boolean; '5': boolean; '6': boolean };
   onLoadCustomPreset?: (slot: '4' | '5' | '6') => boolean;
-  onSaveCustomPreset?: (slot: '4' | '5' | '6') => void;
-  getCustomPresetData?: (slot: '4' | '5' | '6') => { positionSizePercent: number; stopLossPercent: number; takeProfitPercent: number; fastSMA: number; slowSMA: number } | null;
+  onSaveCustomPreset?: (slot: '4' | '5' | '6', name?: string) => void;
+  getCustomPresetData?: (slot: '4' | '5' | '6') => { label: string; positionSizePercent: number; stopLossPercent: number; takeProfitPercent: number; fastSMA: number; slowSMA: number } | null;
 }
 
 export function BacktestConfigForm({
@@ -191,6 +192,9 @@ export function BacktestConfigForm({
   getCustomPresetData,
 }: BacktestConfigFormProps) {
   const [copied, setCopied] = useState(false);
+  const [presetDialogOpen, setPresetDialogOpen] = useState(false);
+  const [pendingPresetSlot, setPendingPresetSlot] = useState<'4' | '5' | '6' | null>(null);
+  const [presetName, setPresetName] = useState('');
 
   // Real-time validation
   const fieldErrors = useMemo<FieldErrors>(() => {
@@ -544,29 +548,34 @@ export function BacktestConfigForm({
                           variant={hasData ? "secondary" : "ghost"}
                           size="sm"
                           className={cn(
-                            "h-7 w-7 p-0 text-xs font-mono",
+                            "h-7 min-w-7 px-1 text-xs font-mono",
                             hasData && "ring-1 ring-primary/50"
                           )}
                           onClick={() => {
                             if (hasData && onLoadCustomPreset) {
                               if (onLoadCustomPreset(slot)) {
-                                toast.success(`Custom Preset ${slot} loaded`, {
+                                toast.success(`${presetData?.label || `Preset ${slot}`} loaded`, {
                                   description: presetData ? `Position: ${presetData.positionSizePercent}% · SL: ${presetData.stopLossPercent}% · TP: ${presetData.takeProfitPercent}%` : undefined,
                                 });
                               }
-                            } else if (onSaveCustomPreset) {
-                              onSaveCustomPreset(slot);
-                              toast.success(`Saved to Custom Preset ${slot}`);
+                            } else {
+                              setPendingPresetSlot(slot);
+                              setPresetName('');
+                              setPresetDialogOpen(true);
                             }
                           }}
                         >
-                          {slot}
+                          {hasData && presetData ? (
+                            <span className="truncate max-w-16">{presetData.label}</span>
+                          ) : (
+                            slot
+                          )}
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
                         {hasData && presetData ? (
                           <div className="text-xs">
-                            <p className="font-medium mb-1">Custom Preset {slot}</p>
+                            <p className="font-medium mb-1">{presetData.label}</p>
                             <p>SMA: {presetData.fastSMA}/{presetData.slowSMA}</p>
                             <p>Position: {presetData.positionSizePercent}%</p>
                             <p>SL: {presetData.stopLossPercent}% · TP: {presetData.takeProfitPercent}%</p>
@@ -581,6 +590,60 @@ export function BacktestConfigForm({
                 })}
               </div>
             )}
+
+            {/* Custom Preset Name Dialog */}
+            <Dialog open={presetDialogOpen} onOpenChange={setPresetDialogOpen}>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Name Your Preset</DialogTitle>
+                  <DialogDescription>
+                    Give your custom preset a memorable name for slot {pendingPresetSlot}.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                  <Input
+                    placeholder="e.g., Aggressive Swing, Safe BTC..."
+                    value={presetName}
+                    onChange={(e) => setPresetName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && pendingPresetSlot) {
+                        onSaveCustomPreset?.(pendingPresetSlot, presetName.trim() || undefined);
+                        toast.success(`Saved as "${presetName.trim() || `Custom ${pendingPresetSlot}`}"`);
+                        setPresetDialogOpen(false);
+                        setPendingPresetSlot(null);
+                        setPresetName('');
+                      }
+                    }}
+                    autoFocus
+                  />
+                </div>
+                <DialogFooter className="gap-2 sm:gap-0">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setPresetDialogOpen(false);
+                      setPendingPresetSlot(null);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      if (pendingPresetSlot) {
+                        onSaveCustomPreset?.(pendingPresetSlot, presetName.trim() || undefined);
+                        toast.success(`Saved as "${presetName.trim() || `Custom ${pendingPresetSlot}`}"`);
+                        setPresetDialogOpen(false);
+                        setPendingPresetSlot(null);
+                        setPresetName('');
+                      }
+                    }}
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Preset
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <TooltipLabel 
