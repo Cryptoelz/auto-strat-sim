@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -236,6 +236,44 @@ export function BacktestConfigForm({
   const [batchSelectMode, setBatchSelectMode] = useState(false);
   const [batchSelectedVersions, setBatchSelectedVersions] = useState<Set<string>>(new Set());
 
+  // Keyboard shortcuts for version history
+  useEffect(() => {
+    if (!versionHistorySlot || !batchSelectMode) return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl/Cmd + A to select all
+      if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+        e.preventDefault();
+        if (getPresetVersionHistory) {
+          const versions = getPresetVersionHistory(versionHistorySlot);
+          setBatchSelectedVersions(new Set(versions.map(v => v.id)));
+        }
+      }
+      
+      // Delete or Backspace to delete selected
+      if ((e.key === 'Delete' || e.key === 'Backspace') && batchSelectedVersions.size > 0) {
+        e.preventDefault();
+        if (onDeleteVersions) {
+          const ids = Array.from(batchSelectedVersions);
+          const deleted = onDeleteVersions(versionHistorySlot, ids);
+          if (deleted > 0) {
+            toast.success(`Deleted ${deleted} version${deleted !== 1 ? 's' : ''}`);
+            setBatchSelectedVersions(new Set());
+          }
+        }
+      }
+      
+      // Escape to exit batch mode
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setBatchSelectMode(false);
+        setBatchSelectedVersions(new Set());
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [versionHistorySlot, batchSelectMode, batchSelectedVersions, getPresetVersionHistory, onDeleteVersions]);
   // Count existing presets (moved up for use in handleFileDrop)
   const existingPresetCount = useMemo(() => {
     if (!customPresetSlots) return 0;
