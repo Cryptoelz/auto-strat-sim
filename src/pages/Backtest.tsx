@@ -30,6 +30,7 @@ const BACKTEST_SHORTCUTS = [
   { key: 'Enter', description: 'Run backtest' },
   { key: 'R', description: 'Reset results' },
   { key: '⌘/Ctrl+S', description: 'Save run for comparison' },
+  { key: '⌘/Ctrl+E', description: 'Export results to CSV' },
   { key: '1', description: 'Apply Conservative preset' },
   { key: '2', description: 'Apply Moderate preset' },
   { key: '3', description: 'Apply Aggressive preset' },
@@ -79,6 +80,20 @@ export default function Backtest() {
         } else {
           toast.error('No result to save', {
             description: 'Run a backtest first before saving',
+          });
+        }
+        return;
+      }
+
+      // Ctrl/Cmd+E to export CSV - works everywhere
+      if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+        e.preventDefault();
+        if (result) {
+          config.exportCSV(result);
+          toast.success('Results exported to CSV');
+        } else {
+          toast.error('No result to export', {
+            description: 'Run a backtest first before exporting',
           });
         }
         return;
