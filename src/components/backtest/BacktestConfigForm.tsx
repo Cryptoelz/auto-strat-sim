@@ -1486,7 +1486,7 @@ export function BacktestConfigForm({
                                     </div>
                                   </div>
                                   {batchSelectMode && (
-                                    <div className="flex items-center gap-2 text-xs">
+                                    <div className="flex items-center gap-2 text-xs flex-wrap">
                                       <span className="text-muted-foreground">
                                         {batchSelectedVersions.size} selected
                                       </span>
@@ -1510,6 +1510,20 @@ export function BacktestConfigForm({
                                           Select All
                                         </Button>
                                       )}
+                                      <div className="flex items-center gap-2 ml-auto text-[10px] text-muted-foreground/60">
+                                        <span className="flex items-center gap-1">
+                                          <kbd className="px-1 py-0.5 bg-muted rounded text-[9px] font-mono">⌘A</kbd>
+                                          <span>select all</span>
+                                        </span>
+                                        <span className="flex items-center gap-1">
+                                          <kbd className="px-1 py-0.5 bg-muted rounded text-[9px] font-mono">Del</kbd>
+                                          <span>delete</span>
+                                        </span>
+                                        <span className="flex items-center gap-1">
+                                          <kbd className="px-1 py-0.5 bg-muted rounded text-[9px] font-mono">Esc</kbd>
+                                          <span>exit</span>
+                                        </span>
+                                      </div>
                                     </div>
                                   )}
                                 </div>
