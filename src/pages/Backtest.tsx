@@ -49,6 +49,7 @@ const BACKTEST_SHORTCUTS = [
   { key: '3', description: 'Apply Aggressive preset' },
   { key: '4-6', description: 'Load custom preset' },
   { key: 'Shift+4-6', description: 'Save to custom preset' },
+  { key: 'Alt+4-6', description: 'Delete custom preset' },
   { key: '?', description: 'Show keyboard shortcuts' },
   { key: 'Esc', description: 'Close dialogs / unfocus' },
 ];
@@ -147,7 +148,16 @@ export default function Backtest() {
         case '5':
         case '6':
           e.preventDefault();
-          if (e.shiftKey) {
+          if (e.altKey) {
+            // Alt+4/5/6 deletes custom preset
+            const slotKey = e.key as '4' | '5' | '6';
+            if (config.hasCustomPreset(slotKey)) {
+              config.deleteCustomPreset(slotKey);
+              toast.success(`Custom Preset ${slotKey} deleted`);
+            } else {
+              toast.error(`Custom Preset ${slotKey} is empty`);
+            }
+          } else if (e.shiftKey) {
             // Shift+4/5/6 saves to custom preset
             config.saveCustomPreset(e.key as '4' | '5' | '6');
             const preset = config.getCustomPreset(e.key as '4' | '5' | '6');
