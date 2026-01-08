@@ -2320,6 +2320,62 @@ export function BacktestConfigForm({
                       Cancel Compare
                     </Button>
                   )}
+                  {!batchSelectMode && !compareVersions[0] && onImportVersionHistory && versionHistorySlot && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const input = document.createElement('input');
+                        input.type = 'file';
+                        input.accept = '.json,application/json';
+                        input.onchange = (e) => {
+                          const file = (e.target as HTMLInputElement).files?.[0];
+                          if (!file) return;
+                          
+                          if (file.size > 100 * 1024) {
+                            toast.error('File too large', { description: 'Version files should be under 100KB' });
+                            return;
+                          }
+                          
+                          const reader = new FileReader();
+                          reader.onload = (event) => {
+                            try {
+                              const json = event.target?.result as string;
+                              const data = JSON.parse(json);
+                              
+                              // Validate structure
+                              if (!data.versions || !Array.isArray(data.versions)) {
+                                toast.error('Invalid file format', { description: 'File does not contain valid versions' });
+                                return;
+                              }
+                              
+                              // Import with merge mode
+                              const result = onImportVersionHistory(versionHistorySlot, data.versions, 'merge');
+                              
+                              if (result.success && result.imported > 0) {
+                                toast.success(`Imported ${result.imported} version${result.imported !== 1 ? 's' : ''}`, {
+                                  description: 'Versions merged into history',
+                                });
+                              } else if (result.success && result.imported === 0) {
+                                toast.info('No new versions to import', {
+                                  description: 'All versions already exist in history',
+                                });
+                              } else {
+                                toast.error('Import failed', { description: 'Could not import versions' });
+                              }
+                            } catch {
+                              toast.error('Invalid JSON', { description: 'Could not parse the file' });
+                            }
+                          };
+                          reader.readAsText(file);
+                        };
+                        input.click();
+                      }}
+                    >
+                      <Upload className="h-3.5 w-3.5 mr-1.5" />
+                      Import
+                    </Button>
+                  )}
                   <Button variant="outline" onClick={() => {
                     setVersionHistorySlot(null);
                     setCompareVersions([null, null]);
