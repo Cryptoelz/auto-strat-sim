@@ -32,7 +32,8 @@ import {
   HelpCircle,
   RefreshCcw,
   X,
-  Pencil
+  Pencil,
+  Upload
 } from 'lucide-react';
 
 interface TooltipLabelProps {
@@ -150,6 +151,8 @@ interface BacktestConfigFormProps {
   onDeleteCustomPreset?: (slot: '4' | '5' | '6') => void;
   onRenameCustomPreset?: (slot: '4' | '5' | '6', newName: string) => void;
   getCustomPresetData?: (slot: '4' | '5' | '6') => { label: string; positionSizePercent: number; stopLossPercent: number; takeProfitPercent: number; fastSMA: number; slowSMA: number } | null;
+  onExportCustomPresets?: () => boolean;
+  onImportCustomPresets?: (json: string) => { success: boolean; message: string };
 }
 
 export function BacktestConfigForm({
@@ -196,6 +199,8 @@ export function BacktestConfigForm({
   onDeleteCustomPreset,
   onRenameCustomPreset,
   getCustomPresetData,
+  onExportCustomPresets,
+  onImportCustomPresets,
 }: BacktestConfigFormProps) {
   const [copied, setCopied] = useState(false);
   const [presetDialogOpen, setPresetDialogOpen] = useState(false);
@@ -637,6 +642,69 @@ export function BacktestConfigForm({
                     </div>
                   );
                 })}
+                
+                {/* Export/Import Buttons */}
+                {(onExportCustomPresets || onImportCustomPresets) && (
+                  <div className="flex items-center gap-1 ml-auto">
+                    {onExportCustomPresets && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0"
+                            onClick={() => {
+                              onExportCustomPresets();
+                              toast.success('Presets exported');
+                            }}
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs">Export presets to JSON</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                    {onImportCustomPresets && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0"
+                            onClick={() => {
+                              const input = document.createElement('input');
+                              input.type = 'file';
+                              input.accept = '.json,application/json';
+                              input.onchange = (e) => {
+                                const file = (e.target as HTMLInputElement).files?.[0];
+                                if (!file) return;
+                                const reader = new FileReader();
+                                reader.onload = (event) => {
+                                  const json = event.target?.result as string;
+                                  const result = onImportCustomPresets(json);
+                                  if (result.success) {
+                                    toast.success(result.message);
+                                  } else {
+                                    toast.error('Import failed', { description: result.message });
+                                  }
+                                };
+                                reader.readAsText(file);
+                              };
+                              input.click();
+                            }}
+                          >
+                            <Upload className="h-3.5 w-3.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs">Import presets from JSON</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
