@@ -176,6 +176,10 @@ interface BacktestConfigFormProps {
   onUpdateVersionNote?: (slot: '4' | '5' | '6', versionId: string, note: string) => boolean;
   onToggleVersionPin?: (slot: '4' | '5' | '6', versionId: string) => boolean;
   onToggleVersionTag?: (slot: '4' | '5' | '6', versionId: string, tag: PresetTagValue) => boolean;
+  
+  // External version history dialog control
+  versionHistoryOpen?: boolean;
+  onVersionHistoryOpenChange?: (open: boolean) => void;
 }
 
 export function BacktestConfigForm({
@@ -237,6 +241,8 @@ export function BacktestConfigForm({
   onUpdateVersionNote,
   onToggleVersionPin,
   onToggleVersionTag,
+  versionHistoryOpen: externalVersionHistoryOpen,
+  onVersionHistoryOpenChange,
 }: BacktestConfigFormProps) {
   const [copied, setCopied] = useState(false);
   const [clearPresetsConfirmOpen, setClearPresetsConfirmOpen] = useState(false);
@@ -257,6 +263,29 @@ export function BacktestConfigForm({
   const [editingNoteText, setEditingNoteText] = useState('');
   const [versionSearchQuery, setVersionSearchQuery] = useState('');
   const [versionTagFilter, setVersionTagFilter] = useState<PresetTagValue | null>(null);
+
+  // Handle external version history dialog control
+  useEffect(() => {
+    if (externalVersionHistoryOpen && !versionHistorySlot) {
+      // Find first available preset slot with history
+      const slots: ('4' | '5' | '6')[] = ['4', '5', '6'];
+      for (const slot of slots) {
+        if (customPresetSlots?.[slot]) {
+          setVersionHistorySlot(slot);
+          break;
+        }
+      }
+    } else if (!externalVersionHistoryOpen && versionHistorySlot && onVersionHistoryOpenChange) {
+      // Keep in sync - if external says closed but we have a slot, close it
+    }
+  }, [externalVersionHistoryOpen, customPresetSlots]);
+
+  // Sync internal slot state back to parent
+  useEffect(() => {
+    if (onVersionHistoryOpenChange) {
+      onVersionHistoryOpenChange(versionHistorySlot !== null);
+    }
+  }, [versionHistorySlot, onVersionHistoryOpenChange]);
 
   // Keyboard shortcuts for version history
   useEffect(() => {
