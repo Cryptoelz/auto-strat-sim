@@ -31,6 +31,7 @@ const BACKTEST_SHORTCUTS = [
   { key: '2', description: 'Apply Moderate preset' },
   { key: '3', description: 'Apply Aggressive preset' },
   { key: '?', description: 'Show keyboard shortcuts' },
+  { key: 'Esc', description: 'Close dialogs / unfocus' },
 ];
 
 export default function Backtest() {
@@ -55,7 +56,18 @@ export default function Backtest() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore if typing in an input
+      // Escape works even in inputs - closes dialogs and blurs focus
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setShortcutsOpen(false);
+        // Blur any focused element
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
+        return;
+      }
+
+      // Ignore other shortcuts if typing in an input
       if (
         e.target instanceof HTMLInputElement ||
         e.target instanceof HTMLTextAreaElement ||
