@@ -1,23 +1,14 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useBacktest } from '@/hooks/useBacktest';
-import { BacktestConfig, SavedRun } from '@/types/backtest';
+import { useBacktestConfig } from '@/hooks/useBacktestConfig';
 import { StrategyOptimizer } from '@/components/backtest/StrategyOptimizer';
 import { WalkForwardAnalysis } from '@/components/backtest/WalkForwardAnalysis';
 import { ResultsDisplay } from '@/components/backtest/ResultsDisplay';
 import { ComparisonTable } from '@/components/backtest/ComparisonTable';
 import { BacktestConfigForm } from '@/components/backtest/BacktestConfigForm';
-import { 
-  loadSavedRuns, 
-  saveSavedRuns, 
-  exportResultToCSV, 
-  exportComparisonToCSV 
-} from '@/lib/backtest-utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { Asset } from '@/types/trading';
-import { subDays } from 'date-fns';
 import { 
   ArrowLeft, 
   AlertTriangle,
@@ -26,98 +17,11 @@ import {
 
 export default function Backtest() {
   const { isRunning, progress, result, error, runBacktest, reset } = useBacktest();
-  
-  // Config state
-  const [startDate, setStartDate] = useState<Date>(subDays(new Date(), 30));
-  const [endDate, setEndDate] = useState<Date>(new Date());
-  const [timeframe, setTimeframe] = useState<'5m' | '15m' | '1h' | '4h'>('15m');
-  const [enabledAssets, setEnabledAssets] = useState<Asset[]>(['BTCUSDT', 'XRPUSDT']);
-  const [fastSMA, setFastSMA] = useState(20);
-  const [slowSMA, setSlowSMA] = useState(50);
-  const [initialBalance, setInitialBalance] = useState(10000);
-  const [positionSizePercent, setPositionSizePercent] = useState(5);
-  const [stopLossPercent, setStopLossPercent] = useState(2);
-  const [takeProfitPercent, setTakeProfitPercent] = useState(4);
-
-  // Saved runs state
-  const [savedRuns, setSavedRuns] = useState<SavedRun[]>(() => loadSavedRuns());
-  const [showComparison, setShowComparison] = useState(false);
-
-  const saveCurrentRun = () => {
-    if (!result) return;
-    
-    const runName = `SMA ${fastSMA}/${slowSMA} ${timeframe}`;
-    const newRun: SavedRun = {
-      id: `run-${Date.now()}`,
-      name: runName,
-      savedAt: Date.now(),
-      config: {
-        assets: enabledAssets,
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-        timeframe,
-        fastSMA,
-        slowSMA,
-        initialBalance,
-        positionSizePercent,
-        stopLossPercent,
-        takeProfitPercent,
-      },
-      result: {
-        finalBalance: result.finalBalance,
-        totalPnl: result.totalPnl,
-        totalPnlPercent: result.totalPnlPercent,
-        winRate: result.winRate,
-        totalTrades: result.totalTrades,
-        maxDrawdown: result.maxDrawdown,
-        profitFactor: result.profitFactor,
-        sharpeRatio: result.sharpeRatio,
-      },
-    };
-
-    const updatedRuns = [...savedRuns, newRun];
-    setSavedRuns(updatedRuns);
-    saveSavedRuns(updatedRuns);
-  };
-
-  const deleteRun = (id: string) => {
-    const updatedRuns = savedRuns.filter(r => r.id !== id);
-    setSavedRuns(updatedRuns);
-    saveSavedRuns(updatedRuns);
-  };
-
-  const clearAllRuns = () => {
-    setSavedRuns([]);
-    saveSavedRuns([]);
-    setShowComparison(false);
-  };
-
-  const toggleAsset = (asset: Asset) => {
-    setEnabledAssets(prev => 
-      prev.includes(asset) 
-        ? prev.filter(a => a !== asset)
-        : [...prev, asset]
-    );
-  };
+  const config = useBacktestConfig();
 
   const handleRunBacktest = () => {
-    if (enabledAssets.length === 0) return;
-    
-    const config: BacktestConfig = {
-      assets: enabledAssets,
-      startDate,
-      endDate,
-      timeframe,
-      fastSMA,
-      slowSMA,
-      initialBalance,
-      positionSizePercent,
-      stopLossPercent,
-      takeProfitPercent,
-      feePercent: 0.1,
-    };
-
-    runBacktest(config);
+    if (config.enabledAssets.length === 0) return;
+    runBacktest(config.buildConfig());
   };
 
   return (
@@ -145,68 +49,65 @@ export default function Backtest() {
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Configuration Panel */}
           <BacktestConfigForm
-            startDate={startDate}
-            endDate={endDate}
-            onStartDateChange={setStartDate}
-            onEndDateChange={setEndDate}
-            timeframe={timeframe}
-            onTimeframeChange={setTimeframe}
-            enabledAssets={enabledAssets}
-            onToggleAsset={toggleAsset}
-            fastSMA={fastSMA}
-            slowSMA={slowSMA}
-            onFastSMAChange={setFastSMA}
-            onSlowSMAChange={setSlowSMA}
-            initialBalance={initialBalance}
-            positionSizePercent={positionSizePercent}
-            stopLossPercent={stopLossPercent}
-            takeProfitPercent={takeProfitPercent}
-            onInitialBalanceChange={setInitialBalance}
-            onPositionSizeChange={setPositionSizePercent}
-            onStopLossChange={setStopLossPercent}
-            onTakeProfitChange={setTakeProfitPercent}
+            startDate={config.startDate}
+            endDate={config.endDate}
+            onStartDateChange={config.setStartDate}
+            onEndDateChange={config.setEndDate}
+            timeframe={config.timeframe}
+            onTimeframeChange={config.setTimeframe}
+            enabledAssets={config.enabledAssets}
+            onToggleAsset={config.toggleAsset}
+            fastSMA={config.fastSMA}
+            slowSMA={config.slowSMA}
+            onFastSMAChange={config.setFastSMA}
+            onSlowSMAChange={config.setSlowSMA}
+            initialBalance={config.initialBalance}
+            positionSizePercent={config.positionSizePercent}
+            stopLossPercent={config.stopLossPercent}
+            takeProfitPercent={config.takeProfitPercent}
+            onInitialBalanceChange={config.setInitialBalance}
+            onPositionSizeChange={config.setPositionSizePercent}
+            onStopLossChange={config.setStopLossPercent}
+            onTakeProfitChange={config.setTakeProfitPercent}
             isRunning={isRunning}
             progress={progress}
             result={result}
             onRunBacktest={handleRunBacktest}
             onReset={reset}
-            onSaveRun={saveCurrentRun}
-            onExportCSV={() => result && exportResultToCSV(result, { fastSMA, slowSMA, timeframe })}
-            savedRuns={savedRuns}
-            showComparison={showComparison}
-            onToggleComparison={() => setShowComparison(!showComparison)}
-            onClearAllRuns={clearAllRuns}
-            onExportComparison={() => exportComparisonToCSV(savedRuns)}
+            onSaveRun={() => result && config.saveCurrentRun(result)}
+            onExportCSV={() => result && config.exportCSV(result)}
+            savedRuns={config.savedRuns}
+            showComparison={config.showComparison}
+            onToggleComparison={config.toggleComparison}
+            onClearAllRuns={config.clearAllRuns}
+            onExportComparison={config.exportComparison}
           />
 
           {/* Strategy Optimizer */}
           <StrategyOptimizer
-            assets={enabledAssets}
-            startDate={startDate}
-            endDate={endDate}
-            timeframe={timeframe}
-            initialBalance={initialBalance}
-            positionSizePercent={positionSizePercent}
-            stopLossPercent={stopLossPercent}
-            takeProfitPercent={takeProfitPercent}
-            currentFastSMA={fastSMA}
-            currentSlowSMA={slowSMA}
-            onApplyOptimal={(fast, slow) => {
-              setFastSMA(fast);
-              setSlowSMA(slow);
-            }}
+            assets={config.enabledAssets}
+            startDate={config.startDate}
+            endDate={config.endDate}
+            timeframe={config.timeframe}
+            initialBalance={config.initialBalance}
+            positionSizePercent={config.positionSizePercent}
+            stopLossPercent={config.stopLossPercent}
+            takeProfitPercent={config.takeProfitPercent}
+            currentFastSMA={config.fastSMA}
+            currentSlowSMA={config.slowSMA}
+            onApplyOptimal={config.applyOptimalSMA}
           />
 
           {/* Walk-Forward Analysis */}
           <WalkForwardAnalysis
-            assets={enabledAssets}
-            startDate={startDate}
-            endDate={endDate}
-            timeframe={timeframe}
-            initialBalance={initialBalance}
-            positionSizePercent={positionSizePercent}
-            stopLossPercent={stopLossPercent}
-            takeProfitPercent={takeProfitPercent}
+            assets={config.enabledAssets}
+            startDate={config.startDate}
+            endDate={config.endDate}
+            timeframe={config.timeframe}
+            initialBalance={config.initialBalance}
+            positionSizePercent={config.positionSizePercent}
+            stopLossPercent={config.stopLossPercent}
+            takeProfitPercent={config.takeProfitPercent}
             fastSMARange={{ min: 5, max: 30, step: 5 }}
             slowSMARange={{ min: 20, max: 100, step: 10 }}
           />
@@ -222,7 +123,7 @@ export default function Backtest() {
               </Card>
             )}
 
-            {!result && !isRunning && !error && !showComparison && (
+            {!result && !isRunning && !error && !config.showComparison && (
               <Card className="border-border/50 bg-card/50 backdrop-blur">
                 <CardContent className="flex flex-col items-center justify-center py-16 text-center">
                   <BarChart3 className="h-12 w-12 text-muted-foreground/50 mb-4" />
@@ -235,11 +136,20 @@ export default function Backtest() {
               </Card>
             )}
 
-            {showComparison && savedRuns.length > 0 && (
-              <ComparisonTable runs={savedRuns} onRemove={deleteRun} />
+            {config.showComparison && config.savedRuns.length > 0 && (
+              <ComparisonTable runs={config.savedRuns} onRemove={config.deleteRun} />
             )}
 
-            {result && !showComparison && <ResultsDisplay result={result} fastSMA={fastSMA} slowSMA={slowSMA} stopLossPercent={stopLossPercent} takeProfitPercent={takeProfitPercent} positionSizePercent={positionSizePercent} />}
+            {result && !config.showComparison && (
+              <ResultsDisplay 
+                result={result} 
+                fastSMA={config.fastSMA} 
+                slowSMA={config.slowSMA} 
+                stopLossPercent={config.stopLossPercent} 
+                takeProfitPercent={config.takeProfitPercent} 
+                positionSizePercent={config.positionSizePercent} 
+              />
+            )}
           </div>
         </div>
       </main>
