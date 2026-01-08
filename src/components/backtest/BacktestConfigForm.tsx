@@ -213,6 +213,82 @@ export function BacktestConfigForm({
   const [isRenaming, setIsRenaming] = useState(false);
   const [importConfirmOpen, setImportConfirmOpen] = useState(false);
   const [pendingImportJson, setPendingImportJson] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  // Count existing presets (moved up for use in handleFileDrop)
+  const existingPresetCount = useMemo(() => {
+    if (!customPresetSlots) return 0;
+    return Object.values(customPresetSlots).filter(Boolean).length;
+  }, [customPresetSlots]);
+
+  // Handle file drop for import
+  const handleFileDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    
+    if (!onImportCustomPresets) return;
+    
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+    
+    // Validate file type
+    if (!file.name.endsWith('.json') && file.type !== 'application/json') {
+      toast.error('Invalid file type', { description: 'Please drop a JSON file' });
+      return;
+    }
+    
+    // Validate file size (max 100KB for preset files)
+    if (file.size > 100 * 1024) {
+      toast.error('File too large', { description: 'Preset files should be under 100KB' });
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const json = event.target?.result as string;
+      // Validate JSON structure
+      try {
+        const data = JSON.parse(json);
+        if (!data.presets || typeof data.presets !== 'object') {
+          toast.error('Invalid preset file', { description: 'File does not contain valid presets' });
+          return;
+        }
+      } catch {
+        toast.error('Invalid JSON', { description: 'Could not parse the file' });
+        return;
+      }
+      
+      // If there are existing presets, show confirmation
+      if (existingPresetCount > 0) {
+        setPendingImportJson(json);
+        setImportConfirmOpen(true);
+      } else {
+        // No existing presets, import directly
+        const result = onImportCustomPresets(json);
+        if (result.success) {
+          toast.success(result.message);
+        } else {
+          toast.error('Import failed', { description: result.message });
+        }
+      }
+    };
+    reader.readAsText(file);
+  }, [onImportCustomPresets, existingPresetCount]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onImportCustomPresets) {
+      setIsDragging(true);
+    }
+  }, [onImportCustomPresets]);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
 
   // Parse pending import for preview
   type PreviewPreset = { label: string; fastSMA: number; slowSMA: number; positionSizePercent: number; stopLossPercent: number; takeProfitPercent: number };
@@ -241,11 +317,6 @@ export function BacktestConfigForm({
     }
   }, [pendingImportJson]);
 
-  // Count existing presets
-  const existingPresetCount = useMemo(() => {
-    if (!customPresetSlots) return 0;
-    return Object.values(customPresetSlots).filter(Boolean).length;
-  }, [customPresetSlots]);
   // Real-time validation
   const fieldErrors = useMemo<FieldErrors>(() => {
     const errors: FieldErrors = {};
@@ -586,8 +657,22 @@ export function BacktestConfigForm({
             
             {/* Custom Preset Slots */}
             {customPresetSlots && (
-              <div className="flex items-center gap-2 mt-2">
-                <span className="text-xs text-muted-foreground">Custom:</span>
+              <div 
+                className={cn(
+                  "flex items-center gap-2 mt-2 p-2 -m-2 rounded-lg transition-colors",
+                  isDragging && "bg-primary/10 ring-2 ring-dashed ring-primary/50"
+                )}
+                onDrop={handleFileDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+              >
+                {isDragging ? (
+                  <div className="flex-1 flex items-center justify-center py-2">
+                    <span className="text-sm text-primary font-medium">Drop JSON file to import presets</span>
+                  </div>
+                ) : (
+                  <>
+                    <span className="text-xs text-muted-foreground">Custom:</span>
                 {(['4', '5', '6'] as const).map((slot) => {
                   const hasData = customPresetSlots[slot];
                   const presetData = getCustomPresetData?.(slot);
@@ -767,6 +852,8 @@ export function BacktestConfigForm({
                     )}
                   </div>
                 )}
+                </>
+              )}
               </div>
             )}
 
