@@ -328,6 +328,14 @@ export default function Backtest() {
             onShareConfig={config.copyShareableUrl}
             onResetToDefaults={config.resetConfig}
             onApplyPreset={config.applyPreset}
+            customPresetSlots={{
+              '4': config.hasCustomPreset('4'),
+              '5': config.hasCustomPreset('5'),
+              '6': config.hasCustomPreset('6'),
+            }}
+            onLoadCustomPreset={config.loadCustomPreset}
+            onSaveCustomPreset={config.saveCustomPreset}
+            getCustomPresetData={config.getCustomPreset}
           />
 
           {/* Strategy Optimizer */}
