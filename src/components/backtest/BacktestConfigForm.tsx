@@ -1192,6 +1192,13 @@ export function BacktestConfigForm({
                           const increased = isNumeric && (val2 as number) > (val1 as number);
                           const decreased = isNumeric && (val2 as number) < (val1 as number);
                           
+                          // Calculate percentage change for numeric values
+                          let percentChange: string | null = null;
+                          if (isNumeric && isDifferent && (val1 as number) !== 0) {
+                            const pct = (((val2 as number) - (val1 as number)) / Math.abs(val1 as number)) * 100;
+                            percentChange = pct > 0 ? `+${pct.toFixed(0)}%` : `${pct.toFixed(0)}%`;
+                          }
+                          
                           return (
                             <div key={key} className={cn(
                               "grid grid-cols-3 gap-2 text-xs py-1.5 px-2 rounded",
@@ -1211,6 +1218,9 @@ export function BacktestConfigForm({
                                 {increased && <span className="text-[10px]">↑</span>}
                                 {decreased && <span className="text-[10px]">↓</span>}
                                 {val2}{suffix || ''}
+                                {percentChange && (
+                                  <span className="text-[10px] opacity-70 ml-0.5">({percentChange})</span>
+                                )}
                               </div>
                             </div>
                           );
