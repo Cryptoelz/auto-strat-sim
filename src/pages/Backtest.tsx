@@ -20,7 +20,8 @@ export default function Backtest() {
   const config = useBacktestConfig();
 
   const handleRunBacktest = () => {
-    if (config.enabledAssets.length === 0) return;
+    const validation = config.validateConfig();
+    if (!validation.success) return;
     runBacktest(config.buildConfig());
   };
 
@@ -114,6 +115,24 @@ export default function Backtest() {
 
           {/* Results Panel */}
           <div className="lg:col-span-2">
+            {config.validationErrors.length > 0 && (
+              <Card className="border-destructive/50 bg-destructive/10 mb-4">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="h-5 w-5 text-destructive mt-0.5" />
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-destructive">Validation Errors</p>
+                      <ul className="text-sm text-destructive list-disc list-inside">
+                        {config.validationErrors.map((err, i) => (
+                          <li key={i}>{err}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {error && (
               <Card className="border-destructive/50 bg-destructive/10">
                 <CardContent className="p-4 flex items-center gap-3">
