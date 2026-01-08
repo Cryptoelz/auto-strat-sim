@@ -231,6 +231,8 @@ export function BacktestConfigForm({
   const [versionHistorySlot, setVersionHistorySlot] = useState<'4' | '5' | '6' | null>(null);
   const [compareVersions, setCompareVersions] = useState<[string | null, string | null]>([null, null]);
   const [versionFieldFilter, setVersionFieldFilter] = useState<string | null>(null);
+  const [batchSelectMode, setBatchSelectMode] = useState(false);
+  const [batchSelectedVersions, setBatchSelectedVersions] = useState<Set<string>>(new Set());
 
   // Count existing presets (moved up for use in handleFileDrop)
   const existingPresetCount = useMemo(() => {
@@ -1137,6 +1139,8 @@ export function BacktestConfigForm({
                 setVersionHistorySlot(null);
                 setCompareVersions([null, null]);
                 setVersionFieldFilter(null);
+                setBatchSelectMode(false);
+                setBatchSelectedVersions(new Set());
               }
             }}>
               <DialogContent className="sm:max-w-2xl">
@@ -1402,34 +1406,77 @@ export function BacktestConfigForm({
                             </p>
                           ) : (
                             <>
-                              {/* Filter Bar */}
+                              {/* Filter & Batch Mode Bar */}
                               {allVersions.length > 1 && !compareVersions[0] && (
-                                <div className="flex items-center gap-2 mb-3 pb-3 border-b">
-                                  <span className="text-xs text-muted-foreground">Filter by change:</span>
-                                  <div className="flex flex-wrap gap-1">
-                                    {fieldOptions.map(({ value, label }) => (
+                                <div className="flex flex-col gap-2 mb-3 pb-3 border-b">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs text-muted-foreground">Filter by change:</span>
+                                    <div className="flex flex-wrap gap-1">
+                                      {fieldOptions.map(({ value, label }) => (
+                                        <Button
+                                          key={value}
+                                          variant={versionFieldFilter === value ? "secondary" : "ghost"}
+                                          size="sm"
+                                          className="h-6 text-[10px] px-2"
+                                          onClick={() => setVersionFieldFilter(
+                                            versionFieldFilter === value ? null : value
+                                          )}
+                                          disabled={batchSelectMode}
+                                        >
+                                          {label}
+                                        </Button>
+                                      ))}
+                                    </div>
+                                    {versionFieldFilter && !batchSelectMode && (
                                       <Button
-                                        key={value}
-                                        variant={versionFieldFilter === value ? "secondary" : "ghost"}
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 text-[10px] px-1.5"
+                                        onClick={() => setVersionFieldFilter(null)}
+                                      >
+                                        <X className="h-3 w-3" />
+                                      </Button>
+                                    )}
+                                    <div className="ml-auto">
+                                      <Button
+                                        variant={batchSelectMode ? "secondary" : "outline"}
                                         size="sm"
                                         className="h-6 text-[10px] px-2"
-                                        onClick={() => setVersionFieldFilter(
-                                          versionFieldFilter === value ? null : value
-                                        )}
+                                        onClick={() => {
+                                          setBatchSelectMode(!batchSelectMode);
+                                          setBatchSelectedVersions(new Set());
+                                        }}
                                       >
-                                        {label}
+                                        {batchSelectMode ? 'Cancel' : 'Select Multiple'}
                                       </Button>
-                                    ))}
+                                    </div>
                                   </div>
-                                  {versionFieldFilter && (
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-6 text-[10px] px-1.5 ml-auto"
-                                      onClick={() => setVersionFieldFilter(null)}
-                                    >
-                                      <X className="h-3 w-3" />
-                                    </Button>
+                                  {batchSelectMode && (
+                                    <div className="flex items-center gap-2 text-xs">
+                                      <span className="text-muted-foreground">
+                                        {batchSelectedVersions.size} selected
+                                      </span>
+                                      {batchSelectedVersions.size > 0 && (
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-5 text-[10px] px-1.5"
+                                          onClick={() => setBatchSelectedVersions(new Set())}
+                                        >
+                                          Clear
+                                        </Button>
+                                      )}
+                                      {filteredVersions.length > 0 && batchSelectedVersions.size < filteredVersions.length && (
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-5 text-[10px] px-1.5"
+                                          onClick={() => setBatchSelectedVersions(new Set(filteredVersions.map(v => v.id)))}
+                                        >
+                                          Select All
+                                        </Button>
+                                      )}
+                                    </div>
                                   )}
                                 </div>
                               )}
@@ -1451,16 +1498,41 @@ export function BacktestConfigForm({
                                 {filteredVersions.map((version) => {
                                   const originalIndex = allVersions.findIndex(v => v.id === version.id);
                                   const isSelected = compareVersions[0] === version.id || compareVersions[1] === version.id;
+                                  const isBatchSelected = batchSelectedVersions.has(version.id);
                                   return (
                                     <div
                                       key={version.id}
                                       className={cn(
-                                        "flex items-center justify-between p-3 rounded-lg border transition-colors",
+                                        "flex items-center gap-3 p-3 rounded-lg border transition-colors",
                                         isSelected 
                                           ? "border-primary bg-primary/10" 
-                                          : "border-border/50 hover:bg-muted/50"
+                                          : isBatchSelected
+                                            ? "border-primary/50 bg-primary/5"
+                                            : "border-border/50 hover:bg-muted/50"
                                       )}
+                                      onClick={batchSelectMode ? () => {
+                                        setBatchSelectedVersions(prev => {
+                                          const next = new Set(prev);
+                                          if (next.has(version.id)) {
+                                            next.delete(version.id);
+                                          } else {
+                                            next.add(version.id);
+                                          }
+                                          return next;
+                                        });
+                                      } : undefined}
+                                      style={batchSelectMode ? { cursor: 'pointer' } : undefined}
                                     >
+                                      {batchSelectMode && (
+                                        <div className={cn(
+                                          "h-4 w-4 rounded border flex items-center justify-center shrink-0",
+                                          isBatchSelected 
+                                            ? "bg-primary border-primary" 
+                                            : "border-muted-foreground/30"
+                                        )}>
+                                          {isBatchSelected && <Check className="h-3 w-3 text-primary-foreground" />}
+                                        </div>
+                                      )}
                                       <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
                                           <span className="text-xs font-medium">
@@ -1483,47 +1555,49 @@ export function BacktestConfigForm({
                                           TP: {version.data.takeProfitPercent}%
                                         </p>
                                       </div>
-                                      <div className="flex items-center gap-1">
-                                        <Button
-                                          variant={isSelected ? "secondary" : "ghost"}
-                                          size="sm"
-                                          className="h-7 text-xs"
-                                          onClick={() => {
-                                            if (isSelected) {
-                                              // Deselect
-                                              if (compareVersions[0] === version.id) {
-                                                setCompareVersions([compareVersions[1], null]);
-                                              } else {
-                                                setCompareVersions([compareVersions[0], null]);
-                                              }
-                                            } else if (!compareVersions[0]) {
-                                              setCompareVersions([version.id, null]);
-                                            } else if (!compareVersions[1]) {
-                                              setCompareVersions([compareVersions[0], version.id]);
-                                            }
-                                          }}
-                                        >
-                                          {isSelected ? <Check className="h-3 w-3" /> : <GitCompare className="h-3 w-3" />}
-                                        </Button>
-                                        {originalIndex > 0 && onRestorePresetVersion && !compareVersions[0] && (
+                                      {!batchSelectMode && (
+                                        <div className="flex items-center gap-1">
                                           <Button
-                                            variant="outline"
+                                            variant={isSelected ? "secondary" : "ghost"}
                                             size="sm"
                                             className="h-7 text-xs"
                                             onClick={() => {
-                                              if (versionHistorySlot && onRestorePresetVersion(versionHistorySlot, version.id)) {
-                                                toast.success('Version restored', {
-                                                  description: `Restored to "${version.data.label}" from ${format(new Date(version.savedAt), 'MMM d, HH:mm')}`,
-                                                });
-                                                setVersionHistorySlot(null);
+                                              if (isSelected) {
+                                                // Deselect
+                                                if (compareVersions[0] === version.id) {
+                                                  setCompareVersions([compareVersions[1], null]);
+                                                } else {
+                                                  setCompareVersions([compareVersions[0], null]);
+                                                }
+                                              } else if (!compareVersions[0]) {
+                                                setCompareVersions([version.id, null]);
+                                              } else if (!compareVersions[1]) {
+                                                setCompareVersions([compareVersions[0], version.id]);
                                               }
                                             }}
                                           >
-                                            <RotateCcw className="h-3 w-3 mr-1" />
-                                            Restore
+                                            {isSelected ? <Check className="h-3 w-3" /> : <GitCompare className="h-3 w-3" />}
                                           </Button>
-                                        )}
-                                      </div>
+                                          {originalIndex > 0 && onRestorePresetVersion && !compareVersions[0] && (
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              className="h-7 text-xs"
+                                              onClick={() => {
+                                                if (versionHistorySlot && onRestorePresetVersion(versionHistorySlot, version.id)) {
+                                                  toast.success('Version restored', {
+                                                    description: `Restored to "${version.data.label}" from ${format(new Date(version.savedAt), 'MMM d, HH:mm')}`,
+                                                  });
+                                                  setVersionHistorySlot(null);
+                                                }
+                                              }}
+                                            >
+                                              <RotateCcw className="h-3 w-3 mr-1" />
+                                              Restore
+                                            </Button>
+                                          )}
+                                        </div>
+                                      )}
                                     </div>
                                   );
                                 })}
@@ -1535,7 +1609,40 @@ export function BacktestConfigForm({
                     })()}
                   </div>
                 )}
-                <DialogFooter>
+                <DialogFooter className="flex-col sm:flex-row gap-2">
+                  {batchSelectMode && batchSelectedVersions.size >= 2 && (
+                    <Button 
+                      variant="default" 
+                      size="sm" 
+                      onClick={() => {
+                        const ids = Array.from(batchSelectedVersions);
+                        setCompareVersions([ids[0], ids[1]]);
+                        setBatchSelectMode(false);
+                        setBatchSelectedVersions(new Set());
+                      }}
+                    >
+                      <GitCompare className="h-3.5 w-3.5 mr-1.5" />
+                      Compare First 2
+                    </Button>
+                  )}
+                  {batchSelectMode && batchSelectedVersions.size === 1 && onRestorePresetVersion && versionHistorySlot && (
+                    <Button 
+                      variant="default" 
+                      size="sm" 
+                      onClick={() => {
+                        const versionId = Array.from(batchSelectedVersions)[0];
+                        if (onRestorePresetVersion(versionHistorySlot, versionId)) {
+                          toast.success('Version restored');
+                          setVersionHistorySlot(null);
+                          setBatchSelectMode(false);
+                          setBatchSelectedVersions(new Set());
+                        }
+                      }}
+                    >
+                      <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
+                      Restore Selected
+                    </Button>
+                  )}
                   {compareVersions[0] && !compareVersions[1] && (
                     <Button variant="ghost" size="sm" onClick={() => setCompareVersions([null, null])}>
                       Cancel Compare
@@ -1544,6 +1651,8 @@ export function BacktestConfigForm({
                   <Button variant="outline" onClick={() => {
                     setVersionHistorySlot(null);
                     setCompareVersions([null, null]);
+                    setBatchSelectMode(false);
+                    setBatchSelectedVersions(new Set());
                   }}>
                     Close
                   </Button>
