@@ -129,6 +129,30 @@ export function usePresetVersioning() {
     }
   }, []);
 
+  /**
+   * Delete specific versions from a slot's history
+   */
+  const deleteVersions = useCallback((
+    slot: '4' | '5' | '6',
+    versionIds: string[]
+  ): number => {
+    const idsToDelete = new Set(versionIds);
+    let deletedCount = 0;
+    
+    setVersionHistory(prev => {
+      const filtered = prev[slot].filter(v => {
+        if (idsToDelete.has(v.id)) {
+          deletedCount++;
+          return false;
+        }
+        return true;
+      });
+      return { ...prev, [slot]: filtered };
+    });
+    
+    return deletedCount;
+  }, []);
+
   return {
     versionHistory,
     addVersion,
@@ -139,5 +163,6 @@ export function usePresetVersioning() {
     hasHistory,
     getTotalVersionCount,
     importSlotHistory,
+    deleteVersions,
   };
 }

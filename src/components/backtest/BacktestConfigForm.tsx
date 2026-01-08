@@ -164,6 +164,7 @@ interface BacktestConfigFormProps {
   onRestorePresetVersion?: (slot: '4' | '5' | '6', versionId: string) => boolean;
   hasPresetHistory?: (slot: '4' | '5' | '6') => boolean;
   onImportVersionHistory?: (slot: '4' | '5' | '6', versions: PresetVersion[], mode?: 'replace' | 'merge') => { success: boolean; imported: number };
+  onDeleteVersions?: (slot: '4' | '5' | '6', versionIds: string[]) => number;
 }
 
 export function BacktestConfigForm({
@@ -218,6 +219,7 @@ export function BacktestConfigForm({
   onRestorePresetVersion,
   hasPresetHistory,
   onImportVersionHistory,
+  onDeleteVersions,
 }: BacktestConfigFormProps) {
   const [copied, setCopied] = useState(false);
   const [clearPresetsConfirmOpen, setClearPresetsConfirmOpen] = useState(false);
@@ -1641,6 +1643,23 @@ export function BacktestConfigForm({
                     >
                       <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
                       Restore Selected
+                    </Button>
+                  )}
+                  {batchSelectMode && batchSelectedVersions.size > 0 && onDeleteVersions && versionHistorySlot && (
+                    <Button 
+                      variant="destructive" 
+                      size="sm" 
+                      onClick={() => {
+                        const ids = Array.from(batchSelectedVersions);
+                        const deleted = onDeleteVersions(versionHistorySlot, ids);
+                        if (deleted > 0) {
+                          toast.success(`Deleted ${deleted} version${deleted !== 1 ? 's' : ''}`);
+                          setBatchSelectedVersions(new Set());
+                        }
+                      }}
+                    >
+                      <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                      Delete ({batchSelectedVersions.size})
                     </Button>
                   )}
                   {compareVersions[0] && !compareVersions[1] && (
