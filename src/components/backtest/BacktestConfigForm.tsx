@@ -227,6 +227,7 @@ export function BacktestConfigForm({
   const [pendingImportJson, setPendingImportJson] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [versionHistorySlot, setVersionHistorySlot] = useState<'4' | '5' | '6' | null>(null);
+  const [compareVersions, setCompareVersions] = useState<[string | null, string | null]>([null, null]);
 
   // Count existing presets (moved up for use in handleFileDrop)
   const existingPresetCount = useMemo(() => {
@@ -1129,80 +1130,219 @@ export function BacktestConfigForm({
 
             {/* Version History Dialog */}
             <Dialog open={versionHistorySlot !== null} onOpenChange={(open) => {
-              if (!open) setVersionHistorySlot(null);
+              if (!open) {
+                setVersionHistorySlot(null);
+                setCompareVersions([null, null]);
+              }
             }}>
-              <DialogContent className="sm:max-w-lg">
+              <DialogContent className="sm:max-w-2xl">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <History className="h-4 w-4" />
                     Version History
                   </DialogTitle>
                   <DialogDescription>
-                    {versionHistorySlot && getCustomPresetData?.(versionHistorySlot)?.label 
-                      ? `Restore a previous version of "${getCustomPresetData(versionHistorySlot)?.label}"`
-                      : 'Restore a previous version of this preset'}
+                    {compareVersions[0] || compareVersions[1] 
+                      ? 'Select two versions to compare side-by-side'
+                      : versionHistorySlot && getCustomPresetData?.(versionHistorySlot)?.label 
+                        ? `Restore a previous version of "${getCustomPresetData(versionHistorySlot)?.label}"`
+                        : 'Restore a previous version of this preset'}
                   </DialogDescription>
                 </DialogHeader>
-                <div className="py-4 max-h-[300px] overflow-y-auto">
-                  {versionHistorySlot && getPresetVersionHistory && (
-                    <div className="space-y-2">
-                      {getPresetVersionHistory(versionHistorySlot).length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center py-4">
-                          No version history available
-                        </p>
-                      ) : (
-                        getPresetVersionHistory(versionHistorySlot).map((version, index) => (
-                          <div
-                            key={version.id}
-                            className="flex items-center justify-between p-3 rounded-lg border border-border/50 hover:bg-muted/50 transition-colors"
-                          >
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs font-medium">
-                                  {version.data.label}
-                                </span>
-                                {index === 0 && (
-                                  <span className="text-[10px] px-1.5 py-0.5 bg-primary/20 text-primary rounded">
-                                    Current
-                                  </span>
-                                )}
+                
+                {/* Comparison View */}
+                {compareVersions[0] && compareVersions[1] && versionHistorySlot && getPresetVersionHistory && (() => {
+                  const versions = getPresetVersionHistory(versionHistorySlot);
+                  const v1 = versions.find(v => v.id === compareVersions[0]);
+                  const v2 = versions.find(v => v.id === compareVersions[1]);
+                  if (!v1 || !v2) return null;
+                  
+                  const fields: { key: keyof typeof v1.data; label: string; suffix?: string }[] = [
+                    { key: 'label', label: 'Name' },
+                    { key: 'fastSMA', label: 'Fast SMA' },
+                    { key: 'slowSMA', label: 'Slow SMA' },
+                    { key: 'positionSizePercent', label: 'Position Size', suffix: '%' },
+                    { key: 'stopLossPercent', label: 'Stop Loss', suffix: '%' },
+                    { key: 'takeProfitPercent', label: 'Take Profit', suffix: '%' },
+                  ];
+                  
+                  return (
+                    <div className="py-4">
+                      <div className="grid grid-cols-3 gap-2 text-xs mb-3">
+                        <div className="font-medium text-muted-foreground">Field</div>
+                        <div className="text-center">
+                          <span className="font-medium">{format(new Date(v1.savedAt), 'MMM d, HH:mm')}</span>
+                          {versions[0]?.id === v1.id && (
+                            <span className="ml-1 text-[10px] px-1 py-0.5 bg-primary/20 text-primary rounded">Current</span>
+                          )}
+                        </div>
+                        <div className="text-center">
+                          <span className="font-medium">{format(new Date(v2.savedAt), 'MMM d, HH:mm')}</span>
+                          {versions[0]?.id === v2.id && (
+                            <span className="ml-1 text-[10px] px-1 py-0.5 bg-primary/20 text-primary rounded">Current</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        {fields.map(({ key, label, suffix }) => {
+                          const val1 = v1.data[key as keyof typeof v1.data];
+                          const val2 = v2.data[key as keyof typeof v2.data];
+                          const isDifferent = val1 !== val2;
+                          return (
+                            <div key={key} className={cn(
+                              "grid grid-cols-3 gap-2 text-xs py-1.5 px-2 rounded",
+                              isDifferent && "bg-yellow-500/10"
+                            )}>
+                              <div className="text-muted-foreground">{label}</div>
+                              <div className={cn("text-center", isDifferent && "font-medium text-yellow-500")}>
+                                {val1}{suffix || ''}
                               </div>
-                              <p className="text-xs text-muted-foreground mt-0.5">
-                                {format(new Date(version.savedAt), 'MMM d, yyyy · HH:mm')}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                SMA: {version.data.fastSMA}/{version.data.slowSMA} · 
-                                Pos: {version.data.positionSizePercent}% · 
-                                SL: {version.data.stopLossPercent}% · 
-                                TP: {version.data.takeProfitPercent}%
-                              </p>
+                              <div className={cn("text-center", isDifferent && "font-medium text-yellow-500")}>
+                                {val2}{suffix || ''}
+                              </div>
                             </div>
-                            {index > 0 && onRestorePresetVersion && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-7 text-xs"
-                                onClick={() => {
-                                  if (versionHistorySlot && onRestorePresetVersion(versionHistorySlot, version.id)) {
-                                    toast.success('Version restored', {
-                                      description: `Restored to "${version.data.label}" from ${format(new Date(version.savedAt), 'MMM d, HH:mm')}`,
-                                    });
-                                    setVersionHistorySlot(null);
-                                  }
-                                }}
-                              >
-                                <RotateCcw className="h-3 w-3 mr-1" />
-                                Restore
-                              </Button>
-                            )}
-                          </div>
-                        ))
-                      )}
+                          );
+                        })}
+                      </div>
+                      <div className="flex justify-center gap-2 mt-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCompareVersions([null, null])}
+                        >
+                          Back to List
+                        </Button>
+                        {versions[0]?.id !== v2.id && onRestorePresetVersion && (
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              if (versionHistorySlot && onRestorePresetVersion(versionHistorySlot, v2.id)) {
+                                toast.success('Version restored', {
+                                  description: `Restored to "${v2.data.label}" from ${format(new Date(v2.savedAt), 'MMM d, HH:mm')}`,
+                                });
+                                setVersionHistorySlot(null);
+                                setCompareVersions([null, null]);
+                              }
+                            }}
+                          >
+                            <RotateCcw className="h-3 w-3 mr-1" />
+                            Restore Right Version
+                          </Button>
+                        )}
+                      </div>
                     </div>
-                  )}
-                </div>
+                  );
+                })()}
+                
+                {/* Version List */}
+                {!(compareVersions[0] && compareVersions[1]) && (
+                  <div className="py-4 max-h-[300px] overflow-y-auto">
+                    {versionHistorySlot && getPresetVersionHistory && (
+                      <div className="space-y-2">
+                        {getPresetVersionHistory(versionHistorySlot).length === 0 ? (
+                          <p className="text-sm text-muted-foreground text-center py-4">
+                            No version history available
+                          </p>
+                        ) : (
+                          <>
+                            {compareVersions[0] && !compareVersions[1] && (
+                              <p className="text-xs text-muted-foreground mb-2 text-center">
+                                Select another version to compare
+                              </p>
+                            )}
+                            {getPresetVersionHistory(versionHistorySlot).map((version, index) => {
+                              const isSelected = compareVersions[0] === version.id || compareVersions[1] === version.id;
+                              return (
+                                <div
+                                  key={version.id}
+                                  className={cn(
+                                    "flex items-center justify-between p-3 rounded-lg border transition-colors",
+                                    isSelected 
+                                      ? "border-primary bg-primary/10" 
+                                      : "border-border/50 hover:bg-muted/50"
+                                  )}
+                                >
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs font-medium">
+                                        {version.data.label}
+                                      </span>
+                                      {index === 0 && (
+                                        <span className="text-[10px] px-1.5 py-0.5 bg-primary/20 text-primary rounded">
+                                          Current
+                                        </span>
+                                      )}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground mt-0.5">
+                                      {format(new Date(version.savedAt), 'MMM d, yyyy · HH:mm')}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      SMA: {version.data.fastSMA}/{version.data.slowSMA} · 
+                                      Pos: {version.data.positionSizePercent}% · 
+                                      SL: {version.data.stopLossPercent}% · 
+                                      TP: {version.data.takeProfitPercent}%
+                                    </p>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <Button
+                                      variant={isSelected ? "secondary" : "ghost"}
+                                      size="sm"
+                                      className="h-7 text-xs"
+                                      onClick={() => {
+                                        if (isSelected) {
+                                          // Deselect
+                                          if (compareVersions[0] === version.id) {
+                                            setCompareVersions([compareVersions[1], null]);
+                                          } else {
+                                            setCompareVersions([compareVersions[0], null]);
+                                          }
+                                        } else if (!compareVersions[0]) {
+                                          setCompareVersions([version.id, null]);
+                                        } else if (!compareVersions[1]) {
+                                          setCompareVersions([compareVersions[0], version.id]);
+                                        }
+                                      }}
+                                    >
+                                      {isSelected ? <Check className="h-3 w-3" /> : <GitCompare className="h-3 w-3" />}
+                                    </Button>
+                                    {index > 0 && onRestorePresetVersion && !compareVersions[0] && (
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-7 text-xs"
+                                        onClick={() => {
+                                          if (versionHistorySlot && onRestorePresetVersion(versionHistorySlot, version.id)) {
+                                            toast.success('Version restored', {
+                                              description: `Restored to "${version.data.label}" from ${format(new Date(version.savedAt), 'MMM d, HH:mm')}`,
+                                            });
+                                            setVersionHistorySlot(null);
+                                          }
+                                        }}
+                                      >
+                                        <RotateCcw className="h-3 w-3 mr-1" />
+                                        Restore
+                                      </Button>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setVersionHistorySlot(null)}>
+                  {compareVersions[0] && !compareVersions[1] && (
+                    <Button variant="ghost" size="sm" onClick={() => setCompareVersions([null, null])}>
+                      Cancel Compare
+                    </Button>
+                  )}
+                  <Button variant="outline" onClick={() => {
+                    setVersionHistorySlot(null);
+                    setCompareVersions([null, null]);
+                  }}>
                     Close
                   </Button>
                 </DialogFooter>
