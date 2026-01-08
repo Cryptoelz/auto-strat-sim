@@ -256,6 +256,7 @@ export function BacktestConfigForm({
   const [editingNoteVersionId, setEditingNoteVersionId] = useState<string | null>(null);
   const [editingNoteText, setEditingNoteText] = useState('');
   const [versionSearchQuery, setVersionSearchQuery] = useState('');
+  const [versionTagFilter, setVersionTagFilter] = useState<PresetTagValue | null>(null);
 
   // Keyboard shortcuts for version history
   useEffect(() => {
@@ -1196,6 +1197,7 @@ export function BacktestConfigForm({
                 setBatchSelectMode(false);
                 setBatchSelectedVersions(new Set());
                 setVersionSearchQuery('');
+                setVersionTagFilter(null);
               }
             }}>
               <DialogContent className="sm:max-w-2xl">
@@ -1452,15 +1454,20 @@ export function BacktestConfigForm({
                           })
                         : allVersions;
                       
+                      // Filter by tag
+                      const tagFiltered = versionTagFilter
+                        ? searchFiltered.filter(version => version.tags?.includes(versionTagFilter))
+                        : searchFiltered;
+                      
                       // Then filter by field changes
-                      const filteredVersions = versionFieldFilter && searchFiltered.length > 1
-                        ? searchFiltered.filter((version, index) => {
-                            if (index === searchFiltered.length - 1) return true; // Always show oldest
-                            const prevVersion = searchFiltered[index + 1];
+                      const filteredVersions = versionFieldFilter && tagFiltered.length > 1
+                        ? tagFiltered.filter((version, index) => {
+                            if (index === tagFiltered.length - 1) return true; // Always show oldest
+                            const prevVersion = tagFiltered[index + 1];
                             const fieldKey = versionFieldFilter as keyof typeof version.data;
                             return version.data[fieldKey] !== prevVersion.data[fieldKey];
                           })
-                        : searchFiltered;
+                        : tagFiltered;
                       
                       const fieldOptions = [
                         { value: 'label', label: 'Name' },
@@ -1499,6 +1506,47 @@ export function BacktestConfigForm({
                                   </Button>
                                 )}
                               </div>
+                              
+                              {/* Tag Filter */}
+                              {allVersions.some(v => v.tags && v.tags.length > 0) && !compareVersions[0] && (
+                                <div className="flex items-center gap-2 mb-3">
+                                  <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+                                  <div className="flex flex-wrap gap-1">
+                                    {PRESET_TAGS.map(tag => {
+                                      const count = allVersions.filter(v => v.tags?.includes(tag.value)).length;
+                                      if (count === 0) return null;
+                                      return (
+                                        <Button
+                                          key={tag.value}
+                                          variant={versionTagFilter === tag.value ? "secondary" : "ghost"}
+                                          size="sm"
+                                          className={cn(
+                                            "h-6 text-[10px] px-2 gap-1",
+                                            versionTagFilter === tag.value && tag.color
+                                          )}
+                                          onClick={() => setVersionTagFilter(
+                                            versionTagFilter === tag.value ? null : tag.value
+                                          )}
+                                          disabled={batchSelectMode}
+                                        >
+                                          {tag.label}
+                                          <span className="text-[9px] opacity-60">({count})</span>
+                                        </Button>
+                                      );
+                                    })}
+                                    {versionTagFilter && !batchSelectMode && (
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 text-[10px] px-1.5"
+                                        onClick={() => setVersionTagFilter(null)}
+                                      >
+                                        <X className="h-3 w-3" />
+                                      </Button>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
                               
                               {/* Filter & Batch Mode Bar */}
                               {allVersions.length > 1 && !compareVersions[0] && (
@@ -1590,17 +1638,18 @@ export function BacktestConfigForm({
                               )}
                               
                               {/* Filter Results Info */}
-                              {(versionSearchQuery || versionFieldFilter) && filteredVersions.length !== allVersions.length && (
+                              {(versionSearchQuery || versionFieldFilter || versionTagFilter) && filteredVersions.length !== allVersions.length && (
                                 <p className="text-xs text-muted-foreground mb-2 text-center">
                                   Showing {filteredVersions.length} of {allVersions.length} versions
                                   {versionSearchQuery && ` matching "${versionSearchQuery}"`}
+                                  {versionTagFilter && ` tagged "${PRESET_TAGS.find(t => t.value === versionTagFilter)?.label}"`}
                                   {versionFieldFilter && ` with ${fieldOptions.find(f => f.value === versionFieldFilter)?.label} changes`}
                                 </p>
                               )}
                               
-                              {filteredVersions.length === 0 && versionSearchQuery && (
+                              {filteredVersions.length === 0 && (versionSearchQuery || versionTagFilter) && (
                                 <p className="text-sm text-muted-foreground text-center py-4">
-                                  No versions match your search
+                                  No versions match your filters
                                 </p>
                               )}
                               
