@@ -34,6 +34,7 @@ import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger }
 import { GitBranch, Play, RotateCcw, TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, XCircle, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Asset, Candle } from '@/types/trading';
+import { WindowResult, WalkForwardResult } from '@/types/backtest';
 import { calculateSMASeries, detectCrossover } from '@/lib/indicators';
 import { formatCurrency } from '@/lib/performance';
 import { format, addDays, differenceInDays } from 'date-fns';
@@ -49,35 +50,6 @@ interface WalkForwardAnalysisProps {
   takeProfitPercent: number;
   fastSMARange: { min: number; max: number; step: number };
   slowSMARange: { min: number; max: number; step: number };
-}
-
-interface WindowResult {
-  windowIndex: number;
-  inSampleStart: Date;
-  inSampleEnd: Date;
-  outOfSampleStart: Date;
-  outOfSampleEnd: Date;
-  optimalFastSMA: number;
-  optimalSlowSMA: number;
-  inSamplePnl: number;
-  inSamplePnlPercent: number;
-  inSampleWinRate: number;
-  inSampleTrades: number;
-  outOfSamplePnl: number;
-  outOfSamplePnlPercent: number;
-  outOfSampleWinRate: number;
-  outOfSampleTrades: number;
-  robustnessRatio: number;
-}
-
-interface WalkForwardResult {
-  windows: WindowResult[];
-  totalInSamplePnl: number;
-  totalOutOfSamplePnl: number;
-  avgRobustnessRatio: number;
-  consistencyScore: number;
-  profitableWindows: number;
-  totalWindows: number;
 }
 
 const BINANCE_API = 'https://api.binance.com/api/v3';

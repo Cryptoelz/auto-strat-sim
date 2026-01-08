@@ -1,5 +1,46 @@
 import { Asset, Trade } from '@/types/trading';
 
+export interface OptimizationResult {
+  fastSMA: number;
+  slowSMA: number;
+  totalPnl: number;
+  totalPnlPercent: number;
+  winRate: number;
+  totalTrades: number;
+  profitFactor: number;
+  maxDrawdown: number;
+  sharpeRatio: number;
+}
+
+export interface WindowResult {
+  windowIndex: number;
+  inSampleStart: Date;
+  inSampleEnd: Date;
+  outOfSampleStart: Date;
+  outOfSampleEnd: Date;
+  optimalFastSMA: number;
+  optimalSlowSMA: number;
+  inSamplePnl: number;
+  inSamplePnlPercent: number;
+  inSampleWinRate: number;
+  inSampleTrades: number;
+  outOfSamplePnl: number;
+  outOfSamplePnlPercent: number;
+  outOfSampleWinRate: number;
+  outOfSampleTrades: number;
+  robustnessRatio: number;
+}
+
+export interface WalkForwardResult {
+  windows: WindowResult[];
+  totalInSamplePnl: number;
+  totalOutOfSamplePnl: number;
+  avgRobustnessRatio: number;
+  consistencyScore: number;
+  profitableWindows: number;
+  totalWindows: number;
+}
+
 export interface BacktestConfig {
   assets: Asset[];
   startDate: Date;
