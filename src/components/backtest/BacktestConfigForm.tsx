@@ -9,6 +9,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Asset } from '@/types/trading';
 import { BacktestResult, SavedRun } from '@/types/backtest';
 import { ASSET_INFO } from '@/config/trading';
@@ -24,8 +25,32 @@ import {
   Download,
   Share2,
   Check,
-  AlertCircle
+  AlertCircle,
+  HelpCircle
 } from 'lucide-react';
+
+interface TooltipLabelProps {
+  label: string;
+  tooltip: string;
+  className?: string;
+  error?: boolean;
+}
+
+function TooltipLabel({ label, tooltip, className, error }: TooltipLabelProps) {
+  return (
+    <div className="flex items-center gap-1">
+      <Label className={cn(className, error && "text-destructive")}>{label}</Label>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-[220px]">
+          <p className="text-xs">{tooltip}</p>
+        </TooltipContent>
+      </Tooltip>
+    </div>
+  );
+}
 
 interface FieldErrors {
   assets?: string;
@@ -249,215 +274,257 @@ export function BacktestConfigForm({
         )}
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Date Range */}
-        <div className="space-y-3">
-          <Label className="text-sm font-medium">Date Range</Label>
-          <div className="grid grid-cols-2 gap-2">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className={cn(
-                    "justify-start text-left font-normal",
-                    fieldErrors.dateRange && "border-destructive"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {format(startDate, 'MMM dd, yyyy')}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={startDate}
-                  onSelect={(date) => date && onStartDateChange(date)}
-                  disabled={(date) => date > endDate || date > new Date()}
-                />
-              </PopoverContent>
-            </Popover>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className={cn(
-                    "justify-start text-left font-normal",
-                    fieldErrors.dateRange && "border-destructive"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {format(endDate, 'MMM dd, yyyy')}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={endDate}
-                  onSelect={(date) => date && onEndDateChange(date)}
-                  disabled={(date) => date < startDate || date > new Date()}
-                />
-              </PopoverContent>
-            </Popover>
+        <TooltipProvider delayDuration={300}>
+          {/* Date Range */}
+          <div className="space-y-3">
+            <TooltipLabel 
+              label="Date Range" 
+              tooltip="Historical period to test your strategy. Longer periods provide more reliable results but take longer to compute."
+              className="text-sm font-medium"
+            />
+            <div className="grid grid-cols-2 gap-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className={cn(
+                      "justify-start text-left font-normal",
+                      fieldErrors.dateRange && "border-destructive"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {format(startDate, 'MMM dd, yyyy')}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={startDate}
+                    onSelect={(date) => date && onStartDateChange(date)}
+                    disabled={(date) => date > endDate || date > new Date()}
+                  />
+                </PopoverContent>
+              </Popover>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className={cn(
+                      "justify-start text-left font-normal",
+                      fieldErrors.dateRange && "border-destructive"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {format(endDate, 'MMM dd, yyyy')}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={endDate}
+                    onSelect={(date) => date && onEndDateChange(date)}
+                    disabled={(date) => date < startDate || date > new Date()}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <FieldError message={fieldErrors.dateRange} />
           </div>
-          <FieldError message={fieldErrors.dateRange} />
-        </div>
 
-        {/* Timeframe */}
-        <div className="space-y-2">
-          <Label className="text-sm font-medium">Timeframe</Label>
-          <Select value={timeframe} onValueChange={(v) => onTimeframeChange(v as typeof timeframe)}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {TIMEFRAME_OPTIONS.map(opt => (
-                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+          {/* Timeframe */}
+          <div className="space-y-2">
+            <TooltipLabel 
+              label="Timeframe" 
+              tooltip="Candlestick interval for analysis. Shorter timeframes (5m, 15m) generate more signals but may include more noise."
+              className="text-sm font-medium"
+            />
+            <Select value={timeframe} onValueChange={(v) => onTimeframeChange(v as typeof timeframe)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {TIMEFRAME_OPTIONS.map(opt => (
+                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Assets */}
+          <div className="space-y-2">
+            <TooltipLabel 
+              label="Trading Pairs" 
+              tooltip="Cryptocurrency pairs to backtest. Selecting multiple pairs diversifies the test but increases computation time."
+              className="text-sm font-medium"
+              error={!!fieldErrors.assets}
+            />
+            <div className="grid grid-cols-2 gap-2">
+              {AVAILABLE_ASSETS.map((asset) => (
+                <div 
+                  key={asset} 
+                  className={cn(
+                    "flex items-center justify-between rounded-lg border bg-secondary/20 px-3 py-2",
+                    fieldErrors.assets ? "border-destructive/50" : "border-border/50"
+                  )}
+                >
+                  <span className="text-sm font-medium">{ASSET_INFO[asset].symbol}</span>
+                  <Switch
+                    checked={enabledAssets.includes(asset)}
+                    onCheckedChange={() => onToggleAsset(asset)}
+                  />
+                </div>
               ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Assets */}
-        <div className="space-y-2">
-          <Label className={cn("text-sm font-medium", fieldErrors.assets && "text-destructive")}>
-            Trading Pairs
-          </Label>
-          <div className="grid grid-cols-2 gap-2">
-            {AVAILABLE_ASSETS.map((asset) => (
-              <div 
-                key={asset} 
-                className={cn(
-                  "flex items-center justify-between rounded-lg border bg-secondary/20 px-3 py-2",
-                  fieldErrors.assets ? "border-destructive/50" : "border-border/50"
-                )}
-              >
-                <span className="text-sm font-medium">{ASSET_INFO[asset].symbol}</span>
-                <Switch
-                  checked={enabledAssets.includes(asset)}
-                  onCheckedChange={() => onToggleAsset(asset)}
-                />
-              </div>
-            ))}
+            </div>
+            <FieldError message={fieldErrors.assets} />
           </div>
-          <FieldError message={fieldErrors.assets} />
-        </div>
 
         <Separator />
 
-        {/* SMA Settings */}
-        <div className="space-y-3">
-          <Label className="text-sm font-medium">SMA Indicators</Label>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label className={cn("text-xs", fieldErrors.fastSMA ? "text-destructive" : "text-muted-foreground")}>
-                Fast SMA
-              </Label>
-              <Input
-                type="number"
-                value={fastSMA}
-                onChange={(e) => onFastSMAChange(parseInt(e.target.value) || 20)}
-                min={5}
-                max={100}
-                className={cn(fieldErrors.fastSMA && "border-destructive")}
-              />
-              <FieldError message={fieldErrors.fastSMA} />
-            </div>
-            <div className="space-y-1">
-              <Label className={cn("text-xs", fieldErrors.slowSMA ? "text-destructive" : "text-muted-foreground")}>
-                Slow SMA
-              </Label>
-              <Input
-                type="number"
-                value={slowSMA}
-                onChange={(e) => onSlowSMAChange(parseInt(e.target.value) || 50)}
-                min={10}
-                max={200}
-                className={cn(fieldErrors.slowSMA && "border-destructive")}
-              />
-              <FieldError message={fieldErrors.slowSMA} />
+          {/* SMA Settings */}
+          <div className="space-y-3">
+            <TooltipLabel 
+              label="SMA Indicators" 
+              tooltip="Simple Moving Averages used for crossover signals. Buy when Fast crosses above Slow, sell when Fast crosses below."
+              className="text-sm font-medium"
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <TooltipLabel 
+                  label="Fast SMA" 
+                  tooltip="Short-term moving average (5-100 periods). Lower values react faster to price changes. Recommended: 10-30."
+                  className="text-xs text-muted-foreground"
+                  error={!!fieldErrors.fastSMA}
+                />
+                <Input
+                  type="number"
+                  value={fastSMA}
+                  onChange={(e) => onFastSMAChange(parseInt(e.target.value) || 20)}
+                  min={5}
+                  max={100}
+                  className={cn(fieldErrors.fastSMA && "border-destructive")}
+                />
+                <FieldError message={fieldErrors.fastSMA} />
+              </div>
+              <div className="space-y-1">
+                <TooltipLabel 
+                  label="Slow SMA" 
+                  tooltip="Long-term moving average (10-200 periods). Higher values filter out noise. Recommended: 40-100."
+                  className="text-xs text-muted-foreground"
+                  error={!!fieldErrors.slowSMA}
+                />
+                <Input
+                  type="number"
+                  value={slowSMA}
+                  onChange={(e) => onSlowSMAChange(parseInt(e.target.value) || 50)}
+                  min={10}
+                  max={200}
+                  className={cn(fieldErrors.slowSMA && "border-destructive")}
+                />
+                <FieldError message={fieldErrors.slowSMA} />
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Risk Settings */}
-        <div className="space-y-3">
-          <Label className="text-sm font-medium">Risk Management</Label>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label className={cn("text-xs", fieldErrors.initialBalance ? "text-destructive" : "text-muted-foreground")}>
-                Initial Balance ($)
-              </Label>
-              <Input
-                type="number"
-                value={initialBalance}
-                onChange={(e) => onInitialBalanceChange(parseInt(e.target.value) || 10000)}
-                min={100}
-                className={cn(fieldErrors.initialBalance && "border-destructive")}
-              />
-              <FieldError message={fieldErrors.initialBalance} />
-            </div>
-            <div className="space-y-1">
-              <Label className={cn("text-xs", fieldErrors.positionSize ? "text-destructive" : "text-muted-foreground")}>
-                Position Size (%)
-              </Label>
-              <Input
-                type="number"
-                value={positionSizePercent}
-                onChange={(e) => onPositionSizeChange(parseInt(e.target.value) || 5)}
-                min={1}
-                max={100}
-                className={cn(fieldErrors.positionSize && "border-destructive")}
-              />
-              <FieldError message={fieldErrors.positionSize} />
-            </div>
-            <div className="space-y-1">
-              <Label className={cn("text-xs", fieldErrors.stopLoss ? "text-destructive" : "text-muted-foreground")}>
-                Stop Loss (%)
-              </Label>
-              <Input
-                type="number"
-                value={stopLossPercent}
-                onChange={(e) => onStopLossChange(parseFloat(e.target.value) || 2)}
-                min={0.1}
-                max={50}
-                step={0.1}
-                className={cn(fieldErrors.stopLoss && "border-destructive")}
-              />
-              <FieldError message={fieldErrors.stopLoss} />
-            </div>
-            <div className="space-y-1">
-              <Label className={cn("text-xs", fieldErrors.takeProfit ? "text-destructive" : "text-muted-foreground")}>
-                Take Profit (%)
-              </Label>
-              <Input
-                type="number"
-                value={takeProfitPercent}
-                onChange={(e) => onTakeProfitChange(parseFloat(e.target.value) || 4)}
-                min={0.1}
-                max={100}
-                step={0.1}
-                className={cn(fieldErrors.takeProfit && "border-destructive")}
-              />
-              <FieldError message={fieldErrors.takeProfit} />
-            </div>
-            <div className="space-y-1">
-              <Label className={cn("text-xs", fieldErrors.fee ? "text-destructive" : "text-muted-foreground")}>
-                Trading Fee (%)
-              </Label>
-              <Input
-                type="number"
-                value={feePercent}
-                onChange={(e) => onFeeChange(parseFloat(e.target.value) || 0.1)}
-                min={0}
-                max={5}
-                step={0.01}
-                className={cn(fieldErrors.fee && "border-destructive")}
-              />
-              <FieldError message={fieldErrors.fee} />
+          {/* Risk Settings */}
+          <div className="space-y-3">
+            <TooltipLabel 
+              label="Risk Management" 
+              tooltip="Control your exposure and protect capital. Conservative settings reduce risk but may limit potential returns."
+              className="text-sm font-medium"
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <TooltipLabel 
+                  label="Initial Balance ($)" 
+                  tooltip="Starting capital for the backtest. Use realistic amounts matching your planned investment ($100 - $100M)."
+                  className="text-xs text-muted-foreground"
+                  error={!!fieldErrors.initialBalance}
+                />
+                <Input
+                  type="number"
+                  value={initialBalance}
+                  onChange={(e) => onInitialBalanceChange(parseInt(e.target.value) || 10000)}
+                  min={100}
+                  className={cn(fieldErrors.initialBalance && "border-destructive")}
+                />
+                <FieldError message={fieldErrors.initialBalance} />
+              </div>
+              <div className="space-y-1">
+                <TooltipLabel 
+                  label="Position Size (%)" 
+                  tooltip="Percentage of balance to risk per trade. Conservative: 1-5%, Moderate: 5-15%, Aggressive: 15%+."
+                  className="text-xs text-muted-foreground"
+                  error={!!fieldErrors.positionSize}
+                />
+                <Input
+                  type="number"
+                  value={positionSizePercent}
+                  onChange={(e) => onPositionSizeChange(parseInt(e.target.value) || 5)}
+                  min={1}
+                  max={100}
+                  className={cn(fieldErrors.positionSize && "border-destructive")}
+                />
+                <FieldError message={fieldErrors.positionSize} />
+              </div>
+              <div className="space-y-1">
+                <TooltipLabel 
+                  label="Stop Loss (%)" 
+                  tooltip="Maximum loss before auto-closing a trade (0.1-50%). Tighter stops reduce losses but may exit good trades early."
+                  className="text-xs text-muted-foreground"
+                  error={!!fieldErrors.stopLoss}
+                />
+                <Input
+                  type="number"
+                  value={stopLossPercent}
+                  onChange={(e) => onStopLossChange(parseFloat(e.target.value) || 2)}
+                  min={0.1}
+                  max={50}
+                  step={0.1}
+                  className={cn(fieldErrors.stopLoss && "border-destructive")}
+                />
+                <FieldError message={fieldErrors.stopLoss} />
+              </div>
+              <div className="space-y-1">
+                <TooltipLabel 
+                  label="Take Profit (%)" 
+                  tooltip="Target profit before auto-closing a trade (0.1-100%). Higher targets may miss profits but capture larger moves."
+                  className="text-xs text-muted-foreground"
+                  error={!!fieldErrors.takeProfit}
+                />
+                <Input
+                  type="number"
+                  value={takeProfitPercent}
+                  onChange={(e) => onTakeProfitChange(parseFloat(e.target.value) || 4)}
+                  min={0.1}
+                  max={100}
+                  step={0.1}
+                  className={cn(fieldErrors.takeProfit && "border-destructive")}
+                />
+                <FieldError message={fieldErrors.takeProfit} />
+              </div>
+              <div className="space-y-1">
+                <TooltipLabel 
+                  label="Trading Fee (%)" 
+                  tooltip="Exchange fee per trade (0-5%). Typical exchanges: 0.1% (Binance), 0.5% (Coinbase). Affects profitability significantly."
+                  className="text-xs text-muted-foreground"
+                  error={!!fieldErrors.fee}
+                />
+                <Input
+                  type="number"
+                  value={feePercent}
+                  onChange={(e) => onFeeChange(parseFloat(e.target.value) || 0.1)}
+                  min={0}
+                  max={5}
+                  step={0.01}
+                  className={cn(fieldErrors.fee && "border-destructive")}
+                />
+                <FieldError message={fieldErrors.fee} />
+              </div>
             </div>
           </div>
-        </div>
+        </TooltipProvider>
 
         {/* Action Buttons */}
         <div className="space-y-2 pt-2">
