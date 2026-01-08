@@ -154,6 +154,7 @@ interface BacktestConfigFormProps {
   getCustomPresetData?: (slot: '4' | '5' | '6') => { label: string; positionSizePercent: number; stopLossPercent: number; takeProfitPercent: number; fastSMA: number; slowSMA: number } | null;
   onExportCustomPresets?: () => boolean;
   onImportCustomPresets?: (json: string, mode?: 'replace' | 'merge') => { success: boolean; message: string };
+  onClearAllCustomPresets?: () => void;
 }
 
 export function BacktestConfigForm({
@@ -202,8 +203,10 @@ export function BacktestConfigForm({
   getCustomPresetData,
   onExportCustomPresets,
   onImportCustomPresets,
+  onClearAllCustomPresets,
 }: BacktestConfigFormProps) {
   const [copied, setCopied] = useState(false);
+  const [clearPresetsConfirmOpen, setClearPresetsConfirmOpen] = useState(false);
   const [presetDialogOpen, setPresetDialogOpen] = useState(false);
   const [pendingPresetSlot, setPendingPresetSlot] = useState<'4' | '5' | '6' | null>(null);
   const [presetName, setPresetName] = useState('');
@@ -745,10 +748,51 @@ export function BacktestConfigForm({
                         </TooltipContent>
                       </Tooltip>
                     )}
+                    {onClearAllCustomPresets && existingPresetCount > 0 && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                            onClick={() => setClearPresetsConfirmOpen(true)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs">Clear all custom presets</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
                   </div>
                 )}
               </div>
             )}
+
+            {/* Clear All Presets Confirmation Dialog */}
+            <AlertDialog open={clearPresetsConfirmOpen} onOpenChange={setClearPresetsConfirmOpen}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Clear all custom presets?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete all {existingPresetCount} custom preset{existingPresetCount !== 1 ? 's' : ''}. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    onClick={() => {
+                      onClearAllCustomPresets?.();
+                      toast.success('All custom presets cleared');
+                    }}
+                  >
+                    Clear All
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
 
             {/* Import Confirmation Dialog */}
             <AlertDialog open={importConfirmOpen} onOpenChange={(open) => {

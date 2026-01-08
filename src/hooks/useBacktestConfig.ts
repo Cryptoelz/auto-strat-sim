@@ -608,6 +608,15 @@ export function useBacktestConfig() {
     }
   }, [customPresets]);
 
+  /**
+   * Clear all custom presets
+   */
+  const clearAllCustomPresets = useCallback(() => {
+    const cleared = { '4': null, '5': null, '6': null };
+    setCustomPresets(cleared);
+    localStorage.setItem('backtest-custom-presets', JSON.stringify(cleared));
+  }, []);
+
   return {
     // Date config
     startDate,
@@ -673,5 +682,6 @@ export function useBacktestConfig() {
     renameCustomPreset,
     exportCustomPresets,
     importCustomPresets,
+    clearAllCustomPresets,
   };
 }
