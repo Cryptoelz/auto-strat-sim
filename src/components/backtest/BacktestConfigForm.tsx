@@ -1279,6 +1279,61 @@ export function BacktestConfigForm({
                     </TooltipContent>
                   </Tooltip>
                 )}
+                
+                {/* Compact Storage Indicator */}
+                {getTotalVersionCount && versionHistory && (() => {
+                  const totalVersions = getTotalVersionCount();
+                  if (totalVersions === 0) return null;
+                  
+                  const storageBytes = new Blob([JSON.stringify(versionHistory)]).size;
+                  const formatBytes = (bytes: number) => {
+                    if (bytes < 1024) return `${bytes}B`;
+                    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
+                    return `${(bytes / (1024 * 1024)).toFixed(2)}MB`;
+                  };
+                  const usagePercent = Math.min(100, (storageBytes / (5 * 1024 * 1024)) * 100);
+                  
+                  return (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => {
+                            // Open version history for first available preset
+                            const slots: ('4' | '5' | '6')[] = ['4', '5', '6'];
+                            for (const slot of slots) {
+                              if (customPresetSlots?.[slot]) {
+                                setVersionHistorySlot(slot);
+                                break;
+                              }
+                            }
+                          }}
+                          className={cn(
+                            "flex items-center gap-1 ml-1 px-1.5 py-0.5 rounded text-[10px] transition-colors cursor-pointer",
+                            usagePercent > 80 
+                              ? "text-amber-500 bg-amber-500/10 hover:bg-amber-500/20" 
+                              : "text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted/50"
+                          )}
+                        >
+                          <HardDrive className="h-3 w-3" />
+                          <span className="font-mono">{totalVersions}</span>
+                          <span className="opacity-60">·</span>
+                          <span className="font-mono">{formatBytes(storageBytes)}</span>
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <div className="text-xs space-y-1">
+                          <p className="font-medium">Version Storage</p>
+                          <p>{totalVersions} version{totalVersions !== 1 ? 's' : ''} · {formatBytes(storageBytes)}</p>
+                          <div className="flex items-center gap-2">
+                            <Progress value={usagePercent} className="h-1 w-16" />
+                            <span className="text-muted-foreground">{usagePercent.toFixed(1)}%</span>
+                          </div>
+                          <p className="text-muted-foreground">Click to manage</p>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })()}
                 </>
               )}
               </div>
