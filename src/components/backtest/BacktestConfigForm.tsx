@@ -935,6 +935,7 @@ export function BacktestConfigForm({
                   const isPending = hasPendingSave?.(slot) ?? false;
                   const justSaved = wasRecentlySaved?.(slot) ?? false;
                   const justCancelled = wasCancelledRecently?.(slot) ?? false;
+                  const versionCount = getPresetVersionHistory?.(slot)?.length ?? 0;
                   return (
                     <div key={slot} className="relative group">
                       <Tooltip>
@@ -1019,17 +1020,22 @@ export function BacktestConfigForm({
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <button
-                              className="absolute right-9 top-1/2 -translate-y-1/2 h-5 w-5 rounded-sm flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                              className="absolute right-9 top-1/2 -translate-y-1/2 h-5 rounded-sm flex items-center gap-0.5 px-1 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setVersionHistorySlot(slot);
                               }}
                             >
                               <History className="h-3 w-3" />
+                              {versionCount > 0 && (
+                                <span className="text-[10px] font-mono leading-none">{versionCount}</span>
+                              )}
                             </button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p className="text-xs">View version history</p>
+                            <p className="text-xs">
+                              {versionCount} version{versionCount !== 1 ? 's' : ''} stored
+                            </p>
                           </TooltipContent>
                         </Tooltip>
                       )}
