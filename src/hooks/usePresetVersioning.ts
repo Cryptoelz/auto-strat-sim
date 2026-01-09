@@ -42,6 +42,9 @@ export function usePresetVersioning() {
   const pendingVersionsRef = useRef<Map<'4' | '5' | '6', { data: PresetVersion['data']; timeoutId: NodeJS.Timeout; startedAt: number }>>(new Map());
   const [pendingSlots, setPendingSlots] = useState<Set<'4' | '5' | '6'>>(new Set());
   const [pendingSaveTimestamps, setPendingSaveTimestamps] = useState<Map<'4' | '5' | '6', number>>(new Map());
+  
+  // Track recently saved slots for animation
+  const [recentlySavedSlots, setRecentlySavedSlots] = useState<Set<'4' | '5' | '6'>>(new Set());
 
   // Persist auto-save preference
   useEffect(() => {
@@ -81,11 +84,27 @@ export function usePresetVersioning() {
   }, []);
 
   /**
+   * Trigger save animation for a slot
+   */
+  const triggerSaveAnimation = useCallback((slot: '4' | '5' | '6') => {
+    setRecentlySavedSlots(prev => new Set(prev).add(slot));
+    // Clear after animation duration (1 second)
+    setTimeout(() => {
+      setRecentlySavedSlots(prev => {
+        const next = new Set(prev);
+        next.delete(slot);
+        return next;
+      });
+    }, 1000);
+  }, []);
+
+  /**
    * Internal function to immediately add a version (no debounce)
    */
   const addVersionImmediate = useCallback((
     slot: '4' | '5' | '6',
-    data: PresetVersion['data']
+    data: PresetVersion['data'],
+    skipAnimation = false
   ) => {
     const version: PresetVersion = {
       id: `v-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -98,8 +117,13 @@ export function usePresetVersioning() {
       return { ...prev, [slot]: slotHistory };
     });
 
+    // Trigger save animation
+    if (!skipAnimation) {
+      triggerSaveAnimation(slot);
+    }
+
     return version;
-  }, [trimVersions]);
+  }, [trimVersions, triggerSaveAnimation]);
 
   /**
    * Add a new version to a slot's history with debouncing
@@ -200,6 +224,13 @@ export function usePresetVersioning() {
   const hasPendingSave = useCallback((slot: '4' | '5' | '6'): boolean => {
     return pendingSlots.has(slot);
   }, [pendingSlots]);
+
+  /**
+   * Check if a slot was recently saved (for animation)
+   */
+  const wasRecentlySaved = useCallback((slot: '4' | '5' | '6'): boolean => {
+    return recentlySavedSlots.has(slot);
+  }, [recentlySavedSlots]);
 
   /**
    * Get the start timestamp of a pending save for countdown calculation
@@ -520,5 +551,7 @@ export function usePresetVersioning() {
     flushPendingSave,
     pendingSlots,
     getPendingSaveStartTime,
+    wasRecentlySaved,
+    recentlySavedSlots,
   };
 }

@@ -799,5 +799,6 @@ export function useBacktestConfig() {
     cancelPendingSave: presetVersioning.cancelPendingSave,
     pendingSlots: presetVersioning.pendingSlots,
     getPendingSaveStartTime: presetVersioning.getPendingSaveStartTime,
+    wasRecentlySaved: presetVersioning.wasRecentlySaved,
   };
 }
