@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { PresetVersion, PresetVersionHistory, MAX_VERSIONS_PER_SLOT, PresetTagValue } from '@/types/preset-version';
+import { playSaveSound } from '@/lib/sounds';
 
 const STORAGE_KEY = 'backtest-preset-versions';
 const AUTO_SAVE_KEY = 'backtest-preset-autosave';
@@ -88,6 +89,8 @@ export function usePresetVersioning() {
    */
   const triggerSaveAnimation = useCallback((slot: '4' | '5' | '6') => {
     setRecentlySavedSlots(prev => new Set(prev).add(slot));
+    // Play subtle save sound
+    playSaveSound();
     // Clear after animation duration (1 second)
     setTimeout(() => {
       setRecentlySavedSlots(prev => {
