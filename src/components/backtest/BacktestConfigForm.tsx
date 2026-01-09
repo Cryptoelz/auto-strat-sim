@@ -398,8 +398,10 @@ export function BacktestConfigForm({
   const [restorePreviewVersionId, setRestorePreviewVersionId] = useState<string | null>(null);
   const [versionHistoryDragging, setVersionHistoryDragging] = useState(false);
   const [clearAllHistoryConfirmOpen, setClearAllHistoryConfirmOpen] = useState(false);
+  const [cleanupConfirmOpen, setCleanupConfirmOpen] = useState(false);
+  const [pendingCleanupCount, setPendingCleanupCount] = useState<number | null>(null);
+  const [pendingCleanupPreview, setPendingCleanupPreview] = useState<string>('');
 
-  // Handle external version history dialog control
   useEffect(() => {
     if (externalVersionHistoryOpen && !versionHistorySlot) {
       // Find first available preset slot with history
@@ -2079,88 +2081,144 @@ export function BacktestConfigForm({
                             return lines.join('\n');
                           };
                           
+                          // Helper to trigger cleanup with confirmation for larger amounts
+                          const handleCleanup = (count: number) => {
+                            if (count >= 3) {
+                              setPendingCleanupCount(count);
+                              setPendingCleanupPreview(getPreviewText(count));
+                              setCleanupConfirmOpen(true);
+                            } else {
+                              onManualCleanup(count);
+                            }
+                          };
+                          
                           return (
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="w-full h-7 text-xs justify-between"
-                                >
-                                  <span className="flex items-center">
-                                    <Zap className="h-3 w-3 mr-1.5" />
-                                    Clean Up Versions
-                                  </span>
-                                  <ChevronDown className="h-3 w-3 ml-1 opacity-50" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-56 bg-popover border shadow-lg z-50">
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <DropdownMenuItem 
-                                      onClick={() => onManualCleanup(1)}
-                                      disabled={unpinnedCount < 1}
-                                      className="text-xs cursor-pointer"
+                            <>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="w-full h-7 text-xs justify-between"
+                                  >
+                                    <span className="flex items-center">
+                                      <Zap className="h-3 w-3 mr-1.5" />
+                                      Clean Up Versions
+                                    </span>
+                                    <ChevronDown className="h-3 w-3 ml-1 opacity-50" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-56 bg-popover border shadow-lg z-50">
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <DropdownMenuItem 
+                                        onClick={() => handleCleanup(1)}
+                                        disabled={unpinnedCount < 1}
+                                        className="text-xs cursor-pointer"
+                                      >
+                                        Remove 1 oldest version
+                                      </DropdownMenuItem>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="left" className="max-w-[200px]">
+                                      <p className="text-xs font-medium mb-1">Will remove:</p>
+                                      <p className="text-xs text-muted-foreground whitespace-pre-line">{getPreviewText(1)}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                  
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <DropdownMenuItem 
+                                        onClick={() => handleCleanup(Math.min(5, unpinnedCount))}
+                                        disabled={unpinnedCount < 2}
+                                        className="text-xs cursor-pointer"
+                                      >
+                                        Remove up to 5 versions
+                                      </DropdownMenuItem>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="left" className="max-w-[200px]">
+                                      <p className="text-xs font-medium mb-1">Will remove:</p>
+                                      <p className="text-xs text-muted-foreground whitespace-pre-line">{getPreviewText(Math.min(5, unpinnedCount))}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                  
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <DropdownMenuItem 
+                                        onClick={() => handleCleanup(Math.min(10, unpinnedCount))}
+                                        disabled={unpinnedCount < 5}
+                                        className="text-xs cursor-pointer"
+                                      >
+                                        Remove up to 10 versions
+                                      </DropdownMenuItem>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="left" className="max-w-[200px]">
+                                      <p className="text-xs font-medium mb-1">Will remove:</p>
+                                      <p className="text-xs text-muted-foreground whitespace-pre-line">{getPreviewText(Math.min(10, unpinnedCount))}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                  
+                                  <DropdownMenuSeparator />
+                                  
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <DropdownMenuItem 
+                                        onClick={() => handleCleanup(unpinnedCount)}
+                                        className="text-xs text-amber-600 cursor-pointer"
+                                      >
+                                        Remove all unpinned ({unpinnedCount})
+                                      </DropdownMenuItem>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="left" className="max-w-[200px]">
+                                      <p className="text-xs font-medium mb-1">Will remove:</p>
+                                      <p className="text-xs text-muted-foreground whitespace-pre-line">{getPreviewText(unpinnedCount)}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                              
+                              {/* Cleanup Confirmation Dialog */}
+                              <AlertDialog open={cleanupConfirmOpen} onOpenChange={setCleanupConfirmOpen}>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle className="flex items-center gap-2">
+                                      <Zap className="h-5 w-5 text-amber-500" />
+                                      Confirm Cleanup
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription asChild>
+                                      <div className="space-y-3">
+                                        <p>
+                                          You are about to remove {pendingCleanupCount} version{pendingCleanupCount !== 1 ? 's' : ''}. This action cannot be undone.
+                                        </p>
+                                        <div className="bg-muted/50 rounded-lg p-3 text-sm">
+                                          <p className="font-medium text-foreground mb-2">Versions to be removed:</p>
+                                          <p className="text-muted-foreground whitespace-pre-line text-xs">{pendingCleanupPreview}</p>
+                                        </div>
+                                      </div>
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel onClick={() => {
+                                      setPendingCleanupCount(null);
+                                      setPendingCleanupPreview('');
+                                    }}>
+                                      Cancel
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction
+                                      className="bg-amber-600 hover:bg-amber-700"
+                                      onClick={() => {
+                                        if (pendingCleanupCount && onManualCleanup) {
+                                          onManualCleanup(pendingCleanupCount);
+                                        }
+                                        setPendingCleanupCount(null);
+                                        setPendingCleanupPreview('');
+                                      }}
                                     >
-                                      Remove 1 oldest version
-                                    </DropdownMenuItem>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="left" className="max-w-[200px]">
-                                    <p className="text-xs font-medium mb-1">Will remove:</p>
-                                    <p className="text-xs text-muted-foreground whitespace-pre-line">{getPreviewText(1)}</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                                
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <DropdownMenuItem 
-                                      onClick={() => onManualCleanup(Math.min(5, unpinnedCount))}
-                                      disabled={unpinnedCount < 2}
-                                      className="text-xs cursor-pointer"
-                                    >
-                                      Remove up to 5 versions
-                                    </DropdownMenuItem>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="left" className="max-w-[200px]">
-                                    <p className="text-xs font-medium mb-1">Will remove:</p>
-                                    <p className="text-xs text-muted-foreground whitespace-pre-line">{getPreviewText(Math.min(5, unpinnedCount))}</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                                
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <DropdownMenuItem 
-                                      onClick={() => onManualCleanup(Math.min(10, unpinnedCount))}
-                                      disabled={unpinnedCount < 5}
-                                      className="text-xs cursor-pointer"
-                                    >
-                                      Remove up to 10 versions
-                                    </DropdownMenuItem>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="left" className="max-w-[200px]">
-                                    <p className="text-xs font-medium mb-1">Will remove:</p>
-                                    <p className="text-xs text-muted-foreground whitespace-pre-line">{getPreviewText(Math.min(10, unpinnedCount))}</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                                
-                                <DropdownMenuSeparator />
-                                
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <DropdownMenuItem 
-                                      onClick={() => onManualCleanup(unpinnedCount)}
-                                      className="text-xs text-amber-600 cursor-pointer"
-                                    >
-                                      Remove all unpinned ({unpinnedCount})
-                                    </DropdownMenuItem>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="left" className="max-w-[200px]">
-                                    <p className="text-xs font-medium mb-1">Will remove:</p>
-                                    <p className="text-xs text-muted-foreground whitespace-pre-line">{getPreviewText(unpinnedCount)}</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                                      Remove {pendingCleanupCount} Version{pendingCleanupCount !== 1 ? 's' : ''}
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </>
                           );
                         })()}
                         
