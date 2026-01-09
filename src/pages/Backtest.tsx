@@ -448,6 +448,7 @@ export default function Backtest() {
             pendingSlots={config.pendingSlots}
             getPendingSaveStartTime={config.getPendingSaveStartTime}
             wasRecentlySaved={config.wasRecentlySaved}
+            wasCancelledRecently={config.wasCancelledRecently}
             versionHistoryOpen={versionHistoryOpen}
             onVersionHistoryOpenChange={setVersionHistoryOpen}
           />
