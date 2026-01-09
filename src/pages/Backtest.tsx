@@ -429,6 +429,8 @@ export default function Backtest() {
             onToggleVersionPin={config.toggleVersionPin}
             onToggleVersionTag={config.toggleVersionTag}
             onBulkToggleVersionTag={config.bulkToggleVersionTag}
+            autoSaveVersions={config.autoSaveVersions}
+            onAutoSaveVersionsChange={config.setAutoSaveVersions}
             versionHistoryOpen={versionHistoryOpen}
             onVersionHistoryOpenChange={setVersionHistoryOpen}
           />

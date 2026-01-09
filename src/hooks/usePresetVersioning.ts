@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { PresetVersion, PresetVersionHistory, MAX_VERSIONS_PER_SLOT, PresetTagValue } from '@/types/preset-version';
 
 const STORAGE_KEY = 'backtest-preset-versions';
+const AUTO_SAVE_KEY = 'backtest-preset-autosave';
 
 /**
  * Hook to manage preset version history
@@ -16,6 +17,20 @@ export function usePresetVersioning() {
       return { '4': [], '5': [], '6': [] };
     }
   });
+
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem(AUTO_SAVE_KEY);
+      return saved !== null ? JSON.parse(saved) : true; // Default to enabled
+    } catch {
+      return true;
+    }
+  });
+
+  // Persist auto-save preference
+  useEffect(() => {
+    localStorage.setItem(AUTO_SAVE_KEY, JSON.stringify(autoSaveEnabled));
+  }, [autoSaveEnabled]);
 
   // Persist to localStorage when history changes
   useEffect(() => {
@@ -362,5 +377,7 @@ export function usePresetVersioning() {
     undoDeleteVersions,
     clearDeleteBackup,
     canUndoDelete: deletedVersionsBackup !== null,
+    autoSaveEnabled,
+    setAutoSaveEnabled,
   };
 }

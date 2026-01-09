@@ -474,8 +474,10 @@ export function useBacktestConfig() {
       slowSMA,
     };
     
-    // Save version to history
-    presetVersioning.addVersion(slot, preset);
+    // Save version to history only if auto-save is enabled
+    if (presetVersioning.autoSaveEnabled) {
+      presetVersioning.addVersion(slot, preset);
+    }
     
     const updated = { ...customPresets, [slot]: preset };
     setCustomPresets(updated);
@@ -786,5 +788,7 @@ export function useBacktestConfig() {
     toggleVersionPin: presetVersioning.toggleVersionPin,
     toggleVersionTag: presetVersioning.toggleVersionTag,
     bulkToggleVersionTag: presetVersioning.bulkToggleVersionTag,
+    autoSaveVersions: presetVersioning.autoSaveEnabled,
+    setAutoSaveVersions: presetVersioning.setAutoSaveEnabled,
   };
 }
