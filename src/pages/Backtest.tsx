@@ -462,6 +462,7 @@ export default function Backtest() {
             onManualCleanup={config.manualCleanup}
             onUndoManualCleanup={config.undoManualCleanup}
             canUndoCleanup={config.canUndoCleanup}
+            cleanupBackupTimestamp={config.cleanupBackupTimestamp}
           />
 
           {/* Strategy Optimizer */}

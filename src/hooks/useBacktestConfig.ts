@@ -813,5 +813,6 @@ export function useBacktestConfig() {
     manualCleanup: presetVersioning.manualCleanup,
     undoManualCleanup: presetVersioning.undoManualCleanup,
     canUndoCleanup: presetVersioning.canUndoCleanup,
+    cleanupBackupTimestamp: presetVersioning.cleanupBackupTimestamp,
   };
 }

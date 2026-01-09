@@ -291,6 +291,7 @@ interface BacktestConfigFormProps {
   onManualCleanup?: (count?: number) => number;
   onUndoManualCleanup?: () => boolean;
   canUndoCleanup?: boolean;
+  cleanupBackupTimestamp?: number | null;
 }
 
 export function BacktestConfigForm({
@@ -378,6 +379,7 @@ export function BacktestConfigForm({
   onManualCleanup,
   onUndoManualCleanup,
   canUndoCleanup = false,
+  cleanupBackupTimestamp,
 }: BacktestConfigFormProps) {
   const [copied, setCopied] = useState(false);
   const [clearPresetsConfirmOpen, setClearPresetsConfirmOpen] = useState(false);
@@ -405,7 +407,20 @@ export function BacktestConfigForm({
   const [cleanupConfirmOpen, setCleanupConfirmOpen] = useState(false);
   const [pendingCleanupCount, setPendingCleanupCount] = useState<number | null>(null);
   const [pendingCleanupPreview, setPendingCleanupPreview] = useState<string>('');
+  
+  // Force re-render for countdown timer
+  const [, setCountdownTick] = useState(0);
+  useEffect(() => {
+    if (!canUndoCleanup || !cleanupBackupTimestamp) return;
+    
+    const interval = setInterval(() => {
+      setCountdownTick(t => t + 1);
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [canUndoCleanup, cleanupBackupTimestamp]);
 
+  // Handle external version history dialog control
   useEffect(() => {
     if (externalVersionHistoryOpen && !versionHistorySlot) {
       // Find first available preset slot with history
@@ -2226,18 +2241,63 @@ export function BacktestConfigForm({
                           );
                         })()}
                         
-                        {/* Undo Cleanup Button */}
-                        {canUndoCleanup && onUndoManualCleanup && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full h-7 text-xs border-amber-500/50 text-amber-600 hover:bg-amber-500/10"
-                            onClick={() => onUndoManualCleanup()}
-                          >
-                            <Undo2 className="h-3 w-3 mr-1.5" />
-                            Undo Last Cleanup
-                          </Button>
-                        )}
+                        {/* Undo Cleanup Button with Countdown */}
+                        {canUndoCleanup && onUndoManualCleanup && cleanupBackupTimestamp && (() => {
+                          const UNDO_TIMEOUT = 30000; // 30 seconds
+                          const elapsed = Date.now() - cleanupBackupTimestamp;
+                          const remaining = Math.max(0, UNDO_TIMEOUT - elapsed);
+                          const remainingSeconds = Math.ceil(remaining / 1000);
+                          const progress = (remaining / UNDO_TIMEOUT) * 100;
+                          
+                          return (
+                            <div className="relative">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="w-full h-8 text-xs border-amber-500/50 text-amber-600 hover:bg-amber-500/10 overflow-hidden"
+                                onClick={() => onUndoManualCleanup()}
+                              >
+                                {/* Progress bar background */}
+                                <div 
+                                  className="absolute inset-0 bg-amber-500/10 transition-all duration-1000 ease-linear"
+                                  style={{ width: `${progress}%` }}
+                                />
+                                <span className="relative flex items-center gap-1.5">
+                                  <Undo2 className="h-3 w-3" />
+                                  Undo Cleanup
+                                  <span className="font-mono text-[10px] opacity-75">({remainingSeconds}s)</span>
+                                </span>
+                              </Button>
+                              {/* Circular countdown indicator */}
+                              <div className="absolute -right-1 -top-1 w-5 h-5">
+                                <svg className="w-full h-full -rotate-90" viewBox="0 0 20 20">
+                                  <circle
+                                    cx="10"
+                                    cy="10"
+                                    r="8"
+                                    fill="hsl(var(--background))"
+                                    stroke="hsl(var(--border))"
+                                    strokeWidth="2"
+                                  />
+                                  <circle
+                                    cx="10"
+                                    cy="10"
+                                    r="8"
+                                    fill="none"
+                                    stroke="hsl(38, 92%, 50%)"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeDasharray={`${progress * 0.502} 100`}
+                                    className="transition-all duration-1000 ease-linear"
+                                  />
+                                </svg>
+                                <span className="absolute inset-0 flex items-center justify-center text-[8px] font-bold text-amber-600">
+                                  {remainingSeconds}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })()}
                         
                         {onClearAllVersionHistory && totalVersions > 0 && (
                           <Button

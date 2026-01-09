@@ -863,5 +863,6 @@ export function usePresetVersioning() {
     undoManualCleanup,
     canUndoCleanup,
     clearCleanupBackup,
+    cleanupBackupTimestamp: cleanupBackup?.timestamp ?? null,
   };
 }
