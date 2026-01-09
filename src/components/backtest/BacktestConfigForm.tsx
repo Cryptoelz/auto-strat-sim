@@ -181,6 +181,7 @@ interface BacktestConfigFormProps {
   // Auto-save control
   autoSaveVersions?: boolean;
   onAutoSaveVersionsChange?: (enabled: boolean) => void;
+  onManualSaveVersion?: (slot: '4' | '5' | '6', data: PresetVersion['data']) => PresetVersion;
   
   // External version history dialog control
   versionHistoryOpen?: boolean;
@@ -249,6 +250,7 @@ export function BacktestConfigForm({
   onBulkToggleVersionTag,
   autoSaveVersions = true,
   onAutoSaveVersionsChange,
+  onManualSaveVersion,
   versionHistoryOpen: externalVersionHistoryOpen,
   onVersionHistoryOpenChange,
 }: BacktestConfigFormProps) {
@@ -1425,18 +1427,51 @@ export function BacktestConfigForm({
                 
                 {/* Auto-save Toggle */}
                 {onAutoSaveVersionsChange && !compareVersions[0] && !batchSelectMode && (
-                  <div className="flex items-center justify-between py-2 px-3 bg-muted/30 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <History className="h-4 w-4 text-muted-foreground" />
-                      <div>
+                  <div className="flex items-center justify-between py-2 px-3 bg-muted/30 rounded-lg gap-3">
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <History className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <div className="min-w-0">
                         <p className="text-sm font-medium">Auto-save versions</p>
                         <p className="text-xs text-muted-foreground">Automatically save when presets change</p>
                       </div>
                     </div>
-                    <Switch
-                      checked={autoSaveVersions}
-                      onCheckedChange={onAutoSaveVersionsChange}
-                    />
+                    <div className="flex items-center gap-2 shrink-0">
+                      {versionHistorySlot && onManualSaveVersion && getCustomPresetData && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 text-xs"
+                                onClick={() => {
+                                  const presetData = getCustomPresetData(versionHistorySlot);
+                                  if (presetData) {
+                                    onManualSaveVersion(versionHistorySlot, {
+                                      ...presetData,
+                                      description: `Manual save: ${presetData.label}`,
+                                    });
+                                    toast.success('Version saved', {
+                                      description: 'Current state saved to version history',
+                                    });
+                                  }
+                                }}
+                              >
+                                <Save className="h-3 w-3 mr-1" />
+                                Save Now
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Manually save current state as a new version</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                      <Switch
+                        checked={autoSaveVersions}
+                        onCheckedChange={onAutoSaveVersionsChange}
+                      />
+                    </div>
                   </div>
                 )}
                 
