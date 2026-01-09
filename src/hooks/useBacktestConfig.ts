@@ -790,5 +790,6 @@ export function useBacktestConfig() {
     bulkToggleVersionTag: presetVersioning.bulkToggleVersionTag,
     autoSaveVersions: presetVersioning.autoSaveEnabled,
     setAutoSaveVersions: presetVersioning.setAutoSaveEnabled,
+    manualSaveVersion: presetVersioning.addVersion,
   };
 }
