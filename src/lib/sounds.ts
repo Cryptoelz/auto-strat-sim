@@ -63,6 +63,35 @@ export function playSellSound() {
   oscillator.stop(ctx.currentTime + 0.35);
 }
 
+export function playSaveSound() {
+  if (volume === 0) return;
+  
+  const ctx = getAudioContext();
+  
+  // Create a subtle "saved" confirmation sound - soft double ping
+  const playPing = (startTime: number, freq: number) => {
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+
+    oscillator.frequency.setValueAtTime(freq, startTime);
+    oscillator.type = 'sine';
+    
+    gainNode.gain.setValueAtTime(0, startTime);
+    gainNode.gain.linearRampToValueAtTime(volume * 0.4, startTime + 0.02);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.12);
+
+    oscillator.start(startTime);
+    oscillator.stop(startTime + 0.12);
+  };
+
+  // Two soft ascending pings
+  playPing(ctx.currentTime, 880);
+  playPing(ctx.currentTime + 0.08, 1100);
+}
+
 export function playSignalSound(type: 'BUY' | 'SELL') {
   if (type === 'BUY') {
     playBuySound();
