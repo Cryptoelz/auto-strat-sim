@@ -5,7 +5,11 @@ import { playSaveSound } from '@/lib/sounds';
 const STORAGE_KEY = 'backtest-preset-versions';
 const AUTO_SAVE_KEY = 'backtest-preset-autosave';
 const DEBOUNCE_DELAY_KEY = 'backtest-preset-debounce-delay';
+const AUTO_CLEANUP_KEY = 'backtest-preset-auto-cleanup';
+const CLEANUP_THRESHOLD_KEY = 'backtest-preset-cleanup-threshold';
 const DEFAULT_DEBOUNCE_DELAY = 3000; // 3 seconds default
+const DEFAULT_CLEANUP_THRESHOLD = 80; // 80% of 5MB limit
+const MAX_STORAGE_BYTES = 5 * 1024 * 1024; // 5MB localStorage limit
 
 /**
  * Hook to manage preset version history
@@ -39,6 +43,24 @@ export function usePresetVersioning() {
     }
   });
 
+  const [autoCleanupEnabled, setAutoCleanupEnabled] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem(AUTO_CLEANUP_KEY);
+      return saved !== null ? JSON.parse(saved) : true; // Default to enabled
+    } catch {
+      return true;
+    }
+  });
+
+  const [cleanupThreshold, setCleanupThreshold] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem(CLEANUP_THRESHOLD_KEY);
+      return saved !== null ? JSON.parse(saved) : DEFAULT_CLEANUP_THRESHOLD;
+    } catch {
+      return DEFAULT_CLEANUP_THRESHOLD;
+    }
+  });
+
   // Debounce state for pending saves
   const pendingVersionsRef = useRef<Map<'4' | '5' | '6', { data: PresetVersion['data']; timeoutId: NodeJS.Timeout; startedAt: number }>>(new Map());
   const [pendingSlots, setPendingSlots] = useState<Set<'4' | '5' | '6'>>(new Set());
@@ -60,6 +82,16 @@ export function usePresetVersioning() {
     localStorage.setItem(DEBOUNCE_DELAY_KEY, JSON.stringify(debounceDelay));
   }, [debounceDelay]);
 
+  // Persist auto-cleanup preference
+  useEffect(() => {
+    localStorage.setItem(AUTO_CLEANUP_KEY, JSON.stringify(autoCleanupEnabled));
+  }, [autoCleanupEnabled]);
+
+  // Persist cleanup threshold preference
+  useEffect(() => {
+    localStorage.setItem(CLEANUP_THRESHOLD_KEY, JSON.stringify(cleanupThreshold));
+  }, [debounceDelay]);
+
   // Persist to localStorage when history changes
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(versionHistory));
@@ -70,6 +102,13 @@ export function usePresetVersioning() {
     return () => {
       pendingVersionsRef.current.forEach(({ timeoutId }) => clearTimeout(timeoutId));
     };
+  }, []);
+
+  /**
+   * Get current storage usage in bytes
+   */
+  const getStorageBytes = useCallback((history: PresetVersionHistory): number => {
+    return new Blob([JSON.stringify(history)]).size;
   }, []);
 
   /**
@@ -88,6 +127,51 @@ export function usePresetVersioning() {
   }, []);
 
   /**
+   * Auto-cleanup oldest unpinned versions when storage exceeds threshold
+   * Returns number of versions removed
+   */
+  const performAutoCleanup = useCallback((history: PresetVersionHistory): { cleaned: PresetVersionHistory; removed: number } => {
+    const thresholdBytes = (cleanupThreshold / 100) * MAX_STORAGE_BYTES;
+    let currentBytes = getStorageBytes(history);
+    
+    if (currentBytes <= thresholdBytes) {
+      return { cleaned: history, removed: 0 };
+    }
+
+    // Collect all unpinned versions across all slots with their slot info
+    const allUnpinned: { slot: '4' | '5' | '6'; version: PresetVersion }[] = [];
+    const slots: ('4' | '5' | '6')[] = ['4', '5', '6'];
+    
+    slots.forEach(slot => {
+      history[slot]
+        .filter(v => !v.pinned)
+        .forEach(version => allUnpinned.push({ slot, version }));
+    });
+
+    // Sort by savedAt (oldest first) to remove oldest first
+    allUnpinned.sort((a, b) => a.version.savedAt - b.version.savedAt);
+
+    const toRemove = new Set<string>();
+    let testHistory = { ...history };
+    let removed = 0;
+
+    // Remove oldest unpinned versions one by one until under threshold
+    for (const item of allUnpinned) {
+      if (currentBytes <= thresholdBytes) break;
+      
+      toRemove.add(item.version.id);
+      testHistory = {
+        ...testHistory,
+        [item.slot]: testHistory[item.slot].filter(v => v.id !== item.version.id)
+      };
+      currentBytes = getStorageBytes(testHistory);
+      removed++;
+    }
+
+    return { cleaned: testHistory, removed };
+  }, [cleanupThreshold, getStorageBytes]);
+
+  /**
    * Trigger save animation for a slot
    */
   const triggerSaveAnimation = useCallback((slot: '4' | '5' | '6') => {
@@ -103,6 +187,9 @@ export function usePresetVersioning() {
       });
     }, 1000);
   }, []);
+
+  // Track cleanup events for UI feedback
+  const [lastCleanupCount, setLastCleanupCount] = useState<number>(0);
 
   /**
    * Internal function to immediately add a version (no debounce)
@@ -120,7 +207,20 @@ export function usePresetVersioning() {
 
     setVersionHistory(prev => {
       const slotHistory = trimVersions([version, ...prev[slot]]);
-      return { ...prev, [slot]: slotHistory };
+      let newHistory = { ...prev, [slot]: slotHistory };
+      
+      // Perform auto-cleanup if enabled
+      if (autoCleanupEnabled) {
+        const { cleaned, removed } = performAutoCleanup(newHistory);
+        if (removed > 0) {
+          setLastCleanupCount(removed);
+          // Clear after a short delay for UI feedback
+          setTimeout(() => setLastCleanupCount(0), 3000);
+        }
+        return cleaned;
+      }
+      
+      return newHistory;
     });
 
     // Trigger save animation
@@ -129,7 +229,7 @@ export function usePresetVersioning() {
     }
 
     return version;
-  }, [trimVersions, triggerSaveAnimation]);
+  }, [trimVersions, triggerSaveAnimation, autoCleanupEnabled, performAutoCleanup]);
 
   /**
    * Add a new version to a slot's history with debouncing
@@ -570,5 +670,12 @@ export function usePresetVersioning() {
     recentlySavedSlots,
     wasCancelledRecently: useCallback((slot: '4' | '5' | '6') => recentlyCancelledSlots.has(slot), [recentlyCancelledSlots]),
     recentlyCancelledSlots,
+    // Auto-cleanup controls
+    autoCleanupEnabled,
+    setAutoCleanupEnabled,
+    cleanupThreshold,
+    setCleanupThreshold,
+    lastCleanupCount,
+    getStorageBytes,
   };
 }

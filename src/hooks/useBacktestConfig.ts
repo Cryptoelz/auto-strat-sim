@@ -804,5 +804,11 @@ export function useBacktestConfig() {
     getTotalVersionCount: presetVersioning.getTotalVersionCount,
     versionHistory: presetVersioning.versionHistory,
     clearAllVersionHistory: presetVersioning.clearAllHistory,
+    // Auto-cleanup controls
+    autoCleanupEnabled: presetVersioning.autoCleanupEnabled,
+    setAutoCleanupEnabled: presetVersioning.setAutoCleanupEnabled,
+    cleanupThreshold: presetVersioning.cleanupThreshold,
+    setCleanupThreshold: presetVersioning.setCleanupThreshold,
+    lastCleanupCount: presetVersioning.lastCleanupCount,
   };
 }

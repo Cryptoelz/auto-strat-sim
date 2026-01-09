@@ -454,6 +454,11 @@ export default function Backtest() {
             getTotalVersionCount={config.getTotalVersionCount}
             versionHistory={config.versionHistory}
             onClearAllVersionHistory={config.clearAllVersionHistory}
+            autoCleanupEnabled={config.autoCleanupEnabled}
+            onAutoCleanupEnabledChange={config.setAutoCleanupEnabled}
+            cleanupThreshold={config.cleanupThreshold}
+            onCleanupThresholdChange={config.setCleanupThreshold}
+            lastCleanupCount={config.lastCleanupCount}
           />
 
           {/* Strategy Optimizer */}
