@@ -562,6 +562,24 @@ export function BacktestConfigForm({
     }
   };
 
+  // Check if current form values differ from a saved preset
+  const hasUnsavedChanges = useCallback((slot: '4' | '5' | '6'): boolean => {
+    if (!getCustomPresetData) return false;
+    const presetData = getCustomPresetData(slot);
+    if (!presetData) return false;
+    
+    // Only show unsaved indicator if this is the active preset
+    if (activeCustomPresetSlot !== slot) return false;
+    
+    return (
+      presetData.fastSMA !== fastSMA ||
+      presetData.slowSMA !== slowSMA ||
+      presetData.positionSizePercent !== positionSizePercent ||
+      presetData.stopLossPercent !== stopLossPercent ||
+      presetData.takeProfitPercent !== takeProfitPercent
+    );
+  }, [getCustomPresetData, activeCustomPresetSlot, fastSMA, slowSMA, positionSizePercent, stopLossPercent, takeProfitPercent]);
+
   return (
     <TooltipProvider delayDuration={300}>
       <Card className="border-border/50 bg-card/50 backdrop-blur lg:col-span-1">
@@ -826,6 +844,8 @@ export function BacktestConfigForm({
                 {(['4', '5', '6'] as const).map((slot) => {
                   const hasData = customPresetSlots[slot];
                   const presetData = getCustomPresetData?.(slot);
+                  const isUnsaved = hasUnsavedChanges(slot);
+                  const isActive = activeCustomPresetSlot === slot;
                   return (
                     <div key={slot} className="relative group">
                       <Tooltip>
@@ -835,7 +855,8 @@ export function BacktestConfigForm({
                             size="sm"
                             className={cn(
                             "h-7 min-w-7 px-1 text-xs font-mono",
-                            hasData && "ring-1 ring-primary/50 pr-14"
+                            hasData && "ring-1 ring-primary/50 pr-14",
+                            isActive && "ring-2 ring-primary"
                           )}
                             onClick={() => {
                               if (hasData && onLoadCustomPreset) {
@@ -857,6 +878,13 @@ export function BacktestConfigForm({
                             ) : (
                               slot
                             )}
+                            {/* Unsaved changes indicator */}
+                            {isUnsaved && (
+                              <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                                <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500" />
+                              </span>
+                            )}
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
@@ -866,6 +894,9 @@ export function BacktestConfigForm({
                               <p>SMA: {presetData.fastSMA}/{presetData.slowSMA}</p>
                               <p>Position: {presetData.positionSizePercent}%</p>
                               <p>SL: {presetData.stopLossPercent}% · TP: {presetData.takeProfitPercent}%</p>
+                              {isUnsaved && (
+                                <p className="text-amber-500 mt-1 font-medium">⚠ Unsaved changes · Ctrl+S to save</p>
+                              )}
                               <p className="text-muted-foreground mt-1">Click to load · Shift+{slot} to overwrite</p>
                             </div>
                           ) : (
