@@ -49,7 +49,8 @@ import {
   ChevronDown,
   Clock,
   Undo2,
-  HardDrive
+  HardDrive,
+  Zap
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -280,6 +281,13 @@ interface BacktestConfigFormProps {
   getTotalVersionCount?: () => number;
   versionHistory?: PresetVersionHistory;
   onClearAllVersionHistory?: () => void;
+  
+  // Auto-cleanup
+  autoCleanupEnabled?: boolean;
+  onAutoCleanupEnabledChange?: (enabled: boolean) => void;
+  cleanupThreshold?: number;
+  onCleanupThresholdChange?: (threshold: number) => void;
+  lastCleanupCount?: number;
 }
 
 export function BacktestConfigForm({
@@ -359,6 +367,11 @@ export function BacktestConfigForm({
   getTotalVersionCount,
   versionHistory,
   onClearAllVersionHistory,
+  autoCleanupEnabled = true,
+  onAutoCleanupEnabledChange,
+  cleanupThreshold = 80,
+  onCleanupThresholdChange,
+  lastCleanupCount = 0,
 }: BacktestConfigFormProps) {
   const [copied, setCopied] = useState(false);
   const [clearPresetsConfirmOpen, setClearPresetsConfirmOpen] = useState(false);
@@ -1986,6 +1999,49 @@ export function BacktestConfigForm({
                           <p className="text-[10px] text-muted-foreground/70">
                             {usagePercent.toFixed(1)}% of ~5 MB localStorage limit
                           </p>
+                        </div>
+                        
+                        {/* Auto-Cleanup Controls */}
+                        <div className="pt-2 border-t border-border/50 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <Zap className="h-3 w-3 text-amber-500" />
+                              <span className="text-muted-foreground">Auto-cleanup</span>
+                            </div>
+                            <Switch
+                              checked={autoCleanupEnabled}
+                              onCheckedChange={onAutoCleanupEnabledChange}
+                              className="scale-75"
+                            />
+                          </div>
+                          
+                          {autoCleanupEnabled && (
+                            <div className="space-y-1">
+                              <div className="flex items-center justify-between text-muted-foreground">
+                                <span>Threshold</span>
+                                <span className="font-mono font-medium text-foreground">{cleanupThreshold}%</span>
+                              </div>
+                              <input
+                                type="range"
+                                min={50}
+                                max={95}
+                                step={5}
+                                value={cleanupThreshold}
+                                onChange={(e) => onCleanupThresholdChange?.(Number(e.target.value))}
+                                className="w-full h-1 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+                              />
+                              <p className="text-[10px] text-muted-foreground/70">
+                                Removes oldest unpinned versions when storage exceeds {cleanupThreshold}%
+                              </p>
+                            </div>
+                          )}
+                          
+                          {lastCleanupCount > 0 && (
+                            <p className="text-[10px] text-amber-500 flex items-center gap-1">
+                              <Zap className="h-2.5 w-2.5" />
+                              Auto-cleaned {lastCleanupCount} version{lastCleanupCount !== 1 ? 's' : ''}
+                            </p>
+                          )}
                         </div>
                         
                         {/* Clear All History Button */}
