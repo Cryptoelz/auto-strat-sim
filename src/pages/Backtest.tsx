@@ -437,6 +437,7 @@ export default function Backtest() {
             hasPendingSave={config.hasPendingSave}
             onFlushPendingSave={config.flushPendingSave}
             pendingSlots={config.pendingSlots}
+            getPendingSaveStartTime={config.getPendingSaveStartTime}
             versionHistoryOpen={versionHistoryOpen}
             onVersionHistoryOpenChange={setVersionHistoryOpen}
           />

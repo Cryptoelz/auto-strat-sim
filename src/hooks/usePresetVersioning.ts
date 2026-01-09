@@ -39,8 +39,9 @@ export function usePresetVersioning() {
   });
 
   // Debounce state for pending saves
-  const pendingVersionsRef = useRef<Map<'4' | '5' | '6', { data: PresetVersion['data']; timeoutId: NodeJS.Timeout }>>(new Map());
+  const pendingVersionsRef = useRef<Map<'4' | '5' | '6', { data: PresetVersion['data']; timeoutId: NodeJS.Timeout; startedAt: number }>>(new Map());
   const [pendingSlots, setPendingSlots] = useState<Set<'4' | '5' | '6'>>(new Set());
+  const [pendingSaveTimestamps, setPendingSaveTimestamps] = useState<Map<'4' | '5' | '6', number>>(new Map());
 
   // Persist auto-save preference
   useEffect(() => {
@@ -119,6 +120,8 @@ export function usePresetVersioning() {
       return addVersionImmediate(slot, data);
     }
 
+    const startedAt = Date.now();
+
     // Set up debounced save
     const timeoutId = setTimeout(() => {
       pendingVersionsRef.current.delete(slot);
@@ -127,11 +130,17 @@ export function usePresetVersioning() {
         next.delete(slot);
         return next;
       });
+      setPendingSaveTimestamps(prev => {
+        const next = new Map(prev);
+        next.delete(slot);
+        return next;
+      });
       addVersionImmediate(slot, data);
     }, debounceDelay);
 
-    pendingVersionsRef.current.set(slot, { data, timeoutId });
+    pendingVersionsRef.current.set(slot, { data, timeoutId, startedAt });
     setPendingSlots(prev => new Set(prev).add(slot));
+    setPendingSaveTimestamps(prev => new Map(prev).set(slot, startedAt));
 
     // Return a placeholder version (actual version created after debounce)
     return {
@@ -154,6 +163,11 @@ export function usePresetVersioning() {
         next.delete(slot);
         return next;
       });
+      setPendingSaveTimestamps(prev => {
+        const next = new Map(prev);
+        next.delete(slot);
+        return next;
+      });
     }
   }, []);
 
@@ -170,6 +184,11 @@ export function usePresetVersioning() {
         next.delete(slot);
         return next;
       });
+      setPendingSaveTimestamps(prev => {
+        const next = new Map(prev);
+        next.delete(slot);
+        return next;
+      });
       return addVersionImmediate(slot, existing.data);
     }
     return null;
@@ -181,6 +200,13 @@ export function usePresetVersioning() {
   const hasPendingSave = useCallback((slot: '4' | '5' | '6'): boolean => {
     return pendingSlots.has(slot);
   }, [pendingSlots]);
+
+  /**
+   * Get the start timestamp of a pending save for countdown calculation
+   */
+  const getPendingSaveStartTime = useCallback((slot: '4' | '5' | '6'): number | null => {
+    return pendingSaveTimestamps.get(slot) ?? null;
+  }, [pendingSaveTimestamps]);
 
   /**
    * Get version history for a specific slot
@@ -493,5 +519,6 @@ export function usePresetVersioning() {
     cancelPendingSave,
     flushPendingSave,
     pendingSlots,
+    getPendingSaveStartTime,
   };
 }
