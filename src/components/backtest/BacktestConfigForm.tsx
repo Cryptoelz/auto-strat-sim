@@ -2046,18 +2046,63 @@ export function BacktestConfigForm({
                           )}
                         </div>
                         
-                        {/* Manual Cleanup Button */}
-                        {onManualCleanup && totalVersions > 0 && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full h-7 text-xs"
-                            onClick={() => onManualCleanup()}
-                          >
-                            <Zap className="h-3 w-3 mr-1.5" />
-                            Clean Up Old Versions
-                          </Button>
-                        )}
+                        {/* Manual Cleanup Dropdown */}
+                        {onManualCleanup && totalVersions > 0 && (() => {
+                          // Count unpinned versions
+                          const unpinnedCount = (versionHistory?.['4']?.filter(v => !v.pinned).length || 0) +
+                            (versionHistory?.['5']?.filter(v => !v.pinned).length || 0) +
+                            (versionHistory?.['6']?.filter(v => !v.pinned).length || 0);
+                          
+                          if (unpinnedCount === 0) return null;
+                          
+                          return (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="w-full h-7 text-xs justify-between"
+                                >
+                                  <span className="flex items-center">
+                                    <Zap className="h-3 w-3 mr-1.5" />
+                                    Clean Up Versions
+                                  </span>
+                                  <ChevronDown className="h-3 w-3 ml-1 opacity-50" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-48 bg-popover border shadow-lg z-50">
+                                <DropdownMenuItem 
+                                  onClick={() => onManualCleanup(1)}
+                                  disabled={unpinnedCount < 1}
+                                  className="text-xs"
+                                >
+                                  Remove 1 oldest version
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => onManualCleanup(Math.min(5, unpinnedCount))}
+                                  disabled={unpinnedCount < 2}
+                                  className="text-xs"
+                                >
+                                  Remove up to 5 versions
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => onManualCleanup(Math.min(10, unpinnedCount))}
+                                  disabled={unpinnedCount < 5}
+                                  className="text-xs"
+                                >
+                                  Remove up to 10 versions
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem 
+                                  onClick={() => onManualCleanup(unpinnedCount)}
+                                  className="text-xs text-amber-600"
+                                >
+                                  Remove all unpinned ({unpinnedCount})
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          );
+                        })()}
                         
                         {/* Clear All History Button */}
                         {onClearAllVersionHistory && totalVersions > 0 && (
