@@ -44,8 +44,10 @@ import {
   MessageSquare,
   Pin,
   Search,
-  Tag
+  Tag,
+  Volume2
 } from 'lucide-react';
+import { getSaveSoundEnabled, setSaveSoundEnabled } from '@/lib/sounds';
 
 interface TooltipLabelProps {
   label: string;
@@ -342,6 +344,7 @@ export function BacktestConfigForm({
   const [copied, setCopied] = useState(false);
   const [clearPresetsConfirmOpen, setClearPresetsConfirmOpen] = useState(false);
   const [presetDialogOpen, setPresetDialogOpen] = useState(false);
+  const [saveSoundEnabledState, setSaveSoundEnabledState] = useState(() => getSaveSoundEnabled());
   const [pendingPresetSlot, setPendingPresetSlot] = useState<'4' | '5' | '6' | null>(null);
   const [presetName, setPresetName] = useState('');
   const [isRenaming, setIsRenaming] = useState(false);
@@ -1726,6 +1729,26 @@ export function BacktestConfigForm({
                             ? 'Saves immediately on every change (may create many versions)'
                             : `Waits ${(debounceDelay / 1000).toFixed(1)} seconds after changes before saving`}
                         </p>
+                      </div>
+                    )}
+                    
+                    {/* Save sound toggle */}
+                    {autoSaveVersions && (
+                      <div className="flex items-center justify-between gap-3 pt-2 border-t border-border/50">
+                        <div className="flex items-center gap-2">
+                          <Volume2 className="h-3.5 w-3.5 text-muted-foreground" />
+                          <Label htmlFor="save-sound-toggle" className="text-xs font-medium cursor-pointer">
+                            Save sound
+                          </Label>
+                        </div>
+                        <Switch
+                          id="save-sound-toggle"
+                          checked={saveSoundEnabledState}
+                          onCheckedChange={(checked) => {
+                            setSaveSoundEnabledState(checked);
+                            setSaveSoundEnabled(checked);
+                          }}
+                        />
                       </div>
                     )}
                   </div>
