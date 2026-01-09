@@ -436,6 +436,7 @@ export default function Backtest() {
             onDebounceDelayChange={config.setDebounceDelay}
             hasPendingSave={config.hasPendingSave}
             onFlushPendingSave={config.flushPendingSave}
+            onCancelPendingSave={config.cancelPendingSave}
             pendingSlots={config.pendingSlots}
             getPendingSaveStartTime={config.getPendingSaveStartTime}
             versionHistoryOpen={versionHistoryOpen}

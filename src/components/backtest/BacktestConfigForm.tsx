@@ -253,6 +253,7 @@ interface BacktestConfigFormProps {
   onDebounceDelayChange?: (delay: number) => void;
   hasPendingSave?: (slot: '4' | '5' | '6') => boolean;
   onFlushPendingSave?: (slot: '4' | '5' | '6') => PresetVersion | null;
+  onCancelPendingSave?: (slot: '4' | '5' | '6') => void;
   pendingSlots?: Set<'4' | '5' | '6'>;
   getPendingSaveStartTime?: (slot: '4' | '5' | '6') => number | null;
   
@@ -328,6 +329,7 @@ export function BacktestConfigForm({
   onDebounceDelayChange,
   hasPendingSave,
   onFlushPendingSave,
+  onCancelPendingSave,
   pendingSlots,
   getPendingSaveStartTime,
   versionHistoryOpen: externalVersionHistoryOpen,
@@ -1601,21 +1603,36 @@ export function BacktestConfigForm({
                                 <PendingSaveCountdown startTime={startTime} delay={debounceDelay} />
                               )}
                               <span>Saving</span>
-                              {onFlushPendingSave && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-5 px-1.5 text-xs hover:text-amber-400"
-                                  onClick={() => {
-                                    const version = onFlushPendingSave(versionHistorySlot);
-                                    if (version) {
-                                      toast.success('Version saved immediately');
-                                    }
-                                  }}
-                                >
-                                  Save now
-                                </Button>
-                              )}
+                              <div className="flex items-center gap-1">
+                                {onFlushPendingSave && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-5 px-1.5 text-xs hover:text-amber-400"
+                                    onClick={() => {
+                                      const version = onFlushPendingSave(versionHistorySlot);
+                                      if (version) {
+                                        toast.success('Version saved immediately');
+                                      }
+                                    }}
+                                  >
+                                    Save now
+                                  </Button>
+                                )}
+                                {onCancelPendingSave && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-5 px-1.5 text-xs text-muted-foreground hover:text-destructive"
+                                    onClick={() => {
+                                      onCancelPendingSave(versionHistorySlot);
+                                      toast.info('Auto-save cancelled');
+                                    }}
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </Button>
+                                )}
+                              </div>
                             </div>
                           );
                         })()}
