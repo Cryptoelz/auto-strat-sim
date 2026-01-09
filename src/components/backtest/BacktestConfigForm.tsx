@@ -266,6 +266,7 @@ export function BacktestConfigForm({
   const [versionSearchQuery, setVersionSearchQuery] = useState('');
   const [versionTagFilter, setVersionTagFilter] = useState<PresetTagValue | null>(null);
   const [restorePreviewVersionId, setRestorePreviewVersionId] = useState<string | null>(null);
+  const [versionHistoryDragging, setVersionHistoryDragging] = useState(false);
 
   // Handle external version history dialog control
   useEffect(() => {
@@ -1232,7 +1233,98 @@ export function BacktestConfigForm({
                 setVersionTagFilter(null);
               }
             }}>
-              <DialogContent className="sm:max-w-2xl">
+              <DialogContent 
+                className={cn(
+                  "sm:max-w-2xl transition-colors",
+                  versionHistoryDragging && "ring-2 ring-primary ring-offset-2"
+                )}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (!versionHistoryDragging) setVersionHistoryDragging(true);
+                }}
+                onDragEnter={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setVersionHistoryDragging(true);
+                }}
+                onDragLeave={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  // Only set to false if leaving the dialog content entirely
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const x = e.clientX;
+                  const y = e.clientY;
+                  if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+                    setVersionHistoryDragging(false);
+                  }
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setVersionHistoryDragging(false);
+                  
+                  if (!onImportVersionHistory || !versionHistorySlot) return;
+                  
+                  const file = e.dataTransfer.files[0];
+                  if (!file) return;
+                  
+                  if (!file.name.endsWith('.json') && file.type !== 'application/json') {
+                    toast.error('Invalid file type', { description: 'Please drop a JSON file' });
+                    return;
+                  }
+                  
+                  if (file.size > 100 * 1024) {
+                    toast.error('File too large', { description: 'Version files should be under 100KB' });
+                    return;
+                  }
+                  
+                  const reader = new FileReader();
+                  reader.onload = (event) => {
+                    try {
+                      const json = JSON.parse(event.target?.result as string);
+                      
+                      if (!json.versions || !Array.isArray(json.versions)) {
+                        toast.error('Invalid file format', { description: 'File does not contain valid versions' });
+                        return;
+                      }
+                      
+                      // Convert ISO date strings back to timestamps
+                      const versions = json.versions.map((v: { id: string; savedAt: string | number; data: PresetVersion['data'] }) => ({
+                        ...v,
+                        savedAt: typeof v.savedAt === 'string' ? new Date(v.savedAt).getTime() : v.savedAt
+                      }));
+                      
+                      const result = onImportVersionHistory(versionHistorySlot, versions, 'merge');
+                      
+                      if (result.success && result.imported > 0) {
+                        toast.success(`Imported ${result.imported} version${result.imported !== 1 ? 's' : ''}`, {
+                          description: 'Versions merged into history',
+                        });
+                      } else if (result.success && result.imported === 0) {
+                        toast.info('No new versions to import', {
+                          description: 'All versions already exist in history',
+                        });
+                      } else {
+                        toast.error('Import failed', { description: 'Could not import versions' });
+                      }
+                    } catch {
+                      toast.error('Invalid JSON', { description: 'Could not parse the file' });
+                    }
+                  };
+                  reader.readAsText(file);
+                }}
+              >
+                {/* Drag overlay */}
+                {versionHistoryDragging && (
+                  <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm rounded-lg border-2 border-dashed border-primary">
+                    <div className="text-center">
+                      <Upload className="h-8 w-8 mx-auto mb-2 text-primary" />
+                      <p className="text-sm font-medium">Drop JSON file to import versions</p>
+                      <p className="text-xs text-muted-foreground">Versions will be merged into history</p>
+                    </div>
+                  </div>
+                )}
                 <DialogHeader>
                   <div className="flex items-center justify-between">
                     <DialogTitle className="flex items-center gap-2">
