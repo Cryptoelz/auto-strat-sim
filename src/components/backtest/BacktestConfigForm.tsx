@@ -410,6 +410,10 @@ interface BacktestConfigFormProps {
   
   // Smart cleanup
   onSmartCleanup?: (keepCount?: number) => number;
+  onGetSmartCleanupPreview?: (keepCount?: number) => {
+    kept: { slot: '4' | '5' | '6'; version: PresetVersion; score: number }[];
+    removed: { slot: '4' | '5' | '6'; version: PresetVersion; score: number }[];
+  };
   versionsWithPerformanceCount?: number;
 }
 
@@ -500,6 +504,7 @@ export function BacktestConfigForm({
   canUndoCleanup = false,
   cleanupBackupTimestamp,
   onSmartCleanup,
+  onGetSmartCleanupPreview,
   versionsWithPerformanceCount = 0,
 }: BacktestConfigFormProps) {
   const [copied, setCopied] = useState(false);
@@ -528,6 +533,12 @@ export function BacktestConfigForm({
   const [cleanupConfirmOpen, setCleanupConfirmOpen] = useState(false);
   const [pendingCleanupCount, setPendingCleanupCount] = useState<number | null>(null);
   const [pendingCleanupPreview, setPendingCleanupPreview] = useState<string>('');
+  const [smartCleanupPreviewOpen, setSmartCleanupPreviewOpen] = useState(false);
+  const [pendingSmartCleanupKeepCount, setPendingSmartCleanupKeepCount] = useState<number>(3);
+  const [smartCleanupPreviewData, setSmartCleanupPreviewData] = useState<{
+    kept: { slot: '4' | '5' | '6'; version: PresetVersion; score: number }[];
+    removed: { slot: '4' | '5' | '6'; version: PresetVersion; score: number }[];
+  } | null>(null);
   
   // Force re-render for countdown timer
   const [, setCountdownTick] = useState(0);
@@ -2314,13 +2325,18 @@ export function BacktestConfigForm({
                                     </TooltipContent>
                                   </Tooltip>
                                   
-                                  {onSmartCleanup && (
+                                  {onSmartCleanup && onGetSmartCleanupPreview && (
                                     <>
                                       <DropdownMenuSeparator />
                                       <Tooltip>
                                         <TooltipTrigger asChild>
                                           <DropdownMenuItem 
-                                            onClick={() => onSmartCleanup(3)}
+                                            onClick={() => {
+                                              const preview = onGetSmartCleanupPreview(3);
+                                              setSmartCleanupPreviewData(preview);
+                                              setPendingSmartCleanupKeepCount(3);
+                                              setSmartCleanupPreviewOpen(true);
+                                            }}
                                             disabled={versionsWithPerformanceCount === 0}
                                             className="text-xs text-purple-600 cursor-pointer"
                                           >
@@ -2343,7 +2359,12 @@ export function BacktestConfigForm({
                                       <Tooltip>
                                         <TooltipTrigger asChild>
                                           <DropdownMenuItem 
-                                            onClick={() => onSmartCleanup(5)}
+                                            onClick={() => {
+                                              const preview = onGetSmartCleanupPreview(5);
+                                              setSmartCleanupPreviewData(preview);
+                                              setPendingSmartCleanupKeepCount(5);
+                                              setSmartCleanupPreviewOpen(true);
+                                            }}
                                             disabled={versionsWithPerformanceCount === 0}
                                             className="text-xs text-purple-600 cursor-pointer"
                                           >
@@ -2361,7 +2382,12 @@ export function BacktestConfigForm({
                                       <Tooltip>
                                         <TooltipTrigger asChild>
                                           <DropdownMenuItem 
-                                            onClick={() => onSmartCleanup(1)}
+                                            onClick={() => {
+                                              const preview = onGetSmartCleanupPreview(1);
+                                              setSmartCleanupPreviewData(preview);
+                                              setPendingSmartCleanupKeepCount(1);
+                                              setSmartCleanupPreviewOpen(true);
+                                            }}
                                             disabled={versionsWithPerformanceCount === 0}
                                             className="text-xs text-purple-600 cursor-pointer"
                                           >
@@ -2423,6 +2449,205 @@ export function BacktestConfigForm({
                                   </AlertDialogFooter>
                                 </AlertDialogContent>
                               </AlertDialog>
+                              
+                              {/* Smart Cleanup Preview Dialog */}
+                              <Dialog open={smartCleanupPreviewOpen} onOpenChange={setSmartCleanupPreviewOpen}>
+                                <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+                                  <DialogHeader>
+                                    <DialogTitle className="flex items-center gap-2">
+                                      <Sparkles className="h-5 w-5 text-purple-500" />
+                                      Smart Cleanup Preview
+                                    </DialogTitle>
+                                    <DialogDescription>
+                                      Review which versions will be kept vs removed based on performance rankings.
+                                      Keeping best {pendingSmartCleanupKeepCount} version{pendingSmartCleanupKeepCount !== 1 ? 's' : ''} per preset.
+                                    </DialogDescription>
+                                  </DialogHeader>
+                                  
+                                  {smartCleanupPreviewData && (
+                                    <div className="flex-1 overflow-auto space-y-4">
+                                      {/* Versions to Keep */}
+                                      <div className="space-y-2">
+                                        <div className="flex items-center gap-2 text-sm font-medium text-green-600">
+                                          <Check className="h-4 w-4" />
+                                          Versions to Keep ({smartCleanupPreviewData.kept.length})
+                                        </div>
+                                        {smartCleanupPreviewData.kept.length > 0 ? (
+                                          <div className="border rounded-lg overflow-hidden">
+                                            <div className="max-h-48 overflow-auto">
+                                              <table className="w-full text-xs">
+                                                <thead className="bg-muted/50 sticky top-0">
+                                                  <tr>
+                                                    <th className="px-3 py-2 text-left font-medium">Preset</th>
+                                                    <th className="px-3 py-2 text-left font-medium">Version</th>
+                                                    <th className="px-3 py-2 text-left font-medium">PnL</th>
+                                                    <th className="px-3 py-2 text-left font-medium">Win Rate</th>
+                                                    <th className="px-3 py-2 text-left font-medium">Sharpe</th>
+                                                    <th className="px-3 py-2 text-left font-medium">Status</th>
+                                                  </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-border">
+                                                  {smartCleanupPreviewData.kept.map((item, idx) => (
+                                                    <tr key={item.version.id} className="hover:bg-muted/30">
+                                                      <td className="px-3 py-2 font-medium">Preset {item.slot}</td>
+                                                      <td className="px-3 py-2">
+                                                        <span className="truncate max-w-[120px] inline-block">
+                                                          {item.version.data.label}
+                                                        </span>
+                                                      </td>
+                                                      <td className={cn(
+                                                        "px-3 py-2",
+                                                        item.version.performance?.totalPnlPercent && item.version.performance.totalPnlPercent >= 0 
+                                                          ? "text-green-600" 
+                                                          : "text-red-500"
+                                                      )}>
+                                                        {item.version.performance 
+                                                          ? `${item.version.performance.totalPnlPercent >= 0 ? '+' : ''}${item.version.performance.totalPnlPercent.toFixed(2)}%`
+                                                          : '—'
+                                                        }
+                                                      </td>
+                                                      <td className="px-3 py-2">
+                                                        {item.version.performance 
+                                                          ? `${item.version.performance.winRate.toFixed(1)}%`
+                                                          : '—'
+                                                        }
+                                                      </td>
+                                                      <td className="px-3 py-2">
+                                                        {item.version.performance 
+                                                          ? item.version.performance.sharpeRatio.toFixed(2)
+                                                          : '—'
+                                                        }
+                                                      </td>
+                                                      <td className="px-3 py-2">
+                                                        {item.version.pinned ? (
+                                                          <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-600">
+                                                            <Pin className="h-2.5 w-2.5" />
+                                                            Pinned
+                                                          </span>
+                                                        ) : idx < pendingSmartCleanupKeepCount ? (
+                                                          <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-600">
+                                                            <Trophy className="h-2.5 w-2.5" />
+                                                            Top {idx + 1}
+                                                          </span>
+                                                        ) : (
+                                                          <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                                                            Recent
+                                                          </span>
+                                                        )}
+                                                      </td>
+                                                    </tr>
+                                                  ))}
+                                                </tbody>
+                                              </table>
+                                            </div>
+                                          </div>
+                                        ) : (
+                                          <div className="text-xs text-muted-foreground p-3 bg-muted/30 rounded-lg">
+                                            No versions will be kept (this shouldn't happen).
+                                          </div>
+                                        )}
+                                      </div>
+                                      
+                                      {/* Versions to Remove */}
+                                      <div className="space-y-2">
+                                        <div className="flex items-center gap-2 text-sm font-medium text-red-500">
+                                          <Trash2 className="h-4 w-4" />
+                                          Versions to Remove ({smartCleanupPreviewData.removed.length})
+                                        </div>
+                                        {smartCleanupPreviewData.removed.length > 0 ? (
+                                          <div className="border border-red-200 dark:border-red-900/50 rounded-lg overflow-hidden bg-red-50/50 dark:bg-red-950/20">
+                                            <div className="max-h-48 overflow-auto">
+                                              <table className="w-full text-xs">
+                                                <thead className="bg-red-100/50 dark:bg-red-900/30 sticky top-0">
+                                                  <tr>
+                                                    <th className="px-3 py-2 text-left font-medium">Preset</th>
+                                                    <th className="px-3 py-2 text-left font-medium">Version</th>
+                                                    <th className="px-3 py-2 text-left font-medium">PnL</th>
+                                                    <th className="px-3 py-2 text-left font-medium">Win Rate</th>
+                                                    <th className="px-3 py-2 text-left font-medium">Sharpe</th>
+                                                    <th className="px-3 py-2 text-left font-medium">Reason</th>
+                                                  </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-red-200/50 dark:divide-red-900/30">
+                                                  {smartCleanupPreviewData.removed.map((item) => (
+                                                    <tr key={item.version.id} className="hover:bg-red-100/30 dark:hover:bg-red-900/20">
+                                                      <td className="px-3 py-2 font-medium">Preset {item.slot}</td>
+                                                      <td className="px-3 py-2">
+                                                        <span className="truncate max-w-[120px] inline-block">
+                                                          {item.version.data.label}
+                                                        </span>
+                                                      </td>
+                                                      <td className={cn(
+                                                        "px-3 py-2",
+                                                        item.version.performance?.totalPnlPercent && item.version.performance.totalPnlPercent >= 0 
+                                                          ? "text-green-600" 
+                                                          : "text-red-500"
+                                                      )}>
+                                                        {item.version.performance 
+                                                          ? `${item.version.performance.totalPnlPercent >= 0 ? '+' : ''}${item.version.performance.totalPnlPercent.toFixed(2)}%`
+                                                          : '—'
+                                                        }
+                                                      </td>
+                                                      <td className="px-3 py-2">
+                                                        {item.version.performance 
+                                                          ? `${item.version.performance.winRate.toFixed(1)}%`
+                                                          : '—'
+                                                        }
+                                                      </td>
+                                                      <td className="px-3 py-2">
+                                                        {item.version.performance 
+                                                          ? item.version.performance.sharpeRatio.toFixed(2)
+                                                          : '—'
+                                                        }
+                                                      </td>
+                                                      <td className="px-3 py-2">
+                                                        <span className="text-[10px] text-muted-foreground">
+                                                          {item.version.performance ? 'Lower performance' : 'No performance data'}
+                                                        </span>
+                                                      </td>
+                                                    </tr>
+                                                  ))}
+                                                </tbody>
+                                              </table>
+                                            </div>
+                                          </div>
+                                        ) : (
+                                          <div className="text-xs text-muted-foreground p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+                                            No versions will be removed. All versions are either pinned or within the keep limit.
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+                                  
+                                  <DialogFooter className="gap-2 sm:gap-0">
+                                    <Button
+                                      variant="outline"
+                                      onClick={() => {
+                                        setSmartCleanupPreviewOpen(false);
+                                        setSmartCleanupPreviewData(null);
+                                      }}
+                                    >
+                                      Cancel
+                                    </Button>
+                                    <Button
+                                      variant="default"
+                                      className="bg-purple-600 hover:bg-purple-700"
+                                      disabled={!smartCleanupPreviewData || smartCleanupPreviewData.removed.length === 0}
+                                      onClick={() => {
+                                        if (onSmartCleanup) {
+                                          onSmartCleanup(pendingSmartCleanupKeepCount);
+                                        }
+                                        setSmartCleanupPreviewOpen(false);
+                                        setSmartCleanupPreviewData(null);
+                                      }}
+                                    >
+                                      <Sparkles className="h-4 w-4 mr-1.5" />
+                                      Remove {smartCleanupPreviewData?.removed.length || 0} Version{(smartCleanupPreviewData?.removed.length || 0) !== 1 ? 's' : ''}
+                                    </Button>
+                                  </DialogFooter>
+                                </DialogContent>
+                              </Dialog>
                             </>
                           );
                         })()}
