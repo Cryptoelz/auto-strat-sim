@@ -256,6 +256,7 @@ interface BacktestConfigFormProps {
   onCancelPendingSave?: (slot: '4' | '5' | '6') => void;
   pendingSlots?: Set<'4' | '5' | '6'>;
   getPendingSaveStartTime?: (slot: '4' | '5' | '6') => number | null;
+  wasRecentlySaved?: (slot: '4' | '5' | '6') => boolean;
   
   // External version history dialog control
   versionHistoryOpen?: boolean;
@@ -332,6 +333,7 @@ export function BacktestConfigForm({
   onCancelPendingSave,
   pendingSlots,
   getPendingSaveStartTime,
+  wasRecentlySaved,
   versionHistoryOpen: externalVersionHistoryOpen,
   onVersionHistoryOpenChange,
 }: BacktestConfigFormProps) {
@@ -926,6 +928,7 @@ export function BacktestConfigForm({
                   const isUnsaved = hasUnsavedChanges(slot);
                   const isActive = activeCustomPresetSlot === slot;
                   const isPending = hasPendingSave?.(slot) ?? false;
+                  const justSaved = wasRecentlySaved?.(slot) ?? false;
                   return (
                     <div key={slot} className="relative group">
                       <Tooltip>
@@ -934,9 +937,10 @@ export function BacktestConfigForm({
                             variant={hasData ? "secondary" : "ghost"}
                             size="sm"
                             className={cn(
-                            "h-7 min-w-7 px-1 text-xs font-mono",
+                            "h-7 min-w-7 px-1 text-xs font-mono transition-all",
                             hasData && "ring-1 ring-primary/50 pr-14",
-                            isActive && "ring-2 ring-primary"
+                            isActive && "ring-2 ring-primary",
+                            justSaved && "ring-2 ring-green-500 bg-green-500/20 animate-pulse"
                           )}
                             onClick={() => {
                               if (hasData && onLoadCustomPreset) {
@@ -958,15 +962,25 @@ export function BacktestConfigForm({
                             ) : (
                               slot
                             )}
+                            {/* Save complete indicator (green check) */}
+                            {justSaved && (
+                              <span className="absolute -top-1 -right-1 flex h-3 w-3 animate-scale-in">
+                                <span className="relative inline-flex items-center justify-center rounded-full h-3 w-3 bg-green-500 text-white">
+                                  <svg className="h-2 w-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                  </svg>
+                                </span>
+                              </span>
+                            )}
                             {/* Pending save indicator (takes priority over unsaved) */}
-                            {isPending && (
+                            {isPending && !justSaved && (
                               <span className="absolute -top-1 -right-1 flex h-3 w-3" title="Saving...">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
                                 <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500" />
                               </span>
                             )}
                             {/* Unsaved changes indicator */}
-                            {isUnsaved && !isPending && (
+                            {isUnsaved && !isPending && !justSaved && (
                               <span className="absolute -top-1 -right-1 flex h-3 w-3">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
                                 <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500" />
@@ -1636,7 +1650,16 @@ export function BacktestConfigForm({
                             </div>
                           );
                         })()}
-                        {versionHistorySlot && onManualSaveVersion && getCustomPresetData && !hasPendingSave?.(versionHistorySlot) && (
+                        {/* Save complete animation */}
+                        {versionHistorySlot && wasRecentlySaved?.(versionHistorySlot) && !hasPendingSave?.(versionHistorySlot) && (
+                          <div className="flex items-center gap-1.5 text-xs text-green-500 animate-fade-in">
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span className="font-medium">Saved!</span>
+                          </div>
+                        )}
+                        {versionHistorySlot && onManualSaveVersion && getCustomPresetData && !hasPendingSave?.(versionHistorySlot) && !wasRecentlySaved?.(versionHistorySlot) && (
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
