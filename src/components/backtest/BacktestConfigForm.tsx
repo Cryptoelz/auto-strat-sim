@@ -331,6 +331,38 @@ export function BacktestConfigForm({
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [versionHistorySlot, batchSelectMode, batchSelectedVersions, getPresetVersionHistory, onDeleteVersions]);
+
+  // Track currently active custom preset slot for Ctrl+S shortcut
+  const [activeCustomPresetSlot, setActiveCustomPresetSlot] = useState<'4' | '5' | '6' | null>(null);
+
+  // Ctrl+S keyboard shortcut to manually save a version
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl/Cmd + S to save version
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        // Check if we have an active custom preset to save
+        const slotToSave = activeCustomPresetSlot || versionHistorySlot;
+        
+        if (slotToSave && onManualSaveVersion && getCustomPresetData) {
+          e.preventDefault();
+          const presetData = getCustomPresetData(slotToSave);
+          if (presetData) {
+            onManualSaveVersion(slotToSave, {
+              ...presetData,
+              description: `Manual save: ${presetData.label}`,
+            });
+            toast.success('Version saved', {
+              description: `Saved "${presetData.label}" to version history (Ctrl+S)`,
+            });
+          }
+        }
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [activeCustomPresetSlot, versionHistorySlot, onManualSaveVersion, getCustomPresetData]);
+
   // Count existing presets (moved up for use in handleFileDrop)
   const existingPresetCount = useMemo(() => {
     if (!customPresetSlots) return 0;
@@ -514,6 +546,7 @@ export function BacktestConfigForm({
     if (!onApplyPreset) return;
     const config = RISK_PRESETS[preset];
     onApplyPreset(preset);
+    setActiveCustomPresetSlot(null); // Clear active custom preset when applying built-in
     toast.success(`${config.label} preset applied`, {
       description: `Position: ${config.positionSizePercent}% · SL: ${config.stopLossPercent}% · TP: ${config.takeProfitPercent}% · SMA: ${config.fastSMA}/${config.slowSMA}`,
     });
@@ -806,6 +839,7 @@ export function BacktestConfigForm({
                             onClick={() => {
                               if (hasData && onLoadCustomPreset) {
                                 if (onLoadCustomPreset(slot)) {
+                                  setActiveCustomPresetSlot(slot);
                                   toast.success(`${presetData?.label || `Preset ${slot}`} loaded`, {
                                     description: presetData ? `Position: ${presetData.positionSizePercent}% · SL: ${presetData.stopLossPercent}% · TP: ${presetData.takeProfitPercent}%` : undefined,
                                   });
