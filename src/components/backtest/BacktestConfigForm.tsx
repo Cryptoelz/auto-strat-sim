@@ -288,6 +288,7 @@ interface BacktestConfigFormProps {
   cleanupThreshold?: number;
   onCleanupThresholdChange?: (threshold: number) => void;
   lastCleanupCount?: number;
+  onManualCleanup?: (count?: number) => number;
 }
 
 export function BacktestConfigForm({
@@ -372,6 +373,7 @@ export function BacktestConfigForm({
   cleanupThreshold = 80,
   onCleanupThresholdChange,
   lastCleanupCount = 0,
+  onManualCleanup,
 }: BacktestConfigFormProps) {
   const [copied, setCopied] = useState(false);
   const [clearPresetsConfirmOpen, setClearPresetsConfirmOpen] = useState(false);
@@ -2043,6 +2045,19 @@ export function BacktestConfigForm({
                             </p>
                           )}
                         </div>
+                        
+                        {/* Manual Cleanup Button */}
+                        {onManualCleanup && totalVersions > 0 && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full h-7 text-xs"
+                            onClick={() => onManualCleanup()}
+                          >
+                            <Zap className="h-3 w-3 mr-1.5" />
+                            Clean Up Old Versions
+                          </Button>
+                        )}
                         
                         {/* Clear All History Button */}
                         {onClearAllVersionHistory && totalVersions > 0 && (
