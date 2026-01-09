@@ -50,7 +50,8 @@ import {
   Clock,
   Undo2,
   HardDrive,
-  Zap
+  Zap,
+  Sparkles
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -292,6 +293,10 @@ interface BacktestConfigFormProps {
   onUndoManualCleanup?: () => boolean;
   canUndoCleanup?: boolean;
   cleanupBackupTimestamp?: number | null;
+  
+  // Smart cleanup
+  onSmartCleanup?: (keepCount?: number) => number;
+  versionsWithPerformanceCount?: number;
 }
 
 export function BacktestConfigForm({
@@ -380,6 +385,8 @@ export function BacktestConfigForm({
   onUndoManualCleanup,
   canUndoCleanup = false,
   cleanupBackupTimestamp,
+  onSmartCleanup,
+  versionsWithPerformanceCount = 0,
 }: BacktestConfigFormProps) {
   const [copied, setCopied] = useState(false);
   const [clearPresetsConfirmOpen, setClearPresetsConfirmOpen] = useState(false);
@@ -2192,6 +2199,71 @@ export function BacktestConfigForm({
                                       <p className="text-xs text-muted-foreground whitespace-pre-line">{getPreviewText(unpinnedCount)}</p>
                                     </TooltipContent>
                                   </Tooltip>
+                                  
+                                  {onSmartCleanup && (
+                                    <>
+                                      <DropdownMenuSeparator />
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <DropdownMenuItem 
+                                            onClick={() => onSmartCleanup(3)}
+                                            disabled={versionsWithPerformanceCount === 0}
+                                            className="text-xs text-purple-600 cursor-pointer"
+                                          >
+                                            <Sparkles className="h-3 w-3 mr-1.5" />
+                                            Smart cleanup (keep best 3)
+                                          </DropdownMenuItem>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="left" className="max-w-[220px]">
+                                          <p className="text-xs font-medium mb-1">Performance-based cleanup</p>
+                                          <p className="text-xs text-muted-foreground">
+                                            Keeps the top 3 best-performing versions per preset based on Sharpe ratio, profit factor, and win rate.
+                                            {versionsWithPerformanceCount === 0 && (
+                                              <span className="block mt-1 text-amber-500">
+                                                Run backtests first to record performance data.
+                                              </span>
+                                            )}
+                                          </p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <DropdownMenuItem 
+                                            onClick={() => onSmartCleanup(5)}
+                                            disabled={versionsWithPerformanceCount === 0}
+                                            className="text-xs text-purple-600 cursor-pointer"
+                                          >
+                                            <Sparkles className="h-3 w-3 mr-1.5" />
+                                            Smart cleanup (keep best 5)
+                                          </DropdownMenuItem>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="left" className="max-w-[220px]">
+                                          <p className="text-xs font-medium mb-1">Performance-based cleanup</p>
+                                          <p className="text-xs text-muted-foreground">
+                                            Keeps the top 5 best-performing versions per preset based on Sharpe ratio, profit factor, and win rate.
+                                          </p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <DropdownMenuItem 
+                                            onClick={() => onSmartCleanup(1)}
+                                            disabled={versionsWithPerformanceCount === 0}
+                                            className="text-xs text-purple-600 cursor-pointer"
+                                          >
+                                            <Sparkles className="h-3 w-3 mr-1.5" />
+                                            Smart cleanup (keep best only)
+                                          </DropdownMenuItem>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="left" className="max-w-[220px]">
+                                          <p className="text-xs font-medium mb-1">Keep only the best</p>
+                                          <p className="text-xs text-muted-foreground">
+                                            Removes all but the single best-performing version per preset.
+                                          </p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </>
+                                  )}
                                 </DropdownMenuContent>
                               </DropdownMenu>
                               

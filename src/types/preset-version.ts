@@ -12,6 +12,26 @@ export const PRESET_TAGS = [
 export type PresetTagValue = typeof PRESET_TAGS[number]['value'];
 
 /**
+ * Performance metrics from a backtest run
+ */
+export interface VersionPerformance {
+  /** Total profit/loss as percentage */
+  totalPnlPercent: number;
+  /** Percentage of winning trades (0-100) */
+  winRate: number;
+  /** Maximum peak-to-trough decline as percentage */
+  maxDrawdown: number;
+  /** Ratio of gross profits to gross losses */
+  profitFactor: number;
+  /** Risk-adjusted return metric */
+  sharpeRatio: number;
+  /** Number of trades executed */
+  totalTrades: number;
+  /** Timestamp when this performance was recorded */
+  recordedAt: number;
+}
+
+/**
  * A single version snapshot of a preset
  */
 export interface PresetVersion {
@@ -25,6 +45,8 @@ export interface PresetVersion {
   pinned?: boolean;
   /** Optional tags for categorizing this version */
   tags?: PresetTagValue[];
+  /** Optional performance metrics from backtest */
+  performance?: VersionPerformance;
   /** The preset values at this version */
   data: {
     label: string;

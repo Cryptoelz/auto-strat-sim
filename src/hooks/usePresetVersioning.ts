@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { PresetVersion, PresetVersionHistory, MAX_VERSIONS_PER_SLOT, PresetTagValue } from '@/types/preset-version';
+import { PresetVersion, PresetVersionHistory, MAX_VERSIONS_PER_SLOT, PresetTagValue, VersionPerformance } from '@/types/preset-version';
 import { playSaveSound } from '@/lib/sounds';
 import { toast } from 'sonner';
 
@@ -337,6 +337,165 @@ export function usePresetVersioning() {
       cleanupUndoTimeoutRef.current = null;
     }
   }, []);
+
+  /**
+   * Update performance metrics for a specific version
+   */
+  const updateVersionPerformance = useCallback((
+    slot: '4' | '5' | '6',
+    versionId: string,
+    performance: VersionPerformance
+  ): boolean => {
+    const version = versionHistory[slot].find(v => v.id === versionId);
+    if (!version) return false;
+
+    setVersionHistory(prev => ({
+      ...prev,
+      [slot]: prev[slot].map(v => 
+        v.id === versionId ? { ...v, performance } : v
+      ),
+    }));
+
+    return true;
+  }, [versionHistory]);
+
+  /**
+   * Calculate a composite performance score for ranking versions
+   * Higher is better. Returns -Infinity for versions without performance data.
+   */
+  const calculatePerformanceScore = useCallback((version: PresetVersion): number => {
+    if (!version.performance) return -Infinity;
+    
+    const p = version.performance;
+    
+    // Composite score: prioritize Sharpe, profit factor, win rate, and penalize drawdown
+    // Sharpe: typically -3 to +3, weight heavily
+    // Profit Factor: typically 0 to 5+, weight moderately
+    // Win Rate: 0-100, normalize
+    // Drawdown: 0-100, penalize
+    
+    const sharpeScore = p.sharpeRatio * 20; // -60 to +60
+    const profitFactorScore = Math.min(p.profitFactor, 5) * 10; // 0 to 50
+    const winRateScore = p.winRate * 0.3; // 0 to 30
+    const drawdownPenalty = p.maxDrawdown * 0.5; // 0 to 50 penalty
+    const pnlScore = Math.max(-50, Math.min(50, p.totalPnlPercent)); // -50 to 50
+    
+    return sharpeScore + profitFactorScore + winRateScore - drawdownPenalty + pnlScore;
+  }, []);
+
+  /**
+   * Smart cleanup: keeps the best-performing versions based on backtest metrics
+   * @param keepCount Number of best-performing versions to keep per slot
+   * @returns Number of versions removed
+   */
+  const smartCleanup = useCallback((keepCount: number = 3): number => {
+    let removed = 0;
+    const removedVersions: { slot: '4' | '5' | '6'; label: string }[] = [];
+    const backupVersions: { slot: '4' | '5' | '6'; version: PresetVersion }[] = [];
+    
+    setVersionHistory(prev => {
+      const slots: ('4' | '5' | '6')[] = ['4', '5', '6'];
+      const newHistory = { ...prev };
+      
+      slots.forEach(slot => {
+        const versions = prev[slot];
+        if (versions.length === 0) return;
+        
+        // Separate pinned and unpinned versions
+        const pinned = versions.filter(v => v.pinned);
+        const unpinned = versions.filter(v => !v.pinned);
+        
+        if (unpinned.length <= keepCount) return;
+        
+        // Separate versions with and without performance data
+        const withPerformance = unpinned.filter(v => v.performance);
+        const withoutPerformance = unpinned.filter(v => !v.performance);
+        
+        // Sort by performance score (highest first)
+        const rankedPerformance = [...withPerformance].sort((a, b) => 
+          calculatePerformanceScore(b) - calculatePerformanceScore(a)
+        );
+        
+        // Keep the best performing versions
+        const toKeepFromPerformance = rankedPerformance.slice(0, keepCount);
+        const toRemoveFromPerformance = rankedPerformance.slice(keepCount);
+        
+        // If we have room, keep some versions without performance data (oldest first to remove)
+        const remainingSlots = Math.max(0, keepCount - toKeepFromPerformance.length);
+        const toKeepWithoutPerformance = withoutPerformance.slice(-remainingSlots); // Keep most recent
+        const toRemoveWithoutPerformance = withoutPerformance.slice(0, withoutPerformance.length - remainingSlots);
+        
+        const toRemove = [...toRemoveFromPerformance, ...toRemoveWithoutPerformance];
+        const idsToRemove = new Set(toRemove.map(v => v.id));
+        
+        toRemove.forEach(v => {
+          removedVersions.push({ slot, label: v.data.label });
+          backupVersions.push({ slot, version: v });
+          removed++;
+        });
+        
+        newHistory[slot] = [...pinned, ...toKeepFromPerformance, ...toKeepWithoutPerformance]
+          .sort((a, b) => b.savedAt - a.savedAt);
+      });
+      
+      return newHistory;
+    });
+
+    if (removed > 0) {
+      // Store backup for undo
+      setCleanupBackup({ versions: backupVersions, timestamp: Date.now() });
+      
+      // Clear any existing timeout
+      if (cleanupUndoTimeoutRef.current) {
+        clearTimeout(cleanupUndoTimeoutRef.current);
+      }
+      
+      // Auto-clear backup after 30 seconds
+      cleanupUndoTimeoutRef.current = setTimeout(() => {
+        setCleanupBackup(null);
+      }, 30000);
+      
+      setLastCleanupCount(removed);
+      setTimeout(() => setLastCleanupCount(0), 5000);
+      
+      const slotCounts = removedVersions.reduce((acc, v) => {
+        acc[v.slot] = (acc[v.slot] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+      
+      const slotSummary = Object.entries(slotCounts)
+        .map(([s, c]) => `Preset ${s}: ${c}`)
+        .join(', ');
+      
+      toast.success(`Smart cleanup: ${removed} low-performing version${removed !== 1 ? 's' : ''} removed`, {
+        description: slotSummary,
+        duration: 10000,
+        action: {
+          label: 'Undo',
+          onClick: () => {
+            undoManualCleanup();
+          },
+        },
+      });
+    } else {
+      toast.info('No versions to clean up', {
+        description: 'All versions are either pinned or already optimal',
+      });
+    }
+
+    return removed;
+  }, [calculatePerformanceScore, undoManualCleanup]);
+
+  /**
+   * Get count of versions with performance data
+   */
+  const getVersionsWithPerformanceCount = useCallback((): number => {
+    const slots: ('4' | '5' | '6')[] = ['4', '5', '6'];
+    return slots.reduce((count, slot) => {
+      return count + versionHistory[slot].filter(v => v.performance).length;
+    }, 0);
+  }, [versionHistory]);
+
 
   /**
    * Trigger save animation for a slot
@@ -864,5 +1023,9 @@ export function usePresetVersioning() {
     canUndoCleanup,
     clearCleanupBackup,
     cleanupBackupTimestamp: cleanupBackup?.timestamp ?? null,
+    // Smart cleanup
+    smartCleanup,
+    updateVersionPerformance,
+    getVersionsWithPerformanceCount,
   };
 }
