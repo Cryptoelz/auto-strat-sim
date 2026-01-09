@@ -1417,6 +1417,84 @@ export function BacktestConfigForm({
                   </DialogDescription>
                 </DialogHeader>
                 
+                {/* Version History Statistics */}
+                {versionHistorySlot && getPresetVersionHistory && !compareVersions[0] && !batchSelectMode && (() => {
+                  const versions = getPresetVersionHistory(versionHistorySlot);
+                  if (versions.length < 2) return null;
+                  
+                  const oldest = versions[versions.length - 1];
+                  const newest = versions[0];
+                  
+                  // Calculate change frequency for each parameter
+                  const changeCount: Record<string, number> = {
+                    label: 0,
+                    fastSMA: 0,
+                    slowSMA: 0,
+                    positionSizePercent: 0,
+                    stopLossPercent: 0,
+                    takeProfitPercent: 0,
+                  };
+                  
+                  for (let i = 0; i < versions.length - 1; i++) {
+                    const current = versions[i];
+                    const previous = versions[i + 1];
+                    
+                    if (current.data.label !== previous.data.label) changeCount.label++;
+                    if (current.data.fastSMA !== previous.data.fastSMA) changeCount.fastSMA++;
+                    if (current.data.slowSMA !== previous.data.slowSMA) changeCount.slowSMA++;
+                    if (current.data.positionSizePercent !== previous.data.positionSizePercent) changeCount.positionSizePercent++;
+                    if (current.data.stopLossPercent !== previous.data.stopLossPercent) changeCount.stopLossPercent++;
+                    if (current.data.takeProfitPercent !== previous.data.takeProfitPercent) changeCount.takeProfitPercent++;
+                  }
+                  
+                  const paramLabels: Record<string, string> = {
+                    label: 'Name',
+                    fastSMA: 'Fast SMA',
+                    slowSMA: 'Slow SMA',
+                    positionSizePercent: 'Position Size',
+                    stopLossPercent: 'Stop Loss',
+                    takeProfitPercent: 'Take Profit',
+                  };
+                  
+                  // Get top 3 most changed parameters (excluding those with 0 changes)
+                  const topChanged = Object.entries(changeCount)
+                    .filter(([_, count]) => count > 0)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 3);
+                  
+                  return (
+                    <div className="bg-muted/30 rounded-lg p-3 text-xs space-y-2">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-4">
+                          <div>
+                            <span className="text-muted-foreground">Versions: </span>
+                            <span className="font-medium">{versions.length}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Range: </span>
+                            <span className="font-medium">
+                              {format(new Date(oldest.savedAt), 'MMM d')} — {format(new Date(newest.savedAt), 'MMM d, yyyy')}
+                            </span>
+                          </div>
+                        </div>
+                        {topChanged.length > 0 && (
+                          <div className="flex items-center gap-1">
+                            <span className="text-muted-foreground">Most changed: </span>
+                            {topChanged.map(([key, count], idx) => (
+                              <span key={key} className="inline-flex items-center">
+                                <span className="px-1.5 py-0.5 bg-primary/10 text-primary rounded text-[10px]">
+                                  {paramLabels[key]} ({count})
+                                </span>
+                                {idx < topChanged.length - 1 && <span className="mx-0.5 text-muted-foreground">,</span>}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
+                
                 {/* Comparison View */}
                 {compareVersions[0] && compareVersions[1] && versionHistorySlot && getPresetVersionHistory && (() => {
                   const versions = getPresetVersionHistory(versionHistorySlot);
