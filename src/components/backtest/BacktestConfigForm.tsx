@@ -186,6 +186,13 @@ interface BacktestConfigFormProps {
   onAutoSaveVersionsChange?: (enabled: boolean) => void;
   onManualSaveVersion?: (slot: '4' | '5' | '6', data: PresetVersion['data']) => PresetVersion;
   
+  // Debounce control
+  debounceDelay?: number;
+  onDebounceDelayChange?: (delay: number) => void;
+  hasPendingSave?: (slot: '4' | '5' | '6') => boolean;
+  onFlushPendingSave?: (slot: '4' | '5' | '6') => PresetVersion | null;
+  pendingSlots?: Set<'4' | '5' | '6'>;
+  
   // External version history dialog control
   versionHistoryOpen?: boolean;
   onVersionHistoryOpenChange?: (open: boolean) => void;
@@ -254,6 +261,11 @@ export function BacktestConfigForm({
   autoSaveVersions = true,
   onAutoSaveVersionsChange,
   onManualSaveVersion,
+  debounceDelay = 3000,
+  onDebounceDelayChange,
+  hasPendingSave,
+  onFlushPendingSave,
+  pendingSlots,
   versionHistoryOpen: externalVersionHistoryOpen,
   onVersionHistoryOpenChange,
 }: BacktestConfigFormProps) {
@@ -847,6 +859,7 @@ export function BacktestConfigForm({
                   const presetData = getCustomPresetData?.(slot);
                   const isUnsaved = hasUnsavedChanges(slot);
                   const isActive = activeCustomPresetSlot === slot;
+                  const isPending = hasPendingSave?.(slot) ?? false;
                   return (
                     <div key={slot} className="relative group">
                       <Tooltip>
@@ -879,8 +892,15 @@ export function BacktestConfigForm({
                             ) : (
                               slot
                             )}
+                            {/* Pending save indicator (takes priority over unsaved) */}
+                            {isPending && (
+                              <span className="absolute -top-1 -right-1 flex h-3 w-3" title="Saving...">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+                                <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500" />
+                              </span>
+                            )}
                             {/* Unsaved changes indicator */}
-                            {isUnsaved && (
+                            {isUnsaved && !isPending && (
                               <span className="absolute -top-1 -right-1 flex h-3 w-3">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
                                 <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500" />
@@ -895,7 +915,10 @@ export function BacktestConfigForm({
                               <p>SMA: {presetData.fastSMA}/{presetData.slowSMA}</p>
                               <p>Position: {presetData.positionSizePercent}%</p>
                               <p>SL: {presetData.stopLossPercent}% · TP: {presetData.takeProfitPercent}%</p>
-                              {isUnsaved && (
+                              {isPending && (
+                                <p className="text-blue-500 mt-1 font-medium">⏳ Saving version...</p>
+                              )}
+                              {isUnsaved && !isPending && (
                                 <p className="text-amber-500 mt-1 font-medium">⚠ Unsaved changes · Ctrl+S to save</p>
                               )}
                               <p className="text-muted-foreground mt-1">Click to load · Shift+{slot} to overwrite</p>
@@ -1493,53 +1516,108 @@ export function BacktestConfigForm({
                   </DialogDescription>
                 </DialogHeader>
                 
-                {/* Auto-save Toggle */}
+                {/* Auto-save Toggle with Debounce Control */}
                 {onAutoSaveVersionsChange && !compareVersions[0] && !batchSelectMode && (
-                  <div className="flex items-center justify-between py-2 px-3 bg-muted/30 rounded-lg gap-3">
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                      <History className="h-4 w-4 text-muted-foreground shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium">Auto-save versions</p>
-                        <p className="text-xs text-muted-foreground">Automatically save when presets change</p>
+                  <div className="space-y-3 py-2 px-3 bg-muted/30 rounded-lg">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <History className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium">Auto-save versions</p>
+                          <p className="text-xs text-muted-foreground">Automatically save when presets change</p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {versionHistorySlot && onManualSaveVersion && getCustomPresetData && (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {/* Pending save indicator */}
+                        {versionHistorySlot && hasPendingSave?.(versionHistorySlot) && (
+                          <div className="flex items-center gap-1.5 text-xs text-amber-500">
+                            <span className="relative flex h-2 w-2">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
+                            </span>
+                            <span>Saving...</span>
+                            {onFlushPendingSave && (
                               <Button
-                                variant="outline"
+                                variant="ghost"
                                 size="sm"
-                                className="h-7 text-xs"
+                                className="h-5 px-1.5 text-xs"
                                 onClick={() => {
-                                  const presetData = getCustomPresetData(versionHistorySlot);
-                                  if (presetData) {
-                                    onManualSaveVersion(versionHistorySlot, {
-                                      ...presetData,
-                                      description: `Manual save: ${presetData.label}`,
-                                    });
-                                    toast.success('Version saved', {
-                                      description: 'Current state saved to version history',
-                                    });
+                                  const version = onFlushPendingSave(versionHistorySlot);
+                                  if (version) {
+                                    toast.success('Version saved immediately');
                                   }
                                 }}
                               >
-                                <Save className="h-3 w-3 mr-1" />
-                                Save Now
+                                Save now
                               </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Manually save current state as a new version</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      )}
-                      <Switch
-                        checked={autoSaveVersions}
-                        onCheckedChange={onAutoSaveVersionsChange}
-                      />
+                            )}
+                          </div>
+                        )}
+                        {versionHistorySlot && onManualSaveVersion && getCustomPresetData && !hasPendingSave?.(versionHistorySlot) && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-7 text-xs"
+                                  onClick={() => {
+                                    const presetData = getCustomPresetData(versionHistorySlot);
+                                    if (presetData) {
+                                      onManualSaveVersion(versionHistorySlot, {
+                                        ...presetData,
+                                        description: `Manual save: ${presetData.label}`,
+                                      });
+                                      toast.success('Version saved', {
+                                        description: 'Current state saved to version history',
+                                      });
+                                    }
+                                  }}
+                                >
+                                  <Save className="h-3 w-3 mr-1" />
+                                  Save Now
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Manually save current state as a new version</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                        <Switch
+                          checked={autoSaveVersions}
+                          onCheckedChange={onAutoSaveVersionsChange}
+                        />
+                      </div>
                     </div>
+                    
+                    {/* Debounce delay slider */}
+                    {autoSaveVersions && onDebounceDelayChange && (
+                      <div className="space-y-2 pt-2 border-t border-border/50">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs text-muted-foreground">Debounce delay</Label>
+                          <span className="text-xs font-mono text-muted-foreground">
+                            {debounceDelay === 0 ? 'Instant' : `${(debounceDelay / 1000).toFixed(1)}s`}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="range"
+                            min={0}
+                            max={10000}
+                            step={500}
+                            value={debounceDelay}
+                            onChange={(e) => onDebounceDelayChange(parseInt(e.target.value))}
+                            className="h-2 accent-primary cursor-pointer"
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {debounceDelay === 0 
+                            ? 'Saves immediately on every change (may create many versions)'
+                            : `Waits ${(debounceDelay / 1000).toFixed(1)} seconds after changes before saving`}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
                 

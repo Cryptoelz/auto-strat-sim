@@ -790,6 +790,13 @@ export function useBacktestConfig() {
     bulkToggleVersionTag: presetVersioning.bulkToggleVersionTag,
     autoSaveVersions: presetVersioning.autoSaveEnabled,
     setAutoSaveVersions: presetVersioning.setAutoSaveEnabled,
-    manualSaveVersion: presetVersioning.addVersion,
+    manualSaveVersion: presetVersioning.addVersionImmediate,
+    // Debounce controls
+    debounceDelay: presetVersioning.debounceDelay,
+    setDebounceDelay: presetVersioning.setDebounceDelay,
+    hasPendingSave: presetVersioning.hasPendingSave,
+    flushPendingSave: presetVersioning.flushPendingSave,
+    cancelPendingSave: presetVersioning.cancelPendingSave,
+    pendingSlots: presetVersioning.pendingSlots,
   };
 }
