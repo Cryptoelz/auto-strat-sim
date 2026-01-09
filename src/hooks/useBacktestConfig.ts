@@ -814,5 +814,9 @@ export function useBacktestConfig() {
     undoManualCleanup: presetVersioning.undoManualCleanup,
     canUndoCleanup: presetVersioning.canUndoCleanup,
     cleanupBackupTimestamp: presetVersioning.cleanupBackupTimestamp,
+    // Smart cleanup
+    smartCleanup: presetVersioning.smartCleanup,
+    updateVersionPerformance: presetVersioning.updateVersionPerformance,
+    getVersionsWithPerformanceCount: presetVersioning.getVersionsWithPerformanceCount,
   };
 }
