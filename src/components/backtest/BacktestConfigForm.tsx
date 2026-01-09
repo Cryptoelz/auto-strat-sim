@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Asset } from '@/types/trading';
 import { BacktestResult, SavedRun } from '@/types/backtest';
-import { PresetVersion, PRESET_TAGS, PresetTagValue } from '@/types/preset-version';
+import { PresetVersion, PRESET_TAGS, PresetTagValue, PresetVersionHistory } from '@/types/preset-version';
 import { VersionTimeline } from './VersionTimeline';
 import { ParameterSparklines } from './ParameterSparklines';
 import { VersionDiffSparklines } from './VersionDiffSparklines';
@@ -48,7 +48,8 @@ import {
   Volume2,
   ChevronDown,
   Clock,
-  Undo2
+  Undo2,
+  HardDrive
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -274,6 +275,10 @@ interface BacktestConfigFormProps {
   // External version history dialog control
   versionHistoryOpen?: boolean;
   onVersionHistoryOpenChange?: (open: boolean) => void;
+  
+  // Storage usage
+  getTotalVersionCount?: () => number;
+  versionHistory?: PresetVersionHistory;
 }
 
 export function BacktestConfigForm({
@@ -350,6 +355,8 @@ export function BacktestConfigForm({
   wasCancelledRecently,
   versionHistoryOpen: externalVersionHistoryOpen,
   onVersionHistoryOpenChange,
+  getTotalVersionCount,
+  versionHistory,
 }: BacktestConfigFormProps) {
   const [copied, setCopied] = useState(false);
   const [clearPresetsConfirmOpen, setClearPresetsConfirmOpen] = useState(false);
@@ -1843,6 +1850,89 @@ export function BacktestConfigForm({
                     )}
                   </div>
                 )}
+                
+                {/* Storage Usage Indicator */}
+                {getTotalVersionCount && versionHistory && !compareVersions[0] && !batchSelectMode && (() => {
+                  const totalVersions = getTotalVersionCount();
+                  if (totalVersions === 0) return null;
+                  
+                  // Calculate storage usage
+                  const storageKey = 'backtest-preset-versions';
+                  let storageBytes = 0;
+                  try {
+                    const stored = localStorage.getItem(storageKey);
+                    if (stored) {
+                      storageBytes = new Blob([stored]).size;
+                    }
+                  } catch {
+                    // Ignore storage access errors
+                  }
+                  
+                  const formatBytes = (bytes: number): string => {
+                    if (bytes < 1024) return `${bytes} B`;
+                    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+                    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+                  };
+                  
+                  // Approximate max (5MB is typical localStorage limit)
+                  const maxBytes = 5 * 1024 * 1024;
+                  const usagePercent = Math.min((storageBytes / maxBytes) * 100, 100);
+                  
+                  // Version counts per slot
+                  const slot4Count = versionHistory['4']?.length || 0;
+                  const slot5Count = versionHistory['5']?.length || 0;
+                  const slot6Count = versionHistory['6']?.length || 0;
+                  
+                  return (
+                    <div className="bg-muted/30 rounded-lg p-3 text-xs space-y-2">
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <HardDrive className="h-3.5 w-3.5" />
+                        <span className="font-medium">Storage Usage</span>
+                      </div>
+                      
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between text-muted-foreground">
+                          <span>Total versions</span>
+                          <span className="font-mono font-medium text-foreground">{totalVersions}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary">4</span>
+                            <span>{slot4Count}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary">5</span>
+                            <span>{slot5Count}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary">6</span>
+                            <span>{slot6Count}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between text-muted-foreground">
+                            <span>Space used</span>
+                            <span className="font-mono font-medium text-foreground">{formatBytes(storageBytes)}</span>
+                          </div>
+                          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                            <div 
+                              className={cn(
+                                "h-full rounded-full transition-all",
+                                usagePercent < 50 ? "bg-green-500" : usagePercent < 80 ? "bg-yellow-500" : "bg-red-500"
+                              )}
+                              style={{ width: `${Math.max(usagePercent, 1)}%` }}
+                            />
+                          </div>
+                          <p className="text-[10px] text-muted-foreground/70">
+                            {usagePercent.toFixed(1)}% of ~5 MB localStorage limit
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
                 
                 {/* Version History Statistics */}
                 {versionHistorySlot && getPresetVersionHistory && !compareVersions[0] && !batchSelectMode && (() => {

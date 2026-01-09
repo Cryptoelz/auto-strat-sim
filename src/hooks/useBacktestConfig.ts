@@ -801,5 +801,7 @@ export function useBacktestConfig() {
     getPendingSaveStartTime: presetVersioning.getPendingSaveStartTime,
     wasRecentlySaved: presetVersioning.wasRecentlySaved,
     wasCancelledRecently: presetVersioning.wasCancelledRecently,
+    getTotalVersionCount: presetVersioning.getTotalVersionCount,
+    versionHistory: presetVersioning.versionHistory,
   };
 }
