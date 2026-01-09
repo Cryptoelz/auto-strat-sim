@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { PresetVersion, PresetVersionHistory, MAX_VERSIONS_PER_SLOT, PresetTagValue } from '@/types/preset-version';
 import { playSaveSound } from '@/lib/sounds';
+import { toast } from 'sonner';
 
 const STORAGE_KEY = 'backtest-preset-versions';
 const AUTO_SAVE_KEY = 'backtest-preset-autosave';
@@ -128,14 +129,18 @@ export function usePresetVersioning() {
 
   /**
    * Auto-cleanup oldest unpinned versions when storage exceeds threshold
-   * Returns number of versions removed
+   * Returns cleaned history, count removed, and details of removed versions
    */
-  const performAutoCleanup = useCallback((history: PresetVersionHistory): { cleaned: PresetVersionHistory; removed: number } => {
+  const performAutoCleanup = useCallback((history: PresetVersionHistory): { 
+    cleaned: PresetVersionHistory; 
+    removed: number;
+    removedVersions: { slot: '4' | '5' | '6'; label: string; savedAt: number }[];
+  } => {
     const thresholdBytes = (cleanupThreshold / 100) * MAX_STORAGE_BYTES;
     let currentBytes = getStorageBytes(history);
     
     if (currentBytes <= thresholdBytes) {
-      return { cleaned: history, removed: 0 };
+      return { cleaned: history, removed: 0, removedVersions: [] };
     }
 
     // Collect all unpinned versions across all slots with their slot info
@@ -152,6 +157,7 @@ export function usePresetVersioning() {
     allUnpinned.sort((a, b) => a.version.savedAt - b.version.savedAt);
 
     const toRemove = new Set<string>();
+    const removedVersions: { slot: '4' | '5' | '6'; label: string; savedAt: number }[] = [];
     let testHistory = { ...history };
     let removed = 0;
 
@@ -160,6 +166,11 @@ export function usePresetVersioning() {
       if (currentBytes <= thresholdBytes) break;
       
       toRemove.add(item.version.id);
+      removedVersions.push({
+        slot: item.slot,
+        label: item.version.data.label,
+        savedAt: item.version.savedAt
+      });
       testHistory = {
         ...testHistory,
         [item.slot]: testHistory[item.slot].filter(v => v.id !== item.version.id)
@@ -168,7 +179,7 @@ export function usePresetVersioning() {
       removed++;
     }
 
-    return { cleaned: testHistory, removed };
+    return { cleaned: testHistory, removed, removedVersions };
   }, [cleanupThreshold, getStorageBytes]);
 
   /**
@@ -211,11 +222,26 @@ export function usePresetVersioning() {
       
       // Perform auto-cleanup if enabled
       if (autoCleanupEnabled) {
-        const { cleaned, removed } = performAutoCleanup(newHistory);
+        const { cleaned, removed, removedVersions } = performAutoCleanup(newHistory);
         if (removed > 0) {
           setLastCleanupCount(removed);
           // Clear after a short delay for UI feedback
-          setTimeout(() => setLastCleanupCount(0), 3000);
+          setTimeout(() => setLastCleanupCount(0), 5000);
+          
+          // Show toast notification with details
+          const slotCounts = removedVersions.reduce((acc, v) => {
+            acc[v.slot] = (acc[v.slot] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>);
+          
+          const slotSummary = Object.entries(slotCounts)
+            .map(([s, count]) => `Preset ${s}: ${count}`)
+            .join(', ');
+          
+          toast.info(`Auto-cleanup: ${removed} version${removed !== 1 ? 's' : ''} removed`, {
+            description: slotSummary,
+            duration: 5000,
+          });
         }
         return cleaned;
       }
