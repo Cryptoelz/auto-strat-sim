@@ -183,6 +183,79 @@ export function usePresetVersioning() {
   }, [cleanupThreshold, getStorageBytes]);
 
   /**
+   * Manually trigger cleanup to remove oldest unpinned versions
+   * @param count Number of versions to remove (default: removes until under 50% threshold)
+   */
+  const manualCleanup = useCallback((count?: number): number => {
+    let removed = 0;
+    const removedVersions: { slot: '4' | '5' | '6'; label: string }[] = [];
+    
+    setVersionHistory(prev => {
+      // Collect all unpinned versions across all slots
+      const allUnpinned: { slot: '4' | '5' | '6'; version: PresetVersion }[] = [];
+      const slots: ('4' | '5' | '6')[] = ['4', '5', '6'];
+      
+      slots.forEach(slot => {
+        prev[slot]
+          .filter(v => !v.pinned)
+          .forEach(version => allUnpinned.push({ slot, version }));
+      });
+
+      if (allUnpinned.length === 0) {
+        toast.info('No unpinned versions to clean up');
+        return prev;
+      }
+
+      // Sort by savedAt (oldest first)
+      allUnpinned.sort((a, b) => a.version.savedAt - b.version.savedAt);
+
+      // Determine how many to remove
+      const toRemoveCount = count ?? Math.max(1, Math.floor(allUnpinned.length / 2));
+      const versionsToRemove = allUnpinned.slice(0, toRemoveCount);
+      
+      if (versionsToRemove.length === 0) {
+        return prev;
+      }
+
+      const idsToRemove = new Set(versionsToRemove.map(v => v.version.id));
+      
+      versionsToRemove.forEach(v => {
+        removedVersions.push({ slot: v.slot, label: v.version.data.label });
+      });
+
+      const newHistory = {
+        '4': prev['4'].filter(v => !idsToRemove.has(v.id)),
+        '5': prev['5'].filter(v => !idsToRemove.has(v.id)),
+        '6': prev['6'].filter(v => !idsToRemove.has(v.id)),
+      };
+      
+      removed = versionsToRemove.length;
+      return newHistory;
+    });
+
+    if (removed > 0) {
+      setLastCleanupCount(removed);
+      setTimeout(() => setLastCleanupCount(0), 5000);
+      
+      const slotCounts = removedVersions.reduce((acc, v) => {
+        acc[v.slot] = (acc[v.slot] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+      
+      const slotSummary = Object.entries(slotCounts)
+        .map(([s, c]) => `Preset ${s}: ${c}`)
+        .join(', ');
+      
+      toast.success(`Manual cleanup: ${removed} version${removed !== 1 ? 's' : ''} removed`, {
+        description: slotSummary,
+        duration: 5000,
+      });
+    }
+
+    return removed;
+  }, []);
+
+  /**
    * Trigger save animation for a slot
    */
   const triggerSaveAnimation = useCallback((slot: '4' | '5' | '6') => {
@@ -703,5 +776,6 @@ export function usePresetVersioning() {
     setCleanupThreshold,
     lastCleanupCount,
     getStorageBytes,
+    manualCleanup,
   };
 }

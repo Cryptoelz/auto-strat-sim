@@ -459,6 +459,7 @@ export default function Backtest() {
             cleanupThreshold={config.cleanupThreshold}
             onCleanupThresholdChange={config.setCleanupThreshold}
             lastCleanupCount={config.lastCleanupCount}
+            onManualCleanup={config.manualCleanup}
           />
 
           {/* Strategy Optimizer */}
