@@ -432,6 +432,11 @@ export default function Backtest() {
             autoSaveVersions={config.autoSaveVersions}
             onAutoSaveVersionsChange={config.setAutoSaveVersions}
             onManualSaveVersion={config.manualSaveVersion}
+            debounceDelay={config.debounceDelay}
+            onDebounceDelayChange={config.setDebounceDelay}
+            hasPendingSave={config.hasPendingSave}
+            onFlushPendingSave={config.flushPendingSave}
+            pendingSlots={config.pendingSlots}
             versionHistoryOpen={versionHistoryOpen}
             onVersionHistoryOpenChange={setVersionHistoryOpen}
           />

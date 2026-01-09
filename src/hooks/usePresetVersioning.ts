@@ -1,8 +1,10 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { PresetVersion, PresetVersionHistory, MAX_VERSIONS_PER_SLOT, PresetTagValue } from '@/types/preset-version';
 
 const STORAGE_KEY = 'backtest-preset-versions';
 const AUTO_SAVE_KEY = 'backtest-preset-autosave';
+const DEBOUNCE_DELAY_KEY = 'backtest-preset-debounce-delay';
+const DEFAULT_DEBOUNCE_DELAY = 3000; // 3 seconds default
 
 /**
  * Hook to manage preset version history
@@ -27,19 +29,41 @@ export function usePresetVersioning() {
     }
   });
 
+  const [debounceDelay, setDebounceDelay] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem(DEBOUNCE_DELAY_KEY);
+      return saved !== null ? JSON.parse(saved) : DEFAULT_DEBOUNCE_DELAY;
+    } catch {
+      return DEFAULT_DEBOUNCE_DELAY;
+    }
+  });
+
+  // Debounce state for pending saves
+  const pendingVersionsRef = useRef<Map<'4' | '5' | '6', { data: PresetVersion['data']; timeoutId: NodeJS.Timeout }>>(new Map());
+  const [pendingSlots, setPendingSlots] = useState<Set<'4' | '5' | '6'>>(new Set());
+
   // Persist auto-save preference
   useEffect(() => {
     localStorage.setItem(AUTO_SAVE_KEY, JSON.stringify(autoSaveEnabled));
   }, [autoSaveEnabled]);
+
+  // Persist debounce delay preference
+  useEffect(() => {
+    localStorage.setItem(DEBOUNCE_DELAY_KEY, JSON.stringify(debounceDelay));
+  }, [debounceDelay]);
 
   // Persist to localStorage when history changes
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(versionHistory));
   }, [versionHistory]);
 
-  /**
-   * Add a new version to a slot's history
-   */
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      pendingVersionsRef.current.forEach(({ timeoutId }) => clearTimeout(timeoutId));
+    };
+  }, []);
+
   /**
    * Trim versions while preserving pinned ones
    */
@@ -56,9 +80,9 @@ export function usePresetVersioning() {
   }, []);
 
   /**
-   * Add a new version to a slot's history
+   * Internal function to immediately add a version (no debounce)
    */
-  const addVersion = useCallback((
+  const addVersionImmediate = useCallback((
     slot: '4' | '5' | '6',
     data: PresetVersion['data']
   ) => {
@@ -75,6 +99,88 @@ export function usePresetVersioning() {
 
     return version;
   }, [trimVersions]);
+
+  /**
+   * Add a new version to a slot's history with debouncing
+   * Multiple saves within the debounce delay will only create one version
+   */
+  const addVersion = useCallback((
+    slot: '4' | '5' | '6',
+    data: PresetVersion['data']
+  ) => {
+    // Clear any existing pending save for this slot
+    const existing = pendingVersionsRef.current.get(slot);
+    if (existing) {
+      clearTimeout(existing.timeoutId);
+    }
+
+    // If debounce is 0, save immediately
+    if (debounceDelay === 0) {
+      return addVersionImmediate(slot, data);
+    }
+
+    // Set up debounced save
+    const timeoutId = setTimeout(() => {
+      pendingVersionsRef.current.delete(slot);
+      setPendingSlots(prev => {
+        const next = new Set(prev);
+        next.delete(slot);
+        return next;
+      });
+      addVersionImmediate(slot, data);
+    }, debounceDelay);
+
+    pendingVersionsRef.current.set(slot, { data, timeoutId });
+    setPendingSlots(prev => new Set(prev).add(slot));
+
+    // Return a placeholder version (actual version created after debounce)
+    return {
+      id: `pending-${slot}`,
+      savedAt: Date.now(),
+      data,
+    } as PresetVersion;
+  }, [debounceDelay, addVersionImmediate]);
+
+  /**
+   * Cancel a pending debounced save for a slot
+   */
+  const cancelPendingSave = useCallback((slot: '4' | '5' | '6') => {
+    const existing = pendingVersionsRef.current.get(slot);
+    if (existing) {
+      clearTimeout(existing.timeoutId);
+      pendingVersionsRef.current.delete(slot);
+      setPendingSlots(prev => {
+        const next = new Set(prev);
+        next.delete(slot);
+        return next;
+      });
+    }
+  }, []);
+
+  /**
+   * Force save any pending version immediately
+   */
+  const flushPendingSave = useCallback((slot: '4' | '5' | '6') => {
+    const existing = pendingVersionsRef.current.get(slot);
+    if (existing) {
+      clearTimeout(existing.timeoutId);
+      pendingVersionsRef.current.delete(slot);
+      setPendingSlots(prev => {
+        const next = new Set(prev);
+        next.delete(slot);
+        return next;
+      });
+      return addVersionImmediate(slot, existing.data);
+    }
+    return null;
+  }, [addVersionImmediate]);
+
+  /**
+   * Check if a slot has a pending save
+   */
+  const hasPendingSave = useCallback((slot: '4' | '5' | '6'): boolean => {
+    return pendingSlots.has(slot);
+  }, [pendingSlots]);
 
   /**
    * Get version history for a specific slot
@@ -361,6 +467,7 @@ export function usePresetVersioning() {
   return {
     versionHistory,
     addVersion,
+    addVersionImmediate,
     getSlotHistory,
     getVersion,
     duplicateVersion,
@@ -379,5 +486,12 @@ export function usePresetVersioning() {
     canUndoDelete: deletedVersionsBackup !== null,
     autoSaveEnabled,
     setAutoSaveEnabled,
+    // Debounce controls
+    debounceDelay,
+    setDebounceDelay,
+    hasPendingSave,
+    cancelPendingSave,
+    flushPendingSave,
+    pendingSlots,
   };
 }
