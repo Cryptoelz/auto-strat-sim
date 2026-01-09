@@ -453,6 +453,7 @@ export default function Backtest() {
             onVersionHistoryOpenChange={setVersionHistoryOpen}
             getTotalVersionCount={config.getTotalVersionCount}
             versionHistory={config.versionHistory}
+            onClearAllVersionHistory={config.clearAllVersionHistory}
           />
 
           {/* Strategy Optimizer */}
