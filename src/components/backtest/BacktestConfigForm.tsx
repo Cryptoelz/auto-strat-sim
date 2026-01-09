@@ -45,8 +45,18 @@ import {
   Pin,
   Search,
   Tag,
-  Volume2
+  Volume2,
+  ChevronDown,
+  Clock,
+  Undo2
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { getSaveSoundEnabled, setSaveSoundEnabled } from '@/lib/sounds';
 
 interface TooltipLabelProps {
@@ -1017,27 +1027,101 @@ export function BacktestConfigForm({
                         </TooltipContent>
                       </Tooltip>
                       {hasData && hasPresetHistory?.(slot) && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
                             <button
                               className="absolute right-9 top-1/2 -translate-y-1/2 h-5 rounded-sm flex items-center gap-0.5 px-1 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setVersionHistorySlot(slot);
-                              }}
+                              onClick={(e) => e.stopPropagation()}
                             >
                               <History className="h-3 w-3" />
                               {versionCount > 0 && (
                                 <span className="text-[10px] font-mono leading-none">{versionCount}</span>
                               )}
+                              <ChevronDown className="h-2.5 w-2.5 opacity-50" />
                             </button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p className="text-xs">
-                              {versionCount} version{versionCount !== 1 ? 's' : ''} stored
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-64">
+                            <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+                              Recent Versions ({versionCount})
+                            </div>
+                            <DropdownMenuSeparator />
+                            {(() => {
+                              const versions = getPresetVersionHistory?.(slot) ?? [];
+                              const recentVersions = versions.slice(0, 5);
+                              if (recentVersions.length === 0) {
+                                return (
+                                  <div className="px-2 py-3 text-xs text-muted-foreground text-center">
+                                    No versions saved yet
+                                  </div>
+                                );
+                              }
+                              return recentVersions.map((version) => (
+                                <DropdownMenuItem
+                                  key={version.id}
+                                  className="flex flex-col items-start gap-0.5 py-2 cursor-pointer"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (onRestorePresetVersion?.(slot, version.id)) {
+                                      toast.success(`Restored version from ${format(new Date(version.savedAt), 'MMM d, HH:mm')}`);
+                                    }
+                                  }}
+                                >
+                                  <div className="flex items-center gap-2 w-full">
+                                    <Clock className="h-3 w-3 text-muted-foreground shrink-0" />
+                                    <span className="text-xs font-medium truncate">
+                                      {formatDistanceToNow(new Date(version.savedAt), { addSuffix: true })}
+                                    </span>
+                                    {version.pinned && (
+                                      <Pin className="h-3 w-3 text-amber-500 shrink-0 ml-auto" />
+                                    )}
+                                  </div>
+                                  <div className="text-[10px] text-muted-foreground pl-5 w-full">
+                                    <span>SMA: {version.data.fastSMA}/{version.data.slowSMA}</span>
+                                    <span className="mx-1">·</span>
+                                    <span>SL: {version.data.stopLossPercent}%</span>
+                                    <span className="mx-1">·</span>
+                                    <span>TP: {version.data.takeProfitPercent}%</span>
+                                  </div>
+                                  {version.note && (
+                                    <div className="text-[10px] text-muted-foreground/70 pl-5 truncate w-full italic">
+                                      "{version.note}"
+                                    </div>
+                                  )}
+                                </DropdownMenuItem>
+                              ));
+                            })()}
+                            {versionCount > 5 && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  className="text-xs text-center justify-center text-primary"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setVersionHistorySlot(slot);
+                                  }}
+                                >
+                                  <History className="h-3 w-3 mr-1.5" />
+                                  View all {versionCount} versions
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                            {versionCount <= 5 && versionCount > 0 && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  className="text-xs text-center justify-center text-muted-foreground"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setVersionHistorySlot(slot);
+                                  }}
+                                >
+                                  <History className="h-3 w-3 mr-1.5" />
+                                  Open full history
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       )}
                       {hasData && onRenameCustomPreset && (
                         <Tooltip>
