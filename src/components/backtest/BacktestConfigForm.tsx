@@ -17,6 +17,7 @@ import { Asset } from '@/types/trading';
 import { BacktestResult, SavedRun } from '@/types/backtest';
 import { PresetVersion, PRESET_TAGS, PresetTagValue } from '@/types/preset-version';
 import { VersionTimeline } from './VersionTimeline';
+import { ParameterSparklines } from './ParameterSparklines';
 import { ASSET_INFO } from '@/config/trading';
 import { RISK_PRESETS, RiskPreset } from '@/hooks/useBacktestConfig';
 import { format, formatDistanceToNow } from 'date-fns';
@@ -1602,6 +1603,14 @@ export function BacktestConfigForm({
                       }}
                     />
                   );
+                })()}
+                
+                {/* Parameter Sparklines */}
+                {versionHistorySlot && getPresetVersionHistory && !compareVersions[0] && !batchSelectMode && (() => {
+                  const versions = getPresetVersionHistory(versionHistorySlot);
+                  if (versions.length < 2) return null;
+                  
+                  return <ParameterSparklines versions={versions} />;
                 })()}
                 
                 {/* Comparison View */}
