@@ -44,7 +44,6 @@ const BACKTEST_SHORTCUTS = [
   { key: '⌘/Ctrl+H', description: 'Open version history' },
   { key: 'C', description: 'Toggle comparison view' },
   { key: 'D', description: 'Delete all saved runs' },
-  { key: 'Esc', description: 'Close comparison view' },
   { key: '1', description: 'Apply Conservative preset' },
   { key: '2', description: 'Apply Moderate preset' },
   { key: '3', description: 'Apply Aggressive preset' },
@@ -53,7 +52,7 @@ const BACKTEST_SHORTCUTS = [
   { key: 'Alt+4-6', description: 'Delete custom preset' },
   { key: 'Alt+0', description: 'Clear all custom presets' },
   { key: '?', description: 'Show keyboard shortcuts' },
-  { key: 'Esc', description: 'Close dialogs / unfocus' },
+  { key: 'Esc', description: 'Cancel auto-save / close dialogs' },
 ];
 
 export default function Backtest() {
@@ -81,10 +80,26 @@ export default function Backtest() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Escape works even in inputs - closes dialogs and blurs focus
+      // Escape works even in inputs - cancels pending auto-save, closes dialogs and blurs focus
       if (e.key === 'Escape') {
         e.preventDefault();
+        // Cancel any pending auto-saves for all slots
+        let cancelledAny = false;
+        (['4', '5', '6'] as const).forEach(slot => {
+          if (config.hasPendingSave(slot)) {
+            config.cancelPendingSave(slot);
+            cancelledAny = true;
+          }
+        });
+        if (cancelledAny) {
+          toast.info('Auto-save cancelled');
+        }
         setShortcutsOpen(false);
+        setVersionHistoryOpen(false);
+        // Close comparison view if open
+        if (config.showComparison) {
+          config.toggleComparison();
+        }
         // Blur any focused element
         if (document.activeElement instanceof HTMLElement) {
           document.activeElement.blur();
@@ -228,13 +243,6 @@ export default function Backtest() {
             toast.error('No saved runs', {
               description: 'Save some runs first to compare',
             });
-          }
-          break;
-        case 'Escape':
-          if (config.showComparison) {
-            e.preventDefault();
-            config.toggleComparison();
-            toast.success('Showing results');
           }
           break;
         case 'd':
