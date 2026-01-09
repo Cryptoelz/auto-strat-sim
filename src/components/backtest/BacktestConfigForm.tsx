@@ -2055,15 +2055,36 @@ export function BacktestConfigForm({
                                             {isSelected ? <Check className="h-3 w-3" /> : <GitCompare className="h-3 w-3" />}
                                           </Button>
                                           {originalIndex > 0 && onRestorePresetVersion && !compareVersions[0] && (
-                                            <Button
-                                              variant="outline"
-                                              size="sm"
-                                              className="h-7 text-xs"
-                                              onClick={() => setRestorePreviewVersionId(version.id)}
-                                            >
-                                              <RotateCcw className="h-3 w-3 mr-1" />
-                                              Restore
-                                            </Button>
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <Button
+                                                  variant="outline"
+                                                  size="sm"
+                                                  className="h-7 text-xs"
+                                                  onClick={(e) => {
+                                                    if (e.shiftKey) {
+                                                      // Quick restore - skip preview
+                                                      if (versionHistorySlot && onRestorePresetVersion(versionHistorySlot, version.id)) {
+                                                        toast.success('Version restored', {
+                                                          description: `Restored to "${version.data.label}"`,
+                                                        });
+                                                        setVersionHistorySlot(null);
+                                                      }
+                                                    } else {
+                                                      // Show preview
+                                                      setRestorePreviewVersionId(version.id);
+                                                    }
+                                                  }}
+                                                >
+                                                  <RotateCcw className="h-3 w-3 mr-1" />
+                                                  Restore
+                                                </Button>
+                                              </TooltipTrigger>
+                                              <TooltipContent>
+                                                <p>Click to preview changes</p>
+                                                <p className="text-[10px] text-muted-foreground">Shift+click to restore instantly</p>
+                                              </TooltipContent>
+                                            </Tooltip>
                                           )}
                                           {onDuplicateVersion && !compareVersions[0] && (
                                             <Tooltip>
