@@ -46,6 +46,9 @@ export function usePresetVersioning() {
   
   // Track recently saved slots for animation
   const [recentlySavedSlots, setRecentlySavedSlots] = useState<Set<'4' | '5' | '6'>>(new Set());
+  
+  // Track recently cancelled slots for shake animation
+  const [recentlyCancelledSlots, setRecentlyCancelledSlots] = useState<Set<'4' | '5' | '6'>>(new Set());
 
   // Persist auto-save preference
   useEffect(() => {
@@ -195,6 +198,15 @@ export function usePresetVersioning() {
         next.delete(slot);
         return next;
       });
+      // Trigger cancel animation
+      setRecentlyCancelledSlots(prev => new Set(prev).add(slot));
+      setTimeout(() => {
+        setRecentlyCancelledSlots(prev => {
+          const next = new Set(prev);
+          next.delete(slot);
+          return next;
+        });
+      }, 400); // Match shake animation duration
     }
   }, []);
 
@@ -556,5 +568,7 @@ export function usePresetVersioning() {
     getPendingSaveStartTime,
     wasRecentlySaved,
     recentlySavedSlots,
+    wasCancelledRecently: useCallback((slot: '4' | '5' | '6') => recentlyCancelledSlots.has(slot), [recentlyCancelledSlots]),
+    recentlyCancelledSlots,
   };
 }

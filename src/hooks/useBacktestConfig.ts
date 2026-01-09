@@ -800,5 +800,6 @@ export function useBacktestConfig() {
     pendingSlots: presetVersioning.pendingSlots,
     getPendingSaveStartTime: presetVersioning.getPendingSaveStartTime,
     wasRecentlySaved: presetVersioning.wasRecentlySaved,
+    wasCancelledRecently: presetVersioning.wasCancelledRecently,
   };
 }

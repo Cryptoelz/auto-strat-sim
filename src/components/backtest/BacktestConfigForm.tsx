@@ -257,6 +257,7 @@ interface BacktestConfigFormProps {
   pendingSlots?: Set<'4' | '5' | '6'>;
   getPendingSaveStartTime?: (slot: '4' | '5' | '6') => number | null;
   wasRecentlySaved?: (slot: '4' | '5' | '6') => boolean;
+  wasCancelledRecently?: (slot: '4' | '5' | '6') => boolean;
   
   // External version history dialog control
   versionHistoryOpen?: boolean;
@@ -334,6 +335,7 @@ export function BacktestConfigForm({
   pendingSlots,
   getPendingSaveStartTime,
   wasRecentlySaved,
+  wasCancelledRecently,
   versionHistoryOpen: externalVersionHistoryOpen,
   onVersionHistoryOpenChange,
 }: BacktestConfigFormProps) {
@@ -929,6 +931,7 @@ export function BacktestConfigForm({
                   const isActive = activeCustomPresetSlot === slot;
                   const isPending = hasPendingSave?.(slot) ?? false;
                   const justSaved = wasRecentlySaved?.(slot) ?? false;
+                  const justCancelled = wasCancelledRecently?.(slot) ?? false;
                   return (
                     <div key={slot} className="relative group">
                       <Tooltip>
@@ -940,7 +943,8 @@ export function BacktestConfigForm({
                             "h-7 min-w-7 px-1 text-xs font-mono transition-all",
                             hasData && "ring-1 ring-primary/50 pr-14",
                             isActive && "ring-2 ring-primary",
-                            justSaved && "ring-2 ring-green-500 bg-green-500/20 animate-pulse"
+                            justSaved && "ring-2 ring-green-500 bg-green-500/20 animate-pulse",
+                            justCancelled && "animate-shake ring-2 ring-destructive/50"
                           )}
                             onClick={() => {
                               if (hasData && onLoadCustomPreset) {
