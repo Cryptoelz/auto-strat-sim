@@ -826,6 +826,7 @@ export function useBacktestConfig() {
     cleanupBackupTimestamp: presetVersioning.cleanupBackupTimestamp,
     // Smart cleanup
     smartCleanup: presetVersioning.smartCleanup,
+    getSmartCleanupPreview: presetVersioning.getSmartCleanupPreview,
     updateVersionPerformance: presetVersioning.updateVersionPerformance,
     getVersionsWithPerformanceCount: presetVersioning.getVersionsWithPerformanceCount,
     // Auto performance recording

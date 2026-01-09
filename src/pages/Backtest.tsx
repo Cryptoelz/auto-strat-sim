@@ -500,6 +500,7 @@ export default function Backtest() {
             canUndoCleanup={config.canUndoCleanup}
             cleanupBackupTimestamp={config.cleanupBackupTimestamp}
             onSmartCleanup={config.smartCleanup}
+            onGetSmartCleanupPreview={config.getSmartCleanupPreview}
             versionsWithPerformanceCount={config.getVersionsWithPerformanceCount()}
           />
 

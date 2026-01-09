@@ -507,6 +507,80 @@ export function usePresetVersioning() {
     }, 0);
   }, [versionHistory]);
 
+  /**
+   * Preview what smart cleanup would keep vs remove
+   * @param keepCount Number of best-performing versions to keep per slot
+   * @returns Object with kept and removed versions by slot
+   */
+  const getSmartCleanupPreview = useCallback((keepCount: number = 3): {
+    kept: { slot: '4' | '5' | '6'; version: PresetVersion; score: number }[];
+    removed: { slot: '4' | '5' | '6'; version: PresetVersion; score: number }[];
+  } => {
+    const slots: ('4' | '5' | '6')[] = ['4', '5', '6'];
+    const kept: { slot: '4' | '5' | '6'; version: PresetVersion; score: number }[] = [];
+    const removed: { slot: '4' | '5' | '6'; version: PresetVersion; score: number }[] = [];
+    
+    slots.forEach(slot => {
+      const versions = versionHistory[slot];
+      if (versions.length === 0) return;
+      
+      // Separate pinned and unpinned versions
+      const pinned = versions.filter(v => v.pinned);
+      const unpinned = versions.filter(v => !v.pinned);
+      
+      // Add pinned versions to kept (they're always kept)
+      pinned.forEach(v => {
+        kept.push({ slot, version: v, score: calculatePerformanceScore(v) });
+      });
+      
+      if (unpinned.length <= keepCount) {
+        // All unpinned are kept
+        unpinned.forEach(v => {
+          kept.push({ slot, version: v, score: calculatePerformanceScore(v) });
+        });
+        return;
+      }
+      
+      // Separate versions with and without performance data
+      const withPerformance = unpinned.filter(v => v.performance);
+      const withoutPerformance = unpinned.filter(v => !v.performance);
+      
+      // Sort by performance score (highest first)
+      const rankedPerformance = [...withPerformance].sort((a, b) => 
+        calculatePerformanceScore(b) - calculatePerformanceScore(a)
+      );
+      
+      // Keep the best performing versions
+      const toKeepFromPerformance = rankedPerformance.slice(0, keepCount);
+      const toRemoveFromPerformance = rankedPerformance.slice(keepCount);
+      
+      // If we have room, keep some versions without performance data (oldest first to remove)
+      const remainingSlots = Math.max(0, keepCount - toKeepFromPerformance.length);
+      const toKeepWithoutPerformance = withoutPerformance.slice(-remainingSlots); // Keep most recent
+      const toRemoveWithoutPerformance = withoutPerformance.slice(0, withoutPerformance.length - remainingSlots);
+      
+      toKeepFromPerformance.forEach(v => {
+        kept.push({ slot, version: v, score: calculatePerformanceScore(v) });
+      });
+      toKeepWithoutPerformance.forEach(v => {
+        kept.push({ slot, version: v, score: calculatePerformanceScore(v) });
+      });
+      
+      toRemoveFromPerformance.forEach(v => {
+        removed.push({ slot, version: v, score: calculatePerformanceScore(v) });
+      });
+      toRemoveWithoutPerformance.forEach(v => {
+        removed.push({ slot, version: v, score: calculatePerformanceScore(v) });
+      });
+    });
+    
+    // Sort kept by score (highest first) and removed by score (lowest first)
+    kept.sort((a, b) => b.score - a.score);
+    removed.sort((a, b) => a.score - b.score);
+    
+    return { kept, removed };
+  }, [versionHistory, calculatePerformanceScore]);
+
 
   /**
    * Trigger save animation for a slot
@@ -1070,6 +1144,7 @@ export function usePresetVersioning() {
     cleanupBackupTimestamp: cleanupBackup?.timestamp ?? null,
     // Smart cleanup
     smartCleanup,
+    getSmartCleanupPreview,
     updateVersionPerformance,
     getVersionsWithPerformanceCount,
     // Loaded version tracking for auto-performance recording
