@@ -803,5 +803,6 @@ export function useBacktestConfig() {
     wasCancelledRecently: presetVersioning.wasCancelledRecently,
     getTotalVersionCount: presetVersioning.getTotalVersionCount,
     versionHistory: presetVersioning.versionHistory,
+    clearAllVersionHistory: presetVersioning.clearAllHistory,
   };
 }

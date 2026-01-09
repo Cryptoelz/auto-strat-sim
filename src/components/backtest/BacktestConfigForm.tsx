@@ -279,6 +279,7 @@ interface BacktestConfigFormProps {
   // Storage usage
   getTotalVersionCount?: () => number;
   versionHistory?: PresetVersionHistory;
+  onClearAllVersionHistory?: () => void;
 }
 
 export function BacktestConfigForm({
@@ -357,6 +358,7 @@ export function BacktestConfigForm({
   onVersionHistoryOpenChange,
   getTotalVersionCount,
   versionHistory,
+  onClearAllVersionHistory,
 }: BacktestConfigFormProps) {
   const [copied, setCopied] = useState(false);
   const [clearPresetsConfirmOpen, setClearPresetsConfirmOpen] = useState(false);
@@ -380,6 +382,7 @@ export function BacktestConfigForm({
   const [versionTagFilter, setVersionTagFilter] = useState<PresetTagValue | null>(null);
   const [restorePreviewVersionId, setRestorePreviewVersionId] = useState<string | null>(null);
   const [versionHistoryDragging, setVersionHistoryDragging] = useState(false);
+  const [clearAllHistoryConfirmOpen, setClearAllHistoryConfirmOpen] = useState(false);
 
   // Handle external version history dialog control
   useEffect(() => {
@@ -1929,6 +1932,19 @@ export function BacktestConfigForm({
                             {usagePercent.toFixed(1)}% of ~5 MB localStorage limit
                           </p>
                         </div>
+                        
+                        {/* Clear All History Button */}
+                        {onClearAllVersionHistory && totalVersions > 0 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full h-7 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => setClearAllHistoryConfirmOpen(true)}
+                          >
+                            <Trash2 className="h-3 w-3 mr-1.5" />
+                            Clear All History
+                          </Button>
+                        )}
                       </div>
                     </div>
                   );
@@ -3046,6 +3062,35 @@ export function BacktestConfigForm({
                           }}
                         >
                           Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                  
+                  {/* Clear All History Confirmation Dialog */}
+                  <AlertDialog open={clearAllHistoryConfirmOpen} onOpenChange={setClearAllHistoryConfirmOpen}>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Clear all version history?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will permanently delete all saved versions across all preset slots. This action cannot be undone and will free up localStorage space.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          onClick={() => {
+                            if (onClearAllVersionHistory) {
+                              const totalBefore = getTotalVersionCount?.() ?? 0;
+                              onClearAllVersionHistory();
+                              toast.success('All version history cleared', {
+                                description: `Deleted ${totalBefore} version${totalBefore !== 1 ? 's' : ''} across all presets`,
+                              });
+                            }
+                          }}
+                        >
+                          Clear All
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
