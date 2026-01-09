@@ -3,6 +3,14 @@ import { PresetVersion, PresetVersionHistory, MAX_VERSIONS_PER_SLOT, PresetTagVa
 import { playSaveSound } from '@/lib/sounds';
 import { toast } from 'sonner';
 
+/**
+ * Represents a currently loaded version for performance tracking
+ */
+export interface LoadedVersionInfo {
+  slot: '4' | '5' | '6';
+  versionId: string;
+}
+
 const STORAGE_KEY = 'backtest-preset-versions';
 const AUTO_SAVE_KEY = 'backtest-preset-autosave';
 const DEBOUNCE_DELAY_KEY = 'backtest-preset-debounce-delay';
@@ -69,6 +77,9 @@ export function usePresetVersioning() {
   
   // Track recently saved slots for animation
   const [recentlySavedSlots, setRecentlySavedSlots] = useState<Set<'4' | '5' | '6'>>(new Set());
+  
+  // Track currently loaded version for auto performance recording
+  const [loadedVersion, setLoadedVersion] = useState<LoadedVersionInfo | null>(null);
   
   // Track recently cancelled slots for shake animation
   const [recentlyCancelledSlots, setRecentlyCancelledSlots] = useState<Set<'4' | '5' | '6'>>(new Set());
@@ -977,6 +988,40 @@ export function usePresetVersioning() {
     setDeletedVersionsBackup(null);
   }, []);
 
+  /**
+   * Set the currently loaded version for performance tracking
+   */
+  const setLoadedVersionInfo = useCallback((slot: '4' | '5' | '6', versionId: string) => {
+    setLoadedVersion({ slot, versionId });
+  }, []);
+
+  /**
+   * Clear the loaded version tracking
+   */
+  const clearLoadedVersion = useCallback(() => {
+    setLoadedVersion(null);
+  }, []);
+
+  /**
+   * Get the currently loaded version info
+   */
+  const getLoadedVersionInfo = useCallback((): LoadedVersionInfo | null => {
+    return loadedVersion;
+  }, [loadedVersion]);
+
+  /**
+   * Record performance for the currently loaded version
+   * Returns the recorded version info if successful, null otherwise
+   */
+  const recordPerformanceForLoadedVersion = useCallback((
+    performance: VersionPerformance
+  ): LoadedVersionInfo | null => {
+    if (!loadedVersion) return null;
+    
+    const success = updateVersionPerformance(loadedVersion.slot, loadedVersion.versionId, performance);
+    return success ? loadedVersion : null;
+  }, [loadedVersion, updateVersionPerformance]);
+
   return {
     versionHistory,
     addVersion,
@@ -1027,5 +1072,11 @@ export function usePresetVersioning() {
     smartCleanup,
     updateVersionPerformance,
     getVersionsWithPerformanceCount,
+    // Loaded version tracking for auto-performance recording
+    loadedVersion,
+    setLoadedVersionInfo,
+    clearLoadedVersion,
+    getLoadedVersionInfo,
+    recordPerformanceForLoadedVersion,
   };
 }

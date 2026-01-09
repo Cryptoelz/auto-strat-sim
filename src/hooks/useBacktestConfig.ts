@@ -462,6 +462,7 @@ export function useBacktestConfig() {
   /**
    * Save current config to a custom preset slot (4, 5, or 6)
    * Also saves a version to history for tracking changes
+   * Tracks the new version as loaded for performance recording
    */
   const saveCustomPreset = useCallback((slot: '4' | '5' | '6', name?: string) => {
     const preset = {
@@ -476,7 +477,12 @@ export function useBacktestConfig() {
     
     // Save version to history only if auto-save is enabled
     if (presetVersioning.autoSaveEnabled) {
-      presetVersioning.addVersion(slot, preset);
+      const version = presetVersioning.addVersion(slot, preset);
+      // Track the new version for performance recording (use immediate version ID after debounce)
+      // We set the loaded version info - it will be updated when the actual version is saved
+      if (version) {
+        presetVersioning.setLoadedVersionInfo(slot, version.id);
+      }
     }
     
     const updated = { ...customPresets, [slot]: preset };
@@ -681,6 +687,7 @@ export function useBacktestConfig() {
 
   /**
    * Restore a preset to a previous version
+   * Also tracks this version as loaded for performance recording
    */
   const restorePresetVersion = useCallback((slot: '4' | '5' | '6', versionId: string): boolean => {
     const version = presetVersioning.getVersion(slot, versionId);
@@ -693,6 +700,9 @@ export function useBacktestConfig() {
     const updated = { ...customPresets, [slot]: preset };
     setCustomPresets(updated);
     localStorage.setItem('backtest-custom-presets', JSON.stringify(updated));
+    
+    // Track this version as loaded for auto performance recording
+    presetVersioning.setLoadedVersionInfo(slot, versionId);
     
     return true;
   }, [customPresets, presetVersioning]);
@@ -818,5 +828,11 @@ export function useBacktestConfig() {
     smartCleanup: presetVersioning.smartCleanup,
     updateVersionPerformance: presetVersioning.updateVersionPerformance,
     getVersionsWithPerformanceCount: presetVersioning.getVersionsWithPerformanceCount,
+    // Auto performance recording
+    loadedVersion: presetVersioning.loadedVersion,
+    setLoadedVersionInfo: presetVersioning.setLoadedVersionInfo,
+    clearLoadedVersion: presetVersioning.clearLoadedVersion,
+    getLoadedVersionInfo: presetVersioning.getLoadedVersionInfo,
+    recordPerformanceForLoadedVersion: presetVersioning.recordPerformanceForLoadedVersion,
   };
 }
