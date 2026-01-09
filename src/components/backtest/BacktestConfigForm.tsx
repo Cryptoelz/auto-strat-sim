@@ -265,6 +265,7 @@ export function BacktestConfigForm({
   const [editingNoteText, setEditingNoteText] = useState('');
   const [versionSearchQuery, setVersionSearchQuery] = useState('');
   const [versionTagFilter, setVersionTagFilter] = useState<PresetTagValue | null>(null);
+  const [restorePreviewVersionId, setRestorePreviewVersionId] = useState<string | null>(null);
 
   // Handle external version history dialog control
   useEffect(() => {
@@ -1966,14 +1967,7 @@ export function BacktestConfigForm({
                                               variant="outline"
                                               size="sm"
                                               className="h-7 text-xs"
-                                              onClick={() => {
-                                                if (versionHistorySlot && onRestorePresetVersion(versionHistorySlot, version.id)) {
-                                                  toast.success('Version restored', {
-                                                    description: `Restored to "${version.data.label}" from ${format(new Date(version.savedAt), 'MMM d, HH:mm')}`,
-                                                  });
-                                                  setVersionHistorySlot(null);
-                                                }
-                                              }}
+                                              onClick={() => setRestorePreviewVersionId(version.id)}
                                             >
                                               <RotateCcw className="h-3 w-3 mr-1" />
                                               Restore
@@ -2385,6 +2379,106 @@ export function BacktestConfigForm({
                     Close
                   </Button>
                 </DialogFooter>
+                
+                {/* Restore Preview Dialog */}
+                <AlertDialog open={restorePreviewVersionId !== null} onOpenChange={(open) => !open && setRestorePreviewVersionId(null)}>
+                  <AlertDialogContent className="max-w-md">
+                    {(() => {
+                      if (!restorePreviewVersionId || !versionHistorySlot || !getPresetVersionHistory) return null;
+                      
+                      const versions = getPresetVersionHistory(versionHistorySlot);
+                      const targetVersion = versions.find(v => v.id === restorePreviewVersionId);
+                      const currentVersion = versions[0]; // Current is always first
+                      
+                      if (!targetVersion || !currentVersion) return null;
+                      
+                      const diffFields = [
+                        { key: 'label', label: 'Name', format: (v: string | number) => v },
+                        { key: 'fastSMA', label: 'Fast SMA', format: (v: string | number) => v },
+                        { key: 'slowSMA', label: 'Slow SMA', format: (v: string | number) => v },
+                        { key: 'positionSizePercent', label: 'Position Size', format: (v: string | number) => `${v}%` },
+                        { key: 'stopLossPercent', label: 'Stop Loss', format: (v: string | number) => `${v}%` },
+                        { key: 'takeProfitPercent', label: 'Take Profit', format: (v: string | number) => `${v}%` },
+                      ] as const;
+                      
+                      const changedFields = diffFields.filter(
+                        field => currentVersion.data[field.key] !== targetVersion.data[field.key]
+                      );
+                      
+                      return (
+                        <>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle className="flex items-center gap-2">
+                              <RotateCcw className="h-4 w-4" />
+                              Restore Version
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Restore to "{targetVersion.data.label}" from {format(new Date(targetVersion.savedAt), 'MMM d, yyyy HH:mm')}
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          
+                          <div className="py-4 space-y-3">
+                            {changedFields.length === 0 ? (
+                              <p className="text-sm text-muted-foreground text-center py-2">
+                                No changes — this version has the same parameters as current.
+                              </p>
+                            ) : (
+                              <>
+                                <p className="text-xs text-muted-foreground">
+                                  {changedFields.length} parameter{changedFields.length !== 1 ? 's' : ''} will change:
+                                </p>
+                                <div className="space-y-2">
+                                  {changedFields.map(field => {
+                                    const currentVal = currentVersion.data[field.key];
+                                    const targetVal = targetVersion.data[field.key];
+                                    const isNumeric = typeof currentVal === 'number' && typeof targetVal === 'number';
+                                    const diff = isNumeric ? targetVal - currentVal : null;
+                                    
+                                    return (
+                                      <div key={field.key} className="flex items-center gap-2 text-sm">
+                                        <span className="text-muted-foreground w-24 shrink-0">{field.label}</span>
+                                        <span className="px-2 py-1 bg-red-500/10 text-red-600 dark:text-red-400 rounded font-mono text-xs line-through">
+                                          {field.format(currentVal)}
+                                        </span>
+                                        <span className="text-muted-foreground">→</span>
+                                        <span className="px-2 py-1 bg-green-500/10 text-green-600 dark:text-green-400 rounded font-mono text-xs">
+                                          {field.format(targetVal)}
+                                          {diff !== null && diff !== 0 && (
+                                            <span className="ml-1 opacity-70">
+                                              ({diff > 0 ? '+' : ''}{diff})
+                                            </span>
+                                          )}
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </>
+                            )}
+                          </div>
+                          
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => {
+                                if (onRestorePresetVersion && onRestorePresetVersion(versionHistorySlot, restorePreviewVersionId)) {
+                                  toast.success('Version restored', {
+                                    description: `Restored to "${targetVersion.data.label}"`,
+                                  });
+                                  setRestorePreviewVersionId(null);
+                                  setVersionHistorySlot(null);
+                                }
+                              }}
+                            >
+                              <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
+                              Restore
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </>
+                      );
+                    })()}
+                  </AlertDialogContent>
+                </AlertDialog>
               </DialogContent>
             </Dialog>
             <div className="grid grid-cols-2 gap-3">
