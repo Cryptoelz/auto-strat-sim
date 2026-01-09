@@ -2048,12 +2048,36 @@ export function BacktestConfigForm({
                         
                         {/* Manual Cleanup Dropdown */}
                         {onManualCleanup && totalVersions > 0 && (() => {
-                          // Count unpinned versions
-                          const unpinnedCount = (versionHistory?.['4']?.filter(v => !v.pinned).length || 0) +
-                            (versionHistory?.['5']?.filter(v => !v.pinned).length || 0) +
-                            (versionHistory?.['6']?.filter(v => !v.pinned).length || 0);
+                          // Collect all unpinned versions sorted by age (oldest first)
+                          const allUnpinned: { slot: '4' | '5' | '6'; label: string; savedAt: number }[] = [];
+                          const slots: ('4' | '5' | '6')[] = ['4', '5', '6'];
+                          
+                          slots.forEach(slot => {
+                            versionHistory?.[slot]?.filter(v => !v.pinned).forEach(v => {
+                              allUnpinned.push({ slot, label: v.data.label, savedAt: v.savedAt });
+                            });
+                          });
+                          
+                          allUnpinned.sort((a, b) => a.savedAt - b.savedAt);
+                          const unpinnedCount = allUnpinned.length;
                           
                           if (unpinnedCount === 0) return null;
+                          
+                          // Helper to get preview text for N versions
+                          const getPreviewText = (count: number): string => {
+                            const toRemove = allUnpinned.slice(0, count);
+                            if (toRemove.length === 0) return 'No versions to remove';
+                            
+                            const lines = toRemove.slice(0, 4).map(v => 
+                              `• ${v.label} (Preset ${v.slot})`
+                            );
+                            
+                            if (toRemove.length > 4) {
+                              lines.push(`... and ${toRemove.length - 4} more`);
+                            }
+                            
+                            return lines.join('\n');
+                          };
                           
                           return (
                             <DropdownMenu>
@@ -2070,35 +2094,71 @@ export function BacktestConfigForm({
                                   <ChevronDown className="h-3 w-3 ml-1 opacity-50" />
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-48 bg-popover border shadow-lg z-50">
-                                <DropdownMenuItem 
-                                  onClick={() => onManualCleanup(1)}
-                                  disabled={unpinnedCount < 1}
-                                  className="text-xs"
-                                >
-                                  Remove 1 oldest version
-                                </DropdownMenuItem>
-                                <DropdownMenuItem 
-                                  onClick={() => onManualCleanup(Math.min(5, unpinnedCount))}
-                                  disabled={unpinnedCount < 2}
-                                  className="text-xs"
-                                >
-                                  Remove up to 5 versions
-                                </DropdownMenuItem>
-                                <DropdownMenuItem 
-                                  onClick={() => onManualCleanup(Math.min(10, unpinnedCount))}
-                                  disabled={unpinnedCount < 5}
-                                  className="text-xs"
-                                >
-                                  Remove up to 10 versions
-                                </DropdownMenuItem>
+                              <DropdownMenuContent align="end" className="w-56 bg-popover border shadow-lg z-50">
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <DropdownMenuItem 
+                                      onClick={() => onManualCleanup(1)}
+                                      disabled={unpinnedCount < 1}
+                                      className="text-xs cursor-pointer"
+                                    >
+                                      Remove 1 oldest version
+                                    </DropdownMenuItem>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="left" className="max-w-[200px]">
+                                    <p className="text-xs font-medium mb-1">Will remove:</p>
+                                    <p className="text-xs text-muted-foreground whitespace-pre-line">{getPreviewText(1)}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                                
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <DropdownMenuItem 
+                                      onClick={() => onManualCleanup(Math.min(5, unpinnedCount))}
+                                      disabled={unpinnedCount < 2}
+                                      className="text-xs cursor-pointer"
+                                    >
+                                      Remove up to 5 versions
+                                    </DropdownMenuItem>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="left" className="max-w-[200px]">
+                                    <p className="text-xs font-medium mb-1">Will remove:</p>
+                                    <p className="text-xs text-muted-foreground whitespace-pre-line">{getPreviewText(Math.min(5, unpinnedCount))}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                                
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <DropdownMenuItem 
+                                      onClick={() => onManualCleanup(Math.min(10, unpinnedCount))}
+                                      disabled={unpinnedCount < 5}
+                                      className="text-xs cursor-pointer"
+                                    >
+                                      Remove up to 10 versions
+                                    </DropdownMenuItem>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="left" className="max-w-[200px]">
+                                    <p className="text-xs font-medium mb-1">Will remove:</p>
+                                    <p className="text-xs text-muted-foreground whitespace-pre-line">{getPreviewText(Math.min(10, unpinnedCount))}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                                
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem 
-                                  onClick={() => onManualCleanup(unpinnedCount)}
-                                  className="text-xs text-amber-600"
-                                >
-                                  Remove all unpinned ({unpinnedCount})
-                                </DropdownMenuItem>
+                                
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <DropdownMenuItem 
+                                      onClick={() => onManualCleanup(unpinnedCount)}
+                                      className="text-xs text-amber-600 cursor-pointer"
+                                    >
+                                      Remove all unpinned ({unpinnedCount})
+                                    </DropdownMenuItem>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="left" className="max-w-[200px]">
+                                    <p className="text-xs font-medium mb-1">Will remove:</p>
+                                    <p className="text-xs text-muted-foreground whitespace-pre-line">{getPreviewText(unpinnedCount)}</p>
+                                  </TooltipContent>
+                                </Tooltip>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           );
