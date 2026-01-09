@@ -451,6 +451,8 @@ export default function Backtest() {
             wasCancelledRecently={config.wasCancelledRecently}
             versionHistoryOpen={versionHistoryOpen}
             onVersionHistoryOpenChange={setVersionHistoryOpen}
+            getTotalVersionCount={config.getTotalVersionCount}
+            versionHistory={config.versionHistory}
           />
 
           {/* Strategy Optimizer */}
