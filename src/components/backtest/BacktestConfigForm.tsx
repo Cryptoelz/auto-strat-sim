@@ -92,6 +92,68 @@ function FieldError({ message }: { message?: string }) {
   );
 }
 
+/**
+ * Countdown timer component for pending saves
+ */
+function PendingSaveCountdown({ 
+  startTime, 
+  delay 
+}: { 
+  startTime: number; 
+  delay: number; 
+}) {
+  const [remaining, setRemaining] = useState(() => {
+    const elapsed = Date.now() - startTime;
+    return Math.max(0, delay - elapsed);
+  });
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const newRemaining = Math.max(0, delay - elapsed);
+      setRemaining(newRemaining);
+      
+      if (newRemaining <= 0) {
+        clearInterval(interval);
+      }
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [startTime, delay]);
+
+  const seconds = (remaining / 1000).toFixed(1);
+  const progress = ((delay - remaining) / delay) * 100;
+
+  return (
+    <div className="flex items-center gap-2">
+      <div className="relative h-4 w-4">
+        <svg className="h-4 w-4 -rotate-90" viewBox="0 0 16 16">
+          <circle
+            cx="8"
+            cy="8"
+            r="6"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            className="text-muted/30"
+          />
+          <circle
+            cx="8"
+            cy="8"
+            r="6"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeDasharray={`${progress * 0.377} 100`}
+            className="text-amber-500 transition-all duration-100"
+          />
+        </svg>
+      </div>
+      <span className="font-mono text-xs tabular-nums">{seconds}s</span>
+    </div>
+  );
+}
+
 const TIMEFRAME_OPTIONS = [
   { value: '5m', label: '5 Minutes' },
   { value: '15m', label: '15 Minutes' },
@@ -192,6 +254,7 @@ interface BacktestConfigFormProps {
   hasPendingSave?: (slot: '4' | '5' | '6') => boolean;
   onFlushPendingSave?: (slot: '4' | '5' | '6') => PresetVersion | null;
   pendingSlots?: Set<'4' | '5' | '6'>;
+  getPendingSaveStartTime?: (slot: '4' | '5' | '6') => number | null;
   
   // External version history dialog control
   versionHistoryOpen?: boolean;
@@ -266,6 +329,7 @@ export function BacktestConfigForm({
   hasPendingSave,
   onFlushPendingSave,
   pendingSlots,
+  getPendingSaveStartTime,
   versionHistoryOpen: externalVersionHistoryOpen,
   onVersionHistoryOpenChange,
 }: BacktestConfigFormProps) {
@@ -1528,31 +1592,33 @@ export function BacktestConfigForm({
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        {/* Pending save indicator */}
-                        {versionHistorySlot && hasPendingSave?.(versionHistorySlot) && (
-                          <div className="flex items-center gap-1.5 text-xs text-amber-500">
-                            <span className="relative flex h-2 w-2">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
-                              <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
-                            </span>
-                            <span>Saving...</span>
-                            {onFlushPendingSave && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-5 px-1.5 text-xs"
-                                onClick={() => {
-                                  const version = onFlushPendingSave(versionHistorySlot);
-                                  if (version) {
-                                    toast.success('Version saved immediately');
-                                  }
-                                }}
-                              >
-                                Save now
-                              </Button>
-                            )}
-                          </div>
-                        )}
+                        {/* Pending save indicator with countdown */}
+                        {versionHistorySlot && hasPendingSave?.(versionHistorySlot) && (() => {
+                          const startTime = getPendingSaveStartTime?.(versionHistorySlot);
+                          return (
+                            <div className="flex items-center gap-2 text-xs text-amber-500">
+                              {startTime && debounceDelay > 0 && (
+                                <PendingSaveCountdown startTime={startTime} delay={debounceDelay} />
+                              )}
+                              <span>Saving</span>
+                              {onFlushPendingSave && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-5 px-1.5 text-xs hover:text-amber-400"
+                                  onClick={() => {
+                                    const version = onFlushPendingSave(versionHistorySlot);
+                                    if (version) {
+                                      toast.success('Version saved immediately');
+                                    }
+                                  }}
+                                >
+                                  Save now
+                                </Button>
+                              )}
+                            </div>
+                          );
+                        })()}
                         {versionHistorySlot && onManualSaveVersion && getCustomPresetData && !hasPendingSave?.(versionHistorySlot) && (
                           <TooltipProvider>
                             <Tooltip>
