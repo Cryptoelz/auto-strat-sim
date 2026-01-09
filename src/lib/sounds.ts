@@ -2,6 +2,7 @@
 
 let audioContext: AudioContext | null = null;
 let volume = parseFloat(localStorage.getItem('sound-volume') || '0.3');
+let saveSoundEnabled = localStorage.getItem('save-sound-enabled') !== 'false'; // Default to enabled
 
 function getAudioContext(): AudioContext {
   if (!audioContext) {
@@ -17,6 +18,15 @@ export function getVolume(): number {
 export function setVolume(newVolume: number) {
   volume = Math.max(0, Math.min(1, newVolume));
   localStorage.setItem('sound-volume', volume.toString());
+}
+
+export function getSaveSoundEnabled(): boolean {
+  return saveSoundEnabled;
+}
+
+export function setSaveSoundEnabled(enabled: boolean) {
+  saveSoundEnabled = enabled;
+  localStorage.setItem('save-sound-enabled', enabled.toString());
 }
 
 export function playBuySound() {
@@ -64,7 +74,7 @@ export function playSellSound() {
 }
 
 export function playSaveSound() {
-  if (volume === 0) return;
+  if (volume === 0 || !saveSoundEnabled) return;
   
   const ctx = getAudioContext();
   
