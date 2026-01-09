@@ -182,6 +182,14 @@ export function usePresetVersioning() {
     return { cleaned: testHistory, removed, removedVersions };
   }, [cleanupThreshold, getStorageBytes]);
 
+  // Store cleanup backup for undo
+  const [cleanupBackup, setCleanupBackup] = useState<{
+    versions: { slot: '4' | '5' | '6'; version: PresetVersion }[];
+    timestamp: number;
+  } | null>(null);
+  
+  const cleanupUndoTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   /**
    * Manually trigger cleanup to remove oldest unpinned versions
    * @param count Number of versions to remove (default: removes until under 50% threshold)
@@ -189,6 +197,7 @@ export function usePresetVersioning() {
   const manualCleanup = useCallback((count?: number): number => {
     let removed = 0;
     const removedVersions: { slot: '4' | '5' | '6'; label: string }[] = [];
+    const backupVersions: { slot: '4' | '5' | '6'; version: PresetVersion }[] = [];
     
     setVersionHistory(prev => {
       // Collect all unpinned versions across all slots
@@ -221,6 +230,7 @@ export function usePresetVersioning() {
       
       versionsToRemove.forEach(v => {
         removedVersions.push({ slot: v.slot, label: v.version.data.label });
+        backupVersions.push({ slot: v.slot, version: v.version });
       });
 
       const newHistory = {
@@ -234,6 +244,19 @@ export function usePresetVersioning() {
     });
 
     if (removed > 0) {
+      // Store backup for undo
+      setCleanupBackup({ versions: backupVersions, timestamp: Date.now() });
+      
+      // Clear any existing timeout
+      if (cleanupUndoTimeoutRef.current) {
+        clearTimeout(cleanupUndoTimeoutRef.current);
+      }
+      
+      // Auto-clear backup after 30 seconds
+      cleanupUndoTimeoutRef.current = setTimeout(() => {
+        setCleanupBackup(null);
+      }, 30000);
+      
       setLastCleanupCount(removed);
       setTimeout(() => setLastCleanupCount(0), 5000);
       
@@ -246,13 +269,73 @@ export function usePresetVersioning() {
         .map(([s, c]) => `Preset ${s}: ${c}`)
         .join(', ');
       
-      toast.success(`Manual cleanup: ${removed} version${removed !== 1 ? 's' : ''} removed`, {
+      toast.success(`Cleanup: ${removed} version${removed !== 1 ? 's' : ''} removed`, {
         description: slotSummary,
-        duration: 5000,
+        duration: 10000,
+        action: {
+          label: 'Undo',
+          onClick: () => {
+            undoManualCleanup();
+          },
+        },
       });
     }
 
     return removed;
+  }, []);
+
+  /**
+   * Undo the last manual cleanup operation
+   */
+  const undoManualCleanup = useCallback((): boolean => {
+    if (!cleanupBackup) {
+      toast.info('Nothing to undo');
+      return false;
+    }
+    
+    const { versions } = cleanupBackup;
+    
+    setVersionHistory(prev => {
+      const newHistory = { ...prev };
+      
+      versions.forEach(({ slot, version }) => {
+        // Check if version doesn't already exist (avoid duplicates)
+        if (!newHistory[slot].some(v => v.id === version.id)) {
+          newHistory[slot] = [...newHistory[slot], version]
+            .sort((a, b) => b.savedAt - a.savedAt);
+        }
+      });
+      
+      return newHistory;
+    });
+    
+    const restoredCount = versions.length;
+    setCleanupBackup(null);
+    
+    if (cleanupUndoTimeoutRef.current) {
+      clearTimeout(cleanupUndoTimeoutRef.current);
+      cleanupUndoTimeoutRef.current = null;
+    }
+    
+    toast.success(`Restored ${restoredCount} version${restoredCount !== 1 ? 's' : ''}`);
+    
+    return true;
+  }, [cleanupBackup]);
+
+  /**
+   * Check if cleanup can be undone
+   */
+  const canUndoCleanup = cleanupBackup !== null;
+
+  /**
+   * Clear the cleanup backup (e.g., when user dismisses undo option)
+   */
+  const clearCleanupBackup = useCallback(() => {
+    setCleanupBackup(null);
+    if (cleanupUndoTimeoutRef.current) {
+      clearTimeout(cleanupUndoTimeoutRef.current);
+      cleanupUndoTimeoutRef.current = null;
+    }
   }, []);
 
   /**
@@ -777,5 +860,8 @@ export function usePresetVersioning() {
     lastCleanupCount,
     getStorageBytes,
     manualCleanup,
+    undoManualCleanup,
+    canUndoCleanup,
+    clearCleanupBackup,
   };
 }

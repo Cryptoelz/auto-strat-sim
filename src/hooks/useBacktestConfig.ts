@@ -811,5 +811,7 @@ export function useBacktestConfig() {
     setCleanupThreshold: presetVersioning.setCleanupThreshold,
     lastCleanupCount: presetVersioning.lastCleanupCount,
     manualCleanup: presetVersioning.manualCleanup,
+    undoManualCleanup: presetVersioning.undoManualCleanup,
+    canUndoCleanup: presetVersioning.canUndoCleanup,
   };
 }

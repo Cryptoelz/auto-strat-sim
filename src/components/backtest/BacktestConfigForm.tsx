@@ -289,6 +289,8 @@ interface BacktestConfigFormProps {
   onCleanupThresholdChange?: (threshold: number) => void;
   lastCleanupCount?: number;
   onManualCleanup?: (count?: number) => number;
+  onUndoManualCleanup?: () => boolean;
+  canUndoCleanup?: boolean;
 }
 
 export function BacktestConfigForm({
@@ -374,6 +376,8 @@ export function BacktestConfigForm({
   onCleanupThresholdChange,
   lastCleanupCount = 0,
   onManualCleanup,
+  onUndoManualCleanup,
+  canUndoCleanup = false,
 }: BacktestConfigFormProps) {
   const [copied, setCopied] = useState(false);
   const [clearPresetsConfirmOpen, setClearPresetsConfirmOpen] = useState(false);
@@ -2222,7 +2226,19 @@ export function BacktestConfigForm({
                           );
                         })()}
                         
-                        {/* Clear All History Button */}
+                        {/* Undo Cleanup Button */}
+                        {canUndoCleanup && onUndoManualCleanup && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full h-7 text-xs border-amber-500/50 text-amber-600 hover:bg-amber-500/10"
+                            onClick={() => onUndoManualCleanup()}
+                          >
+                            <Undo2 className="h-3 w-3 mr-1.5" />
+                            Undo Last Cleanup
+                          </Button>
+                        )}
+                        
                         {onClearAllVersionHistory && totalVersions > 0 && (
                           <Button
                             variant="ghost"
