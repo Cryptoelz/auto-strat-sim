@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useBacktest } from '@/hooks/useBacktest';
@@ -8,6 +8,7 @@ import { WalkForwardAnalysis } from '@/components/backtest/WalkForwardAnalysis';
 import { ResultsDisplay } from '@/components/backtest/ResultsDisplay';
 import { ComparisonTable } from '@/components/backtest/ComparisonTable';
 import { BacktestConfigForm } from '@/components/backtest/BacktestConfigForm';
+import { VersionPerformance } from '@/types/preset-version';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -62,12 +63,47 @@ export default function Backtest() {
   const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
   const { isRunning, progress, result, error, runBacktest, reset } = useBacktest();
   const config = useBacktestConfig();
+  
+  // Track if we've already recorded performance for the current result
+  const lastRecordedResultRef = useRef<typeof result>(null);
 
   const handleRunBacktest = () => {
     const validation = config.validateConfig();
     if (!validation.success) return;
     runBacktest(config.buildConfig());
   };
+
+  // Auto-record performance when backtest completes with a loaded version
+  useEffect(() => {
+    if (
+      result &&
+      !isRunning &&
+      result !== lastRecordedResultRef.current &&
+      config.loadedVersion
+    ) {
+      lastRecordedResultRef.current = result;
+      
+      const performance: VersionPerformance = {
+        totalPnlPercent: result.totalPnlPercent,
+        winRate: result.winRate,
+        maxDrawdown: result.maxDrawdown,
+        profitFactor: result.profitFactor,
+        sharpeRatio: result.sharpeRatio,
+        totalTrades: result.totalTrades,
+        recordedAt: Date.now(),
+      };
+
+      const recorded = config.recordPerformanceForLoadedVersion(performance);
+      
+      if (recorded) {
+        const slotLabel = `Custom ${parseInt(recorded.slot) - 3}`;
+        toast.success('Performance recorded', {
+          description: `Results saved to ${slotLabel} version history.`,
+          duration: 3000,
+        });
+      }
+    }
+  }, [result, isRunning, config]);
 
   // Keyboard shortcuts for presets
   const handlePresetShortcut = useCallback((preset: RiskPreset) => {
