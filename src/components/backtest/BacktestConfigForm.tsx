@@ -178,6 +178,10 @@ interface BacktestConfigFormProps {
   onToggleVersionTag?: (slot: '4' | '5' | '6', versionId: string, tag: PresetTagValue) => boolean;
   onBulkToggleVersionTag?: (slot: '4' | '5' | '6', versionIds: string[], tag: PresetTagValue, action: 'add' | 'remove') => number;
   
+  // Auto-save control
+  autoSaveVersions?: boolean;
+  onAutoSaveVersionsChange?: (enabled: boolean) => void;
+  
   // External version history dialog control
   versionHistoryOpen?: boolean;
   onVersionHistoryOpenChange?: (open: boolean) => void;
@@ -243,6 +247,8 @@ export function BacktestConfigForm({
   onToggleVersionPin,
   onToggleVersionTag,
   onBulkToggleVersionTag,
+  autoSaveVersions = true,
+  onAutoSaveVersionsChange,
   versionHistoryOpen: externalVersionHistoryOpen,
   onVersionHistoryOpenChange,
 }: BacktestConfigFormProps) {
@@ -1416,6 +1422,23 @@ export function BacktestConfigForm({
                         : 'Restore a previous version of this preset'}
                   </DialogDescription>
                 </DialogHeader>
+                
+                {/* Auto-save Toggle */}
+                {onAutoSaveVersionsChange && !compareVersions[0] && !batchSelectMode && (
+                  <div className="flex items-center justify-between py-2 px-3 bg-muted/30 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <History className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">Auto-save versions</p>
+                        <p className="text-xs text-muted-foreground">Automatically save when presets change</p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={autoSaveVersions}
+                      onCheckedChange={onAutoSaveVersionsChange}
+                    />
+                  </div>
+                )}
                 
                 {/* Version History Statistics */}
                 {versionHistorySlot && getPresetVersionHistory && !compareVersions[0] && !batchSelectMode && (() => {
