@@ -18,6 +18,7 @@ import { BacktestResult, SavedRun } from '@/types/backtest';
 import { PresetVersion, PRESET_TAGS, PresetTagValue } from '@/types/preset-version';
 import { VersionTimeline } from './VersionTimeline';
 import { ParameterSparklines } from './ParameterSparklines';
+import { VersionDiffSparklines } from './VersionDiffSparklines';
 import { ASSET_INFO } from '@/config/trading';
 import { RISK_PRESETS, RiskPreset } from '@/hooks/useBacktestConfig';
 import { format, formatDistanceToNow } from 'date-fns';
@@ -1751,6 +1752,15 @@ export function BacktestConfigForm({
                           );
                         })}
                       </div>
+                      
+                      {/* Visual Diff Sparklines */}
+                      <VersionDiffSparklines
+                        version1={v1}
+                        version2={v2}
+                        allVersions={versions}
+                        className="mt-4"
+                      />
+                      
                       <div className="flex justify-center gap-2 mt-4">
                         <Button
                           variant="outline"
