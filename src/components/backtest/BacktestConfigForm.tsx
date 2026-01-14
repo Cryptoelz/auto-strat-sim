@@ -57,6 +57,9 @@ import {
   Trophy,
   Medal,
   Award,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -543,6 +546,8 @@ export function BacktestConfigForm({
   } | null>(null);
   const [manuallyProtectedVersions, setManuallyProtectedVersions] = useState<Set<string>>(new Set());
   const [cleanupPreviewTab, setCleanupPreviewTab] = useState<'list' | 'compare'>('list');
+  const [cleanupSortColumn, setCleanupSortColumn] = useState<'pnl' | 'winRate' | 'sharpe' | null>(null);
+  const [cleanupSortDirection, setCleanupSortDirection] = useState<'asc' | 'desc'>('desc');
   
   // Force re-render for countdown timer
   const [, setCountdownTick] = useState(0);
@@ -2491,7 +2496,46 @@ export function BacktestConfigForm({
                                       item => !manuallyProtectedVersions.has(item.version.id)
                                     );
                                     
-                                    // Calculate parameter averages for comparison
+                                    // Sorting function
+                                    const sortVersions = <T extends { version: { performance?: { totalPnlPercent: number; winRate: number; sharpeRatio: number } } }>(items: T[]): T[] => {
+                                      if (!cleanupSortColumn) return items;
+                                      return [...items].sort((a, b) => {
+                                        const aPerf = a.version.performance;
+                                        const bPerf = b.version.performance;
+                                        if (!aPerf && !bPerf) return 0;
+                                        if (!aPerf) return 1;
+                                        if (!bPerf) return -1;
+                                        
+                                        let aVal: number, bVal: number;
+                                        switch (cleanupSortColumn) {
+                                          case 'pnl': aVal = aPerf.totalPnlPercent; bVal = bPerf.totalPnlPercent; break;
+                                          case 'winRate': aVal = aPerf.winRate; bVal = bPerf.winRate; break;
+                                          case 'sharpe': aVal = aPerf.sharpeRatio; bVal = bPerf.sharpeRatio; break;
+                                          default: return 0;
+                                        }
+                                        return cleanupSortDirection === 'desc' ? bVal - aVal : aVal - bVal;
+                                      });
+                                    };
+                                    
+                                    const sortedKept = sortVersions(effectiveKept);
+                                    const sortedRemoved = sortVersions(effectiveRemoved);
+                                    
+                                    const handleSortClick = (column: 'pnl' | 'winRate' | 'sharpe') => {
+                                      if (cleanupSortColumn === column) {
+                                        setCleanupSortDirection(prev => prev === 'desc' ? 'asc' : 'desc');
+                                      } else {
+                                        setCleanupSortColumn(column);
+                                        setCleanupSortDirection('desc');
+                                      }
+                                    };
+                                    
+                                    const SortIcon = ({ column }: { column: 'pnl' | 'winRate' | 'sharpe' }) => {
+                                      if (cleanupSortColumn !== column) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-50" />;
+                                      return cleanupSortDirection === 'desc' 
+                                        ? <ArrowDown className="h-3 w-3 ml-1" />
+                                        : <ArrowUp className="h-3 w-3 ml-1" />;
+                                    };
+                                    
                                     const calculateAverages = (items: typeof effectiveKept) => {
                                       if (items.length === 0) return null;
                                       const sum = items.reduce((acc, item) => ({
@@ -2554,14 +2598,38 @@ export function BacktestConfigForm({
                                                   <tr>
                                                     <th className="px-3 py-2 text-left font-medium">Preset</th>
                                                     <th className="px-3 py-2 text-left font-medium">Version</th>
-                                                    <th className="px-3 py-2 text-left font-medium">PnL</th>
-                                                    <th className="px-3 py-2 text-left font-medium">Win Rate</th>
-                                                    <th className="px-3 py-2 text-left font-medium">Sharpe</th>
+                                                    <th 
+                                                      className="px-3 py-2 text-left font-medium cursor-pointer hover:bg-muted/80 select-none"
+                                                      onClick={() => handleSortClick('pnl')}
+                                                    >
+                                                      <span className="flex items-center">
+                                                        PnL
+                                                        <SortIcon column="pnl" />
+                                                      </span>
+                                                    </th>
+                                                    <th 
+                                                      className="px-3 py-2 text-left font-medium cursor-pointer hover:bg-muted/80 select-none"
+                                                      onClick={() => handleSortClick('winRate')}
+                                                    >
+                                                      <span className="flex items-center">
+                                                        Win Rate
+                                                        <SortIcon column="winRate" />
+                                                      </span>
+                                                    </th>
+                                                    <th 
+                                                      className="px-3 py-2 text-left font-medium cursor-pointer hover:bg-muted/80 select-none"
+                                                      onClick={() => handleSortClick('sharpe')}
+                                                    >
+                                                      <span className="flex items-center">
+                                                        Sharpe
+                                                        <SortIcon column="sharpe" />
+                                                      </span>
+                                                    </th>
                                                     <th className="px-3 py-2 text-left font-medium">Status</th>
                                                   </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-border">
-                                                  {effectiveKept.map((item, idx) => {
+                                                  {sortedKept.map((item, idx) => {
                                                     const isManuallyProtected = manuallyProtectedVersions.has(item.version.id);
                                                     const originalKeptIndex = smartCleanupPreviewData.kept.findIndex(k => k.version.id === item.version.id);
                                                     
@@ -2680,14 +2748,38 @@ export function BacktestConfigForm({
                                                     </th>
                                                     <th className="px-3 py-2 text-left font-medium">Preset</th>
                                                     <th className="px-3 py-2 text-left font-medium">Version</th>
-                                                    <th className="px-3 py-2 text-left font-medium">PnL</th>
-                                                    <th className="px-3 py-2 text-left font-medium">Win Rate</th>
-                                                    <th className="px-3 py-2 text-left font-medium">Sharpe</th>
+                                                    <th 
+                                                      className="px-3 py-2 text-left font-medium cursor-pointer hover:bg-red-200/50 dark:hover:bg-red-800/30 select-none"
+                                                      onClick={() => handleSortClick('pnl')}
+                                                    >
+                                                      <span className="flex items-center">
+                                                        PnL
+                                                        <SortIcon column="pnl" />
+                                                      </span>
+                                                    </th>
+                                                    <th 
+                                                      className="px-3 py-2 text-left font-medium cursor-pointer hover:bg-red-200/50 dark:hover:bg-red-800/30 select-none"
+                                                      onClick={() => handleSortClick('winRate')}
+                                                    >
+                                                      <span className="flex items-center">
+                                                        Win Rate
+                                                        <SortIcon column="winRate" />
+                                                      </span>
+                                                    </th>
+                                                    <th 
+                                                      className="px-3 py-2 text-left font-medium cursor-pointer hover:bg-red-200/50 dark:hover:bg-red-800/30 select-none"
+                                                      onClick={() => handleSortClick('sharpe')}
+                                                    >
+                                                      <span className="flex items-center">
+                                                        Sharpe
+                                                        <SortIcon column="sharpe" />
+                                                      </span>
+                                                    </th>
                                                     <th className="px-3 py-2 text-left font-medium">Reason</th>
                                                   </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-red-200/50 dark:divide-red-900/30">
-                                                  {effectiveRemoved.map((item) => (
+                                                  {sortedRemoved.map((item) => (
                                                     <tr key={item.version.id} className="hover:bg-red-100/30 dark:hover:bg-red-900/20 group">
                                                       <td className="px-2 py-2 text-center">
                                                         <Checkbox
