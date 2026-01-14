@@ -3078,6 +3078,152 @@ export function BacktestConfigForm({
                                             </div>
                                           )}
                                           
+                                          {/* Performance Metric Charts */}
+                                          {(effectiveKept.length > 0 || effectiveRemoved.length > 0) && (
+                                            <div className="space-y-3">
+                                              <div className="text-xs font-medium">Performance Metrics</div>
+                                              <div className="grid grid-cols-3 gap-2">
+                                                {[
+                                                  { 
+                                                    label: 'PnL %', 
+                                                    getValue: (v: typeof effectiveKept[0]) => v.version.performance?.totalPnlPercent,
+                                                    format: (v: number) => `${v >= 0 ? '+' : ''}${v.toFixed(1)}%`,
+                                                    colorPositive: true
+                                                  },
+                                                  { 
+                                                    label: 'Win Rate', 
+                                                    getValue: (v: typeof effectiveKept[0]) => v.version.performance?.winRate,
+                                                    format: (v: number) => `${v.toFixed(1)}%`,
+                                                    colorPositive: false
+                                                  },
+                                                  { 
+                                                    label: 'Sharpe', 
+                                                    getValue: (v: typeof effectiveKept[0]) => v.version.performance?.sharpeRatio,
+                                                    format: (v: number) => v.toFixed(2),
+                                                    colorPositive: true
+                                                  },
+                                                ].map(({ label, getValue, format, colorPositive }) => {
+                                                  const keptWithPerf = effectiveKept.filter(v => getValue(v) !== undefined);
+                                                  const removedWithPerf = effectiveRemoved.filter(v => getValue(v) !== undefined);
+                                                  const keptValues = keptWithPerf.map(v => getValue(v)!);
+                                                  const removedValues = removedWithPerf.map(v => getValue(v)!);
+                                                  const allValues = [...keptValues, ...removedValues];
+                                                  
+                                                  if (allValues.length === 0) return null;
+                                                  
+                                                  const minVal = Math.min(...allValues, 0);
+                                                  const maxVal = Math.max(...allValues);
+                                                  const range = maxVal - minVal || 1;
+                                                  const keptAvg = keptValues.length > 0 ? keptValues.reduce((a, b) => a + b, 0) / keptValues.length : null;
+                                                  const removedAvg = removedValues.length > 0 ? removedValues.reduce((a, b) => a + b, 0) / removedValues.length : null;
+                                                  
+                                                  return (
+                                                    <div key={label} className="p-2 rounded border bg-muted/20">
+                                                      <div className="text-[10px] font-medium mb-1">{label}</div>
+                                                      
+                                                      {/* Average comparison bars */}
+                                                      <div className="space-y-1 mb-2">
+                                                        <div className="flex items-center gap-1.5">
+                                                          <span className="text-[9px] w-12 text-green-600">Kept</span>
+                                                          <div className="flex-1 h-3 bg-muted rounded-sm overflow-hidden relative">
+                                                            {keptAvg !== null && (
+                                                              <div 
+                                                                className={cn(
+                                                                  "h-full rounded-sm transition-all",
+                                                                  colorPositive && keptAvg >= 0 ? "bg-green-500" : colorPositive && keptAvg < 0 ? "bg-red-500" : "bg-green-500"
+                                                                )}
+                                                                style={{ 
+                                                                  width: `${Math.abs((keptAvg - minVal) / range) * 100}%`,
+                                                                }}
+                                                              />
+                                                            )}
+                                                          </div>
+                                                          <span className={cn(
+                                                            "text-[9px] w-14 text-right font-medium",
+                                                            colorPositive && keptAvg !== null && keptAvg >= 0 ? "text-green-600" : colorPositive && keptAvg !== null ? "text-red-500" : ""
+                                                          )}>
+                                                            {keptAvg !== null ? format(keptAvg) : '—'}
+                                                          </span>
+                                                        </div>
+                                                        <div className="flex items-center gap-1.5">
+                                                          <span className="text-[9px] w-12 text-red-500">Removed</span>
+                                                          <div className="flex-1 h-3 bg-muted rounded-sm overflow-hidden relative">
+                                                            {removedAvg !== null && (
+                                                              <div 
+                                                                className={cn(
+                                                                  "h-full rounded-sm transition-all",
+                                                                  colorPositive && removedAvg >= 0 ? "bg-green-500/60" : colorPositive && removedAvg < 0 ? "bg-red-500/60" : "bg-red-500/60"
+                                                                )}
+                                                                style={{ 
+                                                                  width: `${Math.abs((removedAvg - minVal) / range) * 100}%`,
+                                                                }}
+                                                              />
+                                                            )}
+                                                          </div>
+                                                          <span className={cn(
+                                                            "text-[9px] w-14 text-right font-medium",
+                                                            colorPositive && removedAvg !== null && removedAvg >= 0 ? "text-green-600" : colorPositive && removedAvg !== null ? "text-red-500" : ""
+                                                          )}>
+                                                            {removedAvg !== null ? format(removedAvg) : '—'}
+                                                          </span>
+                                                        </div>
+                                                      </div>
+                                                      
+                                                      {/* Individual value dots */}
+                                                      <div className="flex items-center gap-1 h-4">
+                                                        <div className="flex-1 relative h-full bg-muted/50 rounded-sm">
+                                                          {/* Zero line for PnL */}
+                                                          {colorPositive && minVal < 0 && maxVal > 0 && (
+                                                            <div 
+                                                              className="absolute top-0 bottom-0 w-px bg-border"
+                                                              style={{ left: `${((0 - minVal) / range) * 100}%` }}
+                                                            />
+                                                          )}
+                                                          {/* Kept dots */}
+                                                          {keptWithPerf.map((item, i) => {
+                                                            const val = getValue(item)!;
+                                                            return (
+                                                              <Tooltip key={`kept-${i}`}>
+                                                                <TooltipTrigger asChild>
+                                                                  <div 
+                                                                    className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-green-500 border border-green-600 cursor-pointer hover:scale-125 transition-transform"
+                                                                    style={{ left: `${((val - minVal) / range) * 100}%` }}
+                                                                  />
+                                                                </TooltipTrigger>
+                                                                <TooltipContent side="top" className="text-[10px]">
+                                                                  <div className="font-medium">{item.version.data.label}</div>
+                                                                  <div>{label}: {format(val)}</div>
+                                                                </TooltipContent>
+                                                              </Tooltip>
+                                                            );
+                                                          })}
+                                                          {/* Removed dots */}
+                                                          {removedWithPerf.map((item, i) => {
+                                                            const val = getValue(item)!;
+                                                            return (
+                                                              <Tooltip key={`removed-${i}`}>
+                                                                <TooltipTrigger asChild>
+                                                                  <div 
+                                                                    className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-red-500/70 border border-red-600/70 cursor-pointer hover:scale-125 transition-transform"
+                                                                    style={{ left: `${((val - minVal) / range) * 100}%` }}
+                                                                  />
+                                                                </TooltipTrigger>
+                                                                <TooltipContent side="top" className="text-[10px]">
+                                                                  <div className="font-medium">{item.version.data.label}</div>
+                                                                  <div>{label}: {format(val)}</div>
+                                                                </TooltipContent>
+                                                              </Tooltip>
+                                                            );
+                                                          })}
+                                                        </div>
+                                                      </div>
+                                                    </div>
+                                                  );
+                                                })}
+                                              </div>
+                                            </div>
+                                          )}
+                                          
                                           {/* Side-by-side detailed view */}
                                           <div className="grid grid-cols-2 gap-3">
                                             {/* Kept Versions */}
