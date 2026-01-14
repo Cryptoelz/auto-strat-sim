@@ -2493,9 +2493,21 @@ export function BacktestConfigForm({
                                     <div className="flex-1 overflow-auto space-y-4">
                                       {/* Versions to Keep */}
                                       <div className="space-y-2">
-                                        <div className="flex items-center gap-2 text-sm font-medium text-green-600">
-                                          <Check className="h-4 w-4" />
-                                          Versions to Keep ({effectiveKept.length})
+                                        <div className="flex items-center justify-between">
+                                          <div className="flex items-center gap-2 text-sm font-medium text-green-600">
+                                            <Check className="h-4 w-4" />
+                                            Versions to Keep ({effectiveKept.length})
+                                          </div>
+                                          {manuallyProtectedVersions.size > 0 && (
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              className="h-5 px-2 text-[10px] text-muted-foreground hover:text-foreground"
+                                              onClick={() => setManuallyProtectedVersions(new Set())}
+                                            >
+                                              Unprotect All
+                                            </Button>
+                                          )}
                                         </div>
                                         {effectiveKept.length > 0 ? (
                                           <div className="border rounded-lg overflow-hidden">
