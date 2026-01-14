@@ -2717,7 +2717,132 @@ export function BacktestConfigForm({
                                   );
                                   })()}
                                   
-                                  <DialogFooter className="gap-2 sm:gap-0">
+                                  <DialogFooter className="flex-col sm:flex-row gap-2">
+                                    <div className="flex gap-2 mr-auto">
+                                      <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                          <Button variant="outline" size="sm">
+                                            <Download className="h-4 w-4 mr-1.5" />
+                                            Export
+                                          </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="start">
+                                          <DropdownMenuItem
+                                            onClick={() => {
+                                              if (!smartCleanupPreviewData) return;
+                                              
+                                              const effectiveKept = [
+                                                ...smartCleanupPreviewData.kept,
+                                                ...smartCleanupPreviewData.removed.filter(item => manuallyProtectedVersions.has(item.version.id))
+                                              ];
+                                              const effectiveRemoved = smartCleanupPreviewData.removed.filter(
+                                                item => !manuallyProtectedVersions.has(item.version.id)
+                                              );
+                                              
+                                              const headers = ['Status', 'Preset', 'Version', 'PnL %', 'Win Rate %', 'Sharpe Ratio', 'Reason'];
+                                              const rows = [
+                                                ...effectiveKept.map((item, idx) => {
+                                                  const isManuallyProtected = manuallyProtectedVersions.has(item.version.id);
+                                                  return [
+                                                    isManuallyProtected ? 'Protected (Manual)' : 'Kept',
+                                                    `Preset ${item.slot}`,
+                                                    item.version.data.label,
+                                                    item.version.performance?.totalPnlPercent?.toFixed(2) ?? '',
+                                                    item.version.performance?.winRate?.toFixed(1) ?? '',
+                                                    item.version.performance?.sharpeRatio?.toFixed(2) ?? '',
+                                                    isManuallyProtected ? 'Manually protected' : `Rank #${idx + 1}`
+                                                  ];
+                                                }),
+                                                ...effectiveRemoved.map(item => [
+                                                  'Remove',
+                                                  `Preset ${item.slot}`,
+                                                  item.version.data.label,
+                                                  item.version.performance?.totalPnlPercent?.toFixed(2) ?? '',
+                                                  item.version.performance?.winRate?.toFixed(1) ?? '',
+                                                  item.version.performance?.sharpeRatio?.toFixed(2) ?? '',
+                                                  item.version.performance ? 'Lower performance' : 'No performance data'
+                                                ])
+                                              ];
+                                              
+                                              const csv = [headers.join(','), ...rows.map(row => row.map(cell => `"${cell}"`).join(','))].join('\n');
+                                              const blob = new Blob([csv], { type: 'text/csv' });
+                                              const url = URL.createObjectURL(blob);
+                                              const a = document.createElement('a');
+                                              a.href = url;
+                                              a.download = `cleanup-preview-${format(new Date(), 'yyyy-MM-dd-HHmmss')}.csv`;
+                                              a.click();
+                                              URL.revokeObjectURL(url);
+                                              toast.success('Exported cleanup preview as CSV');
+                                            }}
+                                          >
+                                            Export as CSV
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem
+                                            onClick={() => {
+                                              if (!smartCleanupPreviewData) return;
+                                              
+                                              const effectiveKept = [
+                                                ...smartCleanupPreviewData.kept,
+                                                ...smartCleanupPreviewData.removed.filter(item => manuallyProtectedVersions.has(item.version.id))
+                                              ];
+                                              const effectiveRemoved = smartCleanupPreviewData.removed.filter(
+                                                item => !manuallyProtectedVersions.has(item.version.id)
+                                              );
+                                              
+                                              const report = {
+                                                exportedAt: new Date().toISOString(),
+                                                summary: {
+                                                  totalKept: effectiveKept.length,
+                                                  totalRemoved: effectiveRemoved.length,
+                                                  manuallyProtected: manuallyProtectedVersions.size
+                                                },
+                                                kept: effectiveKept.map((item, idx) => ({
+                                                  preset: item.slot,
+                                                  label: item.version.data.label,
+                                                  id: item.version.id,
+                                                  isManuallyProtected: manuallyProtectedVersions.has(item.version.id),
+                                                  rank: manuallyProtectedVersions.has(item.version.id) ? null : idx + 1,
+                                                  performance: item.version.performance ? {
+                                                    pnlPercent: item.version.performance.totalPnlPercent,
+                                                    winRate: item.version.performance.winRate,
+                                                    sharpeRatio: item.version.performance.sharpeRatio,
+                                                    maxDrawdown: item.version.performance.maxDrawdown,
+                                                    profitFactor: item.version.performance.profitFactor,
+                                                    totalTrades: item.version.performance.totalTrades
+                                                  } : null
+                                                })),
+                                                removed: effectiveRemoved.map(item => ({
+                                                  preset: item.slot,
+                                                  label: item.version.data.label,
+                                                  id: item.version.id,
+                                                  reason: item.version.performance ? 'Lower performance' : 'No performance data',
+                                                  performance: item.version.performance ? {
+                                                    pnlPercent: item.version.performance.totalPnlPercent,
+                                                    winRate: item.version.performance.winRate,
+                                                    sharpeRatio: item.version.performance.sharpeRatio,
+                                                    maxDrawdown: item.version.performance.maxDrawdown,
+                                                    profitFactor: item.version.performance.profitFactor,
+                                                    totalTrades: item.version.performance.totalTrades
+                                                  } : null
+                                                }))
+                                              };
+                                              
+                                              const json = JSON.stringify(report, null, 2);
+                                              const blob = new Blob([json], { type: 'application/json' });
+                                              const url = URL.createObjectURL(blob);
+                                              const a = document.createElement('a');
+                                              a.href = url;
+                                              a.download = `cleanup-preview-${format(new Date(), 'yyyy-MM-dd-HHmmss')}.json`;
+                                              a.click();
+                                              URL.revokeObjectURL(url);
+                                              toast.success('Exported cleanup preview as JSON');
+                                            }}
+                                          >
+                                            Export as JSON
+                                          </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
+                                    </div>
                                     <Button
                                       variant="outline"
                                       onClick={() => {
