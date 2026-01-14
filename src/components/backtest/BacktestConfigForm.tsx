@@ -2602,9 +2602,22 @@ export function BacktestConfigForm({
                                             Versions to Remove ({effectiveRemoved.length})
                                           </div>
                                           {effectiveRemoved.length > 0 && (
-                                            <span className="text-[10px] text-muted-foreground">
-                                              Check to protect from removal
-                                            </span>
+                                            <div className="flex items-center gap-2">
+                                              <span className="text-[10px] text-muted-foreground">
+                                                Check to protect from removal
+                                              </span>
+                                              <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-5 px-2 text-[10px] text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950"
+                                                onClick={() => {
+                                                  const allRemovedIds = smartCleanupPreviewData.removed.map(item => item.version.id);
+                                                  setManuallyProtectedVersions(new Set(allRemovedIds));
+                                                }}
+                                              >
+                                                Protect All
+                                              </Button>
+                                            </div>
                                           )}
                                         </div>
                                         {effectiveRemoved.length > 0 ? (
