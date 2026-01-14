@@ -2918,6 +2918,166 @@ export function BacktestConfigForm({
                                             </table>
                                           </div>
                                           
+                                          {/* Visual Parameter Charts */}
+                                          {(effectiveKept.length > 0 || effectiveRemoved.length > 0) && (
+                                            <div className="space-y-3">
+                                              <div className="text-xs font-medium">Parameter Distribution</div>
+                                              <div className="grid grid-cols-1 gap-2">
+                                                {[
+                                                  { label: 'Position Size', key: 'positionSizePercent' as const, suffix: '%', color: 'blue' },
+                                                  { label: 'Stop Loss', key: 'stopLossPercent' as const, suffix: '%', color: 'orange' },
+                                                  { label: 'Take Profit', key: 'takeProfitPercent' as const, suffix: '%', color: 'purple' },
+                                                ].map(({ label, key, suffix, color }) => {
+                                                  const keptValues = effectiveKept.map(item => item.version.data[key]);
+                                                  const removedValues = effectiveRemoved.map(item => item.version.data[key]);
+                                                  const allValues = [...keptValues, ...removedValues];
+                                                  const maxVal = allValues.length > 0 ? Math.max(...allValues) : 100;
+                                                  const keptAvg = keptValues.length > 0 ? keptValues.reduce((a, b) => a + b, 0) / keptValues.length : 0;
+                                                  const removedAvg = removedValues.length > 0 ? removedValues.reduce((a, b) => a + b, 0) / removedValues.length : 0;
+                                                  
+                                                  return (
+                                                    <div key={key} className="p-2 rounded border bg-muted/20">
+                                                      <div className="flex items-center justify-between mb-1.5">
+                                                        <span className="text-[10px] font-medium">{label}</span>
+                                                        <div className="flex items-center gap-3 text-[9px]">
+                                                          <span className="text-green-600">Kept: {keptAvg.toFixed(1)}{suffix}</span>
+                                                          <span className="text-red-500">Removed: {removedAvg.toFixed(1)}{suffix}</span>
+                                                        </div>
+                                                      </div>
+                                                      <div className="flex gap-1 h-6">
+                                                        {/* Kept versions bars */}
+                                                        {keptValues.map((val, i) => (
+                                                          <Tooltip key={`kept-${i}`}>
+                                                            <TooltipTrigger asChild>
+                                                              <div 
+                                                                className="bg-green-500/70 rounded-sm min-w-[4px] transition-all hover:bg-green-500"
+                                                                style={{ 
+                                                                  height: `${Math.max(10, (val / maxVal) * 100)}%`,
+                                                                  flex: `0 0 ${Math.max(4, 100 / Math.max(allValues.length, 10))}%`
+                                                                }}
+                                                              />
+                                                            </TooltipTrigger>
+                                                            <TooltipContent side="top" className="text-[10px]">
+                                                              <div className="font-medium">{effectiveKept[i]?.version.data.label}</div>
+                                                              <div>{val.toFixed(1)}{suffix}</div>
+                                                            </TooltipContent>
+                                                          </Tooltip>
+                                                        ))}
+                                                        {/* Separator */}
+                                                        {keptValues.length > 0 && removedValues.length > 0 && (
+                                                          <div className="w-px bg-border mx-1" />
+                                                        )}
+                                                        {/* Removed versions bars */}
+                                                        {removedValues.map((val, i) => (
+                                                          <Tooltip key={`removed-${i}`}>
+                                                            <TooltipTrigger asChild>
+                                                              <div 
+                                                                className="bg-red-500/70 rounded-sm min-w-[4px] transition-all hover:bg-red-500"
+                                                                style={{ 
+                                                                  height: `${Math.max(10, (val / maxVal) * 100)}%`,
+                                                                  flex: `0 0 ${Math.max(4, 100 / Math.max(allValues.length, 10))}%`
+                                                                }}
+                                                              />
+                                                            </TooltipTrigger>
+                                                            <TooltipContent side="top" className="text-[10px]">
+                                                              <div className="font-medium">{effectiveRemoved[i]?.version.data.label}</div>
+                                                              <div>{val.toFixed(1)}{suffix}</div>
+                                                            </TooltipContent>
+                                                          </Tooltip>
+                                                        ))}
+                                                      </div>
+                                                    </div>
+                                                  );
+                                                })}
+                                                
+                                                {/* SMA Comparison */}
+                                                <div className="p-2 rounded border bg-muted/20">
+                                                  <div className="flex items-center justify-between mb-1.5">
+                                                    <span className="text-[10px] font-medium">SMA Periods</span>
+                                                    <div className="flex items-center gap-1 text-[9px] text-muted-foreground">
+                                                      <span className="inline-block w-2 h-2 rounded-full bg-blue-500/70" /> Fast
+                                                      <span className="inline-block w-2 h-2 rounded-full bg-indigo-500/70 ml-1" /> Slow
+                                                    </div>
+                                                  </div>
+                                                  <div className="grid grid-cols-2 gap-2">
+                                                    {/* Kept SMA */}
+                                                    <div className="space-y-1">
+                                                      <div className="text-[9px] text-green-600 font-medium">Kept</div>
+                                                      <div className="flex items-end gap-0.5 h-8">
+                                                        {effectiveKept.slice(0, 8).map((item, i) => {
+                                                          const maxSMA = Math.max(
+                                                            ...effectiveKept.map(v => v.version.data.slowSMA),
+                                                            ...effectiveRemoved.map(v => v.version.data.slowSMA),
+                                                            50
+                                                          );
+                                                          return (
+                                                            <Tooltip key={i}>
+                                                              <TooltipTrigger asChild>
+                                                                <div className="flex-1 flex gap-px">
+                                                                  <div 
+                                                                    className="flex-1 bg-blue-500/70 rounded-t-sm"
+                                                                    style={{ height: `${(item.version.data.fastSMA / maxSMA) * 100}%` }}
+                                                                  />
+                                                                  <div 
+                                                                    className="flex-1 bg-indigo-500/70 rounded-t-sm"
+                                                                    style={{ height: `${(item.version.data.slowSMA / maxSMA) * 100}%` }}
+                                                                  />
+                                                                </div>
+                                                              </TooltipTrigger>
+                                                              <TooltipContent side="top" className="text-[10px]">
+                                                                <div className="font-medium">{item.version.data.label}</div>
+                                                                <div>Fast: {item.version.data.fastSMA}, Slow: {item.version.data.slowSMA}</div>
+                                                              </TooltipContent>
+                                                            </Tooltip>
+                                                          );
+                                                        })}
+                                                        {effectiveKept.length === 0 && (
+                                                          <div className="text-[9px] text-muted-foreground">No data</div>
+                                                        )}
+                                                      </div>
+                                                    </div>
+                                                    {/* Removed SMA */}
+                                                    <div className="space-y-1">
+                                                      <div className="text-[9px] text-red-500 font-medium">Removed</div>
+                                                      <div className="flex items-end gap-0.5 h-8">
+                                                        {effectiveRemoved.slice(0, 8).map((item, i) => {
+                                                          const maxSMA = Math.max(
+                                                            ...effectiveKept.map(v => v.version.data.slowSMA),
+                                                            ...effectiveRemoved.map(v => v.version.data.slowSMA),
+                                                            50
+                                                          );
+                                                          return (
+                                                            <Tooltip key={i}>
+                                                              <TooltipTrigger asChild>
+                                                                <div className="flex-1 flex gap-px">
+                                                                  <div 
+                                                                    className="flex-1 bg-blue-500/50 rounded-t-sm"
+                                                                    style={{ height: `${(item.version.data.fastSMA / maxSMA) * 100}%` }}
+                                                                  />
+                                                                  <div 
+                                                                    className="flex-1 bg-indigo-500/50 rounded-t-sm"
+                                                                    style={{ height: `${(item.version.data.slowSMA / maxSMA) * 100}%` }}
+                                                                  />
+                                                                </div>
+                                                              </TooltipTrigger>
+                                                              <TooltipContent side="top" className="text-[10px]">
+                                                                <div className="font-medium">{item.version.data.label}</div>
+                                                                <div>Fast: {item.version.data.fastSMA}, Slow: {item.version.data.slowSMA}</div>
+                                                              </TooltipContent>
+                                                            </Tooltip>
+                                                          );
+                                                        })}
+                                                        {effectiveRemoved.length === 0 && (
+                                                          <div className="text-[9px] text-muted-foreground">No data</div>
+                                                        )}
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          )}
+                                          
                                           {/* Side-by-side detailed view */}
                                           <div className="grid grid-cols-2 gap-3">
                                             {/* Kept Versions */}
