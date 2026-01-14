@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -539,6 +540,7 @@ export function BacktestConfigForm({
     kept: { slot: '4' | '5' | '6'; version: PresetVersion; score: number }[];
     removed: { slot: '4' | '5' | '6'; version: PresetVersion; score: number }[];
   } | null>(null);
+  const [manuallyProtectedVersions, setManuallyProtectedVersions] = useState<Set<string>>(new Set());
   
   // Force re-render for countdown timer
   const [, setCountdownTick] = useState(0);
@@ -2335,6 +2337,7 @@ export function BacktestConfigForm({
                                               const preview = onGetSmartCleanupPreview(3);
                                               setSmartCleanupPreviewData(preview);
                                               setPendingSmartCleanupKeepCount(3);
+                                              setManuallyProtectedVersions(new Set());
                                               setSmartCleanupPreviewOpen(true);
                                             }}
                                             disabled={versionsWithPerformanceCount === 0}
@@ -2363,6 +2366,7 @@ export function BacktestConfigForm({
                                               const preview = onGetSmartCleanupPreview(5);
                                               setSmartCleanupPreviewData(preview);
                                               setPendingSmartCleanupKeepCount(5);
+                                              setManuallyProtectedVersions(new Set());
                                               setSmartCleanupPreviewOpen(true);
                                             }}
                                             disabled={versionsWithPerformanceCount === 0}
@@ -2386,6 +2390,7 @@ export function BacktestConfigForm({
                                               const preview = onGetSmartCleanupPreview(1);
                                               setSmartCleanupPreviewData(preview);
                                               setPendingSmartCleanupKeepCount(1);
+                                              setManuallyProtectedVersions(new Set());
                                               setSmartCleanupPreviewOpen(true);
                                             }}
                                             disabled={versionsWithPerformanceCount === 0}
@@ -2451,7 +2456,12 @@ export function BacktestConfigForm({
                               </AlertDialog>
                               
                               {/* Smart Cleanup Preview Dialog */}
-                              <Dialog open={smartCleanupPreviewOpen} onOpenChange={setSmartCleanupPreviewOpen}>
+                              <Dialog open={smartCleanupPreviewOpen} onOpenChange={(open) => {
+                                setSmartCleanupPreviewOpen(open);
+                                if (!open) {
+                                  setManuallyProtectedVersions(new Set());
+                                }
+                              }}>
                                 <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
                                   <DialogHeader>
                                     <DialogTitle className="flex items-center gap-2">
@@ -2461,18 +2471,33 @@ export function BacktestConfigForm({
                                     <DialogDescription>
                                       Review which versions will be kept vs removed based on performance rankings.
                                       Keeping best {pendingSmartCleanupKeepCount} version{pendingSmartCleanupKeepCount !== 1 ? 's' : ''} per preset.
+                                      {manuallyProtectedVersions.size > 0 && (
+                                        <span className="text-blue-500 ml-1">
+                                          (+{manuallyProtectedVersions.size} manually protected)
+                                        </span>
+                                      )}
                                     </DialogDescription>
                                   </DialogHeader>
                                   
-                                  {smartCleanupPreviewData && (
+                                  {smartCleanupPreviewData && (() => {
+                                    // Compute effective kept/removed lists considering manual protections
+                                    const effectiveKept = [
+                                      ...smartCleanupPreviewData.kept,
+                                      ...smartCleanupPreviewData.removed.filter(item => manuallyProtectedVersions.has(item.version.id))
+                                    ];
+                                    const effectiveRemoved = smartCleanupPreviewData.removed.filter(
+                                      item => !manuallyProtectedVersions.has(item.version.id)
+                                    );
+                                    
+                                    return (
                                     <div className="flex-1 overflow-auto space-y-4">
                                       {/* Versions to Keep */}
                                       <div className="space-y-2">
                                         <div className="flex items-center gap-2 text-sm font-medium text-green-600">
                                           <Check className="h-4 w-4" />
-                                          Versions to Keep ({smartCleanupPreviewData.kept.length})
+                                          Versions to Keep ({effectiveKept.length})
                                         </div>
-                                        {smartCleanupPreviewData.kept.length > 0 ? (
+                                        {effectiveKept.length > 0 ? (
                                           <div className="border rounded-lg overflow-hidden">
                                             <div className="max-h-48 overflow-auto">
                                               <table className="w-full text-xs">
@@ -2487,8 +2512,15 @@ export function BacktestConfigForm({
                                                   </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-border">
-                                                  {smartCleanupPreviewData.kept.map((item, idx) => (
-                                                    <tr key={item.version.id} className="hover:bg-muted/30">
+                                                  {effectiveKept.map((item, idx) => {
+                                                    const isManuallyProtected = manuallyProtectedVersions.has(item.version.id);
+                                                    const originalKeptIndex = smartCleanupPreviewData.kept.findIndex(k => k.version.id === item.version.id);
+                                                    
+                                                    return (
+                                                    <tr key={item.version.id} className={cn(
+                                                      "hover:bg-muted/30",
+                                                      isManuallyProtected && "bg-blue-500/5"
+                                                    )}>
                                                       <td className="px-3 py-2 font-medium">Preset {item.slot}</td>
                                                       <td className="px-3 py-2">
                                                         <span className="truncate max-w-[120px] inline-block">
@@ -2519,15 +2551,29 @@ export function BacktestConfigForm({
                                                         }
                                                       </td>
                                                       <td className="px-3 py-2">
-                                                        {item.version.pinned ? (
+                                                        {isManuallyProtected ? (
+                                                          <button
+                                                            onClick={() => {
+                                                              setManuallyProtectedVersions(prev => {
+                                                                const next = new Set(prev);
+                                                                next.delete(item.version.id);
+                                                                return next;
+                                                              });
+                                                            }}
+                                                            className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-600 hover:bg-blue-500/30 transition-colors cursor-pointer"
+                                                          >
+                                                            <Check className="h-2.5 w-2.5" />
+                                                            Protected
+                                                          </button>
+                                                        ) : item.version.pinned ? (
                                                           <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-600">
                                                             <Pin className="h-2.5 w-2.5" />
                                                             Pinned
                                                           </span>
-                                                        ) : idx < pendingSmartCleanupKeepCount ? (
+                                                        ) : originalKeptIndex >= 0 && originalKeptIndex < pendingSmartCleanupKeepCount ? (
                                                           <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-600">
                                                             <Trophy className="h-2.5 w-2.5" />
-                                                            Top {idx + 1}
+                                                            Top {originalKeptIndex + 1}
                                                           </span>
                                                         ) : (
                                                           <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
@@ -2536,7 +2582,7 @@ export function BacktestConfigForm({
                                                         )}
                                                       </td>
                                                     </tr>
-                                                  ))}
+                                                  )})}
                                                 </tbody>
                                               </table>
                                             </div>
@@ -2550,16 +2596,26 @@ export function BacktestConfigForm({
                                       
                                       {/* Versions to Remove */}
                                       <div className="space-y-2">
-                                        <div className="flex items-center gap-2 text-sm font-medium text-red-500">
-                                          <Trash2 className="h-4 w-4" />
-                                          Versions to Remove ({smartCleanupPreviewData.removed.length})
+                                        <div className="flex items-center justify-between">
+                                          <div className="flex items-center gap-2 text-sm font-medium text-red-500">
+                                            <Trash2 className="h-4 w-4" />
+                                            Versions to Remove ({effectiveRemoved.length})
+                                          </div>
+                                          {effectiveRemoved.length > 0 && (
+                                            <span className="text-[10px] text-muted-foreground">
+                                              Check to protect from removal
+                                            </span>
+                                          )}
                                         </div>
-                                        {smartCleanupPreviewData.removed.length > 0 ? (
+                                        {effectiveRemoved.length > 0 ? (
                                           <div className="border border-red-200 dark:border-red-900/50 rounded-lg overflow-hidden bg-red-50/50 dark:bg-red-950/20">
                                             <div className="max-h-48 overflow-auto">
                                               <table className="w-full text-xs">
                                                 <thead className="bg-red-100/50 dark:bg-red-900/30 sticky top-0">
                                                   <tr>
+                                                    <th className="w-8 px-2 py-2 text-center">
+                                                      <span className="sr-only">Protect</span>
+                                                    </th>
                                                     <th className="px-3 py-2 text-left font-medium">Preset</th>
                                                     <th className="px-3 py-2 text-left font-medium">Version</th>
                                                     <th className="px-3 py-2 text-left font-medium">PnL</th>
@@ -2569,8 +2625,23 @@ export function BacktestConfigForm({
                                                   </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-red-200/50 dark:divide-red-900/30">
-                                                  {smartCleanupPreviewData.removed.map((item) => (
-                                                    <tr key={item.version.id} className="hover:bg-red-100/30 dark:hover:bg-red-900/20">
+                                                  {effectiveRemoved.map((item) => (
+                                                    <tr key={item.version.id} className="hover:bg-red-100/30 dark:hover:bg-red-900/20 group">
+                                                      <td className="px-2 py-2 text-center">
+                                                        <Checkbox
+                                                          checked={false}
+                                                          onCheckedChange={(checked) => {
+                                                            if (checked) {
+                                                              setManuallyProtectedVersions(prev => {
+                                                                const next = new Set(prev);
+                                                                next.add(item.version.id);
+                                                                return next;
+                                                              });
+                                                            }
+                                                          }}
+                                                          className="data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                                                        />
+                                                      </td>
                                                       <td className="px-3 py-2 font-medium">Preset {item.slot}</td>
                                                       <td className="px-3 py-2">
                                                         <span className="truncate max-w-[120px] inline-block">
@@ -2613,12 +2684,13 @@ export function BacktestConfigForm({
                                           </div>
                                         ) : (
                                           <div className="text-xs text-muted-foreground p-3 bg-green-500/10 rounded-lg border border-green-500/20">
-                                            No versions will be removed. All versions are either pinned or within the keep limit.
+                                            No versions will be removed. All versions are either pinned, protected, or within the keep limit.
                                           </div>
                                         )}
                                       </div>
                                     </div>
-                                  )}
+                                  );
+                                  })()}
                                   
                                   <DialogFooter className="gap-2 sm:gap-0">
                                     <Button
@@ -2626,6 +2698,7 @@ export function BacktestConfigForm({
                                       onClick={() => {
                                         setSmartCleanupPreviewOpen(false);
                                         setSmartCleanupPreviewData(null);
+                                        setManuallyProtectedVersions(new Set());
                                       }}
                                     >
                                       Cancel
@@ -2633,17 +2706,40 @@ export function BacktestConfigForm({
                                     <Button
                                       variant="default"
                                       className="bg-purple-600 hover:bg-purple-700"
-                                      disabled={!smartCleanupPreviewData || smartCleanupPreviewData.removed.length === 0}
+                                      disabled={!smartCleanupPreviewData || (smartCleanupPreviewData.removed.length - manuallyProtectedVersions.size) === 0}
                                       onClick={() => {
-                                        if (onSmartCleanup) {
-                                          onSmartCleanup(pendingSmartCleanupKeepCount);
+                                        if (onSmartCleanup && onDeleteVersions && smartCleanupPreviewData) {
+                                          // Get the version IDs that should actually be removed (excluding manually protected)
+                                          const versionIdsToRemove = smartCleanupPreviewData.removed
+                                            .filter(item => !manuallyProtectedVersions.has(item.version.id))
+                                            .map(item => ({ slot: item.slot, id: item.version.id }));
+                                          
+                                          // Group by slot and delete
+                                          const bySlot: Record<'4' | '5' | '6', string[]> = { '4': [], '5': [], '6': [] };
+                                          versionIdsToRemove.forEach(({ slot, id }) => {
+                                            bySlot[slot].push(id);
+                                          });
+                                          
+                                          let totalDeleted = 0;
+                                          for (const slot of ['4', '5', '6'] as const) {
+                                            if (bySlot[slot].length > 0) {
+                                              totalDeleted += onDeleteVersions(slot, bySlot[slot]);
+                                            }
+                                          }
+                                          
+                                          if (totalDeleted > 0) {
+                                            toast.success(`Smart cleanup complete`, {
+                                              description: `Removed ${totalDeleted} version${totalDeleted !== 1 ? 's' : ''}${manuallyProtectedVersions.size > 0 ? `, protected ${manuallyProtectedVersions.size}` : ''}`,
+                                            });
+                                          }
                                         }
                                         setSmartCleanupPreviewOpen(false);
                                         setSmartCleanupPreviewData(null);
+                                        setManuallyProtectedVersions(new Set());
                                       }}
                                     >
                                       <Sparkles className="h-4 w-4 mr-1.5" />
-                                      Remove {smartCleanupPreviewData?.removed.length || 0} Version{(smartCleanupPreviewData?.removed.length || 0) !== 1 ? 's' : ''}
+                                      Remove {smartCleanupPreviewData ? (smartCleanupPreviewData.removed.length - manuallyProtectedVersions.size) : 0} Version{(smartCleanupPreviewData ? (smartCleanupPreviewData.removed.length - manuallyProtectedVersions.size) : 0) !== 1 ? 's' : ''}
                                     </Button>
                                   </DialogFooter>
                                 </DialogContent>
