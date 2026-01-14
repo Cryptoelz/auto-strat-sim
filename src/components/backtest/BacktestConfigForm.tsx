@@ -2571,6 +2571,23 @@ export function BacktestConfigForm({
                                         </TabsTrigger>
                                       </TabsList>
                                       
+                                      {cleanupSortColumn && (
+                                        <div className="flex justify-end mb-2">
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground"
+                                            onClick={() => {
+                                              setCleanupSortColumn(null);
+                                              setCleanupSortDirection('desc');
+                                            }}
+                                          >
+                                            <RotateCcw className="h-3 w-3 mr-1" />
+                                            Reset Sort
+                                          </Button>
+                                        </div>
+                                      )}
+                                      
                                       <TabsContent value="list" className="flex-1 overflow-auto space-y-4 mt-0">
                                       {/* Versions to Keep */}
                                       <div className="space-y-2">
