@@ -14,6 +14,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Asset } from '@/types/trading';
 import { BacktestResult, SavedRun } from '@/types/backtest';
 import { PresetVersion, PRESET_TAGS, PresetTagValue, PresetVersionHistory } from '@/types/preset-version';
@@ -541,6 +542,7 @@ export function BacktestConfigForm({
     removed: { slot: '4' | '5' | '6'; version: PresetVersion; score: number }[];
   } | null>(null);
   const [manuallyProtectedVersions, setManuallyProtectedVersions] = useState<Set<string>>(new Set());
+  const [cleanupPreviewTab, setCleanupPreviewTab] = useState<'list' | 'compare'>('list');
   
   // Force re-render for countdown timer
   const [, setCountdownTick] = useState(0);
@@ -2489,8 +2491,43 @@ export function BacktestConfigForm({
                                       item => !manuallyProtectedVersions.has(item.version.id)
                                     );
                                     
+                                    // Calculate parameter averages for comparison
+                                    const calculateAverages = (items: typeof effectiveKept) => {
+                                      if (items.length === 0) return null;
+                                      const sum = items.reduce((acc, item) => ({
+                                        positionSize: acc.positionSize + item.version.data.positionSizePercent,
+                                        stopLoss: acc.stopLoss + item.version.data.stopLossPercent,
+                                        takeProfit: acc.takeProfit + item.version.data.takeProfitPercent,
+                                        fastSMA: acc.fastSMA + item.version.data.fastSMA,
+                                        slowSMA: acc.slowSMA + item.version.data.slowSMA,
+                                      }), { positionSize: 0, stopLoss: 0, takeProfit: 0, fastSMA: 0, slowSMA: 0 });
+                                      const count = items.length;
+                                      return {
+                                        positionSize: sum.positionSize / count,
+                                        stopLoss: sum.stopLoss / count,
+                                        takeProfit: sum.takeProfit / count,
+                                        fastSMA: sum.fastSMA / count,
+                                        slowSMA: sum.slowSMA / count,
+                                      };
+                                    };
+                                    
+                                    const keptAverages = calculateAverages(effectiveKept);
+                                    const removedAverages = calculateAverages(effectiveRemoved);
+                                    
                                     return (
-                                    <div className="flex-1 overflow-auto space-y-4">
+                                    <Tabs value={cleanupPreviewTab} onValueChange={(v) => setCleanupPreviewTab(v as 'list' | 'compare')} className="flex-1 flex flex-col overflow-hidden">
+                                      <TabsList className="grid w-full grid-cols-2 mb-3">
+                                        <TabsTrigger value="list" className="text-xs">
+                                          <Check className="h-3 w-3 mr-1.5" />
+                                          List View
+                                        </TabsTrigger>
+                                        <TabsTrigger value="compare" className="text-xs">
+                                          <GitCompare className="h-3 w-3 mr-1.5" />
+                                          Compare Parameters
+                                        </TabsTrigger>
+                                      </TabsList>
+                                      
+                                      <TabsContent value="list" className="flex-1 overflow-auto space-y-4 mt-0">
                                       {/* Versions to Keep */}
                                       <div className="space-y-2">
                                         <div className="flex items-center justify-between">
@@ -2713,7 +2750,158 @@ export function BacktestConfigForm({
                                           </div>
                                         )}
                                       </div>
-                                    </div>
+                                      </TabsContent>
+                                      
+                                      <TabsContent value="compare" className="flex-1 overflow-auto mt-0">
+                                        <div className="space-y-4">
+                                          {/* Parameter Comparison Table */}
+                                          <div className="border rounded-lg overflow-hidden">
+                                            <table className="w-full text-xs">
+                                              <thead className="bg-muted/50">
+                                                <tr>
+                                                  <th className="px-3 py-2 text-left font-medium">Parameter</th>
+                                                  <th className="px-3 py-2 text-center font-medium text-green-600">
+                                                    Kept ({effectiveKept.length})
+                                                  </th>
+                                                  <th className="px-3 py-2 text-center font-medium text-red-500">
+                                                    Removed ({effectiveRemoved.length})
+                                                  </th>
+                                                  <th className="px-3 py-2 text-center font-medium">Difference</th>
+                                                </tr>
+                                              </thead>
+                                              <tbody className="divide-y divide-border">
+                                                {[
+                                                  { label: 'Position Size', key: 'positionSize' as const, suffix: '%', decimals: 1 },
+                                                  { label: 'Stop Loss', key: 'stopLoss' as const, suffix: '%', decimals: 1 },
+                                                  { label: 'Take Profit', key: 'takeProfit' as const, suffix: '%', decimals: 1 },
+                                                  { label: 'Fast SMA', key: 'fastSMA' as const, suffix: '', decimals: 0 },
+                                                  { label: 'Slow SMA', key: 'slowSMA' as const, suffix: '', decimals: 0 },
+                                                ].map(({ label, key, suffix, decimals }) => {
+                                                  const keptVal = keptAverages?.[key];
+                                                  const removedVal = removedAverages?.[key];
+                                                  const diff = keptVal !== undefined && removedVal !== undefined 
+                                                    ? keptVal - removedVal 
+                                                    : null;
+                                                  
+                                                  return (
+                                                    <tr key={key} className="hover:bg-muted/30">
+                                                      <td className="px-3 py-2 font-medium">{label}</td>
+                                                      <td className="px-3 py-2 text-center">
+                                                        {keptVal !== undefined ? `${keptVal.toFixed(decimals)}${suffix}` : '—'}
+                                                      </td>
+                                                      <td className="px-3 py-2 text-center">
+                                                        {removedVal !== undefined ? `${removedVal.toFixed(decimals)}${suffix}` : '—'}
+                                                      </td>
+                                                      <td className={cn(
+                                                        "px-3 py-2 text-center font-medium",
+                                                        diff !== null && diff > 0 ? "text-green-600" : diff !== null && diff < 0 ? "text-red-500" : ""
+                                                      )}>
+                                                        {diff !== null ? (
+                                                          <>
+                                                            {diff > 0 ? '+' : ''}{diff.toFixed(decimals)}{suffix}
+                                                          </>
+                                                        ) : '—'}
+                                                      </td>
+                                                    </tr>
+                                                  );
+                                                })}
+                                              </tbody>
+                                            </table>
+                                          </div>
+                                          
+                                          {/* Side-by-side detailed view */}
+                                          <div className="grid grid-cols-2 gap-3">
+                                            {/* Kept Versions */}
+                                            <div className="space-y-2">
+                                              <div className="flex items-center gap-2 text-xs font-medium text-green-600">
+                                                <Check className="h-3 w-3" />
+                                                Kept Versions
+                                              </div>
+                                              <div className="space-y-1.5 max-h-40 overflow-auto pr-1">
+                                                {effectiveKept.map((item) => (
+                                                  <div 
+                                                    key={item.version.id} 
+                                                    className={cn(
+                                                      "p-2 rounded border text-[10px] space-y-1",
+                                                      manuallyProtectedVersions.has(item.version.id) 
+                                                        ? "bg-blue-500/5 border-blue-500/30" 
+                                                        : "bg-green-500/5 border-green-500/30"
+                                                    )}
+                                                  >
+                                                    <div className="font-medium truncate">{item.version.data.label}</div>
+                                                    <div className="grid grid-cols-2 gap-x-2 text-muted-foreground">
+                                                      <span>Position: {item.version.data.positionSizePercent}%</span>
+                                                      <span>SL: {item.version.data.stopLossPercent}%</span>
+                                                      <span>TP: {item.version.data.takeProfitPercent}%</span>
+                                                      <span>SMA: {item.version.data.fastSMA}/{item.version.data.slowSMA}</span>
+                                                    </div>
+                                                  </div>
+                                                ))}
+                                                {effectiveKept.length === 0 && (
+                                                  <div className="text-muted-foreground text-[10px] p-2">No versions</div>
+                                                )}
+                                              </div>
+                                            </div>
+                                            
+                                            {/* Removed Versions */}
+                                            <div className="space-y-2">
+                                              <div className="flex items-center gap-2 text-xs font-medium text-red-500">
+                                                <Trash2 className="h-3 w-3" />
+                                                Removed Versions
+                                              </div>
+                                              <div className="space-y-1.5 max-h-40 overflow-auto pr-1">
+                                                {effectiveRemoved.map((item) => (
+                                                  <div 
+                                                    key={item.version.id} 
+                                                    className="p-2 rounded border bg-red-500/5 border-red-500/30 text-[10px] space-y-1"
+                                                  >
+                                                    <div className="font-medium truncate">{item.version.data.label}</div>
+                                                    <div className="grid grid-cols-2 gap-x-2 text-muted-foreground">
+                                                      <span>Position: {item.version.data.positionSizePercent}%</span>
+                                                      <span>SL: {item.version.data.stopLossPercent}%</span>
+                                                      <span>TP: {item.version.data.takeProfitPercent}%</span>
+                                                      <span>SMA: {item.version.data.fastSMA}/{item.version.data.slowSMA}</span>
+                                                    </div>
+                                                  </div>
+                                                ))}
+                                                {effectiveRemoved.length === 0 && (
+                                                  <div className="text-muted-foreground text-[10px] p-2">No versions to remove</div>
+                                                )}
+                                              </div>
+                                            </div>
+                                          </div>
+                                          
+                                          {/* Summary insight */}
+                                          {keptAverages && removedAverages && (
+                                            <div className="p-3 rounded-lg bg-muted/30 border text-xs">
+                                              <div className="font-medium mb-1">Parameter Insights</div>
+                                              <div className="text-muted-foreground space-y-0.5">
+                                                {keptAverages.positionSize !== removedAverages.positionSize && (
+                                                  <div>
+                                                    • Kept versions use {keptAverages.positionSize > removedAverages.positionSize ? 'larger' : 'smaller'} position sizes on average
+                                                  </div>
+                                                )}
+                                                {keptAverages.stopLoss !== removedAverages.stopLoss && (
+                                                  <div>
+                                                    • Kept versions have {keptAverages.stopLoss > removedAverages.stopLoss ? 'wider' : 'tighter'} stop losses
+                                                  </div>
+                                                )}
+                                                {keptAverages.takeProfit !== removedAverages.takeProfit && (
+                                                  <div>
+                                                    • Kept versions target {keptAverages.takeProfit > removedAverages.takeProfit ? 'higher' : 'lower'} take profits
+                                                  </div>
+                                                )}
+                                                {(keptAverages.fastSMA !== removedAverages.fastSMA || keptAverages.slowSMA !== removedAverages.slowSMA) && (
+                                                  <div>
+                                                    • SMA periods differ between kept and removed versions
+                                                  </div>
+                                                )}
+                                              </div>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </TabsContent>
+                                    </Tabs>
                                   );
                                   })()}
                                   
