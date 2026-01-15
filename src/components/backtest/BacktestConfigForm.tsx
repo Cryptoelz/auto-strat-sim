@@ -3569,6 +3569,199 @@ export function BacktestConfigForm({
                                             );
                                           })()}
                                           
+                                          {/* Correlation Scatter Plot */}
+                                          {(effectiveKept.length > 0 || effectiveRemoved.length > 0) && (() => {
+                                            const metricPairs = [
+                                              { xKey: 'totalPnlPercent', yKey: 'winRate', xLabel: 'PnL %', yLabel: 'Win Rate %' },
+                                              { xKey: 'totalPnlPercent', yKey: 'sharpeRatio', xLabel: 'PnL %', yLabel: 'Sharpe Ratio' },
+                                              { xKey: 'winRate', yKey: 'profitFactor', xLabel: 'Win Rate %', yLabel: 'Profit Factor' },
+                                              { xKey: 'sharpeRatio', yKey: 'maxDrawdown', xLabel: 'Sharpe Ratio', yLabel: 'Max Drawdown %' },
+                                            ];
+                                            
+                                            const [selectedPair, setSelectedPair] = React.useState(0);
+                                            const pair = metricPairs[selectedPair];
+                                            
+                                            type PerformanceKey = 'totalPnlPercent' | 'winRate' | 'sharpeRatio' | 'maxDrawdown' | 'profitFactor';
+                                            
+                                            const getPoints = (items: typeof effectiveKept, isKept: boolean) => {
+                                              return items
+                                                .filter(item => item.version.performance)
+                                                .map(item => ({
+                                                  x: item.version.performance![pair.xKey as PerformanceKey],
+                                                  y: item.version.performance![pair.yKey as PerformanceKey],
+                                                  label: item.version.data.label,
+                                                  isKept,
+                                                }));
+                                            };
+                                            
+                                            const keptPoints = getPoints(effectiveKept, true);
+                                            const removedPoints = getPoints(effectiveRemoved, false);
+                                            const allPoints = [...keptPoints, ...removedPoints];
+                                            
+                                            if (allPoints.length < 2) return null;
+                                            
+                                            const xValues = allPoints.map(p => p.x);
+                                            const yValues = allPoints.map(p => p.y);
+                                            const xMin = Math.min(...xValues);
+                                            const xMax = Math.max(...xValues);
+                                            const yMin = Math.min(...yValues);
+                                            const yMax = Math.max(...yValues);
+                                            const xRange = xMax - xMin || 1;
+                                            const yRange = yMax - yMin || 1;
+                                            const xPadding = xRange * 0.1;
+                                            const yPadding = yRange * 0.1;
+                                            
+                                            const getXPos = (val: number) => ((val - (xMin - xPadding)) / (xRange + 2 * xPadding)) * 100;
+                                            const getYPos = (val: number) => 100 - ((val - (yMin - yPadding)) / (yRange + 2 * yPadding)) * 100;
+                                            
+                                            // Calculate correlation coefficient
+                                            const n = allPoints.length;
+                                            const sumX = xValues.reduce((a, b) => a + b, 0);
+                                            const sumY = yValues.reduce((a, b) => a + b, 0);
+                                            const sumXY = allPoints.reduce((a, p) => a + p.x * p.y, 0);
+                                            const sumX2 = xValues.reduce((a, b) => a + b * b, 0);
+                                            const sumY2 = yValues.reduce((a, b) => a + b * b, 0);
+                                            const correlation = (n * sumXY - sumX * sumY) / 
+                                              Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY)) || 0;
+                                            
+                                            return (
+                                              <div className="space-y-3">
+                                                <div className="flex items-center justify-between">
+                                                  <div className="text-xs font-medium">Correlation Scatter Plot</div>
+                                                  <div className="flex items-center gap-1">
+                                                    {metricPairs.map((mp, idx) => (
+                                                      <Button
+                                                        key={idx}
+                                                        variant={selectedPair === idx ? "secondary" : "ghost"}
+                                                        size="sm"
+                                                        className="h-5 text-[9px] px-1.5"
+                                                        onClick={() => setSelectedPair(idx)}
+                                                      >
+                                                        {mp.xLabel} vs {mp.yLabel}
+                                                      </Button>
+                                                    ))}
+                                                  </div>
+                                                </div>
+                                                
+                                                {/* Scatter plot area */}
+                                                <div className="relative h-48 bg-muted/20 rounded border overflow-hidden">
+                                                  {/* Grid lines */}
+                                                  <div className="absolute inset-0">
+                                                    {[0, 25, 50, 75, 100].map(pct => (
+                                                      <React.Fragment key={pct}>
+                                                        <div 
+                                                          className="absolute left-0 right-0 border-t border-border/30"
+                                                          style={{ top: `${pct}%` }}
+                                                        />
+                                                        <div 
+                                                          className="absolute top-0 bottom-0 border-l border-border/30"
+                                                          style={{ left: `${pct}%` }}
+                                                        />
+                                                      </React.Fragment>
+                                                    ))}
+                                                  </div>
+                                                  
+                                                  {/* Zero lines if applicable */}
+                                                  {xMin < 0 && xMax > 0 && (
+                                                    <div 
+                                                      className="absolute top-0 bottom-0 border-l border-muted-foreground/40"
+                                                      style={{ left: `${getXPos(0)}%` }}
+                                                    />
+                                                  )}
+                                                  {yMin < 0 && yMax > 0 && (
+                                                    <div 
+                                                      className="absolute left-0 right-0 border-t border-muted-foreground/40"
+                                                      style={{ top: `${getYPos(0)}%` }}
+                                                    />
+                                                  )}
+                                                  
+                                                  {/* Removed points (behind) */}
+                                                  {removedPoints.map((point, idx) => (
+                                                    <Tooltip key={`removed-${idx}`}>
+                                                      <TooltipTrigger asChild>
+                                                        <div
+                                                          className="absolute w-3 h-3 bg-red-500/70 rounded-full border-2 border-red-600 transform -translate-x-1/2 -translate-y-1/2 cursor-pointer hover:scale-125 transition-transform z-10"
+                                                          style={{ 
+                                                            left: `${getXPos(point.x)}%`, 
+                                                            top: `${getYPos(point.y)}%` 
+                                                          }}
+                                                        />
+                                                      </TooltipTrigger>
+                                                      <TooltipContent side="top" className="text-[10px]">
+                                                        <div className="font-medium text-red-500">{point.label}</div>
+                                                        <div>{pair.xLabel}: {point.x.toFixed(2)}</div>
+                                                        <div>{pair.yLabel}: {point.y.toFixed(2)}</div>
+                                                      </TooltipContent>
+                                                    </Tooltip>
+                                                  ))}
+                                                  
+                                                  {/* Kept points (in front) */}
+                                                  {keptPoints.map((point, idx) => (
+                                                    <Tooltip key={`kept-${idx}`}>
+                                                      <TooltipTrigger asChild>
+                                                        <div
+                                                          className="absolute w-3.5 h-3.5 bg-green-500/80 rounded-full border-2 border-green-600 transform -translate-x-1/2 -translate-y-1/2 cursor-pointer hover:scale-125 transition-transform z-20"
+                                                          style={{ 
+                                                            left: `${getXPos(point.x)}%`, 
+                                                            top: `${getYPos(point.y)}%` 
+                                                          }}
+                                                        />
+                                                      </TooltipTrigger>
+                                                      <TooltipContent side="top" className="text-[10px]">
+                                                        <div className="font-medium text-green-600">{point.label}</div>
+                                                        <div>{pair.xLabel}: {point.x.toFixed(2)}</div>
+                                                        <div>{pair.yLabel}: {point.y.toFixed(2)}</div>
+                                                      </TooltipContent>
+                                                    </Tooltip>
+                                                  ))}
+                                                  
+                                                  {/* Axis labels */}
+                                                  <div className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[9px] text-muted-foreground font-medium bg-background/80 px-1 rounded">
+                                                    {pair.xLabel}
+                                                  </div>
+                                                  <div className="absolute left-1 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground font-medium bg-background/80 px-1 rounded -rotate-90 origin-center">
+                                                    {pair.yLabel}
+                                                  </div>
+                                                  
+                                                  {/* Corner values */}
+                                                  <div className="absolute bottom-1 left-1 text-[8px] text-muted-foreground/60">
+                                                    {(xMin - xPadding).toFixed(1)}
+                                                  </div>
+                                                  <div className="absolute bottom-1 right-1 text-[8px] text-muted-foreground/60">
+                                                    {(xMax + xPadding).toFixed(1)}
+                                                  </div>
+                                                  <div className="absolute top-1 left-1 text-[8px] text-muted-foreground/60">
+                                                    {(yMax + yPadding).toFixed(1)}
+                                                  </div>
+                                                </div>
+                                                
+                                                {/* Stats and legend */}
+                                                <div className="flex items-center justify-between text-[9px]">
+                                                  <div className="flex items-center gap-4">
+                                                    <div className="flex items-center gap-1">
+                                                      <div className="w-2.5 h-2.5 bg-green-500/80 rounded-full border border-green-600" />
+                                                      <span className="text-muted-foreground">Kept ({keptPoints.length})</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1">
+                                                      <div className="w-2.5 h-2.5 bg-red-500/70 rounded-full border border-red-600" />
+                                                      <span className="text-muted-foreground">Removed ({removedPoints.length})</span>
+                                                    </div>
+                                                  </div>
+                                                  <div className={cn(
+                                                    "font-medium px-2 py-0.5 rounded",
+                                                    Math.abs(correlation) > 0.7 
+                                                      ? correlation > 0 ? "bg-green-500/10 text-green-600" : "bg-red-500/10 text-red-500"
+                                                      : "bg-muted text-muted-foreground"
+                                                  )}>
+                                                    Correlation: {correlation.toFixed(2)}
+                                                    {Math.abs(correlation) > 0.7 ? (correlation > 0 ? ' (strong +)' : ' (strong -)') : 
+                                                     Math.abs(correlation) > 0.4 ? ' (moderate)' : ' (weak)'}
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            );
+                                          })()}
+                                          
                                           {/* Side-by-side detailed view */}
                                           <div className="grid grid-cols-2 gap-3">
                                             {/* Kept Versions */}
