@@ -3224,6 +3224,162 @@ export function BacktestConfigForm({
                                             </div>
                                           )}
                                           
+                                          {/* Summary Statistics Card */}
+                                          {(effectiveKept.length > 0 || effectiveRemoved.length > 0) && (() => {
+                                            // Helper to calculate statistics
+                                            const calcStats = (values: number[]) => {
+                                              if (values.length === 0) return null;
+                                              const sorted = [...values].sort((a, b) => a - b);
+                                              const min = sorted[0];
+                                              const max = sorted[sorted.length - 1];
+                                              const median = sorted.length % 2 === 0
+                                                ? (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2
+                                                : sorted[Math.floor(sorted.length / 2)];
+                                              return { min, max, median };
+                                            };
+
+                                            const metrics = [
+                                              { 
+                                                label: 'PnL %', 
+                                                getValue: (v: typeof effectiveKept[0]) => v.version.performance?.totalPnlPercent,
+                                                format: (v: number) => `${v >= 0 ? '+' : ''}${v.toFixed(2)}%`,
+                                                colorize: true
+                                              },
+                                              { 
+                                                label: 'Win Rate', 
+                                                getValue: (v: typeof effectiveKept[0]) => v.version.performance?.winRate,
+                                                format: (v: number) => `${v.toFixed(1)}%`,
+                                                colorize: false
+                                              },
+                                              { 
+                                                label: 'Sharpe', 
+                                                getValue: (v: typeof effectiveKept[0]) => v.version.performance?.sharpeRatio,
+                                                format: (v: number) => v.toFixed(2),
+                                                colorize: true
+                                              },
+                                              { 
+                                                label: 'Max DD', 
+                                                getValue: (v: typeof effectiveKept[0]) => v.version.performance?.maxDrawdown,
+                                                format: (v: number) => `${v.toFixed(2)}%`,
+                                                colorize: false,
+                                                invertColor: true
+                                              },
+                                              { 
+                                                label: 'Profit Factor', 
+                                                getValue: (v: typeof effectiveKept[0]) => v.version.performance?.profitFactor,
+                                                format: (v: number) => v.toFixed(2),
+                                                colorize: true
+                                              },
+                                            ];
+
+                                            return (
+                                              <div className="space-y-3">
+                                                <div className="text-xs font-medium">Summary Statistics</div>
+                                                <div className="rounded-lg border overflow-hidden">
+                                                  <table className="w-full text-[10px]">
+                                                    <thead>
+                                                      <tr className="bg-muted/50">
+                                                        <th className="px-2 py-1.5 text-left font-medium">Metric</th>
+                                                        <th className="px-2 py-1.5 text-center font-medium" colSpan={3}>
+                                                          <span className="text-green-600">Kept</span>
+                                                        </th>
+                                                        <th className="px-2 py-1.5 text-center font-medium" colSpan={3}>
+                                                          <span className="text-red-500">Removed</span>
+                                                        </th>
+                                                      </tr>
+                                                      <tr className="bg-muted/30 text-muted-foreground">
+                                                        <th className="px-2 py-1 text-left"></th>
+                                                        <th className="px-2 py-1 text-center text-[9px]">Min</th>
+                                                        <th className="px-2 py-1 text-center text-[9px]">Median</th>
+                                                        <th className="px-2 py-1 text-center text-[9px]">Max</th>
+                                                        <th className="px-2 py-1 text-center text-[9px]">Min</th>
+                                                        <th className="px-2 py-1 text-center text-[9px]">Median</th>
+                                                        <th className="px-2 py-1 text-center text-[9px]">Max</th>
+                                                      </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                      {metrics.map(({ label, getValue, format, colorize, invertColor }) => {
+                                                        const keptValues = effectiveKept
+                                                          .map(v => getValue(v))
+                                                          .filter((v): v is number => v !== undefined);
+                                                        const removedValues = effectiveRemoved
+                                                          .map(v => getValue(v))
+                                                          .filter((v): v is number => v !== undefined);
+                                                        
+                                                        const keptStats = calcStats(keptValues);
+                                                        const removedStats = calcStats(removedValues);
+
+                                                        const getValueColor = (val: number | undefined, isKept: boolean, stat: 'min' | 'median' | 'max') => {
+                                                          if (val === undefined || !colorize) return '';
+                                                          if (invertColor) {
+                                                            // For drawdown, lower is better
+                                                            return val < 10 ? 'text-green-600' : val > 20 ? 'text-red-500' : '';
+                                                          }
+                                                          return val >= 0 ? 'text-green-600' : 'text-red-500';
+                                                        };
+
+                                                        return (
+                                                          <tr key={label} className="border-t border-border/50 hover:bg-muted/20">
+                                                            <td className="px-2 py-1.5 font-medium">{label}</td>
+                                                            <td className={cn("px-2 py-1.5 text-center", getValueColor(keptStats?.min, true, 'min'))}>
+                                                              {keptStats ? format(keptStats.min) : '—'}
+                                                            </td>
+                                                            <td className={cn("px-2 py-1.5 text-center font-medium", getValueColor(keptStats?.median, true, 'median'))}>
+                                                              {keptStats ? format(keptStats.median) : '—'}
+                                                            </td>
+                                                            <td className={cn("px-2 py-1.5 text-center", getValueColor(keptStats?.max, true, 'max'))}>
+                                                              {keptStats ? format(keptStats.max) : '—'}
+                                                            </td>
+                                                            <td className={cn("px-2 py-1.5 text-center", getValueColor(removedStats?.min, false, 'min'))}>
+                                                              {removedStats ? format(removedStats.min) : '—'}
+                                                            </td>
+                                                            <td className={cn("px-2 py-1.5 text-center font-medium", getValueColor(removedStats?.median, false, 'median'))}>
+                                                              {removedStats ? format(removedStats.median) : '—'}
+                                                            </td>
+                                                            <td className={cn("px-2 py-1.5 text-center", getValueColor(removedStats?.max, false, 'max'))}>
+                                                              {removedStats ? format(removedStats.max) : '—'}
+                                                            </td>
+                                                          </tr>
+                                                        );
+                                                      })}
+                                                    </tbody>
+                                                  </table>
+                                                </div>
+                                                {/* Quick comparison badges */}
+                                                <div className="flex flex-wrap gap-1.5">
+                                                  {metrics.map(({ label, getValue }) => {
+                                                    const keptValues = effectiveKept.map(v => getValue(v)).filter((v): v is number => v !== undefined);
+                                                    const removedValues = effectiveRemoved.map(v => getValue(v)).filter((v): v is number => v !== undefined);
+                                                    if (keptValues.length === 0 || removedValues.length === 0) return null;
+                                                    
+                                                    const keptMedian = [...keptValues].sort((a, b) => a - b)[Math.floor(keptValues.length / 2)];
+                                                    const removedMedian = [...removedValues].sort((a, b) => a - b)[Math.floor(removedValues.length / 2)];
+                                                    const diff = keptMedian - removedMedian;
+                                                    const percentDiff = removedMedian !== 0 ? ((diff / Math.abs(removedMedian)) * 100) : 0;
+                                                    
+                                                    if (Math.abs(diff) < 0.01) return null;
+                                                    
+                                                    const isPositive = label === 'Max DD' ? diff < 0 : diff > 0;
+                                                    
+                                                    return (
+                                                      <span 
+                                                        key={label}
+                                                        className={cn(
+                                                          "inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-medium",
+                                                          isPositive ? "bg-green-500/10 text-green-600" : "bg-red-500/10 text-red-500"
+                                                        )}
+                                                      >
+                                                        {label}
+                                                        {isPositive ? <ArrowUp className="h-2.5 w-2.5" /> : <ArrowDown className="h-2.5 w-2.5" />}
+                                                        {Math.abs(percentDiff).toFixed(0)}%
+                                                      </span>
+                                                    );
+                                                  })}
+                                                </div>
+                                              </div>
+                                            );
+                                          })()}
+                                          
                                           {/* Side-by-side detailed view */}
                                           <div className="grid grid-cols-2 gap-3">
                                             {/* Kept Versions */}
