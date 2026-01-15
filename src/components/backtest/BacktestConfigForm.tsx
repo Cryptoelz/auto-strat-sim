@@ -4209,6 +4209,78 @@ export function BacktestConfigForm({
                                               return { label: 'Negligible', color: 'text-muted-foreground' };
                                             };
                                             
+                                            // Confidence interval for mean difference (using pooled variance)
+                                            const meanDiffCI = (a: number[], b: number[], confidence: number = 0.95): { lower: number; upper: number; se: number } | null => {
+                                              if (a.length < 2 || b.length < 2) return null;
+                                              
+                                              const meanA = a.reduce((s, v) => s + v, 0) / a.length;
+                                              const meanB = b.reduce((s, v) => s + v, 0) / b.length;
+                                              const diff = meanA - meanB;
+                                              
+                                              const varA = a.reduce((s, v) => s + Math.pow(v - meanA, 2), 0) / (a.length - 1);
+                                              const varB = b.reduce((s, v) => s + Math.pow(v - meanB, 2), 0) / (b.length - 1);
+                                              
+                                              const se = Math.sqrt(varA / a.length + varB / b.length);
+                                              if (se === 0) return null;
+                                              
+                                              // Welch-Satterthwaite degrees of freedom
+                                              const df = Math.pow(varA / a.length + varB / b.length, 2) / (
+                                                Math.pow(varA / a.length, 2) / (a.length - 1) + Math.pow(varB / b.length, 2) / (b.length - 1)
+                                              );
+                                              
+                                              // t-critical value approximation for common confidence levels
+                                              const alpha = 1 - confidence;
+                                              // Approximate t-critical using normal for large df, adjusted for small df
+                                              const tCrit = df > 120 
+                                                ? (confidence === 0.95 ? 1.96 : confidence === 0.99 ? 2.576 : 1.645)
+                                                : (confidence === 0.95 
+                                                  ? 2.0 + 2.5 / df 
+                                                  : confidence === 0.99 
+                                                    ? 2.66 + 4 / df 
+                                                    : 1.7 + 1.5 / df);
+                                              
+                                              const margin = tCrit * se;
+                                              return { lower: diff - margin, upper: diff + margin, se };
+                                            };
+                                            
+                                            // Confidence interval for Cohen's d using non-central t-distribution approximation
+                                            const cohensDCI = (a: number[], b: number[], d: number | null, confidence: number = 0.95): { lower: number; upper: number } | null => {
+                                              if (d === null || a.length < 2 || b.length < 2) return null;
+                                              
+                                              const n1 = a.length;
+                                              const n2 = b.length;
+                                              
+                                              // Standard error of Cohen's d (Hedges & Olkin, 1985)
+                                              const seD = Math.sqrt(
+                                                (n1 + n2) / (n1 * n2) + (d * d) / (2 * (n1 + n2))
+                                              );
+                                              
+                                              // Use normal approximation for CI
+                                              const zCrit = confidence === 0.95 ? 1.96 : confidence === 0.99 ? 2.576 : 1.645;
+                                              const margin = zCrit * seD;
+                                              
+                                              return { lower: d - margin, upper: d + margin };
+                                            };
+                                            
+                                            // Confidence interval for rank-biserial correlation
+                                            const rankBiserialCI = (r: number | null, n1: number, n2: number, confidence: number = 0.95): { lower: number; upper: number } | null => {
+                                              if (r === null || n1 < 2 || n2 < 2) return null;
+                                              
+                                              // Fisher's z transformation for correlation CI
+                                              const z = 0.5 * Math.log((1 + r) / (1 - Math.max(-0.999, Math.min(0.999, r))));
+                                              const seZ = 1 / Math.sqrt(n1 + n2 - 3);
+                                              
+                                              const zCrit = confidence === 0.95 ? 1.96 : confidence === 0.99 ? 2.576 : 1.645;
+                                              const zLower = z - zCrit * seZ;
+                                              const zUpper = z + zCrit * seZ;
+                                              
+                                              // Transform back
+                                              const lower = (Math.exp(2 * zLower) - 1) / (Math.exp(2 * zLower) + 1);
+                                              const upper = (Math.exp(2 * zUpper) - 1) / (Math.exp(2 * zUpper) + 1);
+                                              
+                                              return { lower: Math.max(-1, lower), upper: Math.min(1, upper) };
+                                            };
+                                            
                                             return (
                                               <div className="space-y-3">
                                                 <div className="flex items-center justify-between">
@@ -4235,6 +4307,11 @@ export function BacktestConfigForm({
                                                     // Calculate effect sizes
                                                     const cohensDValue = cohensD(keptValues, removedValues);
                                                     const rankBiserialValue = rankBiserial(keptValues, removedValues);
+                                                    
+                                                    // Calculate confidence intervals
+                                                    const diffCI = meanDiffCI(keptValues, removedValues);
+                                                    const dCI = cohensDCI(keptValues, removedValues, cohensDValue);
+                                                    const rCI = rankBiserialCI(rankBiserialValue, keptValues.length, removedValues.length);
                                                     
                                                     if (!tResult && !mwResult) return null;
                                                     
@@ -4428,6 +4505,191 @@ export function BacktestConfigForm({
                                                           </div>
                                                         </div>
                                                         
+                                                        {/* Confidence Intervals Section */}
+                                                        {(diffCI || dCI || rCI) && (
+                                                          <div className="pt-2 border-t border-border/50 space-y-2">
+                                                            <div className="text-[10px] font-medium text-muted-foreground flex items-center gap-1.5">
+                                                              <span>95% Confidence Intervals</span>
+                                                              <span className="text-[8px] font-normal">(precision of estimates)</span>
+                                                            </div>
+                                                            
+                                                            <div className="grid grid-cols-1 gap-2">
+                                                              {/* Mean Difference CI */}
+                                                              {diffCI && (
+                                                                <div className="rounded bg-muted/30 px-2 py-1.5 space-y-1">
+                                                                  <div className="flex items-center justify-between text-[9px]">
+                                                                    <span className="text-muted-foreground">Mean Difference (Δ)</span>
+                                                                    <span className="font-mono font-medium">
+                                                                      <span className={diff >= 0 ? "text-green-600" : "text-red-500"}>
+                                                                        {diff >= 0 ? '+' : ''}{diff.toFixed(2)}
+                                                                      </span>
+                                                                      <span className="text-muted-foreground ml-1">
+                                                                        [{diffCI.lower.toFixed(2)}, {diffCI.upper.toFixed(2)}]
+                                                                      </span>
+                                                                    </span>
+                                                                  </div>
+                                                                  {/* CI visualization */}
+                                                                  <div className="h-3 relative">
+                                                                    {(() => {
+                                                                      const ciMin = Math.min(diffCI.lower, -Math.abs(diff) * 1.5);
+                                                                      const ciMax = Math.max(diffCI.upper, Math.abs(diff) * 1.5);
+                                                                      const range = ciMax - ciMin || 1;
+                                                                      const zeroPos = ((0 - ciMin) / range) * 100;
+                                                                      const lowerPos = ((diffCI.lower - ciMin) / range) * 100;
+                                                                      const upperPos = ((diffCI.upper - ciMin) / range) * 100;
+                                                                      const pointPos = ((diff - ciMin) / range) * 100;
+                                                                      const ciContainsZero = diffCI.lower <= 0 && diffCI.upper >= 0;
+                                                                      
+                                                                      return (
+                                                                        <>
+                                                                          {/* Background track */}
+                                                                          <div className="absolute inset-y-1 inset-x-0 bg-muted rounded-full" />
+                                                                          {/* Zero reference line */}
+                                                                          <div 
+                                                                            className="absolute top-0 bottom-0 w-px bg-border z-10"
+                                                                            style={{ left: `${Math.max(0, Math.min(100, zeroPos))}%` }}
+                                                                          />
+                                                                          {/* CI range bar */}
+                                                                          <div 
+                                                                            className={cn(
+                                                                              "absolute top-1 bottom-1 rounded-full",
+                                                                              ciContainsZero ? "bg-amber-400/50" : diff > 0 ? "bg-green-400/50" : "bg-red-400/50"
+                                                                            )}
+                                                                            style={{ 
+                                                                              left: `${Math.max(0, lowerPos)}%`, 
+                                                                              width: `${Math.min(100 - lowerPos, upperPos - lowerPos)}%` 
+                                                                            }}
+                                                                          />
+                                                                          {/* Point estimate */}
+                                                                          <div 
+                                                                            className={cn(
+                                                                              "absolute top-0 bottom-0 w-1.5 h-3 rounded-sm",
+                                                                              diff > 0 ? "bg-green-600" : diff < 0 ? "bg-red-500" : "bg-muted-foreground"
+                                                                            )}
+                                                                            style={{ left: `calc(${pointPos}% - 3px)` }}
+                                                                          />
+                                                                          {/* CI endpoints */}
+                                                                          <div 
+                                                                            className="absolute top-0 h-3 w-px bg-foreground/60"
+                                                                            style={{ left: `${lowerPos}%` }}
+                                                                          />
+                                                                          <div 
+                                                                            className="absolute top-0 h-3 w-px bg-foreground/60"
+                                                                            style={{ left: `${upperPos}%` }}
+                                                                          />
+                                                                        </>
+                                                                      );
+                                                                    })()}
+                                                                  </div>
+                                                                  <div className="flex justify-between text-[8px] text-muted-foreground/70">
+                                                                    <span>SE: ±{diffCI.se.toFixed(3)}</span>
+                                                                    <span className={diffCI.lower > 0 || diffCI.upper < 0 ? "text-green-600" : "text-amber-500"}>
+                                                                      {diffCI.lower > 0 || diffCI.upper < 0 ? "Does not include 0" : "Includes 0"}
+                                                                    </span>
+                                                                  </div>
+                                                                </div>
+                                                              )}
+                                                              
+                                                              {/* Effect Sizes CIs in grid */}
+                                                              <div className="grid grid-cols-2 gap-2">
+                                                                {/* Cohen's d CI */}
+                                                                {dCI && (
+                                                                  <div className="rounded bg-muted/30 px-2 py-1.5 space-y-1">
+                                                                    <div className="flex items-center justify-between text-[9px]">
+                                                                      <span className="text-muted-foreground">Cohen's d</span>
+                                                                      <span className="font-mono text-[8px]">
+                                                                        [{dCI.lower.toFixed(2)}, {dCI.upper.toFixed(2)}]
+                                                                      </span>
+                                                                    </div>
+                                                                    <div className="h-2 relative">
+                                                                      {(() => {
+                                                                        // Scale to show -2 to +2 range for Cohen's d
+                                                                        const scale = 2;
+                                                                        const normalize = (v: number) => ((v + scale) / (2 * scale)) * 100;
+                                                                        const zeroPos = 50;
+                                                                        const lowerPos = Math.max(0, normalize(dCI.lower));
+                                                                        const upperPos = Math.min(100, normalize(dCI.upper));
+                                                                        const pointPos = cohensDValue !== null ? normalize(cohensDValue) : 50;
+                                                                        const ciContainsZero = dCI.lower <= 0 && dCI.upper >= 0;
+                                                                        
+                                                                        return (
+                                                                          <>
+                                                                            <div className="absolute inset-0 bg-muted rounded-full" />
+                                                                            <div className="absolute top-0 bottom-0 left-1/2 w-px bg-border" />
+                                                                            <div 
+                                                                              className={cn(
+                                                                                "absolute inset-y-0 rounded-full",
+                                                                                ciContainsZero ? "bg-amber-400/50" : cohensDValue && cohensDValue > 0 ? "bg-green-400/50" : "bg-red-400/50"
+                                                                              )}
+                                                                              style={{ left: `${lowerPos}%`, width: `${upperPos - lowerPos}%` }}
+                                                                            />
+                                                                            <div 
+                                                                              className={cn(
+                                                                                "absolute top-0 bottom-0 w-1 rounded-sm",
+                                                                                cohensDValue && cohensDValue > 0 ? "bg-green-600" : cohensDValue && cohensDValue < 0 ? "bg-red-500" : "bg-muted-foreground"
+                                                                              )}
+                                                                              style={{ left: `calc(${pointPos}% - 2px)` }}
+                                                                            />
+                                                                          </>
+                                                                        );
+                                                                      })()}
+                                                                    </div>
+                                                                    <div className="text-[8px] text-muted-foreground/70 text-center">
+                                                                      {dCI.lower > 0 || dCI.upper < 0 ? "Excludes 0" : "Includes 0"}
+                                                                    </div>
+                                                                  </div>
+                                                                )}
+                                                                
+                                                                {/* Rank-biserial CI */}
+                                                                {rCI && (
+                                                                  <div className="rounded bg-muted/30 px-2 py-1.5 space-y-1">
+                                                                    <div className="flex items-center justify-between text-[9px]">
+                                                                      <span className="text-muted-foreground">Rank-biserial r</span>
+                                                                      <span className="font-mono text-[8px]">
+                                                                        [{rCI.lower.toFixed(2)}, {rCI.upper.toFixed(2)}]
+                                                                      </span>
+                                                                    </div>
+                                                                    <div className="h-2 relative">
+                                                                      {(() => {
+                                                                        // Scale from -1 to +1
+                                                                        const normalize = (v: number) => ((v + 1) / 2) * 100;
+                                                                        const lowerPos = Math.max(0, normalize(rCI.lower));
+                                                                        const upperPos = Math.min(100, normalize(rCI.upper));
+                                                                        const pointPos = rankBiserialValue !== null ? normalize(rankBiserialValue) : 50;
+                                                                        const ciContainsZero = rCI.lower <= 0 && rCI.upper >= 0;
+                                                                        
+                                                                        return (
+                                                                          <>
+                                                                            <div className="absolute inset-0 bg-muted rounded-full" />
+                                                                            <div className="absolute top-0 bottom-0 left-1/2 w-px bg-border" />
+                                                                            <div 
+                                                                              className={cn(
+                                                                                "absolute inset-y-0 rounded-full",
+                                                                                ciContainsZero ? "bg-amber-400/50" : rankBiserialValue && rankBiserialValue > 0 ? "bg-green-400/50" : "bg-red-400/50"
+                                                                              )}
+                                                                              style={{ left: `${lowerPos}%`, width: `${upperPos - lowerPos}%` }}
+                                                                            />
+                                                                            <div 
+                                                                              className={cn(
+                                                                                "absolute top-0 bottom-0 w-1 rounded-sm",
+                                                                                rankBiserialValue && rankBiserialValue > 0 ? "bg-green-600" : rankBiserialValue && rankBiserialValue < 0 ? "bg-red-500" : "bg-muted-foreground"
+                                                                              )}
+                                                                              style={{ left: `calc(${pointPos}% - 2px)` }}
+                                                                            />
+                                                                          </>
+                                                                        );
+                                                                      })()}
+                                                                    </div>
+                                                                    <div className="text-[8px] text-muted-foreground/70 text-center">
+                                                                      {rCI.lower > 0 || rCI.upper < 0 ? "Excludes 0" : "Includes 0"}
+                                                                    </div>
+                                                                  </div>
+                                                                )}
+                                                              </div>
+                                                            </div>
+                                                          </div>
+                                                        )}
+                                                        
                                                         {/* Combined interpretation */}
                                                         {(tResult || mwResult) && (
                                                           <div className={cn(
@@ -4490,8 +4752,11 @@ export function BacktestConfigForm({
                                                     <p>
                                                       <strong>Rank-biserial r:</strong> Effect size for Mann-Whitney U. Ranges from -1 to +1, indicates dominance.
                                                     </p>
+                                                    <p>
+                                                      <strong>95% Confidence Intervals:</strong> Range where the true value likely falls. If CI excludes 0, the effect is statistically significant.
+                                                    </p>
                                                     <p className="text-muted-foreground/70 italic pt-1">
-                                                      Significance (p-value) tells if a difference exists; effect size tells how large that difference is.
+                                                      Significance (p-value) tells if a difference exists; effect size tells how large it is; CI shows precision.
                                                     </p>
                                                   </div>
                                                 </div>
