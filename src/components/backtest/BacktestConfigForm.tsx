@@ -3624,6 +3624,44 @@ export function BacktestConfigForm({
                                             const correlation = (n * sumXY - sumX * sumY) / 
                                               Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY)) || 0;
                                             
+                                            // Calculate linear regression for a set of points
+                                            const calcRegression = (points: typeof allPoints) => {
+                                              if (points.length < 2) return null;
+                                              const pn = points.length;
+                                              const pSumX = points.reduce((a, p) => a + p.x, 0);
+                                              const pSumY = points.reduce((a, p) => a + p.y, 0);
+                                              const pSumXY = points.reduce((a, p) => a + p.x * p.y, 0);
+                                              const pSumX2 = points.reduce((a, p) => a + p.x * p.x, 0);
+                                              
+                                              const slope = (pn * pSumXY - pSumX * pSumY) / (pn * pSumX2 - pSumX * pSumX);
+                                              const intercept = (pSumY - slope * pSumX) / pn;
+                                              
+                                              if (!isFinite(slope) || !isFinite(intercept)) return null;
+                                              
+                                              return { slope, intercept };
+                                            };
+                                            
+                                            const keptRegression = calcRegression(keptPoints);
+                                            const removedRegression = calcRegression(removedPoints);
+                                            
+                                            // Get line endpoints for SVG
+                                            const getLinePoints = (reg: { slope: number; intercept: number } | null, color: 'kept' | 'removed') => {
+                                              if (!reg) return null;
+                                              const lineXMin = xMin - xPadding;
+                                              const lineXMax = xMax + xPadding;
+                                              const y1 = reg.slope * lineXMin + reg.intercept;
+                                              const y2 = reg.slope * lineXMax + reg.intercept;
+                                              return {
+                                                x1: getXPos(lineXMin),
+                                                y1: getYPos(y1),
+                                                x2: getXPos(lineXMax),
+                                                y2: getYPos(y2),
+                                              };
+                                            };
+                                            
+                                            const keptLine = getLinePoints(keptRegression, 'kept');
+                                            const removedLine = getLinePoints(removedRegression, 'removed');
+                                            
                                             return (
                                               <div className="space-y-3">
                                                 <div className="flex items-center justify-between">
@@ -3660,6 +3698,36 @@ export function BacktestConfigForm({
                                                       </React.Fragment>
                                                     ))}
                                                   </div>
+                                                  
+                                                  {/* Trend lines SVG overlay */}
+                                                  <svg className="absolute inset-0 w-full h-full pointer-events-none" preserveAspectRatio="none">
+                                                    {/* Removed trend line (behind) */}
+                                                    {removedLine && (
+                                                      <line
+                                                        x1={`${removedLine.x1}%`}
+                                                        y1={`${removedLine.y1}%`}
+                                                        x2={`${removedLine.x2}%`}
+                                                        y2={`${removedLine.y2}%`}
+                                                        stroke="hsl(0 84% 60%)"
+                                                        strokeWidth="2"
+                                                        strokeDasharray="6 3"
+                                                        strokeOpacity="0.6"
+                                                      />
+                                                    )}
+                                                    {/* Kept trend line (in front) */}
+                                                    {keptLine && (
+                                                      <line
+                                                        x1={`${keptLine.x1}%`}
+                                                        y1={`${keptLine.y1}%`}
+                                                        x2={`${keptLine.x2}%`}
+                                                        y2={`${keptLine.y2}%`}
+                                                        stroke="hsl(142 71% 45%)"
+                                                        strokeWidth="2"
+                                                        strokeDasharray="6 3"
+                                                        strokeOpacity="0.8"
+                                                      />
+                                                    )}
+                                                  </svg>
                                                   
                                                   {/* Zero lines if applicable */}
                                                   {xMin < 0 && xMax > 0 && (
@@ -3736,27 +3804,56 @@ export function BacktestConfigForm({
                                                 </div>
                                                 
                                                 {/* Stats and legend */}
-                                                <div className="flex items-center justify-between text-[9px]">
-                                                  <div className="flex items-center gap-4">
-                                                    <div className="flex items-center gap-1">
-                                                      <div className="w-2.5 h-2.5 bg-green-500/80 rounded-full border border-green-600" />
-                                                      <span className="text-muted-foreground">Kept ({keptPoints.length})</span>
+                                                <div className="flex flex-col gap-2 text-[9px]">
+                                                  <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-4">
+                                                      <div className="flex items-center gap-1">
+                                                        <div className="w-2.5 h-2.5 bg-green-500/80 rounded-full border border-green-600" />
+                                                        <span className="text-muted-foreground">Kept ({keptPoints.length})</span>
+                                                      </div>
+                                                      <div className="flex items-center gap-1">
+                                                        <div className="w-2.5 h-2.5 bg-red-500/70 rounded-full border border-red-600" />
+                                                        <span className="text-muted-foreground">Removed ({removedPoints.length})</span>
+                                                      </div>
                                                     </div>
-                                                    <div className="flex items-center gap-1">
-                                                      <div className="w-2.5 h-2.5 bg-red-500/70 rounded-full border border-red-600" />
-                                                      <span className="text-muted-foreground">Removed ({removedPoints.length})</span>
+                                                    <div className={cn(
+                                                      "font-medium px-2 py-0.5 rounded",
+                                                      Math.abs(correlation) > 0.7 
+                                                        ? correlation > 0 ? "bg-green-500/10 text-green-600" : "bg-red-500/10 text-red-500"
+                                                        : "bg-muted text-muted-foreground"
+                                                    )}>
+                                                      Correlation: {correlation.toFixed(2)}
+                                                      {Math.abs(correlation) > 0.7 ? (correlation > 0 ? ' (strong +)' : ' (strong -)') : 
+                                                       Math.abs(correlation) > 0.4 ? ' (moderate)' : ' (weak)'}
                                                     </div>
                                                   </div>
-                                                  <div className={cn(
-                                                    "font-medium px-2 py-0.5 rounded",
-                                                    Math.abs(correlation) > 0.7 
-                                                      ? correlation > 0 ? "bg-green-500/10 text-green-600" : "bg-red-500/10 text-red-500"
-                                                      : "bg-muted text-muted-foreground"
-                                                  )}>
-                                                    Correlation: {correlation.toFixed(2)}
-                                                    {Math.abs(correlation) > 0.7 ? (correlation > 0 ? ' (strong +)' : ' (strong -)') : 
-                                                     Math.abs(correlation) > 0.4 ? ' (moderate)' : ' (weak)'}
-                                                  </div>
+                                                  
+                                                  {/* Trend line info */}
+                                                  {(keptRegression || removedRegression) && (
+                                                    <div className="flex items-center gap-4 pt-1 border-t border-border/50">
+                                                      <span className="text-muted-foreground">Trend lines:</span>
+                                                      {keptRegression && (
+                                                        <div className="flex items-center gap-1.5">
+                                                          <svg width="16" height="8" className="flex-shrink-0">
+                                                            <line x1="0" y1="4" x2="16" y2="4" stroke="hsl(142 71% 45%)" strokeWidth="2" strokeDasharray="4 2" />
+                                                          </svg>
+                                                          <span className="text-green-600">
+                                                            y = {keptRegression.slope.toFixed(2)}x {keptRegression.intercept >= 0 ? '+' : ''} {keptRegression.intercept.toFixed(2)}
+                                                          </span>
+                                                        </div>
+                                                      )}
+                                                      {removedRegression && (
+                                                        <div className="flex items-center gap-1.5">
+                                                          <svg width="16" height="8" className="flex-shrink-0">
+                                                            <line x1="0" y1="4" x2="16" y2="4" stroke="hsl(0 84% 60%)" strokeWidth="2" strokeDasharray="4 2" />
+                                                          </svg>
+                                                          <span className="text-red-500">
+                                                            y = {removedRegression.slope.toFixed(2)}x {removedRegression.intercept >= 0 ? '+' : ''} {removedRegression.intercept.toFixed(2)}
+                                                          </span>
+                                                        </div>
+                                                      )}
+                                                    </div>
+                                                  )}
                                                 </div>
                                               </div>
                                             );
