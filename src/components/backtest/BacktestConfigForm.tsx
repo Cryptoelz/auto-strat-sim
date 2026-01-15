@@ -3917,6 +3917,409 @@ export function BacktestConfigForm({
                                             );
                                           })()}
                                           
+                                          {/* Statistical Significance Testing */}
+                                          {(effectiveKept.length >= 2 && effectiveRemoved.length >= 2) && (() => {
+                                            // T-test implementation (Welch's t-test for unequal variances)
+                                            const tTest = (a: number[], b: number[]): { t: number; df: number; p: number } | null => {
+                                              if (a.length < 2 || b.length < 2) return null;
+                                              
+                                              const meanA = a.reduce((s, v) => s + v, 0) / a.length;
+                                              const meanB = b.reduce((s, v) => s + v, 0) / b.length;
+                                              const varA = a.reduce((s, v) => s + Math.pow(v - meanA, 2), 0) / (a.length - 1);
+                                              const varB = b.reduce((s, v) => s + Math.pow(v - meanB, 2), 0) / (b.length - 1);
+                                              
+                                              if (varA === 0 && varB === 0) return null;
+                                              
+                                              const seA = varA / a.length;
+                                              const seB = varB / b.length;
+                                              const se = Math.sqrt(seA + seB);
+                                              
+                                              if (se === 0) return null;
+                                              
+                                              const t = (meanA - meanB) / se;
+                                              
+                                              // Welch-Satterthwaite degrees of freedom
+                                              const df = Math.pow(seA + seB, 2) / (
+                                                Math.pow(seA, 2) / (a.length - 1) + Math.pow(seB, 2) / (b.length - 1)
+                                              );
+                                              
+                                              // Approximate p-value using Student's t-distribution
+                                              // Using a numerical approximation for the CDF
+                                              const tCDF = (t: number, df: number): number => {
+                                                const x = df / (df + t * t);
+                                                // Beta function approximation using Stirling's formula
+                                                const beta = (a: number, b: number): number => {
+                                                  return Math.exp(
+                                                    logGamma(a) + logGamma(b) - logGamma(a + b)
+                                                  );
+                                                };
+                                                const logGamma = (z: number): number => {
+                                                  // Lanczos approximation
+                                                  const g = 7;
+                                                  const c = [
+                                                    0.99999999999980993, 676.5203681218851, -1259.1392167224028,
+                                                    771.32342877765313, -176.61502916214059, 12.507343278686905,
+                                                    -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7
+                                                  ];
+                                                  if (z < 0.5) {
+                                                    return Math.log(Math.PI / Math.sin(Math.PI * z)) - logGamma(1 - z);
+                                                  }
+                                                  z -= 1;
+                                                  let x = c[0];
+                                                  for (let i = 1; i < g + 2; i++) {
+                                                    x += c[i] / (z + i);
+                                                  }
+                                                  const t = z + g + 0.5;
+                                                  return 0.5 * Math.log(2 * Math.PI) + (z + 0.5) * Math.log(t) - t + Math.log(x);
+                                                };
+                                                
+                                                // Regularized incomplete beta function approximation
+                                                const betaInc = (x: number, a: number, b: number): number => {
+                                                  if (x === 0) return 0;
+                                                  if (x === 1) return 1;
+                                                  
+                                                  // Use continued fraction for numerical stability
+                                                  const bt = Math.exp(
+                                                    logGamma(a + b) - logGamma(a) - logGamma(b) +
+                                                    a * Math.log(x) + b * Math.log(1 - x)
+                                                  );
+                                                  
+                                                  if (x < (a + 1) / (a + b + 2)) {
+                                                    return bt * betaCF(x, a, b) / a;
+                                                  } else {
+                                                    return 1 - bt * betaCF(1 - x, b, a) / b;
+                                                  }
+                                                };
+                                                
+                                                const betaCF = (x: number, a: number, b: number): number => {
+                                                  const maxIter = 100;
+                                                  const eps = 3e-7;
+                                                  let am = 1, bm = 1, az = 1;
+                                                  const qab = a + b;
+                                                  const qap = a + 1;
+                                                  const qam = a - 1;
+                                                  let bz = 1 - qab * x / qap;
+                                                  
+                                                  for (let m = 1; m <= maxIter; m++) {
+                                                    const em = m;
+                                                    const tem = em + em;
+                                                    let d = em * (b - m) * x / ((qam + tem) * (a + tem));
+                                                    const ap = az + d * am;
+                                                    const bp = bz + d * bm;
+                                                    d = -(a + em) * (qab + em) * x / ((a + tem) * (qap + tem));
+                                                    const app = ap + d * az;
+                                                    const bpp = bp + d * bz;
+                                                    const aold = az;
+                                                    am = ap / bpp;
+                                                    bm = bp / bpp;
+                                                    az = app / bpp;
+                                                    bz = 1;
+                                                    if (Math.abs(az - aold) < eps * Math.abs(az)) return az;
+                                                  }
+                                                  return az;
+                                                };
+                                                
+                                                return 1 - betaInc(x, df / 2, 0.5);
+                                              };
+                                              
+                                              const p = 2 * (1 - tCDF(Math.abs(t), df));
+                                              
+                                              return { t, df, p: Math.max(0, Math.min(1, p)) };
+                                            };
+                                            
+                                            // Mann-Whitney U test implementation
+                                            const mannWhitneyU = (a: number[], b: number[]): { U: number; z: number; p: number } | null => {
+                                              if (a.length < 1 || b.length < 1) return null;
+                                              
+                                              const n1 = a.length;
+                                              const n2 = b.length;
+                                              
+                                              // Combine and rank
+                                              const combined = [
+                                                ...a.map(v => ({ value: v, group: 'a' })),
+                                                ...b.map(v => ({ value: v, group: 'b' }))
+                                              ].sort((x, y) => x.value - y.value);
+                                              
+                                              // Assign ranks with tie handling
+                                              let rank = 1;
+                                              let i = 0;
+                                              while (i < combined.length) {
+                                                let j = i;
+                                                while (j < combined.length && combined[j].value === combined[i].value) {
+                                                  j++;
+                                                }
+                                                const avgRank = (rank + rank + j - i - 1) / 2;
+                                                for (let k = i; k < j; k++) {
+                                                  (combined[k] as any).rank = avgRank;
+                                                }
+                                                rank += j - i;
+                                                i = j;
+                                              }
+                                              
+                                              // Sum ranks for group a
+                                              const R1 = combined
+                                                .filter(c => c.group === 'a')
+                                                .reduce((s, c) => s + (c as any).rank, 0);
+                                              
+                                              // Calculate U statistics
+                                              const U1 = n1 * n2 + (n1 * (n1 + 1)) / 2 - R1;
+                                              const U2 = n1 * n2 - U1;
+                                              const U = Math.min(U1, U2);
+                                              
+                                              // Normal approximation for large samples
+                                              const meanU = (n1 * n2) / 2;
+                                              
+                                              // Calculate tie correction
+                                              const tieGroups: number[] = [];
+                                              let ti = 0;
+                                              while (ti < combined.length) {
+                                                let tj = ti;
+                                                while (tj < combined.length && combined[tj].value === combined[ti].value) {
+                                                  tj++;
+                                                }
+                                                if (tj - ti > 1) {
+                                                  tieGroups.push(tj - ti);
+                                                }
+                                                ti = tj;
+                                              }
+                                              
+                                              const tieCorrection = tieGroups.reduce((s, t) => s + (t * t * t - t), 0);
+                                              const n = n1 + n2;
+                                              const stdU = Math.sqrt(
+                                                (n1 * n2 / 12) * ((n + 1) - tieCorrection / (n * (n - 1)))
+                                              );
+                                              
+                                              if (stdU === 0) return null;
+                                              
+                                              const z = (U - meanU) / stdU;
+                                              
+                                              // Standard normal CDF approximation
+                                              const normalCDF = (x: number): number => {
+                                                const a1 = 0.254829592;
+                                                const a2 = -0.284496736;
+                                                const a3 = 1.421413741;
+                                                const a4 = -1.453152027;
+                                                const a5 = 1.061405429;
+                                                const p = 0.3275911;
+                                                
+                                                const sign = x < 0 ? -1 : 1;
+                                                x = Math.abs(x) / Math.sqrt(2);
+                                                const t = 1.0 / (1.0 + p * x);
+                                                const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+                                                return 0.5 * (1.0 + sign * y);
+                                              };
+                                              
+                                              const p = 2 * (1 - normalCDF(Math.abs(z)));
+                                              
+                                              return { U, z, p: Math.max(0, Math.min(1, p)) };
+                                            };
+                                            
+                                            const metrics = [
+                                              { 
+                                                label: 'PnL %', 
+                                                getValue: (v: typeof effectiveKept[0]) => v.version.performance?.totalPnlPercent,
+                                              },
+                                              { 
+                                                label: 'Win Rate', 
+                                                getValue: (v: typeof effectiveKept[0]) => v.version.performance?.winRate,
+                                              },
+                                              { 
+                                                label: 'Sharpe', 
+                                                getValue: (v: typeof effectiveKept[0]) => v.version.performance?.sharpeRatio,
+                                              },
+                                              { 
+                                                label: 'Max DD', 
+                                                getValue: (v: typeof effectiveKept[0]) => v.version.performance?.maxDrawdown,
+                                              },
+                                              { 
+                                                label: 'Profit Factor', 
+                                                getValue: (v: typeof effectiveKept[0]) => v.version.performance?.profitFactor,
+                                              },
+                                            ];
+                                            
+                                            const getSignificanceLevel = (p: number): { label: string; color: string; stars: string } => {
+                                              if (p < 0.001) return { label: 'Highly Significant', color: 'text-green-600', stars: '***' };
+                                              if (p < 0.01) return { label: 'Very Significant', color: 'text-green-500', stars: '**' };
+                                              if (p < 0.05) return { label: 'Significant', color: 'text-amber-500', stars: '*' };
+                                              if (p < 0.1) return { label: 'Marginally Significant', color: 'text-amber-400', stars: '†' };
+                                              return { label: 'Not Significant', color: 'text-muted-foreground', stars: 'ns' };
+                                            };
+                                            
+                                            return (
+                                              <div className="space-y-3">
+                                                <div className="flex items-center justify-between">
+                                                  <div className="text-xs font-medium">Statistical Significance Testing</div>
+                                                  <div className="text-[9px] text-muted-foreground">
+                                                    n₁={effectiveKept.length} vs n₂={effectiveRemoved.length}
+                                                  </div>
+                                                </div>
+                                                
+                                                <div className="grid grid-cols-1 gap-3">
+                                                  {metrics.map(({ label, getValue }) => {
+                                                    const keptValues = effectiveKept
+                                                      .map(v => getValue(v))
+                                                      .filter((v): v is number => v !== undefined);
+                                                    const removedValues = effectiveRemoved
+                                                      .map(v => getValue(v))
+                                                      .filter((v): v is number => v !== undefined);
+                                                    
+                                                    if (keptValues.length < 2 || removedValues.length < 2) return null;
+                                                    
+                                                    const tResult = tTest(keptValues, removedValues);
+                                                    const mwResult = mannWhitneyU(keptValues, removedValues);
+                                                    
+                                                    if (!tResult && !mwResult) return null;
+                                                    
+                                                    const keptMean = keptValues.reduce((a, b) => a + b, 0) / keptValues.length;
+                                                    const removedMean = removedValues.reduce((a, b) => a + b, 0) / removedValues.length;
+                                                    const diff = keptMean - removedMean;
+                                                    
+                                                    return (
+                                                      <div key={label} className="rounded-lg border bg-muted/20 p-3 space-y-2">
+                                                        <div className="flex items-center justify-between">
+                                                          <span className="text-xs font-medium">{label}</span>
+                                                          <div className="flex items-center gap-2 text-[10px]">
+                                                            <span className={cn(
+                                                              "font-medium",
+                                                              diff > 0 ? "text-green-600" : diff < 0 ? "text-red-500" : "text-muted-foreground"
+                                                            )}>
+                                                              Δ = {diff >= 0 ? '+' : ''}{diff.toFixed(2)}
+                                                            </span>
+                                                            <span className="text-muted-foreground">
+                                                              ({keptMean.toFixed(2)} vs {removedMean.toFixed(2)})
+                                                            </span>
+                                                          </div>
+                                                        </div>
+                                                        
+                                                        <div className="grid grid-cols-2 gap-3">
+                                                          {/* T-test results */}
+                                                          {tResult && (
+                                                            <div className="space-y-1.5">
+                                                              <div className="flex items-center gap-1.5">
+                                                                <span className="text-[10px] font-medium text-muted-foreground">Welch's t-test</span>
+                                                                <span className={cn(
+                                                                  "text-[10px] font-bold",
+                                                                  getSignificanceLevel(tResult.p).color
+                                                                )}>
+                                                                  {getSignificanceLevel(tResult.p).stars}
+                                                                </span>
+                                                              </div>
+                                                              <div className="grid grid-cols-2 gap-x-2 text-[9px]">
+                                                                <div className="flex justify-between">
+                                                                  <span className="text-muted-foreground">t-statistic:</span>
+                                                                  <span className="font-mono">{tResult.t.toFixed(3)}</span>
+                                                                </div>
+                                                                <div className="flex justify-between">
+                                                                  <span className="text-muted-foreground">df:</span>
+                                                                  <span className="font-mono">{tResult.df.toFixed(1)}</span>
+                                                                </div>
+                                                                <div className="flex justify-between col-span-2">
+                                                                  <span className="text-muted-foreground">p-value:</span>
+                                                                  <span className={cn("font-mono font-medium", getSignificanceLevel(tResult.p).color)}>
+                                                                    {tResult.p < 0.001 ? '<0.001' : tResult.p.toFixed(4)}
+                                                                  </span>
+                                                                </div>
+                                                              </div>
+                                                              {/* Visual p-value indicator */}
+                                                              <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                                                                <div 
+                                                                  className={cn(
+                                                                    "h-full rounded-full transition-all",
+                                                                    tResult.p < 0.05 ? "bg-green-500" : tResult.p < 0.1 ? "bg-amber-500" : "bg-muted-foreground/30"
+                                                                  )}
+                                                                  style={{ width: `${Math.max(2, (1 - tResult.p) * 100)}%` }}
+                                                                />
+                                                              </div>
+                                                            </div>
+                                                          )}
+                                                          
+                                                          {/* Mann-Whitney U results */}
+                                                          {mwResult && (
+                                                            <div className="space-y-1.5">
+                                                              <div className="flex items-center gap-1.5">
+                                                                <span className="text-[10px] font-medium text-muted-foreground">Mann-Whitney U</span>
+                                                                <span className={cn(
+                                                                  "text-[10px] font-bold",
+                                                                  getSignificanceLevel(mwResult.p).color
+                                                                )}>
+                                                                  {getSignificanceLevel(mwResult.p).stars}
+                                                                </span>
+                                                              </div>
+                                                              <div className="grid grid-cols-2 gap-x-2 text-[9px]">
+                                                                <div className="flex justify-between">
+                                                                  <span className="text-muted-foreground">U-statistic:</span>
+                                                                  <span className="font-mono">{mwResult.U.toFixed(1)}</span>
+                                                                </div>
+                                                                <div className="flex justify-between">
+                                                                  <span className="text-muted-foreground">z-score:</span>
+                                                                  <span className="font-mono">{mwResult.z.toFixed(3)}</span>
+                                                                </div>
+                                                                <div className="flex justify-between col-span-2">
+                                                                  <span className="text-muted-foreground">p-value:</span>
+                                                                  <span className={cn("font-mono font-medium", getSignificanceLevel(mwResult.p).color)}>
+                                                                    {mwResult.p < 0.001 ? '<0.001' : mwResult.p.toFixed(4)}
+                                                                  </span>
+                                                                </div>
+                                                              </div>
+                                                              {/* Visual p-value indicator */}
+                                                              <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                                                                <div 
+                                                                  className={cn(
+                                                                    "h-full rounded-full transition-all",
+                                                                    mwResult.p < 0.05 ? "bg-green-500" : mwResult.p < 0.1 ? "bg-amber-500" : "bg-muted-foreground/30"
+                                                                  )}
+                                                                  style={{ width: `${Math.max(2, (1 - mwResult.p) * 100)}%` }}
+                                                                />
+                                                              </div>
+                                                            </div>
+                                                          )}
+                                                        </div>
+                                                        
+                                                        {/* Significance interpretation */}
+                                                        {(tResult || mwResult) && (
+                                                          <div className={cn(
+                                                            "text-[9px] pt-1 border-t border-border/50",
+                                                            getSignificanceLevel(Math.min(tResult?.p ?? 1, mwResult?.p ?? 1)).color
+                                                          )}>
+                                                            {getSignificanceLevel(Math.min(tResult?.p ?? 1, mwResult?.p ?? 1)).label}
+                                                            {Math.min(tResult?.p ?? 1, mwResult?.p ?? 1) < 0.05 && (
+                                                              <span className="text-muted-foreground ml-1">
+                                                                — {diff > 0 ? 'Kept' : 'Removed'} versions perform significantly {Math.abs(diff) > 0.1 ? 'better' : 'differently'}
+                                                              </span>
+                                                            )}
+                                                          </div>
+                                                        )}
+                                                      </div>
+                                                    );
+                                                  })}
+                                                </div>
+                                                
+                                                {/* Legend and explanation */}
+                                                <div className="rounded-lg border bg-muted/10 p-2 space-y-2">
+                                                  <div className="flex items-center flex-wrap gap-x-4 gap-y-1 text-[9px]">
+                                                    <span className="font-medium">Significance Levels:</span>
+                                                    <span className="text-green-600 font-bold">*** p&lt;0.001</span>
+                                                    <span className="text-green-500 font-bold">** p&lt;0.01</span>
+                                                    <span className="text-amber-500 font-bold">* p&lt;0.05</span>
+                                                    <span className="text-amber-400 font-bold">† p&lt;0.1</span>
+                                                    <span className="text-muted-foreground">ns p≥0.1</span>
+                                                  </div>
+                                                  <div className="text-[9px] text-muted-foreground space-y-0.5">
+                                                    <p>
+                                                      <strong>Welch's t-test:</strong> Parametric test comparing means, robust to unequal variances.
+                                                    </p>
+                                                    <p>
+                                                      <strong>Mann-Whitney U:</strong> Non-parametric test comparing rank distributions, no normality assumption.
+                                                    </p>
+                                                    <p className="text-muted-foreground/70 italic">
+                                                      When both tests agree (p&lt;0.05), the difference is likely real and not due to chance.
+                                                    </p>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            );
+                                          })()}
+                                          
                                           {/* Correlation Scatter Plot */}
                                           {(effectiveKept.length > 0 || effectiveRemoved.length > 0) && (() => {
                                             const metricPairs = [
