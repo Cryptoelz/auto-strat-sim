@@ -4281,6 +4281,97 @@ export function BacktestConfigForm({
                                               return { lower: Math.max(-1, lower), upper: Math.min(1, upper) };
                                             };
                                             
+                                            // Bootstrap confidence intervals - more robust for small samples
+                                            const bootstrapCI = (
+                                              a: number[], 
+                                              b: number[], 
+                                              statFn: (a: number[], b: number[]) => number | null,
+                                              nBootstrap: number = 1000,
+                                              confidence: number = 0.95
+                                            ): { lower: number; upper: number; bootstrapSE: number } | null => {
+                                              if (a.length < 2 || b.length < 2) return null;
+                                              
+                                              // Seeded random for reproducibility within session
+                                              let seed = 12345;
+                                              const seededRandom = () => {
+                                                seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+                                                return seed / 0x7fffffff;
+                                              };
+                                              
+                                              const resample = (arr: number[]): number[] => {
+                                                const result: number[] = [];
+                                                for (let i = 0; i < arr.length; i++) {
+                                                  result.push(arr[Math.floor(seededRandom() * arr.length)]);
+                                                }
+                                                return result;
+                                              };
+                                              
+                                              const bootstrapStats: number[] = [];
+                                              for (let i = 0; i < nBootstrap; i++) {
+                                                const resampledA = resample(a);
+                                                const resampledB = resample(b);
+                                                const stat = statFn(resampledA, resampledB);
+                                                if (stat !== null && isFinite(stat)) {
+                                                  bootstrapStats.push(stat);
+                                                }
+                                              }
+                                              
+                                              if (bootstrapStats.length < nBootstrap * 0.5) return null;
+                                              
+                                              bootstrapStats.sort((x, y) => x - y);
+                                              
+                                              const alpha = 1 - confidence;
+                                              const lowerIdx = Math.floor((alpha / 2) * bootstrapStats.length);
+                                              const upperIdx = Math.floor((1 - alpha / 2) * bootstrapStats.length) - 1;
+                                              
+                                              // Calculate bootstrap SE
+                                              const mean = bootstrapStats.reduce((s, v) => s + v, 0) / bootstrapStats.length;
+                                              const variance = bootstrapStats.reduce((s, v) => s + Math.pow(v - mean, 2), 0) / (bootstrapStats.length - 1);
+                                              const bootstrapSE = Math.sqrt(variance);
+                                              
+                                              return {
+                                                lower: bootstrapStats[Math.max(0, lowerIdx)],
+                                                upper: bootstrapStats[Math.min(bootstrapStats.length - 1, upperIdx)],
+                                                bootstrapSE
+                                              };
+                                            };
+                                            
+                                            // Helper functions for bootstrap
+                                            const calcMeanDiff = (a: number[], b: number[]): number | null => {
+                                              if (a.length === 0 || b.length === 0) return null;
+                                              const meanA = a.reduce((s, v) => s + v, 0) / a.length;
+                                              const meanB = b.reduce((s, v) => s + v, 0) / b.length;
+                                              return meanA - meanB;
+                                            };
+                                            
+                                            const calcCohensD = (a: number[], b: number[]): number | null => {
+                                              if (a.length < 2 || b.length < 2) return null;
+                                              const meanA = a.reduce((s, v) => s + v, 0) / a.length;
+                                              const meanB = b.reduce((s, v) => s + v, 0) / b.length;
+                                              const varA = a.reduce((s, v) => s + Math.pow(v - meanA, 2), 0) / (a.length - 1);
+                                              const varB = b.reduce((s, v) => s + Math.pow(v - meanB, 2), 0) / (b.length - 1);
+                                              const pooledStd = Math.sqrt(((a.length - 1) * varA + (b.length - 1) * varB) / (a.length + b.length - 2));
+                                              if (pooledStd === 0) return null;
+                                              return (meanA - meanB) / pooledStd;
+                                            };
+                                            
+                                            const calcRankBiserial = (a: number[], b: number[]): number | null => {
+                                              if (a.length < 1 || b.length < 1) return null;
+                                              let countGreater = 0, countLess = 0;
+                                              for (const valA of a) {
+                                                for (const valB of b) {
+                                                  if (valA > valB) countGreater++;
+                                                  else if (valA < valB) countLess++;
+                                                }
+                                              }
+                                              return (countGreater - countLess) / (a.length * b.length);
+                                            };
+                                            
+                                            // Determine if bootstrap should be preferred (small samples)
+                                            const useBootstrap = (n1: number, n2: number): boolean => {
+                                              return n1 < 20 || n2 < 20 || Math.min(n1, n2) < 10;
+                                            };
+                                            
                                             return (
                                               <div className="space-y-3">
                                                 <div className="flex items-center justify-between">
@@ -4309,9 +4400,17 @@ export function BacktestConfigForm({
                                                     const rankBiserialValue = rankBiserial(keptValues, removedValues);
                                                     
                                                     // Calculate confidence intervals
+                                                    const shouldUseBootstrap = useBootstrap(keptValues.length, removedValues.length);
+                                                    
+                                                    // Parametric CIs
                                                     const diffCI = meanDiffCI(keptValues, removedValues);
                                                     const dCI = cohensDCI(keptValues, removedValues, cohensDValue);
                                                     const rCI = rankBiserialCI(rankBiserialValue, keptValues.length, removedValues.length);
+                                                    
+                                                    // Bootstrap CIs (more robust for small samples)
+                                                    const bootDiffCI = shouldUseBootstrap ? bootstrapCI(keptValues, removedValues, calcMeanDiff) : null;
+                                                    const bootDCI = shouldUseBootstrap ? bootstrapCI(keptValues, removedValues, calcCohensD) : null;
+                                                    const bootRCI = shouldUseBootstrap ? bootstrapCI(keptValues, removedValues, calcRankBiserial) : null;
                                                     
                                                     if (!tResult && !mwResult) return null;
                                                     
@@ -4506,16 +4605,23 @@ export function BacktestConfigForm({
                                                         </div>
                                                         
                                                         {/* Confidence Intervals Section */}
-                                                        {(diffCI || dCI || rCI) && (
+                                                        {(diffCI || dCI || rCI || bootDiffCI || bootDCI || bootRCI) && (
                                                           <div className="pt-2 border-t border-border/50 space-y-2">
-                                                            <div className="text-[10px] font-medium text-muted-foreground flex items-center gap-1.5">
-                                                              <span>95% Confidence Intervals</span>
-                                                              <span className="text-[8px] font-normal">(precision of estimates)</span>
+                                                            <div className="text-[10px] font-medium text-muted-foreground flex items-center justify-between">
+                                                              <div className="flex items-center gap-1.5">
+                                                                <span>95% Confidence Intervals</span>
+                                                                <span className="text-[8px] font-normal">(precision of estimates)</span>
+                                                              </div>
+                                                              {shouldUseBootstrap && (
+                                                                <span className="text-[8px] px-1.5 py-0.5 bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded">
+                                                                  Bootstrap (n&lt;20)
+                                                                </span>
+                                                              )}
                                                             </div>
                                                             
                                                             <div className="grid grid-cols-1 gap-2">
                                                               {/* Mean Difference CI */}
-                                                              {diffCI && (
+                                                              {(diffCI || bootDiffCI) && (
                                                                 <div className="rounded bg-muted/30 px-2 py-1.5 space-y-1">
                                                                   <div className="flex items-center justify-between text-[9px]">
                                                                     <span className="text-muted-foreground">Mean Difference (Δ)</span>
@@ -4523,69 +4629,131 @@ export function BacktestConfigForm({
                                                                       <span className={diff >= 0 ? "text-green-600" : "text-red-500"}>
                                                                         {diff >= 0 ? '+' : ''}{diff.toFixed(2)}
                                                                       </span>
-                                                                      <span className="text-muted-foreground ml-1">
-                                                                        [{diffCI.lower.toFixed(2)}, {diffCI.upper.toFixed(2)}]
-                                                                      </span>
                                                                     </span>
                                                                   </div>
-                                                                  {/* CI visualization */}
-                                                                  <div className="h-3 relative">
+                                                                  
+                                                                  {/* Show both parametric and bootstrap if available */}
+                                                                  <div className="space-y-1.5">
+                                                                    {/* Parametric CI */}
+                                                                    {diffCI && (
+                                                                      <div className="space-y-0.5">
+                                                                        <div className="flex items-center justify-between text-[8px]">
+                                                                          <span className="text-muted-foreground/70">Parametric:</span>
+                                                                          <span className="font-mono text-muted-foreground">
+                                                                            [{diffCI.lower.toFixed(2)}, {diffCI.upper.toFixed(2)}]
+                                                                          </span>
+                                                                        </div>
+                                                                        <div className="h-2.5 relative">
+                                                                          {(() => {
+                                                                            const allLower = bootDiffCI ? Math.min(diffCI.lower, bootDiffCI.lower) : diffCI.lower;
+                                                                            const allUpper = bootDiffCI ? Math.max(diffCI.upper, bootDiffCI.upper) : diffCI.upper;
+                                                                            const ciMin = Math.min(allLower, -Math.abs(diff) * 1.5);
+                                                                            const ciMax = Math.max(allUpper, Math.abs(diff) * 1.5);
+                                                                            const range = ciMax - ciMin || 1;
+                                                                            const zeroPos = ((0 - ciMin) / range) * 100;
+                                                                            const lowerPos = ((diffCI.lower - ciMin) / range) * 100;
+                                                                            const upperPos = ((diffCI.upper - ciMin) / range) * 100;
+                                                                            const pointPos = ((diff - ciMin) / range) * 100;
+                                                                            const ciContainsZero = diffCI.lower <= 0 && diffCI.upper >= 0;
+                                                                            
+                                                                            return (
+                                                                              <>
+                                                                                <div className="absolute inset-y-0.5 inset-x-0 bg-muted rounded-full" />
+                                                                                <div 
+                                                                                  className="absolute top-0 bottom-0 w-px bg-border z-10"
+                                                                                  style={{ left: `${Math.max(0, Math.min(100, zeroPos))}%` }}
+                                                                                />
+                                                                                <div 
+                                                                                  className={cn(
+                                                                                    "absolute top-0.5 bottom-0.5 rounded-full",
+                                                                                    ciContainsZero ? "bg-amber-400/50" : diff > 0 ? "bg-green-400/50" : "bg-red-400/50"
+                                                                                  )}
+                                                                                  style={{ 
+                                                                                    left: `${Math.max(0, lowerPos)}%`, 
+                                                                                    width: `${Math.min(100 - lowerPos, upperPos - lowerPos)}%` 
+                                                                                  }}
+                                                                                />
+                                                                                <div 
+                                                                                  className={cn(
+                                                                                    "absolute top-0 bottom-0 w-1 rounded-sm",
+                                                                                    diff > 0 ? "bg-green-600" : diff < 0 ? "bg-red-500" : "bg-muted-foreground"
+                                                                                  )}
+                                                                                  style={{ left: `calc(${pointPos}% - 2px)` }}
+                                                                                />
+                                                                              </>
+                                                                            );
+                                                                          })()}
+                                                                        </div>
+                                                                      </div>
+                                                                    )}
+                                                                    
+                                                                    {/* Bootstrap CI */}
+                                                                    {bootDiffCI && (
+                                                                      <div className="space-y-0.5">
+                                                                        <div className="flex items-center justify-between text-[8px]">
+                                                                          <span className="text-blue-600 dark:text-blue-400">Bootstrap:</span>
+                                                                          <span className="font-mono text-blue-600 dark:text-blue-400">
+                                                                            [{bootDiffCI.lower.toFixed(2)}, {bootDiffCI.upper.toFixed(2)}]
+                                                                          </span>
+                                                                        </div>
+                                                                        <div className="h-2.5 relative">
+                                                                          {(() => {
+                                                                            const allLower = diffCI ? Math.min(diffCI.lower, bootDiffCI.lower) : bootDiffCI.lower;
+                                                                            const allUpper = diffCI ? Math.max(diffCI.upper, bootDiffCI.upper) : bootDiffCI.upper;
+                                                                            const ciMin = Math.min(allLower, -Math.abs(diff) * 1.5);
+                                                                            const ciMax = Math.max(allUpper, Math.abs(diff) * 1.5);
+                                                                            const range = ciMax - ciMin || 1;
+                                                                            const zeroPos = ((0 - ciMin) / range) * 100;
+                                                                            const lowerPos = ((bootDiffCI.lower - ciMin) / range) * 100;
+                                                                            const upperPos = ((bootDiffCI.upper - ciMin) / range) * 100;
+                                                                            const pointPos = ((diff - ciMin) / range) * 100;
+                                                                            const ciContainsZero = bootDiffCI.lower <= 0 && bootDiffCI.upper >= 0;
+                                                                            
+                                                                            return (
+                                                                              <>
+                                                                                <div className="absolute inset-y-0.5 inset-x-0 bg-blue-100 dark:bg-blue-900/30 rounded-full" />
+                                                                                <div 
+                                                                                  className="absolute top-0 bottom-0 w-px bg-border z-10"
+                                                                                  style={{ left: `${Math.max(0, Math.min(100, zeroPos))}%` }}
+                                                                                />
+                                                                                <div 
+                                                                                  className={cn(
+                                                                                    "absolute top-0.5 bottom-0.5 rounded-full",
+                                                                                    ciContainsZero ? "bg-blue-400/50" : diff > 0 ? "bg-blue-500/60" : "bg-blue-500/60"
+                                                                                  )}
+                                                                                  style={{ 
+                                                                                    left: `${Math.max(0, lowerPos)}%`, 
+                                                                                    width: `${Math.min(100 - lowerPos, upperPos - lowerPos)}%` 
+                                                                                  }}
+                                                                                />
+                                                                                <div 
+                                                                                  className="absolute top-0 bottom-0 w-1 rounded-sm bg-blue-600"
+                                                                                  style={{ left: `calc(${pointPos}% - 2px)` }}
+                                                                                />
+                                                                              </>
+                                                                            );
+                                                                          })()}
+                                                                        </div>
+                                                                      </div>
+                                                                    )}
+                                                                  </div>
+                                                                  
+                                                                  <div className="flex justify-between text-[8px] text-muted-foreground/70">
+                                                                    <span>
+                                                                      {diffCI && `SE: ±${diffCI.se.toFixed(3)}`}
+                                                                      {bootDiffCI && diffCI && ' | '}
+                                                                      {bootDiffCI && <span className="text-blue-600 dark:text-blue-400">Boot SE: ±{bootDiffCI.bootstrapSE.toFixed(3)}</span>}
+                                                                    </span>
                                                                     {(() => {
-                                                                      const ciMin = Math.min(diffCI.lower, -Math.abs(diff) * 1.5);
-                                                                      const ciMax = Math.max(diffCI.upper, Math.abs(diff) * 1.5);
-                                                                      const range = ciMax - ciMin || 1;
-                                                                      const zeroPos = ((0 - ciMin) / range) * 100;
-                                                                      const lowerPos = ((diffCI.lower - ciMin) / range) * 100;
-                                                                      const upperPos = ((diffCI.upper - ciMin) / range) * 100;
-                                                                      const pointPos = ((diff - ciMin) / range) * 100;
-                                                                      const ciContainsZero = diffCI.lower <= 0 && diffCI.upper >= 0;
-                                                                      
+                                                                      const primaryCI = bootDiffCI || diffCI;
+                                                                      if (!primaryCI) return null;
+                                                                      const excludesZero = primaryCI.lower > 0 || primaryCI.upper < 0;
                                                                       return (
-                                                                        <>
-                                                                          {/* Background track */}
-                                                                          <div className="absolute inset-y-1 inset-x-0 bg-muted rounded-full" />
-                                                                          {/* Zero reference line */}
-                                                                          <div 
-                                                                            className="absolute top-0 bottom-0 w-px bg-border z-10"
-                                                                            style={{ left: `${Math.max(0, Math.min(100, zeroPos))}%` }}
-                                                                          />
-                                                                          {/* CI range bar */}
-                                                                          <div 
-                                                                            className={cn(
-                                                                              "absolute top-1 bottom-1 rounded-full",
-                                                                              ciContainsZero ? "bg-amber-400/50" : diff > 0 ? "bg-green-400/50" : "bg-red-400/50"
-                                                                            )}
-                                                                            style={{ 
-                                                                              left: `${Math.max(0, lowerPos)}%`, 
-                                                                              width: `${Math.min(100 - lowerPos, upperPos - lowerPos)}%` 
-                                                                            }}
-                                                                          />
-                                                                          {/* Point estimate */}
-                                                                          <div 
-                                                                            className={cn(
-                                                                              "absolute top-0 bottom-0 w-1.5 h-3 rounded-sm",
-                                                                              diff > 0 ? "bg-green-600" : diff < 0 ? "bg-red-500" : "bg-muted-foreground"
-                                                                            )}
-                                                                            style={{ left: `calc(${pointPos}% - 3px)` }}
-                                                                          />
-                                                                          {/* CI endpoints */}
-                                                                          <div 
-                                                                            className="absolute top-0 h-3 w-px bg-foreground/60"
-                                                                            style={{ left: `${lowerPos}%` }}
-                                                                          />
-                                                                          <div 
-                                                                            className="absolute top-0 h-3 w-px bg-foreground/60"
-                                                                            style={{ left: `${upperPos}%` }}
-                                                                          />
-                                                                        </>
+                                                                        <span className={excludesZero ? "text-green-600" : "text-amber-500"}>
+                                                                          {excludesZero ? "Excludes 0 ✓" : "Includes 0"}
+                                                                        </span>
                                                                       );
                                                                     })()}
-                                                                  </div>
-                                                                  <div className="flex justify-between text-[8px] text-muted-foreground/70">
-                                                                    <span>SE: ±{diffCI.se.toFixed(3)}</span>
-                                                                    <span className={diffCI.lower > 0 || diffCI.upper < 0 ? "text-green-600" : "text-amber-500"}>
-                                                                      {diffCI.lower > 0 || diffCI.upper < 0 ? "Does not include 0" : "Includes 0"}
-                                                                    </span>
                                                                   </div>
                                                                 </div>
                                                               )}
@@ -4593,99 +4761,211 @@ export function BacktestConfigForm({
                                                               {/* Effect Sizes CIs in grid */}
                                                               <div className="grid grid-cols-2 gap-2">
                                                                 {/* Cohen's d CI */}
-                                                                {dCI && (
+                                                                {(dCI || bootDCI) && (
                                                                   <div className="rounded bg-muted/30 px-2 py-1.5 space-y-1">
                                                                     <div className="flex items-center justify-between text-[9px]">
                                                                       <span className="text-muted-foreground">Cohen's d</span>
-                                                                      <span className="font-mono text-[8px]">
-                                                                        [{dCI.lower.toFixed(2)}, {dCI.upper.toFixed(2)}]
-                                                                      </span>
                                                                     </div>
-                                                                    <div className="h-2 relative">
+                                                                    
+                                                                    {/* Parametric */}
+                                                                    {dCI && (
+                                                                      <div className="space-y-0.5">
+                                                                        <div className="flex items-center justify-between text-[8px]">
+                                                                          <span className="text-muted-foreground/70">Param:</span>
+                                                                          <span className="font-mono text-[7px]">
+                                                                            [{dCI.lower.toFixed(2)}, {dCI.upper.toFixed(2)}]
+                                                                          </span>
+                                                                        </div>
+                                                                        <div className="h-1.5 relative">
+                                                                          {(() => {
+                                                                            const scale = 2;
+                                                                            const normalize = (v: number) => ((v + scale) / (2 * scale)) * 100;
+                                                                            const lowerPos = Math.max(0, normalize(dCI.lower));
+                                                                            const upperPos = Math.min(100, normalize(dCI.upper));
+                                                                            const pointPos = cohensDValue !== null ? normalize(cohensDValue) : 50;
+                                                                            const ciContainsZero = dCI.lower <= 0 && dCI.upper >= 0;
+                                                                            
+                                                                            return (
+                                                                              <>
+                                                                                <div className="absolute inset-0 bg-muted rounded-full" />
+                                                                                <div className="absolute top-0 bottom-0 left-1/2 w-px bg-border" />
+                                                                                <div 
+                                                                                  className={cn(
+                                                                                    "absolute inset-y-0 rounded-full",
+                                                                                    ciContainsZero ? "bg-amber-400/50" : cohensDValue && cohensDValue > 0 ? "bg-green-400/50" : "bg-red-400/50"
+                                                                                  )}
+                                                                                  style={{ left: `${lowerPos}%`, width: `${upperPos - lowerPos}%` }}
+                                                                                />
+                                                                                <div 
+                                                                                  className={cn(
+                                                                                    "absolute top-0 bottom-0 w-0.5 rounded-sm",
+                                                                                    cohensDValue && cohensDValue > 0 ? "bg-green-600" : cohensDValue && cohensDValue < 0 ? "bg-red-500" : "bg-muted-foreground"
+                                                                                  )}
+                                                                                  style={{ left: `${pointPos}%` }}
+                                                                                />
+                                                                              </>
+                                                                            );
+                                                                          })()}
+                                                                        </div>
+                                                                      </div>
+                                                                    )}
+                                                                    
+                                                                    {/* Bootstrap */}
+                                                                    {bootDCI && (
+                                                                      <div className="space-y-0.5">
+                                                                        <div className="flex items-center justify-between text-[8px]">
+                                                                          <span className="text-blue-600 dark:text-blue-400">Boot:</span>
+                                                                          <span className="font-mono text-[7px] text-blue-600 dark:text-blue-400">
+                                                                            [{bootDCI.lower.toFixed(2)}, {bootDCI.upper.toFixed(2)}]
+                                                                          </span>
+                                                                        </div>
+                                                                        <div className="h-1.5 relative">
+                                                                          {(() => {
+                                                                            const scale = 2;
+                                                                            const normalize = (v: number) => ((v + scale) / (2 * scale)) * 100;
+                                                                            const lowerPos = Math.max(0, normalize(bootDCI.lower));
+                                                                            const upperPos = Math.min(100, normalize(bootDCI.upper));
+                                                                            const pointPos = cohensDValue !== null ? normalize(cohensDValue) : 50;
+                                                                            const ciContainsZero = bootDCI.lower <= 0 && bootDCI.upper >= 0;
+                                                                            
+                                                                            return (
+                                                                              <>
+                                                                                <div className="absolute inset-0 bg-blue-100 dark:bg-blue-900/30 rounded-full" />
+                                                                                <div className="absolute top-0 bottom-0 left-1/2 w-px bg-border" />
+                                                                                <div 
+                                                                                  className={cn(
+                                                                                    "absolute inset-y-0 rounded-full",
+                                                                                    ciContainsZero ? "bg-blue-400/50" : "bg-blue-500/60"
+                                                                                  )}
+                                                                                  style={{ left: `${lowerPos}%`, width: `${upperPos - lowerPos}%` }}
+                                                                                />
+                                                                                <div 
+                                                                                  className="absolute top-0 bottom-0 w-0.5 rounded-sm bg-blue-600"
+                                                                                  style={{ left: `${pointPos}%` }}
+                                                                                />
+                                                                              </>
+                                                                            );
+                                                                          })()}
+                                                                        </div>
+                                                                      </div>
+                                                                    )}
+                                                                    
+                                                                    <div className="text-[7px] text-muted-foreground/70 text-center">
                                                                       {(() => {
-                                                                        // Scale to show -2 to +2 range for Cohen's d
-                                                                        const scale = 2;
-                                                                        const normalize = (v: number) => ((v + scale) / (2 * scale)) * 100;
-                                                                        const zeroPos = 50;
-                                                                        const lowerPos = Math.max(0, normalize(dCI.lower));
-                                                                        const upperPos = Math.min(100, normalize(dCI.upper));
-                                                                        const pointPos = cohensDValue !== null ? normalize(cohensDValue) : 50;
-                                                                        const ciContainsZero = dCI.lower <= 0 && dCI.upper >= 0;
-                                                                        
-                                                                        return (
-                                                                          <>
-                                                                            <div className="absolute inset-0 bg-muted rounded-full" />
-                                                                            <div className="absolute top-0 bottom-0 left-1/2 w-px bg-border" />
-                                                                            <div 
-                                                                              className={cn(
-                                                                                "absolute inset-y-0 rounded-full",
-                                                                                ciContainsZero ? "bg-amber-400/50" : cohensDValue && cohensDValue > 0 ? "bg-green-400/50" : "bg-red-400/50"
-                                                                              )}
-                                                                              style={{ left: `${lowerPos}%`, width: `${upperPos - lowerPos}%` }}
-                                                                            />
-                                                                            <div 
-                                                                              className={cn(
-                                                                                "absolute top-0 bottom-0 w-1 rounded-sm",
-                                                                                cohensDValue && cohensDValue > 0 ? "bg-green-600" : cohensDValue && cohensDValue < 0 ? "bg-red-500" : "bg-muted-foreground"
-                                                                              )}
-                                                                              style={{ left: `calc(${pointPos}% - 2px)` }}
-                                                                            />
-                                                                          </>
-                                                                        );
+                                                                        const primaryCI = bootDCI || dCI;
+                                                                        if (!primaryCI) return null;
+                                                                        return primaryCI.lower > 0 || primaryCI.upper < 0 ? "Excludes 0" : "Includes 0";
                                                                       })()}
-                                                                    </div>
-                                                                    <div className="text-[8px] text-muted-foreground/70 text-center">
-                                                                      {dCI.lower > 0 || dCI.upper < 0 ? "Excludes 0" : "Includes 0"}
                                                                     </div>
                                                                   </div>
                                                                 )}
                                                                 
                                                                 {/* Rank-biserial CI */}
-                                                                {rCI && (
+                                                                {(rCI || bootRCI) && (
                                                                   <div className="rounded bg-muted/30 px-2 py-1.5 space-y-1">
                                                                     <div className="flex items-center justify-between text-[9px]">
                                                                       <span className="text-muted-foreground">Rank-biserial r</span>
-                                                                      <span className="font-mono text-[8px]">
-                                                                        [{rCI.lower.toFixed(2)}, {rCI.upper.toFixed(2)}]
-                                                                      </span>
                                                                     </div>
-                                                                    <div className="h-2 relative">
+                                                                    
+                                                                    {/* Parametric */}
+                                                                    {rCI && (
+                                                                      <div className="space-y-0.5">
+                                                                        <div className="flex items-center justify-between text-[8px]">
+                                                                          <span className="text-muted-foreground/70">Param:</span>
+                                                                          <span className="font-mono text-[7px]">
+                                                                            [{rCI.lower.toFixed(2)}, {rCI.upper.toFixed(2)}]
+                                                                          </span>
+                                                                        </div>
+                                                                        <div className="h-1.5 relative">
+                                                                          {(() => {
+                                                                            const normalize = (v: number) => ((v + 1) / 2) * 100;
+                                                                            const lowerPos = Math.max(0, normalize(rCI.lower));
+                                                                            const upperPos = Math.min(100, normalize(rCI.upper));
+                                                                            const pointPos = rankBiserialValue !== null ? normalize(rankBiserialValue) : 50;
+                                                                            const ciContainsZero = rCI.lower <= 0 && rCI.upper >= 0;
+                                                                            
+                                                                            return (
+                                                                              <>
+                                                                                <div className="absolute inset-0 bg-muted rounded-full" />
+                                                                                <div className="absolute top-0 bottom-0 left-1/2 w-px bg-border" />
+                                                                                <div 
+                                                                                  className={cn(
+                                                                                    "absolute inset-y-0 rounded-full",
+                                                                                    ciContainsZero ? "bg-amber-400/50" : rankBiserialValue && rankBiserialValue > 0 ? "bg-green-400/50" : "bg-red-400/50"
+                                                                                  )}
+                                                                                  style={{ left: `${lowerPos}%`, width: `${upperPos - lowerPos}%` }}
+                                                                                />
+                                                                                <div 
+                                                                                  className={cn(
+                                                                                    "absolute top-0 bottom-0 w-0.5 rounded-sm",
+                                                                                    rankBiserialValue && rankBiserialValue > 0 ? "bg-green-600" : rankBiserialValue && rankBiserialValue < 0 ? "bg-red-500" : "bg-muted-foreground"
+                                                                                  )}
+                                                                                  style={{ left: `${pointPos}%` }}
+                                                                                />
+                                                                              </>
+                                                                            );
+                                                                          })()}
+                                                                        </div>
+                                                                      </div>
+                                                                    )}
+                                                                    
+                                                                    {/* Bootstrap */}
+                                                                    {bootRCI && (
+                                                                      <div className="space-y-0.5">
+                                                                        <div className="flex items-center justify-between text-[8px]">
+                                                                          <span className="text-blue-600 dark:text-blue-400">Boot:</span>
+                                                                          <span className="font-mono text-[7px] text-blue-600 dark:text-blue-400">
+                                                                            [{bootRCI.lower.toFixed(2)}, {bootRCI.upper.toFixed(2)}]
+                                                                          </span>
+                                                                        </div>
+                                                                        <div className="h-1.5 relative">
+                                                                          {(() => {
+                                                                            const normalize = (v: number) => ((v + 1) / 2) * 100;
+                                                                            const lowerPos = Math.max(0, normalize(bootRCI.lower));
+                                                                            const upperPos = Math.min(100, normalize(bootRCI.upper));
+                                                                            const pointPos = rankBiserialValue !== null ? normalize(rankBiserialValue) : 50;
+                                                                            const ciContainsZero = bootRCI.lower <= 0 && bootRCI.upper >= 0;
+                                                                            
+                                                                            return (
+                                                                              <>
+                                                                                <div className="absolute inset-0 bg-blue-100 dark:bg-blue-900/30 rounded-full" />
+                                                                                <div className="absolute top-0 bottom-0 left-1/2 w-px bg-border" />
+                                                                                <div 
+                                                                                  className={cn(
+                                                                                    "absolute inset-y-0 rounded-full",
+                                                                                    ciContainsZero ? "bg-blue-400/50" : "bg-blue-500/60"
+                                                                                  )}
+                                                                                  style={{ left: `${lowerPos}%`, width: `${upperPos - lowerPos}%` }}
+                                                                                />
+                                                                                <div 
+                                                                                  className="absolute top-0 bottom-0 w-0.5 rounded-sm bg-blue-600"
+                                                                                  style={{ left: `${pointPos}%` }}
+                                                                                />
+                                                                              </>
+                                                                            );
+                                                                          })()}
+                                                                        </div>
+                                                                      </div>
+                                                                    )}
+                                                                    
+                                                                    <div className="text-[7px] text-muted-foreground/70 text-center">
                                                                       {(() => {
-                                                                        // Scale from -1 to +1
-                                                                        const normalize = (v: number) => ((v + 1) / 2) * 100;
-                                                                        const lowerPos = Math.max(0, normalize(rCI.lower));
-                                                                        const upperPos = Math.min(100, normalize(rCI.upper));
-                                                                        const pointPos = rankBiserialValue !== null ? normalize(rankBiserialValue) : 50;
-                                                                        const ciContainsZero = rCI.lower <= 0 && rCI.upper >= 0;
-                                                                        
-                                                                        return (
-                                                                          <>
-                                                                            <div className="absolute inset-0 bg-muted rounded-full" />
-                                                                            <div className="absolute top-0 bottom-0 left-1/2 w-px bg-border" />
-                                                                            <div 
-                                                                              className={cn(
-                                                                                "absolute inset-y-0 rounded-full",
-                                                                                ciContainsZero ? "bg-amber-400/50" : rankBiserialValue && rankBiserialValue > 0 ? "bg-green-400/50" : "bg-red-400/50"
-                                                                              )}
-                                                                              style={{ left: `${lowerPos}%`, width: `${upperPos - lowerPos}%` }}
-                                                                            />
-                                                                            <div 
-                                                                              className={cn(
-                                                                                "absolute top-0 bottom-0 w-1 rounded-sm",
-                                                                                rankBiserialValue && rankBiserialValue > 0 ? "bg-green-600" : rankBiserialValue && rankBiserialValue < 0 ? "bg-red-500" : "bg-muted-foreground"
-                                                                              )}
-                                                                              style={{ left: `calc(${pointPos}% - 2px)` }}
-                                                                            />
-                                                                          </>
-                                                                        );
+                                                                        const primaryCI = bootRCI || rCI;
+                                                                        if (!primaryCI) return null;
+                                                                        return primaryCI.lower > 0 || primaryCI.upper < 0 ? "Excludes 0" : "Includes 0";
                                                                       })()}
-                                                                    </div>
-                                                                    <div className="text-[8px] text-muted-foreground/70 text-center">
-                                                                      {rCI.lower > 0 || rCI.upper < 0 ? "Excludes 0" : "Includes 0"}
                                                                     </div>
                                                                   </div>
                                                                 )}
                                                               </div>
+                                                              
+                                                              {/* Bootstrap explanation when active */}
+                                                              {shouldUseBootstrap && (
+                                                                <div className="text-[8px] text-blue-600 dark:text-blue-400 bg-blue-500/10 rounded px-2 py-1">
+                                                                  <strong>Bootstrap CIs</strong> use 1000 resamples for more reliable estimates with small samples (n&lt;20).
+                                                                  They make fewer distributional assumptions than parametric methods.
+                                                                </div>
+                                                              )}
                                                             </div>
                                                           </div>
                                                         )}
@@ -4755,8 +5035,11 @@ export function BacktestConfigForm({
                                                     <p>
                                                       <strong>95% Confidence Intervals:</strong> Range where the true value likely falls. If CI excludes 0, the effect is statistically significant.
                                                     </p>
+                                                    <p>
+                                                      <strong>Bootstrap CIs:</strong> Non-parametric CIs using 1000 resamples. More robust for small samples (n&lt;20) with fewer distributional assumptions.
+                                                    </p>
                                                     <p className="text-muted-foreground/70 italic pt-1">
-                                                      Significance (p-value) tells if a difference exists; effect size tells how large it is; CI shows precision.
+                                                      Significance (p-value) tells if a difference exists; effect size tells how large it is; CI shows precision. Bootstrap CIs are preferred for small samples.
                                                     </p>
                                                   </div>
                                                 </div>
