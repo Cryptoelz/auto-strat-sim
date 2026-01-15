@@ -3380,6 +3380,195 @@ export function BacktestConfigForm({
                                             );
                                           })()}
                                           
+                                          {/* Range Spread Visualization */}
+                                          {(effectiveKept.length > 0 || effectiveRemoved.length > 0) && (() => {
+                                            const metrics = [
+                                              { 
+                                                label: 'PnL %', 
+                                                getValue: (v: typeof effectiveKept[0]) => v.version.performance?.totalPnlPercent,
+                                                format: (v: number) => `${v >= 0 ? '+' : ''}${v.toFixed(1)}%`,
+                                              },
+                                              { 
+                                                label: 'Win Rate', 
+                                                getValue: (v: typeof effectiveKept[0]) => v.version.performance?.winRate,
+                                                format: (v: number) => `${v.toFixed(0)}%`,
+                                              },
+                                              { 
+                                                label: 'Sharpe', 
+                                                getValue: (v: typeof effectiveKept[0]) => v.version.performance?.sharpeRatio,
+                                                format: (v: number) => v.toFixed(2),
+                                              },
+                                              { 
+                                                label: 'Max DD', 
+                                                getValue: (v: typeof effectiveKept[0]) => v.version.performance?.maxDrawdown,
+                                                format: (v: number) => `${v.toFixed(1)}%`,
+                                              },
+                                              { 
+                                                label: 'Profit Factor', 
+                                                getValue: (v: typeof effectiveKept[0]) => v.version.performance?.profitFactor,
+                                                format: (v: number) => v.toFixed(2),
+                                              },
+                                            ];
+
+                                            return (
+                                              <div className="space-y-3">
+                                                <div className="text-xs font-medium">Distribution Overlap</div>
+                                                <div className="space-y-4">
+                                                  {metrics.map(({ label, getValue, format }) => {
+                                                    const keptValues = effectiveKept
+                                                      .map(v => getValue(v))
+                                                      .filter((v): v is number => v !== undefined);
+                                                    const removedValues = effectiveRemoved
+                                                      .map(v => getValue(v))
+                                                      .filter((v): v is number => v !== undefined);
+                                                    
+                                                    if (keptValues.length === 0 && removedValues.length === 0) return null;
+                                                    
+                                                    const allValues = [...keptValues, ...removedValues];
+                                                    const globalMin = Math.min(...allValues);
+                                                    const globalMax = Math.max(...allValues);
+                                                    const range = globalMax - globalMin || 1;
+                                                    
+                                                    const keptMin = keptValues.length > 0 ? Math.min(...keptValues) : null;
+                                                    const keptMax = keptValues.length > 0 ? Math.max(...keptValues) : null;
+                                                    const removedMin = removedValues.length > 0 ? Math.min(...removedValues) : null;
+                                                    const removedMax = removedValues.length > 0 ? Math.max(...removedValues) : null;
+                                                    
+                                                    // Calculate overlap
+                                                    let overlapStart = null;
+                                                    let overlapEnd = null;
+                                                    if (keptMin !== null && keptMax !== null && removedMin !== null && removedMax !== null) {
+                                                      overlapStart = Math.max(keptMin, removedMin);
+                                                      overlapEnd = Math.min(keptMax, removedMax);
+                                                      if (overlapStart > overlapEnd) {
+                                                        overlapStart = null;
+                                                        overlapEnd = null;
+                                                      }
+                                                    }
+                                                    
+                                                    const getPosition = (val: number) => ((val - globalMin) / range) * 100;
+                                                    
+                                                    return (
+                                                      <div key={label} className="space-y-1">
+                                                        <div className="flex items-center justify-between text-[10px]">
+                                                          <span className="font-medium">{label}</span>
+                                                          <div className="flex items-center gap-3 text-muted-foreground">
+                                                            {keptValues.length > 0 && (
+                                                              <span className="text-green-600">
+                                                                {format(keptMin!)} – {format(keptMax!)}
+                                                              </span>
+                                                            )}
+                                                            {removedValues.length > 0 && (
+                                                              <span className="text-red-500">
+                                                                {format(removedMin!)} – {format(removedMax!)}
+                                                              </span>
+                                                            )}
+                                                          </div>
+                                                        </div>
+                                                        
+                                                        {/* Range visualization bar */}
+                                                        <div className="relative h-6 bg-muted/30 rounded overflow-hidden">
+                                                          {/* Scale markers */}
+                                                          <div className="absolute inset-0 flex justify-between items-end px-1 pb-0.5">
+                                                            <span className="text-[8px] text-muted-foreground/60">{format(globalMin)}</span>
+                                                            <span className="text-[8px] text-muted-foreground/60">{format(globalMax)}</span>
+                                                          </div>
+                                                          
+                                                          {/* Removed range (red, behind) */}
+                                                          {removedMin !== null && removedMax !== null && (
+                                                            <div 
+                                                              className="absolute top-1 h-2 bg-red-500/40 rounded-sm"
+                                                              style={{
+                                                                left: `${getPosition(removedMin)}%`,
+                                                                width: `${Math.max(1, getPosition(removedMax) - getPosition(removedMin))}%`,
+                                                              }}
+                                                            />
+                                                          )}
+                                                          
+                                                          {/* Kept range (green, in front) */}
+                                                          {keptMin !== null && keptMax !== null && (
+                                                            <div 
+                                                              className="absolute top-1 h-2 bg-green-500/60 rounded-sm"
+                                                              style={{
+                                                                left: `${getPosition(keptMin)}%`,
+                                                                width: `${Math.max(1, getPosition(keptMax) - getPosition(keptMin))}%`,
+                                                              }}
+                                                            />
+                                                          )}
+                                                          
+                                                          {/* Overlap region (striped pattern) */}
+                                                          {overlapStart !== null && overlapEnd !== null && (
+                                                            <div 
+                                                              className="absolute top-1 h-2 rounded-sm overflow-hidden"
+                                                              style={{
+                                                                left: `${getPosition(overlapStart)}%`,
+                                                                width: `${Math.max(1, getPosition(overlapEnd) - getPosition(overlapStart))}%`,
+                                                                background: 'repeating-linear-gradient(45deg, hsl(var(--chart-1)) 0, hsl(var(--chart-1)) 2px, hsl(var(--chart-2)) 2px, hsl(var(--chart-2)) 4px)',
+                                                                opacity: 0.7,
+                                                              }}
+                                                            />
+                                                          )}
+                                                          
+                                                          {/* Individual version dots - Kept */}
+                                                          {keptValues.map((val, idx) => (
+                                                            <div
+                                                              key={`kept-${idx}`}
+                                                              className="absolute top-2.5 w-1.5 h-1.5 bg-green-600 rounded-full border border-green-700 shadow-sm transform -translate-x-1/2"
+                                                              style={{ left: `${getPosition(val)}%` }}
+                                                              title={`Kept: ${format(val)}`}
+                                                            />
+                                                          ))}
+                                                          
+                                                          {/* Individual version dots - Removed */}
+                                                          {removedValues.map((val, idx) => (
+                                                            <div
+                                                              key={`removed-${idx}`}
+                                                              className="absolute top-2.5 w-1.5 h-1.5 bg-red-500 rounded-full border border-red-600 shadow-sm transform -translate-x-1/2"
+                                                              style={{ left: `${getPosition(val)}%` }}
+                                                              title={`Removed: ${format(val)}`}
+                                                            />
+                                                          ))}
+                                                        </div>
+                                                        
+                                                        {/* Overlap indicator */}
+                                                        {overlapStart !== null && overlapEnd !== null && (
+                                                          <div className="flex items-center gap-1 text-[9px] text-muted-foreground">
+                                                            <div className="w-2 h-2 rounded-sm" style={{
+                                                              background: 'repeating-linear-gradient(45deg, hsl(var(--chart-1)) 0, hsl(var(--chart-1)) 1px, hsl(var(--chart-2)) 1px, hsl(var(--chart-2)) 2px)',
+                                                            }} />
+                                                            <span>Overlap: {format(overlapStart)} – {format(overlapEnd)}</span>
+                                                          </div>
+                                                        )}
+                                                        {overlapStart === null && keptValues.length > 0 && removedValues.length > 0 && (
+                                                          <div className="text-[9px] text-green-600 font-medium">
+                                                            ✓ No overlap - clear separation
+                                                          </div>
+                                                        )}
+                                                      </div>
+                                                    );
+                                                  })}
+                                                </div>
+                                                
+                                                {/* Legend */}
+                                                <div className="flex items-center gap-4 text-[9px] text-muted-foreground pt-1 border-t border-border/50">
+                                                  <div className="flex items-center gap-1">
+                                                    <div className="w-3 h-2 bg-green-500/60 rounded-sm" />
+                                                    <span>Kept range</span>
+                                                  </div>
+                                                  <div className="flex items-center gap-1">
+                                                    <div className="w-3 h-2 bg-red-500/40 rounded-sm" />
+                                                    <span>Removed range</span>
+                                                  </div>
+                                                  <div className="flex items-center gap-1">
+                                                    <div className="w-1.5 h-1.5 bg-green-600 rounded-full border border-green-700" />
+                                                    <div className="w-1.5 h-1.5 bg-red-500 rounded-full border border-red-600 -ml-0.5" />
+                                                    <span>Individual versions</span>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            );
+                                          })()}
+                                          
                                           {/* Side-by-side detailed view */}
                                           <div className="grid grid-cols-2 gap-3">
                                             {/* Kept Versions */}
