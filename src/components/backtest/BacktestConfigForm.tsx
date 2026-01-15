@@ -1,4 +1,6 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -33,6 +35,7 @@ import {
   Trash2,
   GitCompare,
   Download,
+  FileText,
   Share2,
   Check,
   AlertCircle,
@@ -548,6 +551,8 @@ export function BacktestConfigForm({
   const [cleanupPreviewTab, setCleanupPreviewTab] = useState<'list' | 'compare'>('list');
   const [cleanupSortColumn, setCleanupSortColumn] = useState<'pnl' | 'winRate' | 'sharpe' | null>(null);
   const [cleanupSortDirection, setCleanupSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const comparisonReportRef = useRef<HTMLDivElement>(null);
   
   // Force re-render for countdown timer
   const [, setCountdownTick] = useState(0);
@@ -2470,20 +2475,77 @@ export function BacktestConfigForm({
                                 }
                               }}>
                                 <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
-                                  <DialogHeader>
-                                    <DialogTitle className="flex items-center gap-2">
-                                      <Sparkles className="h-5 w-5 text-purple-500" />
-                                      Smart Cleanup Preview
-                                    </DialogTitle>
-                                    <DialogDescription>
-                                      Review which versions will be kept vs removed based on performance rankings.
-                                      Keeping best {pendingSmartCleanupKeepCount} version{pendingSmartCleanupKeepCount !== 1 ? 's' : ''} per preset.
-                                      {manuallyProtectedVersions.size > 0 && (
-                                        <span className="text-blue-500 ml-1">
-                                          (+{manuallyProtectedVersions.size} manually protected)
-                                        </span>
-                                      )}
-                                    </DialogDescription>
+                                  <DialogHeader className="flex flex-row items-start justify-between">
+                                    <div className="flex-1">
+                                      <DialogTitle className="flex items-center gap-2">
+                                        <Sparkles className="h-5 w-5 text-purple-500" />
+                                        Smart Cleanup Preview
+                                      </DialogTitle>
+                                      <DialogDescription>
+                                        Review which versions will be kept vs removed based on performance rankings.
+                                        Keeping best {pendingSmartCleanupKeepCount} version{pendingSmartCleanupKeepCount !== 1 ? 's' : ''} per preset.
+                                        {manuallyProtectedVersions.size > 0 && (
+                                          <span className="text-blue-500 ml-1">
+                                            (+{manuallyProtectedVersions.size} manually protected)
+                                          </span>
+                                        )}
+                                      </DialogDescription>
+                                    </div>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="ml-4 gap-1.5"
+                                      disabled={isExportingPdf}
+                                      onClick={async () => {
+                                        if (!comparisonReportRef.current) return;
+                                        setIsExportingPdf(true);
+                                        try {
+                                          const element = comparisonReportRef.current;
+                                          const canvas = await html2canvas(element, {
+                                            scale: 2,
+                                            useCORS: true,
+                                            logging: false,
+                                            backgroundColor: '#ffffff',
+                                          });
+                                          
+                                          const imgData = canvas.toDataURL('image/png');
+                                          const pdf = new jsPDF({
+                                            orientation: 'portrait',
+                                            unit: 'mm',
+                                            format: 'a4',
+                                          });
+                                          
+                                          const pdfWidth = pdf.internal.pageSize.getWidth();
+                                          const pdfHeight = pdf.internal.pageSize.getHeight();
+                                          const imgWidth = canvas.width;
+                                          const imgHeight = canvas.height;
+                                          const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+                                          const imgX = (pdfWidth - imgWidth * ratio) / 2;
+                                          const imgY = 10;
+                                          
+                                          // Add title
+                                          pdf.setFontSize(16);
+                                          pdf.text('Smart Cleanup Comparison Report', pdfWidth / 2, 15, { align: 'center' });
+                                          pdf.setFontSize(10);
+                                          pdf.text(`Generated: ${format(new Date(), 'PPpp')}`, pdfWidth / 2, 22, { align: 'center' });
+                                          pdf.text(`Kept: ${smartCleanupPreviewData?.kept.length || 0} versions | Removed: ${smartCleanupPreviewData?.removed.length || 0} versions`, pdfWidth / 2, 28, { align: 'center' });
+                                          
+                                          // Add the canvas image
+                                          pdf.addImage(imgData, 'PNG', imgX, 35, imgWidth * ratio * 0.95, imgHeight * ratio * 0.95);
+                                          
+                                          pdf.save(`cleanup-comparison-${format(new Date(), 'yyyy-MM-dd-HHmm')}.pdf`);
+                                          toast.success('PDF exported successfully');
+                                        } catch (error) {
+                                          console.error('PDF export error:', error);
+                                          toast.error('Failed to export PDF');
+                                        } finally {
+                                          setIsExportingPdf(false);
+                                        }
+                                      }}
+                                    >
+                                      <FileText className="h-3.5 w-3.5" />
+                                      {isExportingPdf ? 'Exporting...' : 'Export PDF'}
+                                    </Button>
                                   </DialogHeader>
                                   
                                   {smartCleanupPreviewData && (() => {
@@ -2862,7 +2924,7 @@ export function BacktestConfigForm({
                                       </TabsContent>
                                       
                                       <TabsContent value="compare" className="flex-1 overflow-auto mt-0">
-                                        <div className="space-y-4">
+                                        <div ref={comparisonReportRef} className="space-y-4 bg-background p-2">
                                           {/* Parameter Comparison Table */}
                                           <div className="border rounded-lg overflow-hidden">
                                             <table className="w-full text-xs">
