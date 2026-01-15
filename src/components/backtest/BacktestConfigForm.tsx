@@ -4145,6 +4145,70 @@ export function BacktestConfigForm({
                                               return { label: 'Not Significant', color: 'text-muted-foreground', stars: 'ns' };
                                             };
                                             
+                                            // Cohen's d effect size calculation
+                                            const cohensD = (a: number[], b: number[]): number | null => {
+                                              if (a.length < 2 || b.length < 2) return null;
+                                              
+                                              const meanA = a.reduce((s, v) => s + v, 0) / a.length;
+                                              const meanB = b.reduce((s, v) => s + v, 0) / b.length;
+                                              
+                                              const varA = a.reduce((s, v) => s + Math.pow(v - meanA, 2), 0) / (a.length - 1);
+                                              const varB = b.reduce((s, v) => s + Math.pow(v - meanB, 2), 0) / (b.length - 1);
+                                              
+                                              // Pooled standard deviation
+                                              const pooledStd = Math.sqrt(
+                                                ((a.length - 1) * varA + (b.length - 1) * varB) / (a.length + b.length - 2)
+                                              );
+                                              
+                                              if (pooledStd === 0) return null;
+                                              
+                                              return (meanA - meanB) / pooledStd;
+                                            };
+                                            
+                                            // Rank-biserial correlation (effect size for Mann-Whitney U)
+                                            const rankBiserial = (a: number[], b: number[]): number | null => {
+                                              if (a.length < 1 || b.length < 1) return null;
+                                              
+                                              const n1 = a.length;
+                                              const n2 = b.length;
+                                              
+                                              // Count how many times a value from 'a' is greater than a value from 'b'
+                                              let countGreater = 0;
+                                              let countLess = 0;
+                                              
+                                              for (const valA of a) {
+                                                for (const valB of b) {
+                                                  if (valA > valB) countGreater++;
+                                                  else if (valA < valB) countLess++;
+                                                }
+                                              }
+                                              
+                                              // Rank-biserial correlation: r = (f - u) / (n1 * n2)
+                                              // where f = number of favorable pairs, u = number of unfavorable pairs
+                                              return (countGreater - countLess) / (n1 * n2);
+                                            };
+                                            
+                                            // Interpret effect size
+                                            const getEffectSizeInterpretation = (d: number | null): { label: string; color: string } => {
+                                              if (d === null) return { label: 'N/A', color: 'text-muted-foreground' };
+                                              const absD = Math.abs(d);
+                                              if (absD >= 1.2) return { label: 'Very Large', color: 'text-purple-600' };
+                                              if (absD >= 0.8) return { label: 'Large', color: 'text-blue-600' };
+                                              if (absD >= 0.5) return { label: 'Medium', color: 'text-green-600' };
+                                              if (absD >= 0.2) return { label: 'Small', color: 'text-amber-500' };
+                                              return { label: 'Negligible', color: 'text-muted-foreground' };
+                                            };
+                                            
+                                            const getRankBiserialInterpretation = (r: number | null): { label: string; color: string } => {
+                                              if (r === null) return { label: 'N/A', color: 'text-muted-foreground' };
+                                              const absR = Math.abs(r);
+                                              if (absR >= 0.7) return { label: 'Very Large', color: 'text-purple-600' };
+                                              if (absR >= 0.5) return { label: 'Large', color: 'text-blue-600' };
+                                              if (absR >= 0.3) return { label: 'Medium', color: 'text-green-600' };
+                                              if (absR >= 0.1) return { label: 'Small', color: 'text-amber-500' };
+                                              return { label: 'Negligible', color: 'text-muted-foreground' };
+                                            };
+                                            
                                             return (
                                               <div className="space-y-3">
                                                 <div className="flex items-center justify-between">
@@ -4167,6 +4231,10 @@ export function BacktestConfigForm({
                                                     
                                                     const tResult = tTest(keptValues, removedValues);
                                                     const mwResult = mannWhitneyU(keptValues, removedValues);
+                                                    
+                                                    // Calculate effect sizes
+                                                    const cohensDValue = cohensD(keptValues, removedValues);
+                                                    const rankBiserialValue = rankBiserial(keptValues, removedValues);
                                                     
                                                     if (!tResult && !mwResult) return null;
                                                     
@@ -4275,18 +4343,115 @@ export function BacktestConfigForm({
                                                           )}
                                                         </div>
                                                         
-                                                        {/* Significance interpretation */}
+                                                        {/* Effect Size Section */}
+                                                        <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border/50">
+                                                          {/* Cohen's d */}
+                                                          <div className="space-y-1">
+                                                            <div className="flex items-center gap-1.5">
+                                                              <span className="text-[10px] font-medium text-muted-foreground">Cohen's d</span>
+                                                              <span className={cn(
+                                                                "text-[10px] font-bold",
+                                                                getEffectSizeInterpretation(cohensDValue).color
+                                                              )}>
+                                                                {getEffectSizeInterpretation(cohensDValue).label}
+                                                              </span>
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                              <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden relative">
+                                                                {/* Effect size bar visualization */}
+                                                                <div 
+                                                                  className={cn(
+                                                                    "absolute h-full rounded-full transition-all",
+                                                                    cohensDValue !== null && cohensDValue > 0 
+                                                                      ? "bg-green-500 left-1/2" 
+                                                                      : "bg-red-500 right-1/2"
+                                                                  )}
+                                                                  style={{ 
+                                                                    width: `${Math.min(50, Math.abs(cohensDValue ?? 0) * 20)}%`,
+                                                                    ...(cohensDValue !== null && cohensDValue < 0 && { left: 'auto' })
+                                                                  }}
+                                                                />
+                                                                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-border" />
+                                                              </div>
+                                                              <span className={cn(
+                                                                "text-[10px] font-mono font-medium min-w-[3rem] text-right",
+                                                                cohensDValue !== null && cohensDValue > 0 ? "text-green-600" : 
+                                                                cohensDValue !== null && cohensDValue < 0 ? "text-red-500" : "text-muted-foreground"
+                                                              )}>
+                                                                {cohensDValue !== null ? (cohensDValue > 0 ? '+' : '') + cohensDValue.toFixed(2) : 'N/A'}
+                                                              </span>
+                                                            </div>
+                                                            <div className="text-[8px] text-muted-foreground/70">
+                                                              |d| thresholds: 0.2 small, 0.5 medium, 0.8 large
+                                                            </div>
+                                                          </div>
+                                                          
+                                                          {/* Rank-biserial correlation */}
+                                                          <div className="space-y-1">
+                                                            <div className="flex items-center gap-1.5">
+                                                              <span className="text-[10px] font-medium text-muted-foreground">Rank-biserial r</span>
+                                                              <span className={cn(
+                                                                "text-[10px] font-bold",
+                                                                getRankBiserialInterpretation(rankBiserialValue).color
+                                                              )}>
+                                                                {getRankBiserialInterpretation(rankBiserialValue).label}
+                                                              </span>
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                              <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden relative">
+                                                                {/* Effect size bar visualization */}
+                                                                <div 
+                                                                  className={cn(
+                                                                    "absolute h-full rounded-full transition-all",
+                                                                    rankBiserialValue !== null && rankBiserialValue > 0 
+                                                                      ? "bg-green-500 left-1/2" 
+                                                                      : "bg-red-500 right-1/2"
+                                                                  )}
+                                                                  style={{ 
+                                                                    width: `${Math.min(50, Math.abs(rankBiserialValue ?? 0) * 50)}%`,
+                                                                    ...(rankBiserialValue !== null && rankBiserialValue < 0 && { left: 'auto' })
+                                                                  }}
+                                                                />
+                                                                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-border" />
+                                                              </div>
+                                                              <span className={cn(
+                                                                "text-[10px] font-mono font-medium min-w-[3rem] text-right",
+                                                                rankBiserialValue !== null && rankBiserialValue > 0 ? "text-green-600" : 
+                                                                rankBiserialValue !== null && rankBiserialValue < 0 ? "text-red-500" : "text-muted-foreground"
+                                                              )}>
+                                                                {rankBiserialValue !== null ? (rankBiserialValue > 0 ? '+' : '') + rankBiserialValue.toFixed(2) : 'N/A'}
+                                                              </span>
+                                                            </div>
+                                                            <div className="text-[8px] text-muted-foreground/70">
+                                                              |r| thresholds: 0.1 small, 0.3 medium, 0.5 large
+                                                            </div>
+                                                          </div>
+                                                        </div>
+                                                        
+                                                        {/* Combined interpretation */}
                                                         {(tResult || mwResult) && (
                                                           <div className={cn(
-                                                            "text-[9px] pt-1 border-t border-border/50",
+                                                            "text-[9px] pt-2 border-t border-border/50",
                                                             getSignificanceLevel(Math.min(tResult?.p ?? 1, mwResult?.p ?? 1)).color
                                                           )}>
-                                                            {getSignificanceLevel(Math.min(tResult?.p ?? 1, mwResult?.p ?? 1)).label}
-                                                            {Math.min(tResult?.p ?? 1, mwResult?.p ?? 1) < 0.05 && (
-                                                              <span className="text-muted-foreground ml-1">
-                                                                — {diff > 0 ? 'Kept' : 'Removed'} versions perform significantly {Math.abs(diff) > 0.1 ? 'better' : 'differently'}
+                                                            <div className="flex items-center justify-between">
+                                                              <span>
+                                                                {getSignificanceLevel(Math.min(tResult?.p ?? 1, mwResult?.p ?? 1)).label}
+                                                                {Math.min(tResult?.p ?? 1, mwResult?.p ?? 1) < 0.05 && (
+                                                                  <span className="text-muted-foreground ml-1">
+                                                                    — {diff > 0 ? 'Kept' : 'Removed'} versions perform significantly {Math.abs(diff) > 0.1 ? 'better' : 'differently'}
+                                                                  </span>
+                                                                )}
                                                               </span>
-                                                            )}
+                                                              {cohensDValue !== null && (
+                                                                <span className={cn(
+                                                                  "font-medium",
+                                                                  getEffectSizeInterpretation(cohensDValue).color
+                                                                )}>
+                                                                  {getEffectSizeInterpretation(cohensDValue).label} effect
+                                                                </span>
+                                                              )}
+                                                            </div>
                                                           </div>
                                                         )}
                                                       </div>
@@ -4304,6 +4469,14 @@ export function BacktestConfigForm({
                                                     <span className="text-amber-400 font-bold">† p&lt;0.1</span>
                                                     <span className="text-muted-foreground">ns p≥0.1</span>
                                                   </div>
+                                                  <div className="flex items-center flex-wrap gap-x-4 gap-y-1 text-[9px]">
+                                                    <span className="font-medium">Effect Sizes:</span>
+                                                    <span className="text-muted-foreground">Negligible</span>
+                                                    <span className="text-amber-500">Small</span>
+                                                    <span className="text-green-600">Medium</span>
+                                                    <span className="text-blue-600">Large</span>
+                                                    <span className="text-purple-600">Very Large</span>
+                                                  </div>
                                                   <div className="text-[9px] text-muted-foreground space-y-0.5">
                                                     <p>
                                                       <strong>Welch's t-test:</strong> Parametric test comparing means, robust to unequal variances.
@@ -4311,8 +4484,14 @@ export function BacktestConfigForm({
                                                     <p>
                                                       <strong>Mann-Whitney U:</strong> Non-parametric test comparing rank distributions, no normality assumption.
                                                     </p>
-                                                    <p className="text-muted-foreground/70 italic">
-                                                      When both tests agree (p&lt;0.05), the difference is likely real and not due to chance.
+                                                    <p>
+                                                      <strong>Cohen's d:</strong> Standardized mean difference. Positive = kept better, negative = removed better.
+                                                    </p>
+                                                    <p>
+                                                      <strong>Rank-biserial r:</strong> Effect size for Mann-Whitney U. Ranges from -1 to +1, indicates dominance.
+                                                    </p>
+                                                    <p className="text-muted-foreground/70 italic pt-1">
+                                                      Significance (p-value) tells if a difference exists; effect size tells how large that difference is.
                                                     </p>
                                                   </div>
                                                 </div>
