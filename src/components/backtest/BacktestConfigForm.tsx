@@ -3662,6 +3662,61 @@ export function BacktestConfigForm({
                                             const keptLine = getLinePoints(keptRegression, 'kept');
                                             const removedLine = getLinePoints(removedRegression, 'removed');
                                             
+                                            // Calculate confidence interval for regression
+                                            const calcConfidenceInterval = (
+                                              points: typeof allPoints, 
+                                              reg: { slope: number; intercept: number } | null,
+                                              confidence: number = 0.95
+                                            ) => {
+                                              if (!reg || points.length < 3) return null;
+                                              
+                                              const pn = points.length;
+                                              const meanX = points.reduce((a, p) => a + p.x, 0) / pn;
+                                              const ssX = points.reduce((a, p) => a + (p.x - meanX) ** 2, 0);
+                                              
+                                              // Calculate residual standard error
+                                              const residuals = points.map(p => p.y - (reg.slope * p.x + reg.intercept));
+                                              const sse = residuals.reduce((a, r) => a + r ** 2, 0);
+                                              const se = Math.sqrt(sse / (pn - 2));
+                                              
+                                              // t-value for 95% confidence (approximate)
+                                              const tValue = pn <= 5 ? 2.776 : pn <= 10 ? 2.228 : pn <= 20 ? 2.086 : 1.96;
+                                              
+                                              // Generate confidence band points
+                                              const numPoints = 20;
+                                              const lineXMin = xMin - xPadding;
+                                              const lineXMax = xMax + xPadding;
+                                              const step = (lineXMax - lineXMin) / (numPoints - 1);
+                                              
+                                              const upperBand: { x: number; y: number }[] = [];
+                                              const lowerBand: { x: number; y: number }[] = [];
+                                              
+                                              for (let i = 0; i < numPoints; i++) {
+                                                const xi = lineXMin + i * step;
+                                                const yi = reg.slope * xi + reg.intercept;
+                                                
+                                                // Standard error of prediction at xi
+                                                const seY = se * Math.sqrt(1/pn + (xi - meanX) ** 2 / ssX);
+                                                const margin = tValue * seY;
+                                                
+                                                upperBand.push({ x: getXPos(xi), y: getYPos(yi + margin) });
+                                                lowerBand.push({ x: getXPos(xi), y: getYPos(yi - margin) });
+                                              }
+                                              
+                                              return { upperBand, lowerBand };
+                                            };
+                                            
+                                            const keptCI = calcConfidenceInterval(keptPoints, keptRegression);
+                                            const removedCI = calcConfidenceInterval(removedPoints, removedRegression);
+                                            
+                                            // Generate SVG path for confidence interval polygon
+                                            const getCIPath = (ci: { upperBand: { x: number; y: number }[]; lowerBand: { x: number; y: number }[] } | null) => {
+                                              if (!ci) return '';
+                                              const upper = ci.upperBand.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x}% ${p.y}%`).join(' ');
+                                              const lower = ci.lowerBand.slice().reverse().map(p => `L ${p.x}% ${p.y}%`).join(' ');
+                                              return `${upper} ${lower} Z`;
+                                            };
+                                            
                                             return (
                                               <div className="space-y-3">
                                                 <div className="flex items-center justify-between">
@@ -3699,9 +3754,44 @@ export function BacktestConfigForm({
                                                     ))}
                                                   </div>
                                                   
-                                                  {/* Trend lines SVG overlay */}
+                                                  {/* Confidence intervals and trend lines SVG overlay */}
                                                   <svg className="absolute inset-0 w-full h-full pointer-events-none" preserveAspectRatio="none">
-                                                    {/* Removed trend line (behind) */}
+                                                    <defs>
+                                                      <linearGradient id="keptCIGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                                        <stop offset="0%" stopColor="hsl(142 71% 45%)" stopOpacity="0.15" />
+                                                        <stop offset="50%" stopColor="hsl(142 71% 45%)" stopOpacity="0.25" />
+                                                        <stop offset="100%" stopColor="hsl(142 71% 45%)" stopOpacity="0.15" />
+                                                      </linearGradient>
+                                                      <linearGradient id="removedCIGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                                        <stop offset="0%" stopColor="hsl(0 84% 60%)" stopOpacity="0.1" />
+                                                        <stop offset="50%" stopColor="hsl(0 84% 60%)" stopOpacity="0.2" />
+                                                        <stop offset="100%" stopColor="hsl(0 84% 60%)" stopOpacity="0.1" />
+                                                      </linearGradient>
+                                                    </defs>
+                                                    
+                                                    {/* Removed confidence interval (behind) */}
+                                                    {removedCI && (
+                                                      <path
+                                                        d={getCIPath(removedCI)}
+                                                        fill="url(#removedCIGradient)"
+                                                        stroke="hsl(0 84% 60%)"
+                                                        strokeWidth="0.5"
+                                                        strokeOpacity="0.3"
+                                                      />
+                                                    )}
+                                                    
+                                                    {/* Kept confidence interval (in front) */}
+                                                    {keptCI && (
+                                                      <path
+                                                        d={getCIPath(keptCI)}
+                                                        fill="url(#keptCIGradient)"
+                                                        stroke="hsl(142 71% 45%)"
+                                                        strokeWidth="0.5"
+                                                        strokeOpacity="0.4"
+                                                      />
+                                                    )}
+                                                    
+                                                    {/* Removed trend line */}
                                                     {removedLine && (
                                                       <line
                                                         x1={`${removedLine.x1}%`}
@@ -3714,7 +3804,7 @@ export function BacktestConfigForm({
                                                         strokeOpacity="0.6"
                                                       />
                                                     )}
-                                                    {/* Kept trend line (in front) */}
+                                                    {/* Kept trend line */}
                                                     {keptLine && (
                                                       <line
                                                         x1={`${keptLine.x1}%`}
@@ -3830,25 +3920,49 @@ export function BacktestConfigForm({
                                                   
                                                   {/* Trend line info */}
                                                   {(keptRegression || removedRegression) && (
-                                                    <div className="flex items-center gap-4 pt-1 border-t border-border/50">
-                                                      <span className="text-muted-foreground">Trend lines:</span>
-                                                      {keptRegression && (
-                                                        <div className="flex items-center gap-1.5">
-                                                          <svg width="16" height="8" className="flex-shrink-0">
-                                                            <line x1="0" y1="4" x2="16" y2="4" stroke="hsl(142 71% 45%)" strokeWidth="2" strokeDasharray="4 2" />
-                                                          </svg>
-                                                          <span className="text-green-600">
-                                                            y = {keptRegression.slope.toFixed(2)}x {keptRegression.intercept >= 0 ? '+' : ''} {keptRegression.intercept.toFixed(2)}
-                                                          </span>
-                                                        </div>
-                                                      )}
-                                                      {removedRegression && (
-                                                        <div className="flex items-center gap-1.5">
-                                                          <svg width="16" height="8" className="flex-shrink-0">
-                                                            <line x1="0" y1="4" x2="16" y2="4" stroke="hsl(0 84% 60%)" strokeWidth="2" strokeDasharray="4 2" />
-                                                          </svg>
-                                                          <span className="text-red-500">
-                                                            y = {removedRegression.slope.toFixed(2)}x {removedRegression.intercept >= 0 ? '+' : ''} {removedRegression.intercept.toFixed(2)}
+                                                    <div className="flex flex-col gap-1.5 pt-1 border-t border-border/50">
+                                                      <div className="flex items-center gap-4">
+                                                        <span className="text-muted-foreground">Trend lines:</span>
+                                                        {keptRegression && (
+                                                          <div className="flex items-center gap-1.5">
+                                                            <svg width="16" height="8" className="flex-shrink-0">
+                                                              <line x1="0" y1="4" x2="16" y2="4" stroke="hsl(142 71% 45%)" strokeWidth="2" strokeDasharray="4 2" />
+                                                            </svg>
+                                                            <span className="text-green-600">
+                                                              y = {keptRegression.slope.toFixed(2)}x {keptRegression.intercept >= 0 ? '+' : ''} {keptRegression.intercept.toFixed(2)}
+                                                            </span>
+                                                          </div>
+                                                        )}
+                                                        {removedRegression && (
+                                                          <div className="flex items-center gap-1.5">
+                                                            <svg width="16" height="8" className="flex-shrink-0">
+                                                              <line x1="0" y1="4" x2="16" y2="4" stroke="hsl(0 84% 60%)" strokeWidth="2" strokeDasharray="4 2" />
+                                                            </svg>
+                                                            <span className="text-red-500">
+                                                              y = {removedRegression.slope.toFixed(2)}x {removedRegression.intercept >= 0 ? '+' : ''} {removedRegression.intercept.toFixed(2)}
+                                                            </span>
+                                                          </div>
+                                                        )}
+                                                      </div>
+                                                      
+                                                      {/* Confidence interval legend */}
+                                                      {(keptCI || removedCI) && (
+                                                        <div className="flex items-center gap-4">
+                                                          <span className="text-muted-foreground">95% CI:</span>
+                                                          {keptCI && (
+                                                            <div className="flex items-center gap-1.5">
+                                                              <div className="w-4 h-3 rounded-sm bg-green-500/20 border border-green-500/40" />
+                                                              <span className="text-green-600">Kept</span>
+                                                            </div>
+                                                          )}
+                                                          {removedCI && (
+                                                            <div className="flex items-center gap-1.5">
+                                                              <div className="w-4 h-3 rounded-sm bg-red-500/15 border border-red-500/30" />
+                                                              <span className="text-red-500">Removed</span>
+                                                            </div>
+                                                          )}
+                                                          <span className="text-muted-foreground/60 ml-auto">
+                                                            Shaded regions show prediction uncertainty
                                                           </span>
                                                         </div>
                                                       )}
