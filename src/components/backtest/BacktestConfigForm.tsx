@@ -3631,6 +3631,292 @@ export function BacktestConfigForm({
                                             );
                                           })()}
                                           
+                                          {/* Box Plot Visualization */}
+                                          {(effectiveKept.length > 0 || effectiveRemoved.length > 0) && (() => {
+                                            const metrics = [
+                                              { 
+                                                label: 'PnL %', 
+                                                getValue: (v: typeof effectiveKept[0]) => v.version.performance?.totalPnlPercent,
+                                                format: (v: number) => `${v >= 0 ? '+' : ''}${v.toFixed(1)}%`,
+                                              },
+                                              { 
+                                                label: 'Win Rate', 
+                                                getValue: (v: typeof effectiveKept[0]) => v.version.performance?.winRate,
+                                                format: (v: number) => `${v.toFixed(0)}%`,
+                                              },
+                                              { 
+                                                label: 'Sharpe', 
+                                                getValue: (v: typeof effectiveKept[0]) => v.version.performance?.sharpeRatio,
+                                                format: (v: number) => v.toFixed(2),
+                                              },
+                                              { 
+                                                label: 'Max DD', 
+                                                getValue: (v: typeof effectiveKept[0]) => v.version.performance?.maxDrawdown,
+                                                format: (v: number) => `${v.toFixed(1)}%`,
+                                              },
+                                              { 
+                                                label: 'Profit Factor', 
+                                                getValue: (v: typeof effectiveKept[0]) => v.version.performance?.profitFactor,
+                                                format: (v: number) => v.toFixed(2),
+                                              },
+                                            ];
+
+                                            // Calculate quartiles for box plot
+                                            const calcQuartiles = (values: number[]) => {
+                                              if (values.length === 0) return null;
+                                              const sorted = [...values].sort((a, b) => a - b);
+                                              const n = sorted.length;
+                                              const min = sorted[0];
+                                              const max = sorted[n - 1];
+                                              const q1 = sorted[Math.floor(n * 0.25)];
+                                              const median = sorted[Math.floor(n * 0.5)];
+                                              const q3 = sorted[Math.floor(n * 0.75)];
+                                              
+                                              // Calculate IQR and whiskers
+                                              const iqr = q3 - q1;
+                                              const lowerWhisker = Math.max(min, q1 - 1.5 * iqr);
+                                              const upperWhisker = Math.min(max, q3 + 1.5 * iqr);
+                                              
+                                              // Find outliers
+                                              const outliers = sorted.filter(v => v < lowerWhisker || v > upperWhisker);
+                                              
+                                              return { min, max, q1, median, q3, lowerWhisker, upperWhisker, outliers };
+                                            };
+
+                                            return (
+                                              <div className="space-y-3">
+                                                <div className="text-xs font-medium">Box Plot Comparison</div>
+                                                <div className="space-y-4">
+                                                  {metrics.map(({ label, getValue, format }) => {
+                                                    const keptValues = effectiveKept
+                                                      .map(v => getValue(v))
+                                                      .filter((v): v is number => v !== undefined);
+                                                    const removedValues = effectiveRemoved
+                                                      .map(v => getValue(v))
+                                                      .filter((v): v is number => v !== undefined);
+                                                    
+                                                    if (keptValues.length < 1 && removedValues.length < 1) return null;
+                                                    
+                                                    const keptQuartiles = calcQuartiles(keptValues);
+                                                    const removedQuartiles = calcQuartiles(removedValues);
+                                                    
+                                                    // Determine global scale
+                                                    const allValues = [...keptValues, ...removedValues];
+                                                    if (allValues.length === 0) return null;
+                                                    
+                                                    const globalMin = Math.min(...allValues);
+                                                    const globalMax = Math.max(...allValues);
+                                                    const range = globalMax - globalMin || 1;
+                                                    const padding = range * 0.1;
+                                                    const scaleMin = globalMin - padding;
+                                                    const scaleMax = globalMax + padding;
+                                                    const scaleRange = scaleMax - scaleMin;
+                                                    
+                                                    const getPos = (val: number) => ((val - scaleMin) / scaleRange) * 100;
+                                                    
+                                                    const renderBoxPlot = (
+                                                      quartiles: ReturnType<typeof calcQuartiles>,
+                                                      colorClass: 'green' | 'red',
+                                                      yOffset: number
+                                                    ) => {
+                                                      if (!quartiles) return null;
+                                                      
+                                                      const boxLeft = getPos(quartiles.q1);
+                                                      const boxRight = getPos(quartiles.q3);
+                                                      const medianPos = getPos(quartiles.median);
+                                                      const whiskerLeft = getPos(quartiles.lowerWhisker);
+                                                      const whiskerRight = getPos(quartiles.upperWhisker);
+                                                      
+                                                      const fillColor = colorClass === 'green' ? 'bg-green-500/30' : 'bg-red-500/30';
+                                                      const borderColor = colorClass === 'green' ? 'border-green-500' : 'border-red-500';
+                                                      const medianColor = colorClass === 'green' ? 'bg-green-600' : 'bg-red-600';
+                                                      const whiskerColor = colorClass === 'green' ? 'bg-green-500/60' : 'bg-red-500/60';
+                                                      const outlierBg = colorClass === 'green' ? 'bg-green-500' : 'bg-red-500';
+                                                      
+                                                      return (
+                                                        <div 
+                                                          className="absolute left-0 right-0" 
+                                                          style={{ top: `${yOffset}px`, height: '20px' }}
+                                                        >
+                                                          {/* Left whisker line */}
+                                                          <div 
+                                                            className={`absolute h-0.5 ${whiskerColor}`}
+                                                            style={{ 
+                                                              left: `${whiskerLeft}%`, 
+                                                              width: `${boxLeft - whiskerLeft}%`,
+                                                              top: '9px'
+                                                            }}
+                                                          />
+                                                          
+                                                          {/* Left whisker cap */}
+                                                          <div 
+                                                            className={`absolute w-0.5 ${whiskerColor}`}
+                                                            style={{ 
+                                                              left: `${whiskerLeft}%`, 
+                                                              height: '10px',
+                                                              top: '5px'
+                                                            }}
+                                                          />
+                                                          
+                                                          {/* Box (IQR) */}
+                                                          <div 
+                                                            className={`absolute ${fillColor} border ${borderColor} rounded-sm`}
+                                                            style={{ 
+                                                              left: `${boxLeft}%`, 
+                                                              width: `${Math.max(boxRight - boxLeft, 0.5)}%`,
+                                                              height: '14px',
+                                                              top: '3px'
+                                                            }}
+                                                          />
+                                                          
+                                                          {/* Median line */}
+                                                          <div 
+                                                            className={`absolute w-0.5 ${medianColor}`}
+                                                            style={{ 
+                                                              left: `${medianPos}%`, 
+                                                              height: '14px',
+                                                              top: '3px'
+                                                            }}
+                                                          />
+                                                          
+                                                          {/* Right whisker line */}
+                                                          <div 
+                                                            className={`absolute h-0.5 ${whiskerColor}`}
+                                                            style={{ 
+                                                              left: `${boxRight}%`, 
+                                                              width: `${whiskerRight - boxRight}%`,
+                                                              top: '9px'
+                                                            }}
+                                                          />
+                                                          
+                                                          {/* Right whisker cap */}
+                                                          <div 
+                                                            className={`absolute w-0.5 ${whiskerColor}`}
+                                                            style={{ 
+                                                              left: `${whiskerRight}%`, 
+                                                              height: '10px',
+                                                              top: '5px'
+                                                            }}
+                                                          />
+                                                          
+                                                          {/* Outliers */}
+                                                          {quartiles.outliers.map((outlier, idx) => (
+                                                            <div
+                                                              key={idx}
+                                                              className={`absolute w-1.5 h-1.5 ${outlierBg} rounded-full transform -translate-x-1/2`}
+                                                              style={{ 
+                                                                left: `${getPos(outlier)}%`,
+                                                                top: '7px'
+                                                              }}
+                                                              title={`Outlier: ${format(outlier)}`}
+                                                            />
+                                                          ))}
+                                                        </div>
+                                                      );
+                                                    };
+
+                                                    return (
+                                                      <div key={label} className="space-y-1">
+                                                        <div className="flex items-center justify-between text-[10px]">
+                                                          <span className="font-medium">{label}</span>
+                                                          <div className="flex items-center gap-4 text-muted-foreground">
+                                                            {keptQuartiles && (
+                                                              <span className="text-green-600">
+                                                                Median: {format(keptQuartiles.median)}
+                                                              </span>
+                                                            )}
+                                                            {removedQuartiles && (
+                                                              <span className="text-red-500">
+                                                                Median: {format(removedQuartiles.median)}
+                                                              </span>
+                                                            )}
+                                                          </div>
+                                                        </div>
+                                                        
+                                                        {/* Box plot visualization */}
+                                                        <div className="relative h-12 bg-muted/20 rounded border overflow-hidden">
+                                                          {/* Scale markers */}
+                                                          <div className="absolute inset-x-0 bottom-0 flex justify-between px-1 pb-0.5">
+                                                            <span className="text-[8px] text-muted-foreground/60">{format(scaleMin)}</span>
+                                                            <span className="text-[8px] text-muted-foreground/60">{format((scaleMin + scaleMax) / 2)}</span>
+                                                            <span className="text-[8px] text-muted-foreground/60">{format(scaleMax)}</span>
+                                                          </div>
+                                                          
+                                                          {/* Grid lines */}
+                                                          <div className="absolute inset-0">
+                                                            {[25, 50, 75].map(pct => (
+                                                              <div 
+                                                                key={pct}
+                                                                className="absolute top-0 bottom-0 border-l border-border/20"
+                                                                style={{ left: `${pct}%` }}
+                                                              />
+                                                            ))}
+                                                          </div>
+                                                          
+                                                          {/* Kept box plot (top) */}
+                                                          {renderBoxPlot(keptQuartiles, 'green', 4)}
+                                                          
+                                                          {/* Removed box plot (bottom) */}
+                                                          {renderBoxPlot(removedQuartiles, 'red', 24)}
+                                                        </div>
+                                                        
+                                                        {/* Quartile details */}
+                                                        <div className="grid grid-cols-2 gap-2 text-[9px]">
+                                                          {keptQuartiles && (
+                                                            <div className="flex flex-wrap gap-x-2 text-green-600">
+                                                              <span>Q1: {format(keptQuartiles.q1)}</span>
+                                                              <span>Q3: {format(keptQuartiles.q3)}</span>
+                                                              <span className="text-muted-foreground">
+                                                                IQR: {format(keptQuartiles.q3 - keptQuartiles.q1)}
+                                                              </span>
+                                                            </div>
+                                                          )}
+                                                          {removedQuartiles && (
+                                                            <div className="flex flex-wrap gap-x-2 text-red-500">
+                                                              <span>Q1: {format(removedQuartiles.q1)}</span>
+                                                              <span>Q3: {format(removedQuartiles.q3)}</span>
+                                                              <span className="text-muted-foreground">
+                                                                IQR: {format(removedQuartiles.q3 - removedQuartiles.q1)}
+                                                              </span>
+                                                            </div>
+                                                          )}
+                                                        </div>
+                                                      </div>
+                                                    );
+                                                  })}
+                                                </div>
+                                                
+                                                {/* Legend */}
+                                                <div className="flex items-center gap-4 text-[9px] text-muted-foreground pt-1 border-t border-border/50">
+                                                  <div className="flex items-center gap-1.5">
+                                                    <div className="flex items-center">
+                                                      <div className="w-0.5 h-2 bg-green-500/60" />
+                                                      <div className="w-3 h-3 bg-green-500/30 border border-green-500 rounded-sm" />
+                                                      <div className="w-0.5 h-2 bg-green-500/60" />
+                                                    </div>
+                                                    <span>Kept (top)</span>
+                                                  </div>
+                                                  <div className="flex items-center gap-1.5">
+                                                    <div className="flex items-center">
+                                                      <div className="w-0.5 h-2 bg-red-500/60" />
+                                                      <div className="w-3 h-3 bg-red-500/30 border border-red-500 rounded-sm" />
+                                                      <div className="w-0.5 h-2 bg-red-500/60" />
+                                                    </div>
+                                                    <span>Removed (bottom)</span>
+                                                  </div>
+                                                  <div className="flex items-center gap-1">
+                                                    <div className="w-0.5 h-3 bg-foreground/60" />
+                                                    <span>Median</span>
+                                                  </div>
+                                                  <div className="flex items-center gap-1">
+                                                    <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full" />
+                                                    <span>Outliers</span>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            );
+                                          })()}
+                                          
                                           {/* Correlation Scatter Plot */}
                                           {(effectiveKept.length > 0 || effectiveRemoved.length > 0) && (() => {
                                             const metricPairs = [
