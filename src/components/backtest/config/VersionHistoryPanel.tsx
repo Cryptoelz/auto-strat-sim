@@ -280,7 +280,9 @@ export function VersionHistoryPanel({
             Last cleanup removed {lastCleanupCount} versions
           </p>
         )}
-      </CardContent>
-    </Card>
+          </CardContent>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
   );
 }
