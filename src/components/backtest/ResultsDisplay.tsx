@@ -468,8 +468,9 @@ export function ResultsDisplay({
           </div>
         </CardContent>
       </Card>
+      </StaggeredSection>
 
-      {/* Trade History */}
+      <StaggeredSection index={36}>
       <Card className="border-border/50 bg-card/50 backdrop-blur">
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Trade History</CardTitle>
