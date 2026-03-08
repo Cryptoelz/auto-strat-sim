@@ -85,8 +85,14 @@ export function ResultsDisplay({
   const pnlTrend = result.totalPnl >= 0 ? 'up' : 'down';
   const initialBalance = result.equityCurve.length > 0 ? result.equityCurve[0].balance : 10000;
 
+  let sectionIndex = 0;
+
   return (
-    <div className="space-y-6">
+    <motion.div
+      className="space-y-6"
+      initial="hidden"
+      animate="visible"
+    >
       {/* Key Metrics */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <StatCard
