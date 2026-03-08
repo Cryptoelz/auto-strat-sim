@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useBacktest } from '@/hooks/useBacktest';
-import { useBacktestConfig, RISK_PRESETS, RiskPreset } from '@/hooks/useBacktestConfig';
+import { useBacktestConfig } from '@/hooks/useBacktestConfig';
+import { useBacktestShortcuts, BACKTEST_SHORTCUTS } from '@/hooks/useBacktestShortcuts';
 import { StrategyOptimizer } from '@/components/backtest/StrategyOptimizer';
 import { WalkForwardAnalysis } from '@/components/backtest/WalkForwardAnalysis';
 import { ResultsDisplay } from '@/components/backtest/ResultsDisplay';
@@ -38,25 +39,6 @@ import {
   BarChart3,
   Keyboard,
 } from 'lucide-react';
-
-const BACKTEST_SHORTCUTS = [
-  { key: 'Enter', description: 'Run backtest' },
-  { key: 'R', description: 'Reset results' },
-  { key: '⌘/Ctrl+S', description: 'Save run for comparison' },
-  { key: '⌘/Ctrl+E', description: 'Export results to CSV' },
-  { key: '⌘/Ctrl+H', description: 'Open version history' },
-  { key: 'C', description: 'Toggle comparison view' },
-  { key: 'D', description: 'Delete all saved runs' },
-  { key: '1', description: 'Apply Conservative preset' },
-  { key: '2', description: 'Apply Moderate preset' },
-  { key: '3', description: 'Apply Aggressive preset' },
-  { key: '4-6', description: 'Load custom preset' },
-  { key: 'Shift+4-6', description: 'Save to custom preset' },
-  { key: 'Alt+4-6', description: 'Delete custom preset' },
-  { key: 'Alt+0', description: 'Clear all custom presets' },
-  { key: '?', description: 'Show keyboard shortcuts' },
-  { key: 'Esc', description: 'Cancel auto-save / close dialogs' },
-];
 
 export default function Backtest() {
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
