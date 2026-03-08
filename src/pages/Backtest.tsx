@@ -48,7 +48,6 @@ export default function Backtest() {
   const { isRunning, progress, result, error, runBacktest, reset } = useBacktest();
   const config = useBacktestConfig();
   
-  // Track if we've already recorded performance for the current result
   const lastRecordedResultRef = useRef<typeof result>(null);
 
   const handleRunBacktest = () => {
@@ -57,16 +56,22 @@ export default function Backtest() {
     runBacktest(config.buildConfig());
   };
 
-  // Auto-record performance when backtest completes with a loaded version
+  useBacktestShortcuts({
+    config,
+    isRunning,
+    result,
+    reset,
+    onRunBacktest: handleRunBacktest,
+    setShortcutsOpen,
+    setVersionHistoryOpen,
+    setDeleteConfirmOpen,
+    setClearPresetsConfirmOpen,
+  });
+
+  // Auto-record performance when backtest completes
   useEffect(() => {
-    if (
-      result &&
-      !isRunning &&
-      result !== lastRecordedResultRef.current &&
-      config.loadedVersion
-    ) {
+    if (result && !isRunning && result !== lastRecordedResultRef.current && config.loadedVersion) {
       lastRecordedResultRef.current = result;
-      
       const performance: VersionPerformance = {
         totalPnlPercent: result.totalPnlPercent,
         winRate: result.winRate,
@@ -76,9 +81,7 @@ export default function Backtest() {
         totalTrades: result.totalTrades,
         recordedAt: Date.now(),
       };
-
       const recorded = config.recordPerformanceForLoadedVersion(performance);
-      
       if (recorded) {
         const slotLabel = `Custom ${parseInt(recorded.slot) - 3}`;
         toast.success('Performance recorded', {
@@ -88,15 +91,6 @@ export default function Backtest() {
       }
     }
   }, [result, isRunning, config]);
-
-  // Keyboard shortcuts for presets
-  const handlePresetShortcut = useCallback((preset: RiskPreset) => {
-    const presetConfig = RISK_PRESETS[preset];
-    config.applyPreset(preset);
-    toast.success(`${presetConfig.label} preset applied`, {
-      description: `Position: ${presetConfig.positionSizePercent}% · SL: ${presetConfig.stopLossPercent}% · TP: ${presetConfig.takeProfitPercent}% · SMA: ${presetConfig.fastSMA}/${presetConfig.slowSMA}`,
-    });
-  }, [config]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
