@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { History, Trash2, Undo2, Sparkles } from 'lucide-react';
+import { History, Trash2, Undo2, Sparkles, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { PresetVersion, PresetTagValue, PresetVersionHistory } from '@/types/preset-version';
 
