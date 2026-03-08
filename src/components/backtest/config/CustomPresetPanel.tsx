@@ -250,7 +250,9 @@ export function CustomPresetPanel({
             Last {lastPresetSync.action}: {new Date(lastPresetSync.timestamp).toLocaleTimeString()}
           </p>
         )}
-      </CardContent>
-    </Card>
+          </CardContent>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
   );
 }
