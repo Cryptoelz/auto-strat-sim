@@ -43,6 +43,7 @@ import { Asset } from '@/types/trading';
 import { ASSET_INFO } from '@/config/trading';
 import { formatCurrency } from '@/lib/performance';
 import { format } from 'date-fns';
+import { motion } from 'framer-motion';
 import { 
   TrendingUp,
   TrendingDown,
@@ -54,6 +55,15 @@ import {
   DollarSign,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+const staggerItem = {
+  hidden: { opacity: 0, y: 20 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.06, duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] },
+  }),
+};
 
 interface ResultsDisplayProps {
   result: BacktestResult;
