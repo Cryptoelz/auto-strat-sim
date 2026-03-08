@@ -58,6 +58,7 @@ export function CustomPresetPanel({
 }: CustomPresetPanelProps) {
   const [renamingSlot, setRenamingSlot] = useState<'4' | '5' | '6' | null>(null);
   const [renameValue, setRenameValue] = useState('');
+  const [isOpen, setIsOpen] = useState(true);
 
   const hasAnyPreset = customPresetSlots['4'] || customPresetSlots['5'] || customPresetSlots['6'];
 
