@@ -56,14 +56,21 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const staggerItem = {
-  hidden: { opacity: 0, y: 20 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.06, duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] },
-  }),
+const StaggeredSection = ({ children, index }: { children: React.ReactNode; index: number }) => (
+  <motion.div
+    variants={staggerItem}
+    custom={index}
+    initial="hidden"
+    animate="visible"
+  >
+    {children}
+  </motion.div>
+);
+
+const staggerContainer = {
+  visible: { transition: { staggerChildren: 0.06 } },
 };
+
 
 interface ResultsDisplayProps {
   result: BacktestResult;
