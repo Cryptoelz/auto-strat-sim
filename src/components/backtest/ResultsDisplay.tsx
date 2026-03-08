@@ -521,6 +521,7 @@ export function ResultsDisplay({
           </ScrollArea>
         </CardContent>
       </Card>
+      </StaggeredSection>
     </div>
   );
 }
