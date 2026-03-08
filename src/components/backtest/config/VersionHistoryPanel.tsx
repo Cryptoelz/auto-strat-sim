@@ -1,11 +1,13 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { History, Trash2, Undo2, Sparkles } from 'lucide-react';
+import { History, Trash2, Undo2, Sparkles, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { PresetVersion, PresetTagValue, PresetVersionHistory } from '@/types/preset-version';
 
@@ -93,6 +95,7 @@ export function VersionHistoryPanel({
 }: VersionHistoryPanelProps) {
   const totalVersions = getTotalVersionCount?.() ?? 0;
   const hasAnyHistory = hasPresetHistory('4') || hasPresetHistory('5') || hasPresetHistory('6');
+  const [isOpen, setIsOpen] = useState(true);
 
   const handleManualCleanup = () => {
     if (onManualCleanup) {
@@ -121,21 +124,28 @@ export function VersionHistoryPanel({
   };
 
   return (
-    <Card className="border-border/50 bg-card/50 backdrop-blur">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <History className="h-4 w-4" />
-            Version History
-          </CardTitle>
-          {hasAnyHistory && (
-            <Badge variant="secondary" className="text-[10px]">
-              {totalVersions} version{totalVersions !== 1 ? 's' : ''}
-            </Badge>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-3">
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <Card className="border-border/50 bg-card/50 backdrop-blur">
+        <CollapsibleTrigger asChild>
+          <CardHeader className="pb-3 cursor-pointer select-none">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <History className="h-4 w-4" />
+                Version History
+              </CardTitle>
+              <div className="flex items-center gap-1">
+                {hasAnyHistory && (
+                  <Badge variant="secondary" className="text-[10px]">
+                    {totalVersions} version{totalVersions !== 1 ? 's' : ''}
+                  </Badge>
+                )}
+                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+              </div>
+            </div>
+          </CardHeader>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent className="space-y-3 pt-0">
         {/* Auto-save toggle */}
         {onAutoSaveVersionsChange && (
           <div className="flex items-center justify-between">
@@ -270,7 +280,9 @@ export function VersionHistoryPanel({
             Last cleanup removed {lastCleanupCount} versions
           </p>
         )}
-      </CardContent>
-    </Card>
+          </CardContent>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
   );
 }
