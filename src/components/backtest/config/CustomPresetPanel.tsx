@@ -116,35 +116,40 @@ export function CustomPresetPanel({
   };
 
   return (
-    <Card className="border-border/50 bg-card/50 backdrop-blur">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-sm">Custom Presets</CardTitle>
-          <div className="flex gap-1">
-            {onExportCustomPresets && hasAnyPreset && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleExport}>
-                    <Download className="h-3.5 w-3.5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Export presets</TooltipContent>
-              </Tooltip>
-            )}
-            {onImportCustomPresets && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleImport}>
-                    <Upload className="h-3.5 w-3.5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Import presets</TooltipContent>
-              </Tooltip>
-            )}
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-2">
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <Card className="border-border/50 bg-card/50 backdrop-blur">
+        <CollapsibleTrigger asChild>
+          <CardHeader className="pb-3 cursor-pointer select-none">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm">Custom Presets</CardTitle>
+              <div className="flex items-center gap-1">
+                {onExportCustomPresets && hasAnyPreset && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); handleExport(); }}>
+                        <Download className="h-3.5 w-3.5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Export presets</TooltipContent>
+                  </Tooltip>
+                )}
+                {onImportCustomPresets && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); handleImport(); }}>
+                        <Upload className="h-3.5 w-3.5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Import presets</TooltipContent>
+                  </Tooltip>
+                )}
+                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+              </div>
+            </div>
+          </CardHeader>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent className="space-y-2 pt-0">
         {(['4', '5', '6'] as const).map((slot) => {
           const preset = getCustomPresetData(slot);
           const isOccupied = customPresetSlots[slot];
