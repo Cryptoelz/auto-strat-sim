@@ -520,6 +520,6 @@ export function ResultsDisplay({
           </ScrollArea>
         </CardContent>
       </Card>
-    </motion.div>
+    </div>
   );
 }
