@@ -8,6 +8,8 @@ import { WalkForwardAnalysis } from '@/components/backtest/WalkForwardAnalysis';
 import { ResultsDisplay } from '@/components/backtest/ResultsDisplay';
 import { ComparisonTable } from '@/components/backtest/ComparisonTable';
 import { BacktestConfigForm } from '@/components/backtest/BacktestConfigForm';
+import { CustomPresetPanel } from '@/components/backtest/config/CustomPresetPanel';
+import { VersionHistoryPanel } from '@/components/backtest/config/VersionHistoryPanel';
 import { VersionPerformance } from '@/types/preset-version';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
