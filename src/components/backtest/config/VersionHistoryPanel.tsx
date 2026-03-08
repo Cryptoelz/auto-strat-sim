@@ -124,21 +124,28 @@ export function VersionHistoryPanel({
   };
 
   return (
-    <Card className="border-border/50 bg-card/50 backdrop-blur">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <History className="h-4 w-4" />
-            Version History
-          </CardTitle>
-          {hasAnyHistory && (
-            <Badge variant="secondary" className="text-[10px]">
-              {totalVersions} version{totalVersions !== 1 ? 's' : ''}
-            </Badge>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-3">
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <Card className="border-border/50 bg-card/50 backdrop-blur">
+        <CollapsibleTrigger asChild>
+          <CardHeader className="pb-3 cursor-pointer select-none">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <History className="h-4 w-4" />
+                Version History
+              </CardTitle>
+              <div className="flex items-center gap-1">
+                {hasAnyHistory && (
+                  <Badge variant="secondary" className="text-[10px]">
+                    {totalVersions} version{totalVersions !== 1 ? 's' : ''}
+                  </Badge>
+                )}
+                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+              </div>
+            </div>
+          </CardHeader>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent className="space-y-3 pt-0">
         {/* Auto-save toggle */}
         {onAutoSaveVersionsChange && (
           <div className="flex items-center justify-between">
