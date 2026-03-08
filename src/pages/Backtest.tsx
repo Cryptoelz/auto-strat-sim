@@ -449,6 +449,10 @@ export default function Backtest() {
             onShareConfig={config.copyShareableUrl}
             onResetToDefaults={config.resetConfig}
             onApplyPreset={config.applyPreset}
+          />
+
+          {/* Custom Presets Panel */}
+          <CustomPresetPanel
             customPresetSlots={{
               '4': config.hasCustomPreset('4'),
               '5': config.hasCustomPreset('5'),
@@ -463,6 +467,10 @@ export default function Backtest() {
             onImportCustomPresets={config.importCustomPresets}
             onClearAllCustomPresets={config.clearAllCustomPresets}
             lastPresetSync={config.lastPresetSync}
+          />
+
+          {/* Version History Panel */}
+          <VersionHistoryPanel
             getPresetVersionHistory={config.getPresetVersionHistory}
             onRestorePresetVersion={config.restorePresetVersion}
             hasPresetHistory={config.hasPresetHistory}
