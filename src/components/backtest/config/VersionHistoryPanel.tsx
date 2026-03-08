@@ -124,28 +124,35 @@ export function VersionHistoryPanel({
   };
 
   return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <Card className="border-border/50 bg-card/50 backdrop-blur">
-        <CollapsibleTrigger asChild>
-          <CardHeader className="pb-3 cursor-pointer select-none">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <History className="h-4 w-4" />
-                Version History
-              </CardTitle>
-              <div className="flex items-center gap-1">
-                {hasAnyHistory && (
-                  <Badge variant="secondary" className="text-[10px]">
-                    {totalVersions} version{totalVersions !== 1 ? 's' : ''}
-                  </Badge>
-                )}
-                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
-              </div>
-            </div>
-          </CardHeader>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <CardContent className="space-y-3 pt-0">
+    <Card className="border-border/50 bg-card/50 backdrop-blur">
+      <CardHeader className="pb-3 cursor-pointer select-none" onClick={() => setIsOpen(!isOpen)}>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <History className="h-4 w-4" />
+            Version History
+          </CardTitle>
+          <div className="flex items-center gap-1">
+            {hasAnyHistory && (
+              <Badge variant="secondary" className="text-[10px]">
+                {totalVersions} version{totalVersions !== 1 ? 's' : ''}
+              </Badge>
+            )}
+            <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.3, ease: 'easeInOut' }}>
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            </motion.div>
+          </div>
+        </div>
+      </CardHeader>
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            style={{ overflow: 'hidden' }}
+          >
+            <CardContent className="space-y-3 pt-0">
         {/* Auto-save toggle */}
         {onAutoSaveVersionsChange && (
           <div className="flex items-center justify-between">
