@@ -299,6 +299,7 @@ export function ResultsDisplay({
         </StaggeredSection>
       )}
 
+      <StaggeredSection index={34}>
       <div className="grid gap-4 md:grid-cols-2">
         <Card className="border-border/50 bg-card/50 backdrop-blur">
           <CardHeader className="pb-2">
