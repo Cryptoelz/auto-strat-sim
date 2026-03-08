@@ -524,6 +524,6 @@ export function ResultsDisplay({
           </ScrollArea>
         </CardContent>
       </Card>
-    </div>
+    </motion.div>
   );
 }
