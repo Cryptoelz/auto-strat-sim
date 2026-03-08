@@ -67,6 +67,7 @@ export interface BacktestConfigFormProps {
   // Share & Reset
   onShareConfig?: () => Promise<boolean>;
   onResetToDefaults?: () => void;
+  onApplyPreset?: (preset: RiskPreset) => void;
 }
 
 
