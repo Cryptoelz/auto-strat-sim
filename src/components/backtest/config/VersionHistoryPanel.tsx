@@ -95,6 +95,7 @@ export function VersionHistoryPanel({
 }: VersionHistoryPanelProps) {
   const totalVersions = getTotalVersionCount?.() ?? 0;
   const hasAnyHistory = hasPresetHistory('4') || hasPresetHistory('5') || hasPresetHistory('6');
+  const [isOpen, setIsOpen] = useState(true);
 
   const handleManualCleanup = () => {
     if (onManualCleanup) {
