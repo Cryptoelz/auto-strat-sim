@@ -288,8 +288,9 @@ export function VersionHistoryPanel({
           </p>
         )}
           </CardContent>
-        </CollapsibleContent>
-      </Card>
-    </Collapsible>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </Card>
   );
 }

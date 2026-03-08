@@ -258,8 +258,9 @@ export function CustomPresetPanel({
           </p>
         )}
           </CardContent>
-        </CollapsibleContent>
-      </Card>
-    </Collapsible>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </Card>
   );
 }
