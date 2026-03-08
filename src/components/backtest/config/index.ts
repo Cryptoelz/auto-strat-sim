@@ -9,3 +9,7 @@ export { SMAConfig } from './SMAConfig';
 export { RiskConfig } from './RiskConfig';
 export { RiskPresetButtons } from './RiskPresetButtons';
 export { ActionButtons } from './ActionButtons';
+export { CustomPresetPanel } from './CustomPresetPanel';
+export type { CustomPresetPanelProps } from './CustomPresetPanel';
+export { VersionHistoryPanel } from './VersionHistoryPanel';
+export type { VersionHistoryPanelProps } from './VersionHistoryPanel';
