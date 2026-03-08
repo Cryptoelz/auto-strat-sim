@@ -43,6 +43,7 @@ import { Asset } from '@/types/trading';
 import { ASSET_INFO } from '@/config/trading';
 import { formatCurrency } from '@/lib/performance';
 import { format } from 'date-fns';
+import { motion } from 'framer-motion';
 import { 
   TrendingUp,
   TrendingDown,
@@ -54,6 +55,17 @@ import {
   DollarSign,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+const StaggeredSection = ({ children, index }: { children: React.ReactNode; index: number }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: index * 0.06, duration: 0.4, ease: "easeOut" }}
+  >
+    {children}
+  </motion.div>
+);
+
 
 interface ResultsDisplayProps {
   result: BacktestResult;
@@ -77,218 +89,217 @@ export function ResultsDisplay({
 
   return (
     <div className="space-y-6">
-      {/* Key Metrics */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <StatCard
-          title="Final Balance"
-          value={formatCurrency(result.finalBalance)}
-          icon={DollarSign}
-          trend={pnlTrend}
-        />
-        <StatCard
-          title="Total P&L"
-          value={`${result.totalPnl >= 0 ? '+' : ''}${formatCurrency(result.totalPnl)}`}
-          icon={result.totalPnl >= 0 ? TrendingUp : TrendingDown}
-          trend={pnlTrend}
-        />
-        <StatCard
-          title="Return"
-          value={`${result.totalPnlPercent >= 0 ? '+' : ''}${result.totalPnlPercent.toFixed(2)}%`}
-          icon={Percent}
-          trend={pnlTrend}
-        />
-        <StatCard
-          title="Win Rate"
-          value={`${result.winRate.toFixed(1)}%`}
-          icon={Trophy}
-          trend={result.winRate >= 50 ? 'up' : 'down'}
-        />
-      </div>
-
-      {/* Equity Curve & Drawdown Charts */}
-      {result.equityCurve.length > 1 && (
-        <div className="space-y-4">
-          <EquityCurveChart data={result.equityCurve} initialBalance={initialBalance} />
-          <DrawdownChart data={result.equityCurve} maxDrawdown={result.maxDrawdown} />
+      <StaggeredSection index={0}>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <StatCard title="Final Balance" value={formatCurrency(result.finalBalance)} icon={DollarSign} trend={pnlTrend} />
+          <StatCard title="Total P&L" value={`${result.totalPnl >= 0 ? '+' : ''}${formatCurrency(result.totalPnl)}`} icon={result.totalPnl >= 0 ? TrendingUp : TrendingDown} trend={pnlTrend} />
+          <StatCard title="Return" value={`${result.totalPnlPercent >= 0 ? '+' : ''}${result.totalPnlPercent.toFixed(2)}%`} icon={Percent} trend={pnlTrend} />
+          <StatCard title="Win Rate" value={`${result.winRate.toFixed(1)}%`} icon={Trophy} trend={result.winRate >= 50 ? 'up' : 'down'} />
         </div>
+      </StaggeredSection>
+
+      {result.equityCurve.length > 1 && (
+        <StaggeredSection index={1}>
+          <div className="space-y-4">
+            <EquityCurveChart data={result.equityCurve} initialBalance={initialBalance} />
+            <DrawdownChart data={result.equityCurve} maxDrawdown={result.maxDrawdown} />
+          </div>
+        </StaggeredSection>
       )}
 
-      {/* Benchmark Comparison */}
       {result.trades.length >= 2 && (
-        <BenchmarkComparisonCard 
-          trades={result.trades} 
-          equityCurve={result.equityCurve} 
-          initialBalance={initialBalance} 
-        />
+        <StaggeredSection index={2}>
+          <BenchmarkComparisonCard trades={result.trades} equityCurve={result.equityCurve} initialBalance={initialBalance} />
+        </StaggeredSection>
       )}
 
-      {/* Monthly Returns Heatmap */}
       {result.trades.length > 0 && (
-        <MonthlyReturnsHeatmap trades={result.trades} />
+        <StaggeredSection index={3}>
+          <MonthlyReturnsHeatmap trades={result.trades} />
+        </StaggeredSection>
       )}
 
-      {/* Streak Analysis */}
       {result.trades.length > 0 && (
-        <StreakAnalysisCard trades={result.trades} />
+        <StaggeredSection index={4}>
+          <StreakAnalysisCard trades={result.trades} />
+        </StaggeredSection>
       )}
 
-      {/* Monte Carlo Simulation */}
       {result.trades.length >= 5 && (
-        <MonteCarloCard trades={result.trades} initialBalance={initialBalance} />
+        <StaggeredSection index={5}>
+          <MonteCarloCard trades={result.trades} initialBalance={initialBalance} />
+        </StaggeredSection>
       )}
 
-      {/* Trade Duration Analysis */}
       {result.trades.length > 0 && (
-        <TradeDurationCard trades={result.trades} />
+        <StaggeredSection index={6}>
+          <TradeDurationCard trades={result.trades} />
+        </StaggeredSection>
       )}
 
-      {/* Walk-Forward Analysis */}
       {result.trades.length >= 4 && (
-        <WalkForwardCard trades={result.trades} />
+        <StaggeredSection index={7}>
+          <WalkForwardCard trades={result.trades} />
+        </StaggeredSection>
       )}
 
-      {/* Hourly Performance */}
       {result.trades.length > 0 && (
-        <HourlyPerformanceCard trades={result.trades} />
+        <StaggeredSection index={8}>
+          <HourlyPerformanceCard trades={result.trades} />
+        </StaggeredSection>
       )}
 
-      {/* Day of Week Performance */}
       {result.trades.length > 0 && (
-        <DayOfWeekPerformanceCard trades={result.trades} />
+        <StaggeredSection index={9}>
+          <DayOfWeekPerformanceCard trades={result.trades} />
+        </StaggeredSection>
       )}
 
-      {/* Parameter Sensitivity */}
       {result.trades.length >= 5 && (
-        <ParameterSensitivityCard trades={result.trades} currentFast={fastSMA} currentSlow={slowSMA} />
+        <StaggeredSection index={10}>
+          <ParameterSensitivityCard trades={result.trades} currentFast={fastSMA} currentSlow={slowSMA} />
+        </StaggeredSection>
       )}
 
-      {/* Trade Clustering Analysis */}
       {result.trades.length >= 5 && (
-        <TradeClusteringCard trades={result.trades} />
+        <StaggeredSection index={11}>
+          <TradeClusteringCard trades={result.trades} />
+        </StaggeredSection>
       )}
 
-      {/* Kelly Criterion & Expected Value */}
       {result.trades.length >= 5 && (
-        <KellyCriterionCard trades={result.trades} />
+        <StaggeredSection index={12}>
+          <KellyCriterionCard trades={result.trades} />
+        </StaggeredSection>
       )}
 
-      {/* Duration vs Profitability Scatter Plot */}
       {result.trades.length >= 2 && (
-        <DurationVsProfitabilityChart trades={result.trades} />
+        <StaggeredSection index={13}>
+          <DurationVsProfitabilityChart trades={result.trades} />
+        </StaggeredSection>
       )}
 
-      {/* Risk of Ruin Analysis */}
       {result.trades.length >= 5 && (
-        <RiskOfRuinCard trades={result.trades} />
+        <StaggeredSection index={14}>
+          <RiskOfRuinCard trades={result.trades} />
+        </StaggeredSection>
       )}
 
-      {/* P&L Distribution Histogram */}
       {result.trades.length >= 2 && (
-        <PnLDistributionChart trades={result.trades} />
+        <StaggeredSection index={15}>
+          <PnLDistributionChart trades={result.trades} />
+        </StaggeredSection>
       )}
 
-      {/* Risk-Adjusted Returns (Sharpe, Sortino, Calmar) */}
       {result.trades.length >= 5 && (
-        <RiskAdjustedReturnsCard trades={result.trades} />
+        <StaggeredSection index={16}>
+          <RiskAdjustedReturnsCard trades={result.trades} />
+        </StaggeredSection>
       )}
 
-      {/* Streak Probability Analysis */}
       {result.trades.length >= 5 && (
-        <StreakProbabilityCard trades={result.trades} />
+        <StaggeredSection index={17}>
+          <StreakProbabilityCard trades={result.trades} />
+        </StaggeredSection>
       )}
 
-      {/* Profit Factor */}
       {result.trades.length >= 2 && (
-        <ProfitFactorCard trades={result.trades} />
+        <StaggeredSection index={18}>
+          <ProfitFactorCard trades={result.trades} />
+        </StaggeredSection>
       )}
 
-      {/* Trade Expectancy */}
       {result.trades.length >= 5 && (
-        <TradeExpectancyCard trades={result.trades} />
+        <StaggeredSection index={19}>
+          <TradeExpectancyCard trades={result.trades} />
+        </StaggeredSection>
       )}
 
-      {/* Recovery Factor */}
       {result.trades.length >= 2 && (
-        <RecoveryFactorCard trades={result.trades} initialBalance={initialBalance} />
+        <StaggeredSection index={20}>
+          <RecoveryFactorCard trades={result.trades} initialBalance={initialBalance} />
+        </StaggeredSection>
       )}
 
-      {/* Payoff Ratio */}
       {result.trades.length >= 2 && (
-        <PayoffRatioCard trades={result.trades} />
+        <StaggeredSection index={21}>
+          <PayoffRatioCard trades={result.trades} />
+        </StaggeredSection>
       )}
 
-      {/* Trade Size Analysis */}
       {result.trades.length >= 5 && (
-        <TradeSizeAnalysisCard trades={result.trades} />
+        <StaggeredSection index={22}>
+          <TradeSizeAnalysisCard trades={result.trades} />
+        </StaggeredSection>
       )}
 
-      {/* Market Regime Analysis */}
       {result.trades.length >= 5 && (
-        <MarketRegimeCard trades={result.trades} />
+        <StaggeredSection index={23}>
+          <MarketRegimeCard trades={result.trades} />
+        </StaggeredSection>
       )}
 
-      {/* Volatility Analysis */}
       {result.trades.length >= 5 && (
-        <VolatilityAnalysisCard trades={result.trades} />
+        <StaggeredSection index={24}>
+          <VolatilityAnalysisCard trades={result.trades} />
+        </StaggeredSection>
       )}
 
-      {/* Asset Correlation Matrix */}
       {result.trades.length >= 5 && (
-        <AssetCorrelationCard trades={result.trades} />
+        <StaggeredSection index={25}>
+          <AssetCorrelationCard trades={result.trades} />
+        </StaggeredSection>
       )}
 
-      {/* MAE/MFE Analysis */}
       {result.trades.length >= 5 && (
-        <MaeMfeAnalysisCard 
-          trades={result.trades} 
-          stopLossPercent={stopLossPercent} 
-          takeProfitPercent={takeProfitPercent} 
-        />
+        <StaggeredSection index={26}>
+          <MaeMfeAnalysisCard trades={result.trades} stopLossPercent={stopLossPercent} takeProfitPercent={takeProfitPercent} />
+        </StaggeredSection>
       )}
 
-      {/* Trade Timing Optimization */}
       {result.trades.length >= 5 && (
-        <TradeTimingCard trades={result.trades} />
+        <StaggeredSection index={27}>
+          <TradeTimingCard trades={result.trades} />
+        </StaggeredSection>
       )}
 
-      {/* Position Sizing Analysis */}
       {result.trades.length >= 5 && (
-        <PositionSizingCard 
-          trades={result.trades} 
-          initialBalance={initialBalance} 
-          currentPositionSize={positionSizePercent} 
-        />
+        <StaggeredSection index={28}>
+          <PositionSizingCard trades={result.trades} initialBalance={initialBalance} currentPositionSize={positionSizePercent} />
+        </StaggeredSection>
       )}
 
-      {/* Drawdown Recovery Analysis */}
       {result.trades.length >= 5 && (
-        <DrawdownRecoveryCard trades={result.trades} initialBalance={initialBalance} />
+        <StaggeredSection index={29}>
+          <DrawdownRecoveryCard trades={result.trades} initialBalance={initialBalance} />
+        </StaggeredSection>
       )}
 
-      {/* Streak Impact Analysis */}
       {result.trades.length >= 5 && (
-        <StreakImpactCard trades={result.trades} initialBalance={initialBalance} />
+        <StaggeredSection index={30}>
+          <StreakImpactCard trades={result.trades} initialBalance={initialBalance} />
+        </StaggeredSection>
       )}
 
-      {/* Trade Quality Score */}
       {result.trades.length >= 5 && (
-        <TradeQualityScoreCard 
-          trades={result.trades} 
-          stopLossPercent={stopLossPercent} 
-          takeProfitPercent={takeProfitPercent} 
-        />
+        <StaggeredSection index={31}>
+          <TradeQualityScoreCard trades={result.trades} stopLossPercent={stopLossPercent} takeProfitPercent={takeProfitPercent} />
+        </StaggeredSection>
       )}
 
-      {/* Optimal Trade Filter Analysis */}
       {result.trades.length >= 5 && (
-        <OptimalTradeFilterCard trades={result.trades} />
+        <StaggeredSection index={32}>
+          <OptimalTradeFilterCard trades={result.trades} />
+        </StaggeredSection>
       )}
 
-      {/* Trade Pattern Clustering Analysis */}
       {result.trades.length >= 10 && (
-        <TradePatternClusteringCard trades={result.trades} />
+        <StaggeredSection index={33}>
+          <TradePatternClusteringCard trades={result.trades} />
+        </StaggeredSection>
       )}
 
+      <StaggeredSection index={34}>
       <div className="grid gap-4 md:grid-cols-2">
         <Card className="border-border/50 bg-card/50 backdrop-blur">
           <CardHeader className="pb-2">
@@ -416,8 +427,9 @@ export function ResultsDisplay({
           </CardContent>
         </Card>
       </div>
+      </StaggeredSection>
 
-      {/* Asset Breakdown */}
+      <StaggeredSection index={35}>
       <Card className="border-border/50 bg-card/50 backdrop-blur">
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
@@ -456,8 +468,9 @@ export function ResultsDisplay({
           </div>
         </CardContent>
       </Card>
+      </StaggeredSection>
 
-      {/* Trade History */}
+      <StaggeredSection index={36}>
       <Card className="border-border/50 bg-card/50 backdrop-blur">
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Trade History</CardTitle>
@@ -508,6 +521,7 @@ export function ResultsDisplay({
           </ScrollArea>
         </CardContent>
       </Card>
+      </StaggeredSection>
     </div>
   );
 }
