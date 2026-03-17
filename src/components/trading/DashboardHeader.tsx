@@ -30,8 +30,6 @@ interface DashboardHeaderProps {
   notificationPermission: NotificationPermission;
   notificationsSupported: boolean;
   onRequestNotifications: () => void;
-  keyboardEnabled: boolean;
-  onToggleKeyboard: () => void;
 }
 
 export function DashboardHeader({
