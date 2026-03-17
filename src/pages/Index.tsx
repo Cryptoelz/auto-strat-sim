@@ -5,7 +5,7 @@ import { usePnlAlerts } from '@/hooks/usePnlAlerts';
 import { DashboardHeader } from '@/components/trading/DashboardHeader';
 import { BalanceCard, PriceCard } from '@/components/trading/DashboardCards';
 import { PriceChart } from '@/components/trading/PriceChart';
-import { SignalAlert } from '@/components/trading/SignalAlert';
+import { AssetDetailPanel } from '@/components/trading/AssetDetailPanel';
 import { TradeHistory } from '@/components/trading/TradeHistory';
 import { TradeJournal } from '@/components/trading/TradeJournal';
 import { PerformanceStats } from '@/components/trading/PerformanceStats';
@@ -33,6 +33,7 @@ const Index = () => {
     takeProfitPercent: DEFAULT_CONFIG.risk.takeProfitPercent,
     pnlAlertProfit: null,
     pnlAlertLoss: null,
+    filters: { ...DEFAULT_CONFIG.filters },
   });
 
   const config = useMemo(() => ({
@@ -50,6 +51,7 @@ const Index = () => {
       stopLossPercent: strategyConfig.stopLossPercent,
       takeProfitPercent: strategyConfig.takeProfitPercent,
     },
+    filters: strategyConfig.filters,
   }), [strategyConfig]);
 
   const {
@@ -57,6 +59,7 @@ const Index = () => {
     candles,
     prices,
     signals,
+    analytics,
     isLoading,
     lastUpdate,
     toggleRunning,
@@ -68,7 +71,6 @@ const Index = () => {
     setStrategyConfig(newConfig);
   };
 
-  // P&L Alerts
   usePnlAlerts({
     state,
     profitTarget: strategyConfig.pnlAlertProfit,
@@ -78,10 +80,8 @@ const Index = () => {
   const { permission, isSupported, requestPermission, sendSignalNotification } = useNotifications();
   const prevSignalsRef = useRef<Record<Asset, string | null>>({ BTCUSDT: null, XRPUSDT: null, FETUSDT: null, XLMUSDT: null });
 
-  // Send notifications when signals change
   useEffect(() => {
     if (permission !== 'granted') return;
-
     strategyConfig.enabledAssets.forEach((asset) => {
       const signal = signals[asset];
       if (signal && signal.type !== 'HOLD') {
@@ -132,7 +132,7 @@ const Index = () => {
 
       <main className="container mx-auto px-3 py-4 sm:px-4 sm:py-6">
         {/* Top cards row */}
-        <div className="mb-4 grid grid-cols-2 gap-2 sm:mb-6 sm:gap-4 lg:grid-cols-3 xl:grid-cols-6">
+        <div className="mb-4 grid grid-cols-2 gap-2 sm:mb-6 sm:gap-4 lg:grid-cols-4">
           <BalanceCard state={state} prices={prices} />
           {strategyConfig.enabledAssets.map((asset) => (
             <PriceCard key={asset} asset={asset} price={prices[asset]} />
@@ -144,7 +144,7 @@ const Index = () => {
           />
         </div>
 
-        {/* Charts and signals grid */}
+        {/* Charts + Asset Detail Panels */}
         <div className="mb-4 grid gap-4 sm:mb-6 sm:gap-6 md:grid-cols-2">
           {strategyConfig.enabledAssets.map((asset) => (
             <div key={asset} className="space-y-3 sm:space-y-4">
@@ -155,17 +155,15 @@ const Index = () => {
                 fastSMA={strategyConfig.fastSMA}
                 slowSMA={strategyConfig.slowSMA}
               />
-              <SignalAlert
+              <AssetDetailPanel
                 asset={asset}
-                signal={signals[asset]}
-                position={state.positions[asset]}
-                currentPrice={prices[asset]}
+                data={analytics[asset]}
               />
             </div>
           ))}
         </div>
 
-        {/* History and performance row */}
+        {/* Trade Log and Performance Dashboard */}
         <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
           <TradeHistory trades={state.trades} />
           <MemoizedPerformanceStats state={state} />
@@ -173,10 +171,10 @@ const Index = () => {
 
         {/* Portfolio and Asset breakdown */}
         <div className="mt-4 grid gap-4 sm:mt-6 sm:gap-6 lg:grid-cols-2">
-          <MemoizedPortfolioAllocation 
-            state={state} 
-            prices={prices} 
-            enabledAssets={strategyConfig.enabledAssets} 
+          <MemoizedPortfolioAllocation
+            state={state}
+            prices={prices}
+            enabledAssets={strategyConfig.enabledAssets}
           />
           <MemoizedAssetBreakdown trades={state.trades} />
         </div>
@@ -189,7 +187,7 @@ const Index = () => {
         {/* Footer disclaimer */}
         <footer className="mt-6 rounded-lg border border-border/50 bg-card/30 p-3 text-center sm:mt-8 sm:p-4">
           <p className="text-xs text-muted-foreground sm:text-sm">
-            ⚠️ <strong>SIMULATION ONLY</strong> - Automated trading agent for educational purposes. No real trades.
+            ⚠️ <strong>SIMULATION ONLY</strong> — Automated trading agent with trend, volatility & regime filters. No real trades.
           </p>
         </footer>
       </main>
