@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Settings } from 'lucide-react';
+import { Settings, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import {
   Popover,
   PopoverContent,
@@ -17,8 +18,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { DEFAULT_CONFIG, ASSET_INFO } from '@/config/trading';
-import { Asset } from '@/types/trading';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { DEFAULT_CONFIG, ALL_ASSETS, ASSET_INFO } from '@/config/trading';
+import { Asset, FilterConfig } from '@/types/trading';
 
 export type Timeframe = '5m' | '15m' | '1h' | '4h';
 
@@ -29,7 +31,12 @@ export const TIMEFRAME_OPTIONS: { value: Timeframe; label: string }[] = [
   { value: '4h', label: '4 Hours' },
 ];
 
-const ALL_ASSETS: Asset[] = ['BTCUSDT', 'XRPUSDT', 'FETUSDT', 'XLMUSDT'];
+const HTF_OPTIONS: { value: string; label: string }[] = [
+  { value: '15m', label: '15m' },
+  { value: '1h', label: '1h' },
+  { value: '4h', label: '4h' },
+  { value: '1d', label: '1d' },
+];
 
 export interface StrategyConfig {
   timeframe: Timeframe;
@@ -41,6 +48,7 @@ export interface StrategyConfig {
   takeProfitPercent: number;
   pnlAlertProfit: number | null;
   pnlAlertLoss: number | null;
+  filters: FilterConfig;
 }
 
 const STORAGE_KEY = 'strategy-config';
@@ -52,7 +60,7 @@ function loadConfig(): StrategyConfig {
       const parsed = JSON.parse(stored);
       return {
         timeframe: parsed.timeframe ?? DEFAULT_CONFIG.timeframe,
-        enabledAssets: parsed.enabledAssets ?? ALL_ASSETS,
+        enabledAssets: parsed.enabledAssets ?? DEFAULT_CONFIG.assets,
         fastSMA: parsed.fastSMA ?? DEFAULT_CONFIG.indicators.fastSMA,
         slowSMA: parsed.slowSMA ?? DEFAULT_CONFIG.indicators.slowSMA,
         positionSizePercent: parsed.positionSizePercent ?? DEFAULT_CONFIG.risk.positionSizePercent,
@@ -60,6 +68,10 @@ function loadConfig(): StrategyConfig {
         takeProfitPercent: parsed.takeProfitPercent ?? DEFAULT_CONFIG.risk.takeProfitPercent,
         pnlAlertProfit: parsed.pnlAlertProfit ?? null,
         pnlAlertLoss: parsed.pnlAlertLoss ?? null,
+        filters: {
+          ...DEFAULT_CONFIG.filters,
+          ...(parsed.filters || {}),
+        },
       };
     }
   } catch {
@@ -67,7 +79,7 @@ function loadConfig(): StrategyConfig {
   }
   return {
     timeframe: DEFAULT_CONFIG.timeframe as Timeframe,
-    enabledAssets: ALL_ASSETS,
+    enabledAssets: [...DEFAULT_CONFIG.assets],
     fastSMA: DEFAULT_CONFIG.indicators.fastSMA,
     slowSMA: DEFAULT_CONFIG.indicators.slowSMA,
     positionSizePercent: DEFAULT_CONFIG.risk.positionSizePercent,
@@ -75,6 +87,7 @@ function loadConfig(): StrategyConfig {
     takeProfitPercent: DEFAULT_CONFIG.risk.takeProfitPercent,
     pnlAlertProfit: null,
     pnlAlertLoss: null,
+    filters: { ...DEFAULT_CONFIG.filters },
   };
 }
 
@@ -97,17 +110,16 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
   const [takeProfitInput, setTakeProfitInput] = useState(config.takeProfitPercent.toString());
   const [pnlAlertProfitInput, setPnlAlertProfitInput] = useState(config.pnlAlertProfit?.toString() ?? '');
   const [pnlAlertLossInput, setPnlAlertLossInput] = useState(config.pnlAlertLoss?.toString() ?? '');
+  const [filtersInput, setFiltersInput] = useState<FilterConfig>(config.filters);
+  const [showFilters, setShowFilters] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
 
-  useEffect(() => {
-    onConfigChange(config);
-  }, []);
+  useEffect(() => { onConfigChange(config); }, []);
 
   const toggleAsset = (asset: Asset) => {
     setEnabledAssetsInput((prev) => {
       if (prev.includes(asset)) {
-        // Don't allow disabling all assets
         if (prev.length === 1) return prev;
         return prev.filter((a) => a !== asset);
       }
@@ -124,55 +136,28 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
     const pnlProfit = pnlAlertProfitInput.trim() ? parseFloat(pnlAlertProfitInput) : null;
     const pnlLoss = pnlAlertLossInput.trim() ? parseFloat(pnlAlertLossInput) : null;
 
-    // Validation
     if (isNaN(fast) || isNaN(slow) || isNaN(positionSize) || isNaN(stopLoss) || isNaN(takeProfit)) {
-      setError('Please enter valid numbers');
-      return;
+      setError('Please enter valid numbers'); return;
     }
-    if (pnlProfit !== null && isNaN(pnlProfit)) {
-      setError('Profit target must be a valid number');
-      return;
-    }
-    if (pnlLoss !== null && isNaN(pnlLoss)) {
-      setError('Loss limit must be a valid number');
-      return;
-    }
-    if (fast < 2 || fast > 200) {
-      setError('Fast SMA must be between 2 and 200');
-      return;
-    }
-    if (slow < 2 || slow > 200) {
-      setError('Slow SMA must be between 2 and 200');
-      return;
-    }
-    if (fast >= slow) {
-      setError('Fast SMA must be smaller than Slow SMA');
-      return;
-    }
-    if (positionSize < 1 || positionSize > 100) {
-      setError('Position Size must be between 1% and 100%');
-      return;
-    }
-    if (stopLoss < 0.5 || stopLoss > 20) {
-      setError('Stop Loss must be between 0.5% and 20%');
-      return;
-    }
-    if (takeProfit < 0.5 || takeProfit > 50) {
-      setError('Take Profit must be between 0.5% and 50%');
-      return;
-    }
+    if (fast < 2 || fast > 200) { setError('Fast SMA must be between 2 and 200'); return; }
+    if (slow < 2 || slow > 200) { setError('Slow SMA must be between 2 and 200'); return; }
+    if (fast >= slow) { setError('Fast SMA must be smaller than Slow SMA'); return; }
+    if (positionSize < 1 || positionSize > 100) { setError('Position Size must be between 1% and 100%'); return; }
+    if (stopLoss < 0.5 || stopLoss > 20) { setError('Stop Loss must be between 0.5% and 20%'); return; }
+    if (takeProfit < 0.5 || takeProfit > 50) { setError('Take Profit must be between 0.5% and 50%'); return; }
 
     setError(null);
-    const newConfig: StrategyConfig = { 
+    const newConfig: StrategyConfig = {
       timeframe: timeframeInput,
       enabledAssets: enabledAssetsInput,
-      fastSMA: fast, 
+      fastSMA: fast,
       slowSMA: slow,
       positionSizePercent: positionSize,
       stopLossPercent: stopLoss,
       takeProfitPercent: takeProfit,
       pnlAlertProfit: pnlProfit,
       pnlAlertLoss: pnlLoss,
+      filters: filtersInput,
     };
     setConfig(newConfig);
     saveConfig(newConfig);
@@ -183,7 +168,7 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
   const handleReset = () => {
     const defaultConfig: StrategyConfig = {
       timeframe: DEFAULT_CONFIG.timeframe as Timeframe,
-      enabledAssets: ALL_ASSETS,
+      enabledAssets: [...DEFAULT_CONFIG.assets],
       fastSMA: DEFAULT_CONFIG.indicators.fastSMA,
       slowSMA: DEFAULT_CONFIG.indicators.slowSMA,
       positionSizePercent: DEFAULT_CONFIG.risk.positionSizePercent,
@@ -191,6 +176,7 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
       takeProfitPercent: DEFAULT_CONFIG.risk.takeProfitPercent,
       pnlAlertProfit: null,
       pnlAlertLoss: null,
+      filters: { ...DEFAULT_CONFIG.filters },
     };
     setTimeframeInput(defaultConfig.timeframe);
     setEnabledAssetsInput(defaultConfig.enabledAssets);
@@ -201,6 +187,7 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
     setTakeProfitInput(defaultConfig.takeProfitPercent.toString());
     setPnlAlertProfitInput('');
     setPnlAlertLossInput('');
+    setFiltersInput({ ...DEFAULT_CONFIG.filters });
     setConfig(defaultConfig);
     saveConfig(defaultConfig);
     onConfigChange(defaultConfig);
@@ -215,203 +202,190 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
           <span className="sr-only">Strategy settings</span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-72" align="end">
-        <div className="space-y-4">
-          <div>
-            <h4 className="font-medium text-sm">Strategy Settings</h4>
-            <p className="text-xs text-muted-foreground">Customize timeframe, indicators & risk</p>
-          </div>
+      <PopoverContent className="w-80 p-0" align="end">
+        <ScrollArea className="h-[520px]">
+          <div className="space-y-4 p-4">
+            <div>
+              <h4 className="font-medium text-sm">Strategy Settings</h4>
+              <p className="text-xs text-muted-foreground">Configure execution, indicators, risk & filters</p>
+            </div>
 
-          {/* Timeframe Setting */}
-          <div className="space-y-1">
-            <Label htmlFor="timeframe" className="text-xs">
-              Timeframe
-            </Label>
-            <Select value={timeframeInput} onValueChange={(value) => setTimeframeInput(value as Timeframe)}>
-              <SelectTrigger className="h-8">
-                <SelectValue placeholder="Select timeframe" />
-              </SelectTrigger>
-              <SelectContent>
-                {TIMEFRAME_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <Separator />
-
-          {/* Asset Toggles */}
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground">Trading Pairs</p>
+            {/* Timeframe */}
             <div className="grid grid-cols-2 gap-2">
-              {ALL_ASSETS.map((asset) => {
-                const info = ASSET_INFO[asset];
-                return (
-                  <div key={asset} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={asset}
-                      checked={enabledAssetsInput.includes(asset)}
-                      onCheckedChange={() => toggleAsset(asset)}
+              <div className="space-y-1">
+                <Label className="text-xs">Execution TF</Label>
+                <Select value={timeframeInput} onValueChange={(v) => setTimeframeInput(v as Timeframe)}>
+                  <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {TIMEFRAME_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Higher TF</Label>
+                <Select value={filtersInput.higherTimeframe} onValueChange={(v) => setFiltersInput(f => ({ ...f, higherTimeframe: v }))}>
+                  <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {HTF_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Assets */}
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">Trading Pairs</p>
+              <div className="grid grid-cols-2 gap-2">
+                {ALL_ASSETS.map((asset) => {
+                  const info = ASSET_INFO[asset];
+                  return (
+                    <div key={asset} className="flex items-center space-x-2">
+                      <Checkbox id={asset} checked={enabledAssetsInput.includes(asset)} onCheckedChange={() => toggleAsset(asset)} />
+                      <Label htmlFor={asset} className="text-xs cursor-pointer">{info.symbol}</Label>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* SMA */}
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">SMA Indicators</p>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-xs">Fast SMA</Label>
+                  <Input type="number" min={2} max={200} value={fastInput} onChange={(e) => setFastInput(e.target.value)} className="h-8" />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Slow SMA</Label>
+                  <Input type="number" min={2} max={200} value={slowInput} onChange={(e) => setSlowInput(e.target.value)} className="h-8" />
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Risk */}
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">Risk Management</p>
+              <div className="space-y-1">
+                <Label className="text-xs">Position Size %</Label>
+                <Input type="number" min={1} max={100} step={1} value={positionSizeInput} onChange={(e) => setPositionSizeInput(e.target.value)} className="h-8" />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-xs">Stop Loss %</Label>
+                  <Input type="number" min={0.5} max={20} step={0.5} value={stopLossInput} onChange={(e) => setStopLossInput(e.target.value)} className="h-8" />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Take Profit %</Label>
+                  <Input type="number" min={0.5} max={50} step={0.5} value={takeProfitInput} onChange={(e) => setTakeProfitInput(e.target.value)} className="h-8" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-xs">Fee %</Label>
+                  <Input type="number" min={0} max={1} step={0.01} value={filtersInput.slippagePercent.toString()} onChange={(e) => setFiltersInput(f => ({ ...f, slippagePercent: parseFloat(e.target.value) || 0 }))} className="h-8" />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Slippage %</Label>
+                  <Input type="number" min={0} max={1} step={0.01} value={filtersInput.slippagePercent.toString()} onChange={(e) => setFiltersInput(f => ({ ...f, slippagePercent: parseFloat(e.target.value) || 0 }))} className="h-8" />
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Filters Section */}
+            <div className="space-y-2">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="flex w-full items-center justify-between text-xs font-medium text-muted-foreground hover:text-foreground"
+              >
+                <span>Signal Filters</span>
+                {showFilters ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+              </button>
+
+              {showFilters && (
+                <div className="space-y-3 pt-1">
+                  {/* Trend Filter */}
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs">Trend Filter (HTF)</Label>
+                    <Switch
+                      checked={filtersInput.trendFilterEnabled}
+                      onCheckedChange={(v) => setFiltersInput(f => ({ ...f, trendFilterEnabled: v }))}
                     />
-                    <Label htmlFor={asset} className="text-xs cursor-pointer">
-                      {info.symbol}
-                    </Label>
                   </div>
-                );
-              })}
+
+                  {/* Volatility Filter */}
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs">Volatility Filter (ATR)</Label>
+                    <Switch
+                      checked={filtersInput.volatilityFilterEnabled}
+                      onCheckedChange={(v) => setFiltersInput(f => ({ ...f, volatilityFilterEnabled: v }))}
+                    />
+                  </div>
+                  {filtersInput.volatilityFilterEnabled && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <Label className="text-xs">ATR Period</Label>
+                        <Input type="number" min={5} max={50} value={filtersInput.atrPeriod.toString()} onChange={(e) => setFiltersInput(f => ({ ...f, atrPeriod: parseInt(e.target.value) || 14 }))} className="h-8" />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">ATR Threshold %</Label>
+                        <Input type="number" min={0.01} max={5} step={0.1} value={filtersInput.atrThreshold.toString()} onChange={(e) => setFiltersInput(f => ({ ...f, atrThreshold: parseFloat(e.target.value) || 0.5 }))} className="h-8" />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Market Regime Filter */}
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs">Market Regime Filter</Label>
+                    <Switch
+                      checked={filtersInput.regimeFilterEnabled}
+                      onCheckedChange={(v) => setFiltersInput(f => ({ ...f, regimeFilterEnabled: v }))}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
 
-          <Separator />
+            <Separator />
 
-          {/* SMA Settings */}
-          <div className="space-y-3">
-            <p className="text-xs font-medium text-muted-foreground">SMA Indicators</p>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <Label htmlFor="fast-sma" className="text-xs">
-                  Fast SMA
-                </Label>
-                <Input
-                  id="fast-sma"
-                  type="number"
-                  min={2}
-                  max={200}
-                  value={fastInput}
-                  onChange={(e) => setFastInput(e.target.value)}
-                  className="h-8"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="slow-sma" className="text-xs">
-                  Slow SMA
-                </Label>
-                <Input
-                  id="slow-sma"
-                  type="number"
-                  min={2}
-                  max={200}
-                  value={slowInput}
-                  onChange={(e) => setSlowInput(e.target.value)}
-                  className="h-8"
-                />
-              </div>
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Risk Settings */}
-          <div className="space-y-3">
-            <p className="text-xs font-medium text-muted-foreground">Risk Management</p>
-            <div className="space-y-1">
-              <Label htmlFor="position-size" className="text-xs">
-                Position Size %
-              </Label>
-              <Input
-                id="position-size"
-                type="number"
-                min={1}
-                max={100}
-                step={1}
-                value={positionSizeInput}
-                onChange={(e) => setPositionSizeInput(e.target.value)}
-                className="h-8"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <Label htmlFor="stop-loss" className="text-xs">
-                  Stop Loss %
-                </Label>
-                <Input
-                  id="stop-loss"
-                  type="number"
-                  min={0.5}
-                  max={20}
-                  step={0.5}
-                  value={stopLossInput}
-                  onChange={(e) => setStopLossInput(e.target.value)}
-                  className="h-8"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="take-profit" className="text-xs">
-                  Take Profit %
-                </Label>
-                <Input
-                  id="take-profit"
-                  type="number"
-                  min={0.5}
-                  max={50}
-                  step={0.5}
-                  value={takeProfitInput}
-                  onChange={(e) => setTakeProfitInput(e.target.value)}
-                  className="h-8"
-                />
+            {/* P&L Alerts */}
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">P&L Alerts (optional)</p>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-xs">Profit Target $</Label>
+                  <Input type="number" min={0} step={100} placeholder="e.g. 500" value={pnlAlertProfitInput} onChange={(e) => setPnlAlertProfitInput(e.target.value)} className="h-8" />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Loss Limit $</Label>
+                  <Input type="number" min={0} step={100} placeholder="e.g. 200" value={pnlAlertLossInput} onChange={(e) => setPnlAlertLossInput(e.target.value)} className="h-8" />
+                </div>
               </div>
             </div>
-          </div>
 
-          <Separator />
+            {error && <p className="text-xs text-destructive">{error}</p>}
 
-          {/* P&L Alerts */}
-          <div className="space-y-3">
-            <p className="text-xs font-medium text-muted-foreground">P&L Alerts (optional)</p>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <Label htmlFor="pnl-profit" className="text-xs">
-                  Profit Target $
-                </Label>
-                <Input
-                  id="pnl-profit"
-                  type="number"
-                  min={0}
-                  step={100}
-                  placeholder="e.g. 500"
-                  value={pnlAlertProfitInput}
-                  onChange={(e) => setPnlAlertProfitInput(e.target.value)}
-                  className="h-8"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="pnl-loss" className="text-xs">
-                  Loss Limit $
-                </Label>
-                <Input
-                  id="pnl-loss"
-                  type="number"
-                  min={0}
-                  step={100}
-                  placeholder="e.g. 200"
-                  value={pnlAlertLossInput}
-                  onChange={(e) => setPnlAlertLossInput(e.target.value)}
-                  className="h-8"
-                />
-              </div>
+            <div className="flex gap-2">
+              <Button size="sm" className="flex-1" onClick={handleApply}>Apply</Button>
+              <Button size="sm" variant="outline" onClick={handleReset}>Reset</Button>
             </div>
+
+            <p className="text-xs text-muted-foreground">
+              {config.timeframe} • SMA {config.fastSMA}/{config.slowSMA} • Size {config.positionSizePercent}%
+              {config.filters.trendFilterEnabled && ' • TF'}
+              {config.filters.volatilityFilterEnabled && ' • ATR'}
+              {config.filters.regimeFilterEnabled && ' • MR'}
+            </p>
           </div>
-
-          {error && (
-            <p className="text-xs text-destructive">{error}</p>
-          )}
-
-          <div className="flex gap-2">
-            <Button size="sm" className="flex-1" onClick={handleApply}>
-              Apply
-            </Button>
-            <Button size="sm" variant="outline" onClick={handleReset}>
-              Reset
-            </Button>
-          </div>
-
-          <p className="text-xs text-muted-foreground">
-            {config.timeframe} • SMA {config.fastSMA}/{config.slowSMA} • Size {config.positionSizePercent}%
-          </p>
-        </div>
+        </ScrollArea>
       </PopoverContent>
     </Popover>
   );
