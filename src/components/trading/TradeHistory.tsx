@@ -8,22 +8,26 @@ import { format } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { History, Download } from 'lucide-react';
 
-const REASON_LABELS: Record<TradeReason, string> = {
+const REASON_LABELS: Record<string, string> = {
   bullish_crossover: 'Bullish Cross',
   bearish_crossover: 'Bearish Cross',
   stop_loss: 'Stop Loss',
   take_profit: 'Take Profit',
   flip_to_long: 'Flip → Long',
   flip_to_short: 'Flip → Short',
+  signal: 'Signal',
+  flip: 'Flip',
 };
 
-const REASON_COLORS: Record<TradeReason, string> = {
+const REASON_COLORS: Record<string, string> = {
   bullish_crossover: 'border-trading-profit/50 bg-trading-profit/10 text-trading-profit',
   bearish_crossover: 'border-trading-loss/50 bg-trading-loss/10 text-trading-loss',
   stop_loss: 'border-destructive/50 bg-destructive/10 text-destructive',
   take_profit: 'border-trading-profit/50 bg-trading-profit/10 text-trading-profit',
   flip_to_long: 'border-primary/50 bg-primary/10 text-primary',
   flip_to_short: 'border-primary/50 bg-primary/10 text-primary',
+  signal: 'border-muted bg-muted/50 text-muted-foreground',
+  flip: 'border-primary/50 bg-primary/10 text-primary',
 };
 
 function exportToCSV(trades: Trade[]) {
