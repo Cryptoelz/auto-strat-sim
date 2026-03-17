@@ -1,4 +1,4 @@
-import { Position, TradingConfig } from '@/types/trading';
+import { Position, PositionDirection, TradingConfig } from '@/types/trading';
 
 /**
  * Calculate position size based on available balance
@@ -13,23 +13,33 @@ export function calculatePositionSize(
 }
 
 /**
- * Calculate stop loss price
+ * Calculate stop loss price for long or short
  */
 export function calculateStopLoss(
   entryPrice: number,
-  stopLossPercent: number
+  stopLossPercent: number,
+  direction: PositionDirection
 ): number {
-  return entryPrice * (1 - stopLossPercent / 100);
+  if (direction === 'long') {
+    return entryPrice * (1 - stopLossPercent / 100);
+  }
+  // Short: SL is above entry
+  return entryPrice * (1 + stopLossPercent / 100);
 }
 
 /**
- * Calculate take profit price
+ * Calculate take profit price for long or short
  */
 export function calculateTakeProfit(
   entryPrice: number,
-  takeProfitPercent: number
+  takeProfitPercent: number,
+  direction: PositionDirection
 ): number {
-  return entryPrice * (1 + takeProfitPercent / 100);
+  if (direction === 'long') {
+    return entryPrice * (1 + takeProfitPercent / 100);
+  }
+  // Short: TP is below entry
+  return entryPrice * (1 - takeProfitPercent / 100);
 }
 
 /**
@@ -39,7 +49,11 @@ export function shouldTriggerStopLoss(
   position: Position,
   currentPrice: number
 ): boolean {
-  return currentPrice <= position.stopLoss;
+  if (position.direction === 'long') {
+    return currentPrice <= position.stopLoss;
+  }
+  // Short: price rising hits SL
+  return currentPrice >= position.stopLoss;
 }
 
 /**
@@ -49,7 +63,11 @@ export function shouldTriggerTakeProfit(
   position: Position,
   currentPrice: number
 ): boolean {
-  return currentPrice >= position.takeProfit;
+  if (position.direction === 'long') {
+    return currentPrice >= position.takeProfit;
+  }
+  // Short: price falling hits TP
+  return currentPrice <= position.takeProfit;
 }
 
 /**
@@ -60,6 +78,22 @@ export function calculateFees(
   feePercent: number
 ): number {
   return value * (feePercent / 100);
+}
+
+/**
+ * Calculate PnL for a position
+ */
+export function calculatePnl(
+  direction: PositionDirection,
+  entryPrice: number,
+  exitPrice: number,
+  size: number
+): number {
+  if (direction === 'long') {
+    return (exitPrice - entryPrice) * size;
+  }
+  // Short PnL: profit when price drops
+  return (entryPrice - exitPrice) * size;
 }
 
 /**

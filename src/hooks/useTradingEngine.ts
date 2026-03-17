@@ -3,13 +3,13 @@ import { Asset, Candle, TradingConfig, TradingState, Signal } from '@/types/trad
 import { DEFAULT_CONFIG } from '@/config/trading';
 import { fetchCandles, fetchAllPrices } from '@/lib/marketData';
 import { generateSignal, isInCooldown, CANDLE_INTERVAL_MS } from '@/lib/signalEngine';
-import { checkAndExecuteRiskLimits, openPosition, closePosition } from '@/lib/executionSimulator';
+import { checkAndExecuteRiskLimits, openLong, openShort, closePosition, flipPosition } from '@/lib/executionSimulator';
 import { saveState, loadState, resetState } from '@/lib/stateManager';
 import { canExecuteTrade } from '@/lib/riskManager';
 import { playSignalSound } from '@/lib/sounds';
 import { toast } from 'sonner';
 
-const POLL_INTERVAL = 60000; // 1 minute
+const POLL_INTERVAL = 60000;
 
 export function useTradingEngine(config: TradingConfig = DEFAULT_CONFIG) {
   const [state, setState] = useState<TradingState>(loadState);
@@ -36,7 +36,6 @@ export function useTradingEngine(config: TradingConfig = DEFAULT_CONFIG) {
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Fetch market data
   const fetchData = useCallback(async () => {
     try {
       const [btcCandles, xrpCandles, fetCandles, xlmCandles, currentPrices] = await Promise.all([
@@ -56,7 +55,6 @@ export function useTradingEngine(config: TradingConfig = DEFAULT_CONFIG) {
       setPrices(currentPrices);
       setLastUpdate(new Date());
 
-      // Generate signals for all assets
       const allCandles: Record<Asset, Candle[]> = {
         BTCUSDT: btcCandles,
         XRPUSDT: xrpCandles,
@@ -87,7 +85,6 @@ export function useTradingEngine(config: TradingConfig = DEFAULT_CONFIG) {
         const prevSig = prevSignalsRef.current?.[asset];
         
         if (newSig && (newSig.type === 'BUY' || newSig.type === 'SELL')) {
-          // Play sound if this is a new signal or signal type changed
           if (!prevSig || prevSig.type !== newSig.type) {
             playSignalSound(newSig.type);
           }
@@ -97,18 +94,17 @@ export function useTradingEngine(config: TradingConfig = DEFAULT_CONFIG) {
       prevSignalsRef.current = newSignals;
       setSignals(newSignals);
 
-      // Check risk limits (stop loss / take profit)
+      // Check risk limits
       setState((prev) => {
         const newState = checkAndExecuteRiskLimits(prev, currentPrices, config);
         if (newState !== prev) {
           saveState(newState);
-          // Check if any position was closed
           for (const asset of config.assets) {
             if (prev.positions[asset] && !newState.positions[asset]) {
               const trade = newState.trades[newState.trades.length - 1];
               if (trade) {
                 const reason = trade.exitReason === 'stop_loss' ? 'Stop Loss' : 'Take Profit';
-                toast.info(`${asset} position closed: ${reason}`);
+                toast.info(`${asset} ${trade.direction.toUpperCase()} closed: ${reason}`);
               }
             }
           }
@@ -124,9 +120,9 @@ export function useTradingEngine(config: TradingConfig = DEFAULT_CONFIG) {
     }
   }, [config]);
 
-  // Process signals in auto mode
-  const processAutoSignals = useCallback(() => {
-    if (state.mode !== 'auto' || !state.isRunning) return;
+  // Process signals automatically with flip logic
+  const processSignals = useCallback(() => {
+    if (!state.isRunning) return;
 
     setState((prev) => {
       let newState = { ...prev };
@@ -136,28 +132,54 @@ export function useTradingEngine(config: TradingConfig = DEFAULT_CONFIG) {
         const price = prices[asset];
         const position = newState.positions[asset];
 
-        if (!signal || !price) continue;
+        if (!signal || !price || signal.type === 'HOLD') continue;
 
-        // Check cooldown
-        if (isInCooldown(newState.lastTradeTime[asset], Date.now(), config.risk.cooldownCandles, CANDLE_INTERVAL_MS)) {
-          continue;
-        }
-
-        // Process BUY signal
-        if (signal.type === 'BUY' && !position) {
-          const validation = canExecuteTrade(newState.balance, price, config);
-          if (validation.valid) {
-            newState = openPosition(newState, asset, price, config);
-            toast.success(`AUTO: Opened ${asset} position at $${price.toFixed(2)}`);
+        // BUY signal (bullish crossover)
+        if (signal.type === 'BUY') {
+          if (position?.direction === 'short') {
+            // FLIP: close SHORT, open LONG
+            const validation = canExecuteTrade(newState.balance + position.size * position.entryPrice, price, config);
+            if (validation.valid) {
+              newState = flipPosition(newState, asset, price, 'long', config);
+              const trade = newState.trades[newState.trades.length - 2]; // The close trade
+              const pnlText = trade?.pnl >= 0 ? `+$${trade.pnl.toFixed(2)}` : `-$${Math.abs(trade.pnl).toFixed(2)}`;
+              toast.success(`🔄 ${asset} FLIP: SHORT→LONG at $${price.toFixed(2)} (P&L: ${pnlText})`);
+            }
+          } else if (!position) {
+            // No position → open LONG
+            if (!isInCooldown(newState.lastTradeTime[asset], Date.now(), config.risk.cooldownCandles, CANDLE_INTERVAL_MS)) {
+              const validation = canExecuteTrade(newState.balance, price, config);
+              if (validation.valid) {
+                newState = openLong(newState, asset, price, config);
+                toast.success(`📈 ${asset} LONG opened at $${price.toFixed(2)}`);
+              }
+            }
           }
+          // If already LONG, do nothing
         }
 
-        // Process SELL signal
-        if (signal.type === 'SELL' && position) {
-          newState = closePosition(newState, asset, price, 'signal', config);
-          const trade = newState.trades[newState.trades.length - 1];
-          const pnlText = trade.pnl >= 0 ? `+$${trade.pnl.toFixed(2)}` : `-$${Math.abs(trade.pnl).toFixed(2)}`;
-          toast.success(`AUTO: Closed ${asset} position. P&L: ${pnlText}`);
+        // SELL signal (bearish crossover)
+        if (signal.type === 'SELL') {
+          if (position?.direction === 'long') {
+            // FLIP: close LONG, open SHORT
+            const validation = canExecuteTrade(newState.balance + position.size * position.entryPrice, price, config);
+            if (validation.valid) {
+              newState = flipPosition(newState, asset, price, 'short', config);
+              const trade = newState.trades[newState.trades.length - 2];
+              const pnlText = trade?.pnl >= 0 ? `+$${trade.pnl.toFixed(2)}` : `-$${Math.abs(trade.pnl).toFixed(2)}`;
+              toast.success(`🔄 ${asset} FLIP: LONG→SHORT at $${price.toFixed(2)} (P&L: ${pnlText})`);
+            }
+          } else if (!position) {
+            // No position → open SHORT
+            if (!isInCooldown(newState.lastTradeTime[asset], Date.now(), config.risk.cooldownCandles, CANDLE_INTERVAL_MS)) {
+              const validation = canExecuteTrade(newState.balance, price, config);
+              if (validation.valid) {
+                newState = openShort(newState, asset, price, config);
+                toast.success(`📉 ${asset} SHORT opened at $${price.toFixed(2)}`);
+              }
+            }
+          }
+          // If already SHORT, do nothing
         }
       }
 
@@ -166,62 +188,14 @@ export function useTradingEngine(config: TradingConfig = DEFAULT_CONFIG) {
       }
       return newState;
     });
-  }, [state.mode, state.isRunning, signals, prices, config]);
-
-  // Manual trade execution
-  const executeTrade = useCallback(
-    (asset: Asset, action: 'buy' | 'sell') => {
-      const price = prices[asset];
-      if (!price) {
-        toast.error('Price not available');
-        return;
-      }
-
-      setState((prev) => {
-        let newState = { ...prev };
-        const position = prev.positions[asset];
-
-        if (action === 'buy' && !position) {
-          const validation = canExecuteTrade(prev.balance, price, config);
-          if (!validation.valid) {
-            toast.error(validation.reason || 'Cannot execute trade');
-            return prev;
-          }
-          newState = openPosition(prev, asset, price, config);
-          toast.success(`Opened ${asset} position at $${price.toFixed(2)}`);
-        } else if (action === 'sell' && position) {
-          newState = closePosition(prev, asset, price, 'signal', config);
-          const trade = newState.trades[newState.trades.length - 1];
-          const pnlText = trade.pnl >= 0 ? `+$${trade.pnl.toFixed(2)}` : `-$${Math.abs(trade.pnl).toFixed(2)}`;
-          toast.success(`Closed ${asset} position. P&L: ${pnlText}`);
-        }
-
-        saveState(newState);
-        return newState;
-      });
-    },
-    [prices, config]
-  );
-
-  // Toggle mode
-  const toggleMode = useCallback(() => {
-    setState((prev) => {
-      const newState = {
-        ...prev,
-        mode: prev.mode === 'auto' ? 'manual' : 'auto',
-      } as TradingState;
-      saveState(newState);
-      toast.info(`Switched to ${newState.mode === 'auto' ? 'Auto' : 'Manual'} mode`);
-      return newState;
-    });
-  }, []);
+  }, [state.isRunning, signals, prices, config]);
 
   // Toggle running state
   const toggleRunning = useCallback(() => {
     setState((prev) => {
       const newState = { ...prev, isRunning: !prev.isRunning };
       saveState(newState);
-      toast.info(newState.isRunning ? 'Simulation started' : 'Simulation paused');
+      toast.info(newState.isRunning ? 'Agent started' : 'Agent paused');
       return newState;
     });
   }, []);
@@ -230,15 +204,13 @@ export function useTradingEngine(config: TradingConfig = DEFAULT_CONFIG) {
   const reset = useCallback(() => {
     const newState = resetState();
     setState(newState);
-    toast.info('Simulation reset to initial state');
+    toast.info('Agent reset to initial state');
   }, []);
 
   // Initial fetch and polling
   useEffect(() => {
     fetchData();
-
     intervalRef.current = setInterval(fetchData, POLL_INTERVAL);
-
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
@@ -246,12 +218,12 @@ export function useTradingEngine(config: TradingConfig = DEFAULT_CONFIG) {
     };
   }, [fetchData]);
 
-  // Process auto signals when data changes - debounced to prevent rapid updates
+  // Process signals when data changes
   useEffect(() => {
-    if (state.mode !== 'auto' || !state.isRunning) return;
-    const timeoutId = setTimeout(processAutoSignals, 100);
+    if (!state.isRunning) return;
+    const timeoutId = setTimeout(processSignals, 100);
     return () => clearTimeout(timeoutId);
-  }, [signals, state.mode, state.isRunning, processAutoSignals]);
+  }, [signals, state.isRunning, processSignals]);
 
   return {
     state,
@@ -260,8 +232,6 @@ export function useTradingEngine(config: TradingConfig = DEFAULT_CONFIG) {
     signals,
     isLoading,
     lastUpdate,
-    executeTrade,
-    toggleMode,
     toggleRunning,
     reset,
     refetch: fetchData,

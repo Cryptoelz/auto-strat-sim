@@ -1,7 +1,6 @@
 import { TradingConfig, TradingState, Asset } from '@/types/trading';
 
 export const DEFAULT_CONFIG: TradingConfig = {
-  mode: 'manual',
   timeframe: '15m',
   assets: ['BTCUSDT', 'XRPUSDT', 'FETUSDT', 'XLMUSDT'],
   indicators: {
@@ -44,8 +43,7 @@ export const getInitialState = (): TradingState => ({
     FETUSDT: 0,
     XLMUSDT: 0,
   },
-  mode: 'manual',
-  isRunning: false,
+  isRunning: true,
 });
 
 export const ASSET_INFO: Record<Asset, { name: string; symbol: string; color: string }> = {
@@ -55,5 +53,5 @@ export const ASSET_INFO: Record<Asset, { name: string; symbol: string; color: st
   XLMUSDT: { name: 'Stellar', symbol: 'XLM', color: 'trading-xlm' },
 };
 
-export const CANDLE_LIMIT = 100; // Number of candles to fetch
-export const POLL_INTERVAL = 60000; // 1 minute polling
+export const CANDLE_LIMIT = 100;
+export const POLL_INTERVAL = 60000;
