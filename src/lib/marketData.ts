@@ -13,13 +13,9 @@ export async function fetchCandles(
       `${BINANCE_API}/klines?symbol=${asset}&interval=${interval}&limit=${limit}`
     );
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch candles: ${response.statusText}`);
-    }
+    if (!response.ok) throw new Error(`Failed to fetch candles: ${response.statusText}`);
 
     const data = await response.json();
-
-    // Binance returns: [openTime, open, high, low, close, volume, closeTime, ...]
     return data.map((candle: (string | number)[]) => ({
       timestamp: Number(candle[0]),
       open: parseFloat(candle[1] as string),
@@ -37,11 +33,7 @@ export async function fetchCandles(
 export async function fetchCurrentPrice(asset: Asset): Promise<number | null> {
   try {
     const response = await fetch(`${BINANCE_API}/ticker/price?symbol=${asset}`);
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch price: ${response.statusText}`);
-    }
-
+    if (!response.ok) throw new Error(`Failed to fetch price: ${response.statusText}`);
     const data = await response.json();
     return parseFloat(data.price);
   } catch (error) {
@@ -56,4 +48,14 @@ export async function fetchAllPrices(assets: Asset[]): Promise<Record<Asset, num
     acc[asset] = prices[index];
     return acc;
   }, {} as Record<Asset, number | null>);
+}
+
+/**
+ * Fetch higher timeframe candles for trend filter
+ */
+export async function fetchHTFCandles(
+  asset: Asset,
+  htfInterval: string
+): Promise<Candle[]> {
+  return fetchCandles(asset, htfInterval, CANDLE_LIMIT);
 }

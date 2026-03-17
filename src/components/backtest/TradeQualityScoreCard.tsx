@@ -80,7 +80,10 @@ function calculateTradeScore(
     case 'stop_loss':
       executionScore = 15; // Disciplined exit
       break;
-    case 'signal':
+    case 'bullish_crossover':
+    case 'bearish_crossover':
+    case 'flip_to_long':
+    case 'flip_to_short':
       executionScore = isWin ? 20 : 12; // Signal-based, depends on outcome
       break;
     default:
