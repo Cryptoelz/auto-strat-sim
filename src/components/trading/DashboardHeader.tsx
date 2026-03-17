@@ -71,7 +71,6 @@ export function DashboardHeader({
               {/* Mobile only: settings, theme and volume toggles */}
               <div className="flex items-center gap-2 md:hidden">
                 <StrategySettings onConfigChange={onConfigChange} />
-                <KeyboardShortcutsHelp enabled={keyboardEnabled} onToggle={onToggleKeyboard} />
                 <NotificationToggle
                   permission={notificationPermission}
                   isSupported={notificationsSupported}
