@@ -140,7 +140,7 @@ function runBacktestSimulation(
           pnlPercent: pnlPercentFinal / 100,
           size: position.size,
           fees: totalFees,
-          exitReason,
+          exitReason: exitReason === 'signal' ? 'bullish_crossover' : exitReason as any,
           entryReason: 'signal',
         });
 
