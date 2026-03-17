@@ -1,10 +1,9 @@
 import { useState, useMemo, useEffect, useRef, useCallback, memo } from 'react';
 import { useTradingEngine } from '@/hooks/useTradingEngine';
 import { useNotifications } from '@/hooks/useNotifications';
-import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { usePnlAlerts } from '@/hooks/usePnlAlerts';
 import { DashboardHeader } from '@/components/trading/DashboardHeader';
-import { BalanceCard, PriceCard, ModeCard } from '@/components/trading/DashboardCards';
+import { BalanceCard, PriceCard } from '@/components/trading/DashboardCards';
 import { PriceChart } from '@/components/trading/PriceChart';
 import { SignalAlert } from '@/components/trading/SignalAlert';
 import { TradeHistory } from '@/components/trading/TradeHistory';
@@ -12,13 +11,12 @@ import { TradeJournal } from '@/components/trading/TradeJournal';
 import { PerformanceStats } from '@/components/trading/PerformanceStats';
 import { AssetBreakdown } from '@/components/trading/AssetBreakdown';
 import { PortfolioAllocation } from '@/components/trading/PortfolioAllocation';
+import { AgentStatusCard } from '@/components/trading/AgentStatusCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DEFAULT_CONFIG } from '@/config/trading';
 import { StrategyConfig } from '@/components/StrategySettings';
-import { Asset, TradingState } from '@/types/trading';
-import { toast } from 'sonner';
+import { Asset } from '@/types/trading';
 
-// Memoized portfolio allocation wrapper to prevent re-renders
 const MemoizedPortfolioAllocation = memo(PortfolioAllocation);
 const MemoizedAssetBreakdown = memo(AssetBreakdown);
 const MemoizedTradeJournal = memo(TradeJournal);
@@ -61,8 +59,6 @@ const Index = () => {
     signals,
     isLoading,
     lastUpdate,
-    executeTrade,
-    toggleMode,
     toggleRunning,
     reset,
     refetch,
@@ -77,36 +73,6 @@ const Index = () => {
     state,
     profitTarget: strategyConfig.pnlAlertProfit,
     lossLimit: strategyConfig.pnlAlertLoss,
-  });
-
-  // Keyboard shortcuts
-  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
-  const [keyboardEnabled, setKeyboardEnabled] = useState(true);
-
-  const handleKeyboardBuy = useCallback((asset: Asset) => {
-    if (!state.positions[asset]) {
-      executeTrade(asset, 'buy');
-    } else {
-      toast.info(`Already have a ${asset} position`);
-    }
-  }, [state.positions, executeTrade]);
-
-  const handleKeyboardSell = useCallback((asset: Asset) => {
-    if (state.positions[asset]) {
-      executeTrade(asset, 'sell');
-    } else {
-      toast.info(`No ${asset} position to sell`);
-    }
-  }, [state.positions, executeTrade]);
-
-  useKeyboardShortcuts({
-    enabled: keyboardEnabled,
-    selectedAsset,
-    onBuy: handleKeyboardBuy,
-    onSell: handleKeyboardSell,
-    onToggleMode: toggleMode,
-    onToggleRunning: toggleRunning,
-    onRefresh: refetch,
   });
 
   const { permission, isSupported, requestPermission, sendSignalNotification } = useNotifications();
@@ -162,8 +128,6 @@ const Index = () => {
         notificationPermission={permission}
         notificationsSupported={isSupported}
         onRequestNotifications={requestPermission}
-        keyboardEnabled={keyboardEnabled}
-        onToggleKeyboard={() => setKeyboardEnabled(!keyboardEnabled)}
       />
 
       <main className="container mx-auto px-3 py-4 sm:px-4 sm:py-6">
@@ -173,11 +137,10 @@ const Index = () => {
           {strategyConfig.enabledAssets.map((asset) => (
             <PriceCard key={asset} asset={asset} price={prices[asset]} />
           ))}
-          <ModeCard
-            mode={state.mode}
+          <AgentStatusCard
             isRunning={state.isRunning}
-            onToggleMode={toggleMode}
             onToggleRunning={toggleRunning}
+            totalTrades={state.trades.length}
           />
         </div>
 
@@ -191,16 +154,12 @@ const Index = () => {
                 position={state.positions[asset]}
                 fastSMA={strategyConfig.fastSMA}
                 slowSMA={strategyConfig.slowSMA}
-                isSelected={selectedAsset === asset}
-                onSelect={() => setSelectedAsset(selectedAsset === asset ? null : asset)}
               />
               <SignalAlert
                 asset={asset}
                 signal={signals[asset]}
                 position={state.positions[asset]}
                 currentPrice={prices[asset]}
-                mode={state.mode}
-                onExecute={executeTrade}
               />
             </div>
           ))}
@@ -230,7 +189,7 @@ const Index = () => {
         {/* Footer disclaimer */}
         <footer className="mt-6 rounded-lg border border-border/50 bg-card/30 p-3 text-center sm:mt-8 sm:p-4">
           <p className="text-xs text-muted-foreground sm:text-sm">
-            ⚠️ <strong>SIMULATION ONLY</strong> - Paper trading for educational purposes. No real trades.
+            ⚠️ <strong>SIMULATION ONLY</strong> - Automated trading agent for educational purposes. No real trades.
           </p>
         </footer>
       </main>

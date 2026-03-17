@@ -71,7 +71,7 @@ export function usePresetVersioning() {
   });
 
   // Debounce state for pending saves
-  const pendingVersionsRef = useRef<Map<'4' | '5' | '6', { data: PresetVersion['data']; timeoutId: NodeJS.Timeout; startedAt: number }>>(new Map());
+  const pendingVersionsRef = useRef<Map<'4' | '5' | '6', { data: PresetVersion['data']; timeoutId: ReturnType<typeof setTimeout>; startedAt: number }>>(new Map());
   const [pendingSlots, setPendingSlots] = useState<Set<'4' | '5' | '6'>>(new Set());
   const [pendingSaveTimestamps, setPendingSaveTimestamps] = useState<Map<'4' | '5' | '6', number>>(new Map());
   
@@ -199,7 +199,7 @@ export function usePresetVersioning() {
     timestamp: number;
   } | null>(null);
   
-  const cleanupUndoTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const cleanupUndoTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /**
    * Manually trigger cleanup to remove oldest unpinned versions

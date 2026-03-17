@@ -4,7 +4,7 @@ export type Asset = 'BTCUSDT' | 'XRPUSDT' | 'FETUSDT' | 'XLMUSDT';
 
 export type SignalType = 'BUY' | 'SELL' | 'HOLD';
 
-export type TradingMode = 'auto' | 'manual';
+export type PositionDirection = 'long' | 'short';
 
 export interface Candle {
   timestamp: number;
@@ -32,10 +32,10 @@ export interface Signal {
 export interface Position {
   id: string;
   asset: Asset;
+  direction: PositionDirection;
   entryPrice: number;
   entryTime: number;
   size: number;
-  type: 'long';
   stopLoss: number;
   takeProfit: number;
 }
@@ -43,6 +43,7 @@ export interface Position {
 export interface Trade {
   id: string;
   asset: Asset;
+  direction: PositionDirection;
   entryPrice: number;
   exitPrice: number;
   entryTime: number;
@@ -52,7 +53,7 @@ export interface Trade {
   pnlPercent: number;
   fees: number;
   type: 'win' | 'loss';
-  exitReason: 'signal' | 'stop_loss' | 'take_profit';
+  exitReason: 'signal' | 'stop_loss' | 'take_profit' | 'flip';
 }
 
 export interface TradingState {
@@ -62,12 +63,10 @@ export interface TradingState {
   trades: Trade[];
   lastSignal: Record<Asset, Signal | null>;
   lastTradeTime: Record<Asset, number>;
-  mode: TradingMode;
   isRunning: boolean;
 }
 
 export interface TradingConfig {
-  mode: TradingMode;
   timeframe: string;
   assets: Asset[];
   indicators: {

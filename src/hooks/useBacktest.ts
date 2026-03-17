@@ -130,6 +130,7 @@ function runBacktestSimulation(
         trades.push({
           id: `bt-${asset}-${position.entryTime}`,
           asset,
+          direction: 'long',
           type: netPnl >= 0 ? 'win' : 'loss',
           entryPrice: position.entryPrice,
           exitPrice,
@@ -185,6 +186,7 @@ function runBacktestSimulation(
     trades.push({
       id: `bt-${asset}-${position.entryTime}`,
       asset,
+      direction: 'long',
       type: netPnl >= 0 ? 'win' : 'loss',
       entryPrice: position.entryPrice,
       exitPrice,

@@ -30,8 +30,6 @@ interface DashboardHeaderProps {
   notificationPermission: NotificationPermission;
   notificationsSupported: boolean;
   onRequestNotifications: () => void;
-  keyboardEnabled: boolean;
-  onToggleKeyboard: () => void;
 }
 
 export function DashboardHeader({
@@ -44,8 +42,6 @@ export function DashboardHeader({
   notificationPermission,
   notificationsSupported,
   onRequestNotifications,
-  keyboardEnabled,
-  onToggleKeyboard,
 }: DashboardHeaderProps) {
   const [showResetDialog, setShowResetDialog] = useState(false);
 
@@ -75,7 +71,6 @@ export function DashboardHeader({
               {/* Mobile only: settings, theme and volume toggles */}
               <div className="flex items-center gap-2 md:hidden">
                 <StrategySettings onConfigChange={onConfigChange} />
-                <KeyboardShortcutsHelp enabled={keyboardEnabled} onToggle={onToggleKeyboard} />
                 <NotificationToggle
                   permission={notificationPermission}
                   isSupported={notificationsSupported}
@@ -134,7 +129,7 @@ export function DashboardHeader({
               {/* Desktop only: settings, theme and volume toggles */}
               <div className="hidden items-center gap-2 md:flex">
                 <StrategySettings onConfigChange={onConfigChange} />
-                <KeyboardShortcutsHelp enabled={keyboardEnabled} onToggle={onToggleKeyboard} />
+                
                 <NotificationToggle
                   permission={notificationPermission}
                   isSupported={notificationsSupported}
