@@ -199,7 +199,7 @@ export function usePresetVersioning() {
     timestamp: number;
   } | null>(null);
   
-  const cleanupUndoTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const cleanupUndoTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /**
    * Manually trigger cleanup to remove oldest unpinned versions

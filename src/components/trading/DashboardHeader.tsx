@@ -129,7 +129,7 @@ export function DashboardHeader({
               {/* Desktop only: settings, theme and volume toggles */}
               <div className="hidden items-center gap-2 md:flex">
                 <StrategySettings onConfigChange={onConfigChange} />
-                <KeyboardShortcutsHelp enabled={keyboardEnabled} onToggle={onToggleKeyboard} />
+                
                 <NotificationToggle
                   permission={notificationPermission}
                   isSupported={notificationsSupported}
