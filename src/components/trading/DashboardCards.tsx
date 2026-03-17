@@ -18,7 +18,12 @@ export function BalanceCard({ state, prices }: BalanceCardProps) {
     const position = state.positions[asset];
     const price = prices[asset];
     if (position && price) {
-      totalValue += position.size * price;
+      if (position.direction === 'long') {
+        totalValue += position.size * price;
+      } else {
+        // Short: locked capital + unrealized PnL
+        totalValue += position.size * position.entryPrice + (position.entryPrice - price) * position.size;
+      }
     }
   }
 
