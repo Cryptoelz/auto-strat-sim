@@ -2,7 +2,7 @@ import { TradingConfig, TradingState, Asset } from '@/types/trading';
 
 export const DEFAULT_CONFIG: TradingConfig = {
   timeframe: '15m',
-  assets: ['BTCUSDT', 'XRPUSDT', 'FETUSDT', 'XLMUSDT'],
+  assets: ['BTCUSDT', 'XRPUSDT'],
   indicators: {
     fastSMA: 20,
     slowSMA: 50,
@@ -17,9 +17,20 @@ export const DEFAULT_CONFIG: TradingConfig = {
     makerPercent: 0.1,
     takerPercent: 0.1,
   },
+  filters: {
+    trendFilterEnabled: true,
+    volatilityFilterEnabled: true,
+    regimeFilterEnabled: true,
+    higherTimeframe: '1h',
+    atrPeriod: 14,
+    atrThreshold: 0.5,
+    slippagePercent: 0.05,
+  },
 };
 
 export const INITIAL_BALANCE = 10000;
+
+export const ALL_ASSETS: Asset[] = ['BTCUSDT', 'XRPUSDT', 'FETUSDT', 'XLMUSDT'];
 
 export const getInitialState = (): TradingState => ({
   balance: INITIAL_BALANCE,

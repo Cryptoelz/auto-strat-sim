@@ -6,6 +6,23 @@ export type SignalType = 'BUY' | 'SELL' | 'HOLD';
 
 export type PositionDirection = 'long' | 'short';
 
+export type MarketRegime = 'trending_bullish' | 'trending_bearish' | 'sideways';
+
+export type TradeReason =
+  | 'bullish_crossover'
+  | 'bearish_crossover'
+  | 'stop_loss'
+  | 'take_profit'
+  | 'flip_to_long'
+  | 'flip_to_short';
+
+export type FilterBlockReason =
+  | 'trend_filter'
+  | 'volatility_filter'
+  | 'regime_filter'
+  | 'cooldown_active'
+  | 'insufficient_balance';
+
 export interface Candle {
   timestamp: number;
   open: number;
@@ -53,7 +70,22 @@ export interface Trade {
   pnlPercent: number;
   fees: number;
   type: 'win' | 'loss';
-  exitReason: 'signal' | 'stop_loss' | 'take_profit' | 'flip';
+  exitReason: TradeReason;
+}
+
+export interface AssetAnalytics {
+  price: number | null;
+  smaFast: number | null;
+  smaSlow: number | null;
+  htfTrend: 'bullish' | 'bearish' | 'neutral';
+  atr: number | null;
+  atrPercent: number | null;
+  marketRegime: MarketRegime;
+  signal: Signal | null;
+  position: Position | null;
+  unrealizedPnl: number | null;
+  realizedPnl: number;
+  filterBlocked: FilterBlockReason | null;
 }
 
 export interface TradingState {
@@ -64,6 +96,16 @@ export interface TradingState {
   lastSignal: Record<Asset, Signal | null>;
   lastTradeTime: Record<Asset, number>;
   isRunning: boolean;
+}
+
+export interface FilterConfig {
+  trendFilterEnabled: boolean;
+  volatilityFilterEnabled: boolean;
+  regimeFilterEnabled: boolean;
+  higherTimeframe: string;
+  atrPeriod: number;
+  atrThreshold: number;
+  slippagePercent: number;
 }
 
 export interface TradingConfig {
@@ -83,6 +125,7 @@ export interface TradingConfig {
     makerPercent: number;
     takerPercent: number;
   };
+  filters: FilterConfig;
 }
 
 export interface PerformanceMetrics {
@@ -93,5 +136,8 @@ export interface PerformanceMetrics {
   totalPnl: number;
   totalPnlPercent: number;
   maxDrawdown: number;
+  avgWin: number;
+  avgLoss: number;
+  profitFactor: number;
   equityCurve: { timestamp: number; balance: number }[];
 }
