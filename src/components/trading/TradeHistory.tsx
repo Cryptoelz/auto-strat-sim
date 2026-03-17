@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Trade, TradeReason } from '@/types/trading';
+import { Trade } from '@/types/trading';
 import { ASSET_INFO } from '@/config/trading';
 import { formatCurrency, formatPercent } from '@/lib/performance';
 import { format } from 'date-fns';
@@ -17,6 +17,7 @@ const REASON_LABELS: Record<string, string> = {
   flip_to_short: 'Flip → Short',
   signal: 'Signal',
   flip: 'Flip',
+  unknown: 'Unknown',
 };
 
 const REASON_COLORS: Record<string, string> = {
@@ -28,23 +29,33 @@ const REASON_COLORS: Record<string, string> = {
   flip_to_short: 'border-primary/50 bg-primary/10 text-primary',
   signal: 'border-muted bg-muted/50 text-muted-foreground',
   flip: 'border-primary/50 bg-primary/10 text-primary',
+  unknown: 'border-muted bg-muted/50 text-muted-foreground',
 };
+
+function getTradeDirection(trade: Partial<Trade>): 'LONG' | 'SHORT' {
+  return trade.direction === 'short' ? 'SHORT' : 'LONG';
+}
+
+function getTradeReason(reason: unknown): string {
+  return typeof reason === 'string' && REASON_LABELS[reason] ? reason : 'unknown';
+}
 
 function exportToCSV(trades: Trade[]) {
   const headers = ['Time', 'Asset', 'Side', 'Entry', 'Exit', 'Size', 'Fees', 'PnL', 'PnL %', 'Reason'];
-  const rows = trades.map(trade => {
+  const rows = trades.map((trade) => {
     const info = ASSET_INFO[trade.asset];
+    const reasonKey = getTradeReason(trade.exitReason);
     return [
       format(new Date(trade.exitTime), 'yyyy-MM-dd HH:mm:ss'),
       info.symbol,
-      trade.direction.toUpperCase(),
+      getTradeDirection(trade),
       trade.entryPrice.toFixed(2),
       trade.exitPrice.toFixed(2),
       trade.size.toFixed(6),
       trade.fees.toFixed(2),
       trade.pnl.toFixed(2),
-      (trade.pnlPercent).toFixed(2) + '%',
-      REASON_LABELS[trade.exitReason] || trade.exitReason,
+      trade.pnlPercent.toFixed(2) + '%',
+      REASON_LABELS[reasonKey],
     ].join(',');
   });
 
@@ -73,7 +84,7 @@ export function TradeHistory({ trades }: TradeHistoryProps) {
           Trade Log
           <div className="ml-auto flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => exportToCSV(trades)} disabled={trades.length === 0} className="h-6 px-2">
-              <Download className="h-3 w-3 mr-1" />CSV
+              <Download className="mr-1 h-3 w-3" />CSV
             </Button>
             <Badge variant="secondary">{trades.length} trades</Badge>
           </div>
@@ -89,20 +100,23 @@ export function TradeHistory({ trades }: TradeHistoryProps) {
             <div className="space-y-2">
               {sortedTrades.map((trade) => {
                 const info = ASSET_INFO[trade.asset];
+                const directionLabel = getTradeDirection(trade);
+                const reasonKey = getTradeReason(trade.exitReason);
+                const directionClass =
+                  directionLabel === 'LONG'
+                    ? 'border-trading-profit/50 bg-trading-profit/10 text-trading-profit text-[10px]'
+                    : 'border-trading-loss/50 bg-trading-loss/10 text-trading-loss text-[10px]';
+
                 return (
                   <div key={trade.id} className="rounded-lg border border-border/50 bg-secondary/20 p-2.5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-medium">{info.symbol}</span>
-                        <Badge variant="outline" className={
-                          trade.direction === 'long'
-                            ? 'border-trading-profit/50 bg-trading-profit/10 text-trading-profit text-[10px]'
-                            : 'border-trading-loss/50 bg-trading-loss/10 text-trading-loss text-[10px]'
-                        }>
-                          {trade.direction.toUpperCase()}
+                        <Badge variant="outline" className={directionClass}>
+                          {directionLabel}
                         </Badge>
-                        <Badge variant="outline" className={`${REASON_COLORS[trade.exitReason]} text-[10px]`}>
-                          {REASON_LABELS[trade.exitReason]}
+                        <Badge variant="outline" className={`${REASON_COLORS[reasonKey]} text-[10px]`}>
+                          {REASON_LABELS[reasonKey]}
                         </Badge>
                       </div>
                       <span className={`text-sm font-medium ${trade.pnl >= 0 ? 'text-trading-profit' : 'text-trading-loss'}`}>
