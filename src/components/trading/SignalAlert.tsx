@@ -1,18 +1,15 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Asset, Signal, Position } from '@/types/trading';
 import { ASSET_INFO } from '@/config/trading';
 import { formatCurrency } from '@/lib/performance';
-import { ArrowUpCircle, ArrowDownCircle, MinusCircle, Zap } from 'lucide-react';
+import { ArrowUpCircle, ArrowDownCircle, MinusCircle } from 'lucide-react';
 
 interface SignalAlertProps {
   asset: Asset;
   signal: Signal | null;
   position: Position | null;
   currentPrice: number | null;
-  mode: 'auto' | 'manual';
-  onExecute: (asset: Asset, action: 'buy' | 'sell') => void;
 }
 
 export function SignalAlert({
@@ -20,8 +17,6 @@ export function SignalAlert({
   signal,
   position,
   currentPrice,
-  mode,
-  onExecute,
 }: SignalAlertProps) {
   const info = ASSET_INFO[asset];
 
@@ -43,12 +38,16 @@ export function SignalAlert({
     return 'animate-pulse-glow-red';
   };
 
-  // Calculate unrealized P&L if position exists
+  // Calculate unrealized P&L based on position direction
   const unrealizedPnl = position && currentPrice
-    ? (currentPrice - position.entryPrice) * position.size
+    ? position.direction === 'long'
+      ? (currentPrice - position.entryPrice) * position.size
+      : (position.entryPrice - currentPrice) * position.size
     : null;
   const unrealizedPnlPercent = position && currentPrice
-    ? ((currentPrice - position.entryPrice) / position.entryPrice) * 100
+    ? position.direction === 'long'
+      ? ((currentPrice - position.entryPrice) / position.entryPrice) * 100
+      : ((position.entryPrice - currentPrice) / position.entryPrice) * 100
     : null;
 
   return (
@@ -64,20 +63,34 @@ export function SignalAlert({
             ></span>
             {info.symbol} Signal
           </span>
-          {signal && (
-            <Badge
-              variant="outline"
-              className={
-                signal.type === 'BUY'
-                  ? 'border-trading-profit/50 bg-trading-profit/10 text-trading-profit'
-                  : signal.type === 'SELL'
-                  ? 'border-trading-loss/50 bg-trading-loss/10 text-trading-loss'
-                  : 'border-trading-neutral/50 bg-trading-neutral/10 text-trading-neutral'
-              }
-            >
-              {signal.type}
-            </Badge>
-          )}
+          <div className="flex items-center gap-2">
+            {position && (
+              <Badge
+                variant="outline"
+                className={
+                  position.direction === 'long'
+                    ? 'border-trading-profit/50 bg-trading-profit/10 text-trading-profit'
+                    : 'border-trading-loss/50 bg-trading-loss/10 text-trading-loss'
+                }
+              >
+                {position.direction.toUpperCase()}
+              </Badge>
+            )}
+            {signal && (
+              <Badge
+                variant="outline"
+                className={
+                  signal.type === 'BUY'
+                    ? 'border-trading-profit/50 bg-trading-profit/10 text-trading-profit'
+                    : signal.type === 'SELL'
+                    ? 'border-trading-loss/50 bg-trading-loss/10 text-trading-loss'
+                    : 'border-trading-neutral/50 bg-trading-neutral/10 text-trading-neutral'
+                }
+              >
+                {signal.type}
+              </Badge>
+            )}
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -87,11 +100,11 @@ export function SignalAlert({
             <p className="font-medium">
               {signal?.type === 'BUY' && 'Bullish Crossover Detected'}
               {signal?.type === 'SELL' && 'Bearish Crossover Detected'}
-              {(!signal || signal.type === 'HOLD') && 'No Active Signal'}
+              {(!signal || signal.type === 'HOLD') && 'Waiting for Crossover...'}
             </p>
             {signal && signal.type !== 'HOLD' && (
               <p className="text-sm text-muted-foreground">
-                SMA 20: ${signal.smaFast.toFixed(2)} | SMA 50: ${signal.smaSlow.toFixed(2)}
+                SMA {signal.smaFast.toFixed(2)} / {signal.smaSlow.toFixed(2)}
               </p>
             )}
           </div>
@@ -101,7 +114,9 @@ export function SignalAlert({
         {position && (
           <div className="rounded-lg border border-border/50 bg-secondary/30 p-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Open Position</span>
+              <span className="text-sm text-muted-foreground">
+                {position.direction === 'long' ? '📈 Long' : '📉 Short'} Position
+              </span>
               <span className="text-sm font-medium">
                 Entry: {formatCurrency(position.entryPrice)}
               </span>
@@ -125,35 +140,9 @@ export function SignalAlert({
           </div>
         )}
 
-        {/* Manual mode buttons */}
-        {mode === 'manual' && (
-          <div className="flex gap-2">
-            {!position && (
-              <Button
-                onClick={() => onExecute(asset, 'buy')}
-                className="flex-1 bg-trading-profit hover:bg-trading-profit/90"
-              >
-                <Zap className="mr-2 h-4 w-4" />
-                Open Long
-              </Button>
-            )}
-            {position && (
-              <Button
-                onClick={() => onExecute(asset, 'sell')}
-                className="flex-1 bg-trading-loss hover:bg-trading-loss/90"
-              >
-                <Zap className="mr-2 h-4 w-4" />
-                Close Position
-              </Button>
-            )}
-          </div>
-        )}
-
-        {mode === 'auto' && (
-          <p className="text-center text-sm text-muted-foreground">
-            Auto mode - Trades execute automatically
-          </p>
-        )}
+        <p className="text-center text-sm text-muted-foreground">
+          🤖 Fully automated — trades execute on crossover signals
+        </p>
       </CardContent>
     </Card>
   );
