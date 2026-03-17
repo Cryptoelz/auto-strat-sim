@@ -42,8 +42,6 @@ export function DashboardHeader({
   notificationPermission,
   notificationsSupported,
   onRequestNotifications,
-  keyboardEnabled,
-  onToggleKeyboard,
 }: DashboardHeaderProps) {
   const [showResetDialog, setShowResetDialog] = useState(false);
 
