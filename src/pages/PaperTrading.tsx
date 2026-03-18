@@ -361,6 +361,18 @@ export default function PaperTrading() {
           onMemoryConfigChange={setMemoryConfig}
         />
 
+        {/* Agent Governance & Guardrails */}
+        <AgentGovernanceDashboard
+          state={state}
+          analytics={analytics}
+          enabledAssets={config.assets.filter(a => enabledAssets[a])}
+          portfolioDrawdown={maxDrawdown}
+          reconnectErrors={connectionStatus.missedCandles}
+          governanceConfig={governanceConfig}
+          onGovernanceConfigChange={setGovernanceConfig}
+          prevStatus={prevGovStatus}
+        />
+
         {/* Decision Log */}
         <DecisionLog />
 
