@@ -347,6 +347,16 @@ export default function PaperTrading() {
           onAgentConfigChange={setAgentConfig}
         />
 
+        {/* Agent Memory & Adaptation */}
+        <AgentMemoryDashboard
+          state={state}
+          analytics={analytics}
+          enabledAssets={config.assets.filter(a => enabledAssets[a])}
+          portfolioDrawdown={maxDrawdown}
+          memoryConfig={memoryConfig}
+          onMemoryConfigChange={setMemoryConfig}
+        />
+
         {/* Decision Log */}
         <DecisionLog />
 
