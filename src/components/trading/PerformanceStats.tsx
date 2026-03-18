@@ -11,7 +11,7 @@ import {
   Tooltip,
 } from 'recharts';
 import { format } from 'date-fns';
-import { TrendingUp, Target, AlertTriangle, BarChart3, Award, Scale } from 'lucide-react';
+import { TrendingUp, Target, AlertTriangle, BarChart3, Award, Scale, ArrowUpRight, ArrowDownRight, DollarSign } from 'lucide-react';
 
 interface PerformanceStatsProps {
   state: TradingState;
@@ -61,6 +61,32 @@ export function PerformanceStats({ state }: PerformanceStatsProps) {
 
           <div className="rounded-lg bg-secondary/30 p-2.5">
             <div className="flex items-center gap-1.5 text-muted-foreground">
+              <ArrowUpRight className="h-3.5 w-3.5" />
+              <span className="text-[11px]">Longs</span>
+            </div>
+            <p className="mt-1 text-sm font-bold">{metrics.longTrades}</p>
+            <p className="text-[10px] text-muted-foreground">WR: {metrics.longWinRate.toFixed(0)}%</p>
+          </div>
+
+          <div className="rounded-lg bg-secondary/30 p-2.5">
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <ArrowDownRight className="h-3.5 w-3.5" />
+              <span className="text-[11px]">Shorts</span>
+            </div>
+            <p className="mt-1 text-sm font-bold">{metrics.shortTrades}</p>
+            <p className="text-[10px] text-muted-foreground">WR: {metrics.shortWinRate.toFixed(0)}%</p>
+          </div>
+
+          <div className="rounded-lg bg-secondary/30 p-2.5">
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <DollarSign className="h-3.5 w-3.5" />
+              <span className="text-[11px]">Equity</span>
+            </div>
+            <p className="mt-1 text-sm font-bold">{formatCurrency(metrics.currentEquity)}</p>
+          </div>
+
+          <div className="rounded-lg bg-secondary/30 p-2.5">
+            <div className="flex items-center gap-1.5 text-muted-foreground">
               <Award className="h-3.5 w-3.5" />
               <span className="text-[11px]">Avg Win</span>
             </div>
@@ -85,6 +111,23 @@ export function PerformanceStats({ state }: PerformanceStatsProps) {
             </p>
           </div>
         </div>
+
+        {/* Risk status */}
+        {state.isPaused && (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-2.5 text-xs">
+            <p className="font-medium text-destructive">⚠️ Trading Paused: {state.pauseReason}</p>
+            <p className="mt-0.5 text-muted-foreground">
+              Resumes: {new Date(state.pauseUntil).toLocaleTimeString()}
+            </p>
+          </div>
+        )}
+
+        {state.consecutiveLosses > 0 && (
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted-foreground">Consecutive Losses</span>
+            <span className="font-medium text-trading-loss">{state.consecutiveLosses}</span>
+          </div>
+        )}
 
         {/* Equity Curve */}
         {metrics.equityCurve.length > 1 && (

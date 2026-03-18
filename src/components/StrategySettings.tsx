@@ -112,6 +112,7 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
   const [pnlAlertLossInput, setPnlAlertLossInput] = useState(config.pnlAlertLoss?.toString() ?? '');
   const [filtersInput, setFiltersInput] = useState<FilterConfig>(config.filters);
   const [showFilters, setShowFilters] = useState(false);
+  const [showRiskProtection, setShowRiskProtection] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
 
@@ -203,7 +204,7 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="end">
-        <ScrollArea className="h-[520px]">
+        <ScrollArea className="h-[560px]">
           <div className="space-y-4 p-4">
             <div>
               <h4 className="font-medium text-sm">Strategy Settings</h4>
@@ -300,7 +301,7 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
 
             <Separator />
 
-            {/* Filters Section */}
+            {/* Signal Filters Section */}
             <div className="space-y-2">
               <button
                 onClick={() => setShowFilters(!showFilters)}
@@ -336,7 +337,7 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
                         <Input type="number" min={5} max={50} value={filtersInput.atrPeriod.toString()} onChange={(e) => setFiltersInput(f => ({ ...f, atrPeriod: parseInt(e.target.value) || 14 }))} className="h-8" />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs">ATR Threshold %</Label>
+                        <Label className="text-xs">Min ATR %</Label>
                         <Input type="number" min={0.01} max={5} step={0.1} value={filtersInput.atrThreshold.toString()} onChange={(e) => setFiltersInput(f => ({ ...f, atrThreshold: parseFloat(e.target.value) || 0.5 }))} className="h-8" />
                       </div>
                     </div>
@@ -349,6 +350,53 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
                       checked={filtersInput.regimeFilterEnabled}
                       onCheckedChange={(v) => setFiltersInput(f => ({ ...f, regimeFilterEnabled: v }))}
                     />
+                  </div>
+
+                  {/* SMA Distance Filter */}
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs">Trend Strength (SMA Dist.)</Label>
+                    <Switch
+                      checked={filtersInput.smaDistanceFilterEnabled}
+                      onCheckedChange={(v) => setFiltersInput(f => ({ ...f, smaDistanceFilterEnabled: v }))}
+                    />
+                  </div>
+                  {filtersInput.smaDistanceFilterEnabled && (
+                    <div className="space-y-1">
+                      <Label className="text-xs">Min SMA Distance %</Label>
+                      <Input type="number" min={0.01} max={5} step={0.05} value={filtersInput.minSmaDistancePercent.toString()} onChange={(e) => setFiltersInput(f => ({ ...f, minSmaDistancePercent: parseFloat(e.target.value) || 0.1 }))} className="h-8" />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <Separator />
+
+            {/* Risk Protection Section */}
+            <div className="space-y-2">
+              <button
+                onClick={() => setShowRiskProtection(!showRiskProtection)}
+                className="flex w-full items-center justify-between text-xs font-medium text-muted-foreground hover:text-foreground"
+              >
+                <span>Risk Protection</span>
+                {showRiskProtection ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+              </button>
+
+              {showRiskProtection && (
+                <div className="space-y-3 pt-1">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Max Daily Loss %</Label>
+                    <Input type="number" min={0} max={50} step={1} value={filtersInput.maxDailyLossPercent.toString()} onChange={(e) => setFiltersInput(f => ({ ...f, maxDailyLossPercent: parseFloat(e.target.value) || 0 }))} className="h-8" />
+                    <p className="text-[10px] text-muted-foreground">0 = disabled</p>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Max Consecutive Losses</Label>
+                    <Input type="number" min={0} max={20} step={1} value={filtersInput.maxConsecutiveLosses.toString()} onChange={(e) => setFiltersInput(f => ({ ...f, maxConsecutiveLosses: parseInt(e.target.value) || 0 }))} className="h-8" />
+                    <p className="text-[10px] text-muted-foreground">0 = disabled</p>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Pause Candles After Limit</Label>
+                    <Input type="number" min={1} max={100} step={1} value={filtersInput.pauseCandlesAfterLossLimit.toString()} onChange={(e) => setFiltersInput(f => ({ ...f, pauseCandlesAfterLossLimit: parseInt(e.target.value) || 10 }))} className="h-8" />
                   </div>
                 </div>
               )}
@@ -383,6 +431,7 @@ export function StrategySettings({ onConfigChange }: StrategySettingsProps) {
               {config.filters.trendFilterEnabled && ' • TF'}
               {config.filters.volatilityFilterEnabled && ' • ATR'}
               {config.filters.regimeFilterEnabled && ' • MR'}
+              {config.filters.smaDistanceFilterEnabled && ' • SD'}
             </p>
           </div>
         </ScrollArea>
