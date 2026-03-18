@@ -26,6 +26,8 @@ import { AgentDecisionDashboard } from '@/components/trading/AgentDecisionDashbo
 import { AgentMemoryDashboard } from '@/components/trading/AgentMemoryDashboard';
 import { AgentConfig, DEFAULT_AGENT_CONFIG } from '@/types/agent';
 import { MemoryConfig, DEFAULT_MEMORY_CONFIG } from '@/types/memory';
+import { GovernanceConfig, DEFAULT_GOVERNANCE_CONFIG, GovernanceStatus } from '@/types/governance';
+import { AgentGovernanceDashboard } from '@/components/trading/AgentGovernanceDashboard';
 import { computePortfolioState } from '@/lib/portfolioManager';
 import { getLogEntries, subscribeToLog } from '@/lib/logger';
 import { useSyncExternalStore } from 'react';
