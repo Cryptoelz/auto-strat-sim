@@ -5,6 +5,7 @@ import { DEFAULT_CONFIG, ASSET_INFO } from '@/config/trading';
 import { Asset, TradingConfig } from '@/types/trading';
 import { PortfolioConfig, DEFAULT_PORTFOLIO_CONFIG } from '@/types/portfolio';
 import { MultiStrategyConfig, DEFAULT_MULTI_STRATEGY_CONFIG } from '@/types/strategy';
+import { AgentConfig, DEFAULT_AGENT_CONFIG } from '@/types/agent';
 import { computePortfolioState } from '@/lib/portfolioManager';
 import { StrategyConfig } from '@/components/StrategySettings';
 import { PriceChart } from '@/components/trading/PriceChart';
@@ -15,6 +16,7 @@ import { PortfolioDashboard } from '@/components/trading/PortfolioDashboard';
 import { DecisionLog } from '@/components/trading/DecisionLog';
 import { AlertsAndReports } from '@/components/trading/AlertsAndReports';
 import { StrategyDashboard } from '@/components/trading/StrategyDashboard';
+import { AgentDecisionDashboard } from '@/components/trading/AgentDecisionDashboard';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { getLogEntries, subscribeToLog } from '@/lib/logger';
 import { formatCurrency } from '@/lib/performance';
@@ -40,6 +42,7 @@ const MemoizedPerformanceStats = memo(PerformanceStats);
 export default function PaperTrading() {
   const [portfolioConfig, setPortfolioConfig] = useState<PortfolioConfig>(DEFAULT_PORTFOLIO_CONFIG);
   const [multiStrategyConfig, setMultiStrategyConfig] = useState<MultiStrategyConfig>(DEFAULT_MULTI_STRATEGY_CONFIG);
+  const [agentConfig, setAgentConfig] = useState<AgentConfig>(DEFAULT_AGENT_CONFIG);
   const peakEquityRef = useRef(10000);
   const portfolioLogsRef = useRef<any[]>([]);
 
@@ -327,6 +330,18 @@ export default function PaperTrading() {
           enabledAssets={config.assets.filter(a => enabledAssets[a])}
           multiConfig={multiStrategyConfig}
           onConfigChange={setMultiStrategyConfig}
+        />
+
+        {/* Agent Decision Engine */}
+        <AgentDecisionDashboard
+          candles={candles}
+          analytics={analytics}
+          state={state}
+          enabledAssets={config.assets.filter(a => enabledAssets[a])}
+          multiConfig={multiStrategyConfig}
+          portfolioDrawdown={maxDrawdown}
+          agentConfig={agentConfig}
+          onAgentConfigChange={setAgentConfig}
         />
 
         {/* Decision Log */}

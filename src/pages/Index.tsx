@@ -22,6 +22,8 @@ import { StrategyConfig } from '@/components/StrategySettings';
 import { Asset, DecisionLogEntry } from '@/types/trading';
 import { PortfolioConfig, DEFAULT_PORTFOLIO_CONFIG } from '@/types/portfolio';
 import { MultiStrategyConfig, DEFAULT_MULTI_STRATEGY_CONFIG } from '@/types/strategy';
+import { AgentDecisionDashboard } from '@/components/trading/AgentDecisionDashboard';
+import { AgentConfig, DEFAULT_AGENT_CONFIG } from '@/types/agent';
 import { computePortfolioState } from '@/lib/portfolioManager';
 import { getLogEntries, subscribeToLog } from '@/lib/logger';
 import { useSyncExternalStore } from 'react';
@@ -38,6 +40,7 @@ const Index = () => {
 
   const [portfolioConfig, setPortfolioConfig] = useState<PortfolioConfig>(DEFAULT_PORTFOLIO_CONFIG);
   const [multiStrategyConfig, setMultiStrategyConfig] = useState<MultiStrategyConfig>(DEFAULT_MULTI_STRATEGY_CONFIG);
+  const [agentConfig, setAgentConfig] = useState<AgentConfig>(DEFAULT_AGENT_CONFIG);
   const peakEquityRef = useRef(10000);
   const portfolioLogsRef = useRef<any[]>([]);
 
@@ -198,6 +201,20 @@ const Index = () => {
             enabledAssets={strategyConfig.enabledAssets}
             multiConfig={multiStrategyConfig}
             onConfigChange={setMultiStrategyConfig}
+          />
+        </div>
+
+        {/* Agent Decision Engine */}
+        <div className="mt-4 sm:mt-6">
+          <AgentDecisionDashboard
+            candles={candles}
+            analytics={analytics}
+            state={state}
+            enabledAssets={strategyConfig.enabledAssets}
+            multiConfig={multiStrategyConfig}
+            portfolioDrawdown={0}
+            agentConfig={agentConfig}
+            onAgentConfigChange={setAgentConfig}
           />
         </div>
 
