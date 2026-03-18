@@ -1,0 +1,243 @@
+import { Candle, Asset, SignalType, MarketRegime } from '@/types/trading';
+import {
+  StrategyId, StrategyDefinition, StrategySignal, StrategyParams,
+  StrategyPerformance, StrategyComparison, MultiStrategyConfig,
+} from '@/types/strategy';
+import {
+  calculateSMASeries, calculateSMA, detectCrossover, calculateATR,
+  calculateATRPercent, detectMarketRegime,
+} from './indicators';
+
+// ─── New Indicators: EMA & RSI ───────────────────────────────────────
+
+export function calculateEMASeries(candles: Candle[], period: number): (number | null)[] {
+  const result: (number | null)[] = [];
+  if (candles.length === 0) return result;
+  const multiplier = 2 / (period + 1);
+  let ema: number | null = null;
+
+  for (let i = 0; i < candles.length; i++) {
+    if (i < period - 1) {
+      result.push(null);
+    } else if (i === period - 1) {
+      // Seed with SMA
+      const sum = candles.slice(0, period).reduce((s, c) => s + c.close, 0);
+      ema = sum / period;
+      result.push(ema);
+    } else {
+      ema = (candles[i].close - ema!) * multiplier + ema!;
+      result.push(ema);
+    }
+  }
+  return result;
+}
+
+export function calculateEMA(candles: Candle[], period: number): number | null {
+  const series = calculateEMASeries(candles, period);
+  return series[series.length - 1] ?? null;
+}
+
+export function calculateRSISeries(candles: Candle[], period: number): (number | null)[] {
+  const result: (number | null)[] = [];
+  if (candles.length < period + 1) {
+    return candles.map(() => null);
+  }
+
+  let avgGain = 0;
+  let avgLoss = 0;
+
+  // Initial average
+  for (let i = 1; i <= period; i++) {
+    const change = candles[i].close - candles[i - 1].close;
+    if (change > 0) avgGain += change;
+    else avgLoss += Math.abs(change);
+  }
+  avgGain /= period;
+  avgLoss /= period;
+
+  for (let i = 0; i < candles.length; i++) {
+    if (i < period) {
+      result.push(null);
+    } else if (i === period) {
+      const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
+      result.push(100 - 100 / (1 + rs));
+    } else {
+      const change = candles[i].close - candles[i - 1].close;
+      const gain = change > 0 ? change : 0;
+      const loss = change < 0 ? Math.abs(change) : 0;
+      avgGain = (avgGain * (period - 1) + gain) / period;
+      avgLoss = (avgLoss * (period - 1) + loss) / period;
+      const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
+      result.push(100 - 100 / (1 + rs));
+    }
+  }
+  return result;
+}
+
+export function calculateRSI(candles: Candle[], period: number): number | null {
+  const series = calculateRSISeries(candles, period);
+  return series[series.length - 1] ?? null;
+}
+
+// ─── Strategy Registry ───────────────────────────────────────────────
+
+export const STRATEGY_DEFINITIONS: StrategyDefinition[] = [
+  {
+    id: 'sma_crossover',
+    name: 'SMA Crossover',
+    description: 'Buy when fast SMA crosses above slow SMA, sell on reverse. Classic trend-following.',
+    defaultParams: { smaFast: 20, smaSlow: 50, stopLossPercent: 2, takeProfitPercent: 4, cooldownCandles: 3 },
+  },
+  {
+    id: 'ema_crossover',
+    name: 'EMA Crossover',
+    description: 'Buy when fast EMA crosses above slow EMA. Faster response to price changes than SMA.',
+    defaultParams: { emaFast: 12, emaSlow: 26, stopLossPercent: 2, takeProfitPercent: 4, cooldownCandles: 3 },
+  },
+  {
+    id: 'rsi_trend',
+    name: 'RSI + Trend Filter',
+    description: 'Long when RSI recovers from oversold in bullish trend, short when RSI falls from overbought in bearish trend.',
+    defaultParams: { rsiPeriod: 14, rsiOverbought: 70, rsiOversold: 30, stopLossPercent: 2, takeProfitPercent: 4, cooldownCandles: 3 },
+  },
+];
+
+export function getStrategyDefinition(id: StrategyId): StrategyDefinition {
+  return STRATEGY_DEFINITIONS.find(s => s.id === id)!;
+}
+
+// ─── Strategy Signal Generators ──────────────────────────────────────
+
+function generateSMACrossoverSignal(
+  asset: Asset, candles: Candle[], params: StrategyParams,
+): StrategySignal {
+  const fast = params.smaFast ?? 20;
+  const slow = params.smaSlow ?? 50;
+  const closed = candles.slice(0, -1);
+
+  if (closed.length < slow + 1) {
+    return holdSignal(asset, candles, 'sma_crossover', { smaFast: null, smaSlow: null });
+  }
+
+  const fastSeries = calculateSMASeries(closed, fast);
+  const slowSeries = calculateSMASeries(closed, slow);
+  const idx = closed.length - 1;
+  const cross = detectCrossover(fastSeries[idx], slowSeries[idx], fastSeries[idx - 1], slowSeries[idx - 1]);
+
+  let type: SignalType = 'HOLD';
+  let confidence = 30;
+  if (cross === 1) { type = 'BUY'; confidence = 70; }
+  if (cross === -1) { type = 'SELL'; confidence = 70; }
+
+  return {
+    type, strategyId: 'sma_crossover', asset,
+    timestamp: closed[idx].timestamp, price: closed[idx].close, confidence,
+    metadata: { smaFast: fastSeries[idx], smaSlow: slowSeries[idx] },
+  };
+}
+
+function generateEMACrossoverSignal(
+  asset: Asset, candles: Candle[], params: StrategyParams,
+): StrategySignal {
+  const fast = params.emaFast ?? 12;
+  const slow = params.emaSlow ?? 26;
+  const closed = candles.slice(0, -1);
+
+  if (closed.length < slow + 1) {
+    return holdSignal(asset, candles, 'ema_crossover', { emaFast: null, emaSlow: null });
+  }
+
+  const fastSeries = calculateEMASeries(closed, fast);
+  const slowSeries = calculateEMASeries(closed, slow);
+  const idx = closed.length - 1;
+  const cross = detectCrossover(fastSeries[idx], slowSeries[idx], fastSeries[idx - 1], slowSeries[idx - 1]);
+
+  let type: SignalType = 'HOLD';
+  let confidence = 30;
+  if (cross === 1) { type = 'BUY'; confidence = 75; }
+  if (cross === -1) { type = 'SELL'; confidence = 75; }
+
+  return {
+    type, strategyId: 'ema_crossover', asset,
+    timestamp: closed[idx].timestamp, price: closed[idx].close, confidence,
+    metadata: { emaFast: fastSeries[idx], emaSlow: slowSeries[idx] },
+  };
+}
+
+function generateRSITrendSignal(
+  asset: Asset, candles: Candle[], params: StrategyParams,
+): StrategySignal {
+  const rsiPeriod = params.rsiPeriod ?? 14;
+  const overbought = params.rsiOverbought ?? 70;
+  const oversold = params.rsiOversold ?? 30;
+  const closed = candles.slice(0, -1);
+
+  if (closed.length < rsiPeriod + 2) {
+    return holdSignal(asset, candles, 'rsi_trend', { rsi: null, regime: null });
+  }
+
+  const rsiSeries = calculateRSISeries(closed, rsiPeriod);
+  const idx = closed.length - 1;
+  const rsiCurrent = rsiSeries[idx];
+  const rsiPrev = rsiSeries[idx - 1];
+  const regime = detectMarketRegime(closed, 20, 50, 14);
+
+  if (rsiCurrent === null || rsiPrev === null) {
+    return holdSignal(asset, candles, 'rsi_trend', { rsi: rsiCurrent, regime });
+  }
+
+  let type: SignalType = 'HOLD';
+  let confidence = 30;
+
+  // Long: RSI crosses up from oversold in bullish/sideways regime
+  if (rsiPrev <= oversold && rsiCurrent > oversold && regime !== 'trending_bearish') {
+    type = 'BUY';
+    confidence = 65;
+  }
+  // Short: RSI crosses down from overbought in bearish/sideways regime
+  if (rsiPrev >= overbought && rsiCurrent < overbought && regime !== 'trending_bullish') {
+    type = 'SELL';
+    confidence = 65;
+  }
+
+  return {
+    type, strategyId: 'rsi_trend', asset,
+    timestamp: closed[idx].timestamp, price: closed[idx].close, confidence,
+    metadata: { rsi: rsiCurrent, regime },
+  };
+}
+
+function holdSignal(asset: Asset, candles: Candle[], strategyId: StrategyId, metadata: Record<string, any>): StrategySignal {
+  return {
+    type: 'HOLD', strategyId, asset,
+    timestamp: candles[candles.length - 1]?.timestamp ?? Date.now(),
+    price: candles[candles.length - 1]?.close ?? 0,
+    confidence: 0, metadata,
+  };
+}
+
+// ─── Main Entry Point ────────────────────────────────────────────────
+
+export function generateStrategySignal(
+  strategyId: StrategyId,
+  asset: Asset,
+  candles: Candle[],
+  params: StrategyParams,
+): StrategySignal {
+  switch (strategyId) {
+    case 'sma_crossover': return generateSMACrossoverSignal(asset, candles, params);
+    case 'ema_crossover': return generateEMACrossoverSignal(asset, candles, params);
+    case 'rsi_trend': return generateRSITrendSignal(asset, candles, params);
+    default: return holdSignal(asset, candles, strategyId, {});
+  }
+}
+
+export function generateAllStrategySignals(
+  asset: Asset,
+  candles: Candle[],
+  config: MultiStrategyConfig,
+): StrategySignal[] {
+  return config.activeStrategies.map(id =>
+    generateStrategySignal(id, asset, candles, config.strategyParams[id]),
+  );
+}

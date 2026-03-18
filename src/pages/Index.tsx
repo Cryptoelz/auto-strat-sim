@@ -13,6 +13,7 @@ import { AssetBreakdown } from '@/components/trading/AssetBreakdown';
 import { PortfolioAllocation } from '@/components/trading/PortfolioAllocation';
 import { PortfolioDashboard } from '@/components/trading/PortfolioDashboard';
 import { AlertsAndReports } from '@/components/trading/AlertsAndReports';
+import { StrategyDashboard } from '@/components/trading/StrategyDashboard';
 import { AgentStatusCard } from '@/components/trading/AgentStatusCard';
 import { DecisionLog } from '@/components/trading/DecisionLog';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -20,6 +21,7 @@ import { DEFAULT_CONFIG } from '@/config/trading';
 import { StrategyConfig } from '@/components/StrategySettings';
 import { Asset, DecisionLogEntry } from '@/types/trading';
 import { PortfolioConfig, DEFAULT_PORTFOLIO_CONFIG } from '@/types/portfolio';
+import { MultiStrategyConfig, DEFAULT_MULTI_STRATEGY_CONFIG } from '@/types/strategy';
 import { computePortfolioState } from '@/lib/portfolioManager';
 import { getLogEntries, subscribeToLog } from '@/lib/logger';
 import { useSyncExternalStore } from 'react';
@@ -35,6 +37,7 @@ const Index = () => {
   const blockedSignals = useMemo(() => decisionLog.filter(e => e.action === 'blocked'), [decisionLog]);
 
   const [portfolioConfig, setPortfolioConfig] = useState<PortfolioConfig>(DEFAULT_PORTFOLIO_CONFIG);
+  const [multiStrategyConfig, setMultiStrategyConfig] = useState<MultiStrategyConfig>(DEFAULT_MULTI_STRATEGY_CONFIG);
   const peakEquityRef = useRef(10000);
   const portfolioLogsRef = useRef<any[]>([]);
 
@@ -186,6 +189,16 @@ const Index = () => {
         <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
           <TradeHistory trades={state.trades} />
           <MemoizedPerformanceStats state={state} />
+        </div>
+
+        {/* Multi-Strategy Dashboard */}
+        <div className="mt-4 sm:mt-6">
+          <StrategyDashboard
+            candles={candles}
+            enabledAssets={strategyConfig.enabledAssets}
+            multiConfig={multiStrategyConfig}
+            onConfigChange={setMultiStrategyConfig}
+          />
         </div>
 
         {/* Decision Log */}
