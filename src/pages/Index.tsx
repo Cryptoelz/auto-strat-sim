@@ -293,6 +293,11 @@ const Index = () => {
           <MemoizedAssetBreakdown trades={state.trades} />
         </div>
 
+        {/* Experiment Management */}
+        <div className="mt-4 sm:mt-6">
+          <ExperimentDashboard />
+        </div>
+
         {/* Trading Journal */}
         <div className="mt-4 sm:mt-6">
           <MemoizedTradeJournal trades={state.trades} />

@@ -386,6 +386,9 @@ export default function PaperTrading() {
           prevStatus={prevGovStatus}
         />
 
+        {/* Experiment Management */}
+        <ExperimentDashboard />
+
         {/* Decision Log */}
         <DecisionLog />
 
