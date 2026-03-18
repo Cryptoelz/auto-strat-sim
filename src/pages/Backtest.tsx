@@ -422,6 +422,20 @@ export default function Backtest() {
                 )}
               </>
             )}
+
+            {/* Scenario & Stress Testing */}
+            <div className="mt-6">
+              <ScenarioTestingDashboard
+                assets={config.enabledAssets}
+                fastSMA={config.fastSMA}
+                slowSMA={config.slowSMA}
+                positionSizePercent={config.positionSizePercent}
+                stopLossPercent={config.stopLossPercent}
+                takeProfitPercent={config.takeProfitPercent}
+                feePercent={config.feePercent}
+                initialBalance={config.initialBalance}
+              />
+            </div>
           </div>
         </div>
       </main>
