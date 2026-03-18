@@ -1,5 +1,5 @@
-import { Candle, FilterBlockReason, FilterConfig, MarketRegime, SignalType } from '@/types/trading';
-import { calculateSMA, calculateATRPercent, detectMarketRegime } from './indicators';
+import { Candle, FilterBlockReason, FilterConfig, MarketRegime, SignalType, TradingState } from '@/types/trading';
+import { calculateSMA, calculateATRPercent, calculateSMADistance } from './indicators';
 
 export interface FilterResult {
   allowed: boolean;
@@ -15,15 +15,15 @@ export function checkTrendFilter(
   slowPeriod: number,
   signalType: SignalType
 ): boolean {
-  if (htfCandles.length < slowPeriod) return true; // Not enough data, allow
+  if (htfCandles.length < slowPeriod) return true;
   
   const fast = calculateSMA(htfCandles, fastPeriod);
   const slow = calculateSMA(htfCandles, slowPeriod);
   
   if (fast === null || slow === null) return true;
   
-  if (signalType === 'BUY') return fast > slow;   // Only long when HTF bullish
-  if (signalType === 'SELL') return fast < slow;   // Only short when HTF bearish
+  if (signalType === 'BUY') return fast > slow;
+  if (signalType === 'SELL') return fast < slow;
   return true;
 }
 
@@ -36,7 +36,7 @@ export function checkVolatilityFilter(
   atrThreshold: number
 ): boolean {
   const atrPercent = calculateATRPercent(candles, atrPeriod);
-  if (atrPercent === null) return true; // Not enough data, allow
+  if (atrPercent === null) return true;
   return atrPercent >= atrThreshold;
 }
 
@@ -54,6 +54,54 @@ export function checkRegimeFilter(
 }
 
 /**
+ * Check SMA distance filter: minimum separation required
+ */
+export function checkSMADistanceFilter(
+  candles: Candle[],
+  fastPeriod: number,
+  slowPeriod: number,
+  minDistancePercent: number
+): boolean {
+  const distance = calculateSMADistance(candles, fastPeriod, slowPeriod);
+  if (distance === null) return true;
+  return distance >= minDistancePercent;
+}
+
+/**
+ * Check daily loss limit
+ */
+export function checkDailyLossLimit(
+  state: TradingState,
+  maxDailyLossPercent: number
+): boolean {
+  if (maxDailyLossPercent <= 0) return true;
+  const today = new Date().toISOString().slice(0, 10);
+  if (state.dailyPnlDate !== today) return true; // new day, no losses yet
+  const dailyLossPercent = (Math.abs(Math.min(0, state.dailyPnl)) / state.initialBalance) * 100;
+  return dailyLossPercent < maxDailyLossPercent;
+}
+
+/**
+ * Check consecutive losses
+ */
+export function checkConsecutiveLosses(
+  state: TradingState,
+  maxConsecutiveLosses: number
+): boolean {
+  if (maxConsecutiveLosses <= 0) return true;
+  return state.consecutiveLosses < maxConsecutiveLosses;
+}
+
+/**
+ * Check if agent is in loss-limit pause
+ */
+export function checkLossPause(state: TradingState): boolean {
+  if (!state.isPaused) return true;
+  if (Date.now() >= state.pauseUntil) return true;
+  return false;
+}
+
+/**
  * Run all filters and return result
  */
 export function runFilters(
@@ -61,13 +109,30 @@ export function runFilters(
   candles: Candle[],
   htfCandles: Candle[],
   regime: MarketRegime,
-  config: FilterConfig
+  config: FilterConfig,
+  state: TradingState,
+  fastPeriod: number,
+  slowPeriod: number
 ): FilterResult {
   if (signalType === 'HOLD') return { allowed: true, reason: null };
 
+  // Check loss pause first
+  if (!checkLossPause(state)) {
+    return { allowed: false, reason: state.consecutiveLosses >= config.maxConsecutiveLosses ? 'consecutive_loss_pause' : 'daily_loss_pause' };
+  }
+
+  // Check daily loss limit
+  if (!checkDailyLossLimit(state, config.maxDailyLossPercent)) {
+    return { allowed: false, reason: 'daily_loss_pause' };
+  }
+
+  // Check consecutive losses
+  if (!checkConsecutiveLosses(state, config.maxConsecutiveLosses)) {
+    return { allowed: false, reason: 'consecutive_loss_pause' };
+  }
+
   if (config.trendFilterEnabled) {
-    // Use same SMA periods for HTF trend check
-    if (!checkTrendFilter(htfCandles, 20, 50, signalType)) {
+    if (!checkTrendFilter(htfCandles, fastPeriod, slowPeriod, signalType)) {
       return { allowed: false, reason: 'trend_filter' };
     }
   }
@@ -81,6 +146,12 @@ export function runFilters(
   if (config.regimeFilterEnabled) {
     if (!checkRegimeFilter(regime, signalType)) {
       return { allowed: false, reason: 'regime_filter' };
+    }
+  }
+
+  if (config.smaDistanceFilterEnabled) {
+    if (!checkSMADistanceFilter(candles, fastPeriod, slowPeriod, config.minSmaDistancePercent)) {
+      return { allowed: false, reason: 'sma_distance_filter' };
     }
   }
 

@@ -10,6 +10,14 @@ export function calculatePerformanceMetrics(state: TradingState): PerformanceMet
   const losingTrades = losses.length;
   const winRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0;
 
+  // Long/short breakdown
+  const longTrades = trades.filter((t) => t.direction === 'long');
+  const shortTrades = trades.filter((t) => t.direction === 'short');
+  const longWins = longTrades.filter((t) => t.type === 'win');
+  const shortWins = shortTrades.filter((t) => t.type === 'win');
+  const longWinRate = longTrades.length > 0 ? (longWins.length / longTrades.length) * 100 : 0;
+  const shortWinRate = shortTrades.length > 0 ? (shortWins.length / shortTrades.length) * 100 : 0;
+
   const totalPnl = trades.reduce((sum, t) => sum + t.pnl, 0);
   const totalPnlPercent = ((balance - initialBalance) / initialBalance) * 100;
 
@@ -23,10 +31,17 @@ export function calculatePerformanceMetrics(state: TradingState): PerformanceMet
   const maxDrawdown = calculateMaxDrawdown(trades, initialBalance);
   const equityCurve = generateEquityCurve(trades, initialBalance);
 
+  // Current equity includes unrealized PnL (balance is already adjusted for open positions)
+  const currentEquity = balance;
+
   return {
     totalTrades,
     winningTrades,
     losingTrades,
+    longTrades: longTrades.length,
+    shortTrades: shortTrades.length,
+    longWinRate,
+    shortWinRate,
     winRate,
     totalPnl,
     totalPnlPercent,
@@ -34,6 +49,7 @@ export function calculatePerformanceMetrics(state: TradingState): PerformanceMet
     avgWin,
     avgLoss,
     profitFactor,
+    currentEquity,
     equityCurve,
   };
 }

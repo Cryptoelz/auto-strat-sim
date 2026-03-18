@@ -3,11 +3,11 @@ import { Badge } from '@/components/ui/badge';
 import { Asset, AssetAnalytics, MarketRegime } from '@/types/trading';
 import { ASSET_INFO } from '@/config/trading';
 import { formatCurrency } from '@/lib/performance';
-import { TrendingUp, TrendingDown, Minus, Activity, Shield, Zap, BarChart3 } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Activity, Shield, Zap, BarChart3, Gauge } from 'lucide-react';
 
 const REGIME_LABELS: Record<MarketRegime, { label: string; className: string }> = {
-  trending_bullish: { label: 'Trending ↑', className: 'border-trading-profit/50 bg-trading-profit/10 text-trading-profit' },
-  trending_bearish: { label: 'Trending ↓', className: 'border-trading-loss/50 bg-trading-loss/10 text-trading-loss' },
+  trending_bullish: { label: 'Bullish ↑', className: 'border-trading-profit/50 bg-trading-profit/10 text-trading-profit' },
+  trending_bearish: { label: 'Bearish ↓', className: 'border-trading-loss/50 bg-trading-loss/10 text-trading-loss' },
   sideways: { label: 'Sideways', className: 'border-trading-neutral/50 bg-trading-neutral/10 text-trading-neutral' },
 };
 
@@ -21,8 +21,11 @@ const FILTER_LABELS: Record<string, string> = {
   trend_filter: 'Trend Filter',
   volatility_filter: 'Low Volatility',
   regime_filter: 'Regime Filter',
+  sma_distance_filter: 'Low Conviction',
   cooldown_active: 'Cooldown',
   insufficient_balance: 'Low Balance',
+  daily_loss_pause: 'Daily Loss Limit',
+  consecutive_loss_pause: 'Loss Streak',
 };
 
 interface AssetDetailPanelProps {
@@ -57,17 +60,27 @@ export function AssetDetailPanel({ asset, data }: AssetDetailPanelProps) {
           <div className="rounded-md bg-secondary/30 p-2">
             <span className="text-muted-foreground">Fast SMA</span>
             <p className="font-medium text-foreground">{data.smaFast ? `$${data.smaFast.toFixed(2)}` : '---'}</p>
+            {data.smaFastSlope !== null && (
+              <span className={`text-[10px] ${data.smaFastSlope >= 0 ? 'text-trading-profit' : 'text-trading-loss'}`}>
+                {data.smaFastSlope >= 0 ? '↑' : '↓'} {Math.abs(data.smaFastSlope).toFixed(3)}%
+              </span>
+            )}
           </div>
           <div className="rounded-md bg-secondary/30 p-2">
             <span className="text-muted-foreground">Slow SMA</span>
             <p className="font-medium text-foreground">{data.smaSlow ? `$${data.smaSlow.toFixed(2)}` : '---'}</p>
+            {data.smaSlowSlope !== null && (
+              <span className={`text-[10px] ${data.smaSlowSlope >= 0 ? 'text-trading-profit' : 'text-trading-loss'}`}>
+                {data.smaSlowSlope >= 0 ? '↑' : '↓'} {Math.abs(data.smaSlowSlope).toFixed(3)}%
+              </span>
+            )}
           </div>
         </div>
 
-        {/* HTF Trend & ATR */}
-        <div className="grid grid-cols-2 gap-2 text-xs">
+        {/* HTF Trend, ATR, SMA Distance */}
+        <div className="grid grid-cols-3 gap-2 text-xs">
           <div className="flex items-center gap-2 rounded-md bg-secondary/30 p-2">
-            <Shield className="h-3.5 w-3.5 text-muted-foreground" />
+            <Shield className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
             <div>
               <span className="text-muted-foreground">HTF Trend</span>
               <div className="flex items-center gap-1">
@@ -77,12 +90,20 @@ export function AssetDetailPanel({ asset, data }: AssetDetailPanelProps) {
             </div>
           </div>
           <div className="flex items-center gap-2 rounded-md bg-secondary/30 p-2">
-            <Zap className="h-3.5 w-3.5 text-muted-foreground" />
+            <Zap className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
             <div>
               <span className="text-muted-foreground">ATR</span>
               <p className="font-medium text-foreground">
-                {data.atr !== null ? `$${data.atr.toFixed(2)}` : '---'}
-                {data.atrPercent !== null && <span className="ml-1 text-muted-foreground">({data.atrPercent.toFixed(2)}%)</span>}
+                {data.atrPercent !== null ? `${data.atrPercent.toFixed(2)}%` : '---'}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 rounded-md bg-secondary/30 p-2">
+            <Gauge className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+            <div>
+              <span className="text-muted-foreground">SMA Dist</span>
+              <p className="font-medium text-foreground">
+                {data.smaDistance !== null ? `${data.smaDistance.toFixed(3)}%` : '---'}
               </p>
             </div>
           </div>
@@ -97,7 +118,7 @@ export function AssetDetailPanel({ asset, data }: AssetDetailPanelProps) {
           <div className="flex items-center gap-2">
             {data.filterBlocked && (
               <Badge variant="outline" className="border-destructive/50 bg-destructive/10 text-destructive text-[10px]">
-                ⛔ {FILTER_LABELS[data.filterBlocked]}
+                ⛔ {FILTER_LABELS[data.filterBlocked] || data.filterBlocked}
               </Badge>
             )}
             {data.signal && (

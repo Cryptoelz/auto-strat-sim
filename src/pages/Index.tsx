@@ -12,6 +12,7 @@ import { PerformanceStats } from '@/components/trading/PerformanceStats';
 import { AssetBreakdown } from '@/components/trading/AssetBreakdown';
 import { PortfolioAllocation } from '@/components/trading/PortfolioAllocation';
 import { AgentStatusCard } from '@/components/trading/AgentStatusCard';
+import { DecisionLog } from '@/components/trading/DecisionLog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DEFAULT_CONFIG } from '@/config/trading';
 import { StrategyConfig } from '@/components/StrategySettings';
@@ -141,6 +142,8 @@ const Index = () => {
             isRunning={state.isRunning}
             onToggleRunning={toggleRunning}
             totalTrades={state.trades.length}
+            isPaused={state.isPaused}
+            pauseReason={state.pauseReason}
           />
         </div>
 
@@ -169,6 +172,11 @@ const Index = () => {
           <MemoizedPerformanceStats state={state} />
         </div>
 
+        {/* Decision Log */}
+        <div className="mt-4 sm:mt-6">
+          <DecisionLog />
+        </div>
+
         {/* Portfolio and Asset breakdown */}
         <div className="mt-4 grid gap-4 sm:mt-6 sm:gap-6 lg:grid-cols-2">
           <MemoizedPortfolioAllocation
@@ -187,7 +195,7 @@ const Index = () => {
         {/* Footer disclaimer */}
         <footer className="mt-6 rounded-lg border border-border/50 bg-card/30 p-3 text-center sm:mt-8 sm:p-4">
           <p className="text-xs text-muted-foreground sm:text-sm">
-            ⚠️ <strong>SIMULATION ONLY</strong> — Automated trading agent with trend, volatility & regime filters. No real trades.
+            ⚠️ <strong>SIMULATION ONLY</strong> — Automated trading agent with trend, volatility, regime & trend-strength filters. No real trades.
           </p>
         </footer>
       </main>

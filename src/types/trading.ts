@@ -14,14 +14,19 @@ export type TradeReason =
   | 'stop_loss'
   | 'take_profit'
   | 'flip_to_long'
-  | 'flip_to_short';
+  | 'flip_to_short'
+  | 'daily_loss_limit'
+  | 'consecutive_loss_limit';
 
 export type FilterBlockReason =
   | 'trend_filter'
   | 'volatility_filter'
   | 'regime_filter'
+  | 'sma_distance_filter'
   | 'cooldown_active'
-  | 'insufficient_balance';
+  | 'insufficient_balance'
+  | 'daily_loss_pause'
+  | 'consecutive_loss_pause';
 
 export interface Candle {
   timestamp: number;
@@ -73,10 +78,24 @@ export interface Trade {
   exitReason: TradeReason;
 }
 
+export interface DecisionLogEntry {
+  id: string;
+  timestamp: number;
+  asset: Asset;
+  action: 'opened_long' | 'opened_short' | 'closed_long' | 'closed_short' | 'flipped' | 'blocked' | 'risk_pause';
+  explanation: string;
+  signal?: SignalType;
+  regime?: MarketRegime;
+  filterBlocked?: FilterBlockReason;
+}
+
 export interface AssetAnalytics {
   price: number | null;
   smaFast: number | null;
   smaSlow: number | null;
+  smaDistance: number | null;
+  smaFastSlope: number | null;
+  smaSlowSlope: number | null;
   htfTrend: 'bullish' | 'bearish' | 'neutral';
   atr: number | null;
   atrPercent: number | null;
@@ -96,16 +115,27 @@ export interface TradingState {
   lastSignal: Record<Asset, Signal | null>;
   lastTradeTime: Record<Asset, number>;
   isRunning: boolean;
+  isPaused: boolean;
+  pauseUntil: number;
+  pauseReason: string | null;
+  dailyPnl: number;
+  dailyPnlDate: string;
+  consecutiveLosses: number;
 }
 
 export interface FilterConfig {
   trendFilterEnabled: boolean;
   volatilityFilterEnabled: boolean;
   regimeFilterEnabled: boolean;
+  smaDistanceFilterEnabled: boolean;
   higherTimeframe: string;
   atrPeriod: number;
   atrThreshold: number;
   slippagePercent: number;
+  minSmaDistancePercent: number;
+  maxDailyLossPercent: number;
+  maxConsecutiveLosses: number;
+  pauseCandlesAfterLossLimit: number;
 }
 
 export interface TradingConfig {
@@ -132,6 +162,10 @@ export interface PerformanceMetrics {
   totalTrades: number;
   winningTrades: number;
   losingTrades: number;
+  longTrades: number;
+  shortTrades: number;
+  longWinRate: number;
+  shortWinRate: number;
   winRate: number;
   totalPnl: number;
   totalPnlPercent: number;
@@ -139,5 +173,6 @@ export interface PerformanceMetrics {
   avgWin: number;
   avgLoss: number;
   profitFactor: number;
+  currentEquity: number;
   equityCurve: { timestamp: number; balance: number }[];
 }

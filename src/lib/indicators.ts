@@ -68,7 +68,6 @@ export function calculateATR(candles: Candle[], period: number): number | null {
 
   if (trueRanges.length < period) return null;
 
-  // Use simple average for first ATR value, then EMA-like smoothing
   const recentTRs = trueRanges.slice(-period);
   return recentTRs.reduce((sum, tr) => sum + tr, 0) / period;
 }
@@ -85,7 +84,36 @@ export function calculateATRPercent(candles: Candle[], period: number): number |
 }
 
 /**
- * Detect market regime based on SMA spread and ATR
+ * Calculate SMA slope (rate of change over last N candles)
+ * Returns slope as percent per candle
+ */
+export function calculateSMASlope(candles: Candle[], period: number, lookback: number = 5): number | null {
+  if (candles.length < period + lookback) return null;
+  
+  const currentSMA = calculateSMA(candles, period);
+  const pastCandles = candles.slice(0, -lookback);
+  const pastSMA = calculateSMA(pastCandles, period);
+  
+  if (currentSMA === null || pastSMA === null || pastSMA === 0) return null;
+  
+  return ((currentSMA - pastSMA) / pastSMA) * 100;
+}
+
+/**
+ * Calculate SMA distance as percentage of price
+ */
+export function calculateSMADistance(candles: Candle[], fastPeriod: number, slowPeriod: number): number | null {
+  const fast = calculateSMA(candles, fastPeriod);
+  const slow = calculateSMA(candles, slowPeriod);
+  if (fast === null || slow === null) return null;
+  const price = candles[candles.length - 1]?.close;
+  if (!price || price === 0) return null;
+  return (Math.abs(fast - slow) / price) * 100;
+}
+
+/**
+ * Detect market regime based on SMA slopes and separation
+ * Uses slope direction of both SMAs + their distance to classify regime
  */
 export function detectMarketRegime(
   candles: Candle[],
@@ -93,10 +121,12 @@ export function detectMarketRegime(
   slowPeriod: number,
   atrPeriod: number
 ): MarketRegime {
-  if (candles.length < slowPeriod + 1) return 'sideways';
+  if (candles.length < slowPeriod + 5) return 'sideways';
 
   const fast = calculateSMA(candles, fastPeriod);
   const slow = calculateSMA(candles, slowPeriod);
+  const fastSlope = calculateSMASlope(candles, fastPeriod, 5);
+  const slowSlope = calculateSMASlope(candles, slowPeriod, 5);
   const atr = calculateATR(candles, atrPeriod);
   const price = candles[candles.length - 1].close;
 
@@ -108,5 +138,16 @@ export function detectMarketRegime(
   // If SMA spread is tight relative to ATR, market is sideways
   if (smaSpread < atrRatio * 0.3) return 'sideways';
 
+  // Use slopes for confirmation
+  if (fastSlope !== null && slowSlope !== null) {
+    // BULLISH: fast > slow AND both slopes positive (or at least fast positive)
+    if (fast > slow && fastSlope > 0 && slowSlope > -0.05) return 'trending_bullish';
+    // BEARISH: fast < slow AND both slopes negative (or at least fast negative)
+    if (fast < slow && fastSlope < 0 && slowSlope < 0.05) return 'trending_bearish';
+    // Mixed slopes = sideways even if SMAs are separated
+    if (Math.abs(fastSlope) < 0.02 && Math.abs(slowSlope) < 0.02) return 'sideways';
+  }
+
+  // Fallback to simple position-based detection
   return fast > slow ? 'trending_bullish' : 'trending_bearish';
 }

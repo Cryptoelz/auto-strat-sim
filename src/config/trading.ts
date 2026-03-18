@@ -21,10 +21,15 @@ export const DEFAULT_CONFIG: TradingConfig = {
     trendFilterEnabled: true,
     volatilityFilterEnabled: true,
     regimeFilterEnabled: true,
+    smaDistanceFilterEnabled: false,
     higherTimeframe: '1h',
     atrPeriod: 14,
     atrThreshold: 0.5,
     slippagePercent: 0.05,
+    minSmaDistancePercent: 0.1,
+    maxDailyLossPercent: 5,
+    maxConsecutiveLosses: 5,
+    pauseCandlesAfterLossLimit: 10,
   },
 };
 
@@ -55,6 +60,12 @@ export const getInitialState = (): TradingState => ({
     XLMUSDT: 0,
   },
   isRunning: true,
+  isPaused: false,
+  pauseUntil: 0,
+  pauseReason: null,
+  dailyPnl: 0,
+  dailyPnlDate: new Date().toISOString().slice(0, 10),
+  consecutiveLosses: 0,
 });
 
 export const ASSET_INFO: Record<Asset, { name: string; symbol: string; color: string }> = {

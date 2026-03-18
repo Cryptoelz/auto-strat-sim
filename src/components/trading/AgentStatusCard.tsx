@@ -6,9 +6,11 @@ interface AgentStatusCardProps {
   isRunning: boolean;
   onToggleRunning: () => void;
   totalTrades: number;
+  isPaused?: boolean;
+  pauseReason?: string | null;
 }
 
-export function AgentStatusCard({ isRunning, onToggleRunning, totalTrades }: AgentStatusCardProps) {
+export function AgentStatusCard({ isRunning, onToggleRunning, totalTrades, isPaused, pauseReason }: AgentStatusCardProps) {
   return (
     <Card className="border-border/50 bg-card/50 backdrop-blur">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -22,15 +24,22 @@ export function AgentStatusCard({ isRunning, onToggleRunning, totalTrades }: Age
           <Badge
             variant="outline"
             className={
-              isRunning
+              isPaused
+                ? 'border-destructive/50 bg-destructive/10 text-destructive'
+                : isRunning
                 ? 'border-trading-profit/50 bg-trading-profit/10 text-trading-profit'
                 : 'border-trading-neutral/50 bg-trading-neutral/10 text-trading-neutral'
             }
           >
-            <span className={`mr-1.5 inline-block h-2 w-2 rounded-full ${isRunning ? 'bg-trading-profit animate-pulse' : 'bg-muted-foreground'}`} />
-            {isRunning ? 'ACTIVE' : 'PAUSED'}
+            <span className={`mr-1.5 inline-block h-2 w-2 rounded-full ${
+              isPaused ? 'bg-destructive' : isRunning ? 'bg-trading-profit animate-pulse' : 'bg-muted-foreground'
+            }`} />
+            {isPaused ? 'RISK PAUSE' : isRunning ? 'ACTIVE' : 'PAUSED'}
           </Badge>
         </div>
+        {isPaused && pauseReason && (
+          <p className="mt-1 text-[10px] text-destructive">{pauseReason}</p>
+        )}
         <p className="mt-2 text-xs text-muted-foreground">{totalTrades} trades executed</p>
         <button
           onClick={onToggleRunning}
