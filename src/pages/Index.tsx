@@ -225,6 +225,19 @@ const Index = () => {
           />
         </div>
 
+        {/* Agent Governance & Guardrails */}
+        <div className="mt-4 sm:mt-6">
+          <AgentGovernanceDashboard
+            state={state}
+            analytics={analytics}
+            enabledAssets={strategyConfig.enabledAssets}
+            portfolioDrawdown={0}
+            governanceConfig={governanceConfig}
+            onGovernanceConfigChange={setGovernanceConfig}
+            prevStatus={prevGovStatus}
+          />
+        </div>
+
         {/* Agent Memory & Adaptation */}
         <div className="mt-4 sm:mt-6">
           <AgentMemoryDashboard
