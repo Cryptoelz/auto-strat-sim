@@ -30,6 +30,7 @@ import { GovernanceConfig, DEFAULT_GOVERNANCE_CONFIG, GovernanceStatus } from '@
 import { AgentGovernanceDashboard } from '@/components/trading/AgentGovernanceDashboard';
 import { OperatorState, OperatorConfig, DEFAULT_OPERATOR_STATE, DEFAULT_OPERATOR_CONFIG } from '@/types/operator';
 import { OperatorControlDashboard } from '@/components/trading/OperatorControlDashboard';
+import { ExperimentDashboard } from '@/components/trading/ExperimentDashboard';
 import { computePortfolioState } from '@/lib/portfolioManager';
 import { getLogEntries, subscribeToLog } from '@/lib/logger';
 import { useSyncExternalStore } from 'react';
