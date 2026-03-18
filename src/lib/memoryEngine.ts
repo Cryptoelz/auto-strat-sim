@@ -126,16 +126,7 @@ function buildStrategyMemory(
   return entries;
 }
 
-// Helper to safely get adaptation strength
-function adaptenceStrengthSafe(config: MemoryConfig): number {
-  const modeMultiplier = config.adaptationMode === 'conservative' ? 0.3
-    : config.adaptationMode === 'aggressive' ? 1.0
-    : 0.6;
-  return config.adaptationStrength * modeMultiplier;
-}
-
-// Helper to safely get adaptation strength
-function adaptenceStrengthSafe(config: MemoryConfig): number {
+// ─── Risk Memory ─────────────────────────────────────────────────────
 
 function buildRiskMemory(
   state: TradingState,
