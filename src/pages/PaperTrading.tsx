@@ -12,6 +12,7 @@ import { TradeHistory } from '@/components/trading/TradeHistory';
 import { PerformanceStats } from '@/components/trading/PerformanceStats';
 import { PortfolioDashboard } from '@/components/trading/PortfolioDashboard';
 import { DecisionLog } from '@/components/trading/DecisionLog';
+import { AlertsAndReports } from '@/components/trading/AlertsAndReports';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { getLogEntries, subscribeToLog } from '@/lib/logger';
 import { formatCurrency } from '@/lib/performance';
@@ -319,6 +320,16 @@ export default function PaperTrading() {
 
         {/* Decision Log */}
         <DecisionLog />
+
+        {/* Alerts, Reports & Daily Summary */}
+        <AlertsAndReports
+          state={state}
+          config={config}
+          portfolioConfig={portfolioConfig}
+          unrealizedPnl={unrealizedPnl}
+          maxDrawdown={maxDrawdown}
+          sessionStartTime={sessionStartTime}
+        />
 
         {/* Footer */}
         <footer className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-center">

@@ -12,6 +12,7 @@ import { PerformanceStats } from '@/components/trading/PerformanceStats';
 import { AssetBreakdown } from '@/components/trading/AssetBreakdown';
 import { PortfolioAllocation } from '@/components/trading/PortfolioAllocation';
 import { PortfolioDashboard } from '@/components/trading/PortfolioDashboard';
+import { AlertsAndReports } from '@/components/trading/AlertsAndReports';
 import { AgentStatusCard } from '@/components/trading/AgentStatusCard';
 import { DecisionLog } from '@/components/trading/DecisionLog';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -219,6 +220,22 @@ const Index = () => {
         {/* Trading Journal */}
         <div className="mt-4 sm:mt-6">
           <MemoizedTradeJournal trades={state.trades} />
+        </div>
+
+        {/* Alerts, Reports & Daily Summary */}
+        <div className="mt-4 sm:mt-6">
+          <AlertsAndReports
+            state={state}
+            config={config}
+            portfolioConfig={portfolioConfig}
+            unrealizedPnl={Object.entries(state.positions).reduce((sum, [asset, pos]) => {
+              if (!pos || !prices[asset as Asset]) return sum;
+              const p = prices[asset as Asset]!;
+              return sum + (pos.direction === 'long' ? (p - pos.entryPrice) * pos.size : (pos.entryPrice - p) * pos.size);
+            }, 0)}
+            maxDrawdown={0}
+            sessionStartTime={Date.now()}
+          />
         </div>
 
         {/* Footer disclaimer */}
