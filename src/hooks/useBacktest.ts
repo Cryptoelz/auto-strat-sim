@@ -222,6 +222,7 @@ export function useBacktest() {
 
   const reset = useCallback(() => {
     setResult(null);
+    setAuditLog([]);
     setError(null);
     setProgress(0);
   }, []);
@@ -230,6 +231,7 @@ export function useBacktest() {
     isRunning,
     progress,
     result,
+    auditLog,
     error,
     runBacktest,
     reset,
