@@ -6,6 +6,7 @@ import { Asset, TradingConfig } from '@/types/trading';
 import { PortfolioConfig, DEFAULT_PORTFOLIO_CONFIG } from '@/types/portfolio';
 import { MultiStrategyConfig, DEFAULT_MULTI_STRATEGY_CONFIG } from '@/types/strategy';
 import { AgentConfig, DEFAULT_AGENT_CONFIG } from '@/types/agent';
+import { MemoryConfig, DEFAULT_MEMORY_CONFIG } from '@/types/memory';
 import { computePortfolioState } from '@/lib/portfolioManager';
 import { StrategyConfig } from '@/components/StrategySettings';
 import { PriceChart } from '@/components/trading/PriceChart';
@@ -17,6 +18,7 @@ import { DecisionLog } from '@/components/trading/DecisionLog';
 import { AlertsAndReports } from '@/components/trading/AlertsAndReports';
 import { StrategyDashboard } from '@/components/trading/StrategyDashboard';
 import { AgentDecisionDashboard } from '@/components/trading/AgentDecisionDashboard';
+import { AgentMemoryDashboard } from '@/components/trading/AgentMemoryDashboard';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { getLogEntries, subscribeToLog } from '@/lib/logger';
 import { formatCurrency } from '@/lib/performance';
@@ -43,6 +45,7 @@ export default function PaperTrading() {
   const [portfolioConfig, setPortfolioConfig] = useState<PortfolioConfig>(DEFAULT_PORTFOLIO_CONFIG);
   const [multiStrategyConfig, setMultiStrategyConfig] = useState<MultiStrategyConfig>(DEFAULT_MULTI_STRATEGY_CONFIG);
   const [agentConfig, setAgentConfig] = useState<AgentConfig>(DEFAULT_AGENT_CONFIG);
+  const [memoryConfig, setMemoryConfig] = useState<MemoryConfig>(DEFAULT_MEMORY_CONFIG);
   const peakEquityRef = useRef(10000);
   const portfolioLogsRef = useRef<any[]>([]);
 
@@ -342,6 +345,16 @@ export default function PaperTrading() {
           portfolioDrawdown={maxDrawdown}
           agentConfig={agentConfig}
           onAgentConfigChange={setAgentConfig}
+        />
+
+        {/* Agent Memory & Adaptation */}
+        <AgentMemoryDashboard
+          state={state}
+          analytics={analytics}
+          enabledAssets={config.assets.filter(a => enabledAssets[a])}
+          portfolioDrawdown={maxDrawdown}
+          memoryConfig={memoryConfig}
+          onMemoryConfigChange={setMemoryConfig}
         />
 
         {/* Decision Log */}

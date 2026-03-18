@@ -23,7 +23,9 @@ import { Asset, DecisionLogEntry } from '@/types/trading';
 import { PortfolioConfig, DEFAULT_PORTFOLIO_CONFIG } from '@/types/portfolio';
 import { MultiStrategyConfig, DEFAULT_MULTI_STRATEGY_CONFIG } from '@/types/strategy';
 import { AgentDecisionDashboard } from '@/components/trading/AgentDecisionDashboard';
+import { AgentMemoryDashboard } from '@/components/trading/AgentMemoryDashboard';
 import { AgentConfig, DEFAULT_AGENT_CONFIG } from '@/types/agent';
+import { MemoryConfig, DEFAULT_MEMORY_CONFIG } from '@/types/memory';
 import { computePortfolioState } from '@/lib/portfolioManager';
 import { getLogEntries, subscribeToLog } from '@/lib/logger';
 import { useSyncExternalStore } from 'react';
@@ -41,6 +43,7 @@ const Index = () => {
   const [portfolioConfig, setPortfolioConfig] = useState<PortfolioConfig>(DEFAULT_PORTFOLIO_CONFIG);
   const [multiStrategyConfig, setMultiStrategyConfig] = useState<MultiStrategyConfig>(DEFAULT_MULTI_STRATEGY_CONFIG);
   const [agentConfig, setAgentConfig] = useState<AgentConfig>(DEFAULT_AGENT_CONFIG);
+  const [memoryConfig, setMemoryConfig] = useState<MemoryConfig>(DEFAULT_MEMORY_CONFIG);
   const peakEquityRef = useRef(10000);
   const portfolioLogsRef = useRef<any[]>([]);
 
@@ -218,7 +221,18 @@ const Index = () => {
           />
         </div>
 
-        {/* Decision Log */}
+        {/* Agent Memory & Adaptation */}
+        <div className="mt-4 sm:mt-6">
+          <AgentMemoryDashboard
+            state={state}
+            analytics={analytics}
+            enabledAssets={strategyConfig.enabledAssets}
+            portfolioDrawdown={0}
+            memoryConfig={memoryConfig}
+            onMemoryConfigChange={setMemoryConfig}
+          />
+        </div>
+
         <div className="mt-4 sm:mt-6">
           <DecisionLog />
         </div>
