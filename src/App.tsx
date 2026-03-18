@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Index from "./pages/Index";
 import Backtest from "./pages/Backtest";
+import PaperTrading from "./pages/PaperTrading";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
