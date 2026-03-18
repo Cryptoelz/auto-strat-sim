@@ -7,6 +7,7 @@ import { useBacktestConfig } from '@/hooks/useBacktestConfig';
 import { useBacktestShortcuts, BACKTEST_SHORTCUTS } from '@/hooks/useBacktestShortcuts';
 import { StrategyOptimizer } from '@/components/backtest/StrategyOptimizer';
 import { WalkForwardAnalysis } from '@/components/backtest/WalkForwardAnalysis';
+import { FullOptimizer } from '@/components/backtest/FullOptimizer';
 import { ResultsDisplay } from '@/components/backtest/ResultsDisplay';
 import { ComparisonTable } from '@/components/backtest/ComparisonTable';
 import { BacktestConfigForm } from '@/components/backtest/BacktestConfigForm';
@@ -311,7 +312,24 @@ export default function Backtest() {
             versionsWithPerformanceCount={config.getVersionsWithPerformanceCount()}
           />
 
-          {/* Strategy Optimizer */}
+          {/* Full Parameter Optimizer */}
+          <FullOptimizer
+            assets={config.enabledAssets}
+            startDate={config.startDate}
+            endDate={config.endDate}
+            timeframe={config.timeframe}
+            initialBalance={config.initialBalance}
+            positionSizePercent={config.positionSizePercent}
+            feePercent={config.feePercent}
+            onApplyParams={(params) => {
+              config.setFastSMA(params.fastSMA);
+              config.setSlowSMA(params.slowSMA);
+              config.setStopLossPercent(params.stopLoss);
+              config.setTakeProfitPercent(params.takeProfit);
+            }}
+          />
+
+          {/* Strategy Optimizer (SMA-only quick mode) */}
           <StrategyOptimizer
             assets={config.enabledAssets}
             startDate={config.startDate}
