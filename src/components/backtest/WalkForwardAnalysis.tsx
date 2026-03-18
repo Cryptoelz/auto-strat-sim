@@ -35,7 +35,7 @@ import { GitBranch, Play, RotateCcw, TrendingUp, TrendingDown, AlertTriangle, Ch
 import { cn } from '@/lib/utils';
 import { Asset, Candle } from '@/types/trading';
 import { WindowResult, WalkForwardResult } from '@/types/backtest';
-import { calculateSMASeries, detectCrossover } from '@/lib/indicators';
+import { runQuickBacktest } from '@/lib/backtest-engine';
 import { formatCurrency } from '@/lib/performance';
 import { format, addDays, differenceInDays } from 'date-fns';
 
