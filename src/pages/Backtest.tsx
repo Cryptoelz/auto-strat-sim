@@ -387,14 +387,21 @@ export default function Backtest() {
             )}
 
             {result && !config.showComparison && (
-              <ResultsDisplay 
-                result={result} 
-                fastSMA={config.fastSMA} 
-                slowSMA={config.slowSMA} 
-                stopLossPercent={config.stopLossPercent} 
-                takeProfitPercent={config.takeProfitPercent} 
-                positionSizePercent={config.positionSizePercent} 
-              />
+              <>
+                <ResultsDisplay 
+                  result={result} 
+                  fastSMA={config.fastSMA} 
+                  slowSMA={config.slowSMA} 
+                  stopLossPercent={config.stopLossPercent} 
+                  takeProfitPercent={config.takeProfitPercent} 
+                  positionSizePercent={config.positionSizePercent} 
+                />
+                {auditLog.length > 0 && (
+                  <div className="mt-6">
+                    <BacktestAuditPanel audit={auditLog} />
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
