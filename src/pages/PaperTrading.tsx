@@ -304,6 +304,19 @@ export default function PaperTrading() {
           <MemoizedPerformanceStats state={state} />
         </div>
 
+        {/* Portfolio Dashboard */}
+        <PortfolioDashboard
+          portfolioState={computePortfolioState(
+            state, prices, analytics, signals,
+            config.assets.filter(a => enabledAssets[a]),
+            portfolioConfig,
+            peakEquityRef.current, portfolioLogsRef.current,
+          )}
+          portfolioConfig={portfolioConfig}
+          onConfigChange={setPortfolioConfig}
+          enabledAssets={config.assets.filter(a => enabledAssets[a])}
+        />
+
         {/* Decision Log */}
         <DecisionLog />
 
