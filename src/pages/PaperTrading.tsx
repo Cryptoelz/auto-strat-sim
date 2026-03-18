@@ -35,6 +35,10 @@ import { format } from 'date-fns';
 const MemoizedPerformanceStats = memo(PerformanceStats);
 
 export default function PaperTrading() {
+  const [portfolioConfig, setPortfolioConfig] = useState<PortfolioConfig>(DEFAULT_PORTFOLIO_CONFIG);
+  const peakEquityRef = useRef(10000);
+  const portfolioLogsRef = useRef<any[]>([]);
+
   const [strategyConfig] = useState<StrategyConfig>({
     timeframe: DEFAULT_CONFIG.timeframe as '5m' | '15m' | '1h' | '4h',
     enabledAssets: DEFAULT_CONFIG.assets as Asset[],
