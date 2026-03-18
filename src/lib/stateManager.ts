@@ -22,7 +22,9 @@ function normalizeTrade(rawTrade: Partial<Trade>): Trade {
       rawTrade.exitReason === 'stop_loss' ||
       rawTrade.exitReason === 'take_profit' ||
       rawTrade.exitReason === 'flip_to_long' ||
-      rawTrade.exitReason === 'flip_to_short'
+      rawTrade.exitReason === 'flip_to_short' ||
+      rawTrade.exitReason === 'daily_loss_limit' ||
+      rawTrade.exitReason === 'consecutive_loss_limit'
         ? rawTrade.exitReason
         : 'bullish_crossover',
   };
@@ -52,10 +54,18 @@ export function loadState(): TradingState {
         typeof parsed.positions === 'object' &&
         Array.isArray(parsed.trades)
       ) {
+        const initial = getInitialState();
         return {
-          ...getInitialState(),
+          ...initial,
           ...parsed,
           trades: parsed.trades.map(normalizeTrade),
+          // Ensure new fields exist with defaults
+          isPaused: parsed.isPaused ?? false,
+          pauseUntil: parsed.pauseUntil ?? 0,
+          pauseReason: parsed.pauseReason ?? null,
+          dailyPnl: parsed.dailyPnl ?? 0,
+          dailyPnlDate: parsed.dailyPnlDate ?? new Date().toISOString().slice(0, 10),
+          consecutiveLosses: parsed.consecutiveLosses ?? 0,
         };
       }
     }
