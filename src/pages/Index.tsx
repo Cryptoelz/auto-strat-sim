@@ -326,6 +326,11 @@ const Index = () => {
           />
         </div>
 
+        {/* Master Orchestration */}
+        <div className="mt-4 sm:mt-6">
+          <OrchestrationDashboard />
+        </div>
+
         {/* Footer disclaimer */}
         <footer className="mt-6 rounded-lg border border-border/50 bg-card/30 p-3 text-center sm:mt-8 sm:p-4">
           <p className="text-xs text-muted-foreground sm:text-sm">
