@@ -11,12 +11,15 @@ import { TradeJournal } from '@/components/trading/TradeJournal';
 import { PerformanceStats } from '@/components/trading/PerformanceStats';
 import { AssetBreakdown } from '@/components/trading/AssetBreakdown';
 import { PortfolioAllocation } from '@/components/trading/PortfolioAllocation';
+import { PortfolioDashboard } from '@/components/trading/PortfolioDashboard';
 import { AgentStatusCard } from '@/components/trading/AgentStatusCard';
 import { DecisionLog } from '@/components/trading/DecisionLog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DEFAULT_CONFIG } from '@/config/trading';
 import { StrategyConfig } from '@/components/StrategySettings';
 import { Asset, DecisionLogEntry } from '@/types/trading';
+import { PortfolioConfig, DEFAULT_PORTFOLIO_CONFIG } from '@/types/portfolio';
+import { computePortfolioState } from '@/lib/portfolioManager';
 import { getLogEntries, subscribeToLog } from '@/lib/logger';
 import { useSyncExternalStore } from 'react';
 
@@ -29,6 +32,10 @@ const Index = () => {
   // Subscribe to decision log for blocked signals
   const decisionLog = useSyncExternalStore(subscribeToLog, getLogEntries);
   const blockedSignals = useMemo(() => decisionLog.filter(e => e.action === 'blocked'), [decisionLog]);
+
+  const [portfolioConfig, setPortfolioConfig] = useState<PortfolioConfig>(DEFAULT_PORTFOLIO_CONFIG);
+  const peakEquityRef = useRef(10000);
+  const portfolioLogsRef = useRef<any[]>([]);
 
   const [strategyConfig, setStrategyConfig] = useState<StrategyConfig>({
     timeframe: DEFAULT_CONFIG.timeframe as '5m' | '15m' | '1h' | '4h',
@@ -183,6 +190,20 @@ const Index = () => {
         {/* Decision Log */}
         <div className="mt-4 sm:mt-6">
           <DecisionLog />
+        </div>
+
+        {/* Portfolio Dashboard */}
+        <div className="mt-4 sm:mt-6">
+          <PortfolioDashboard
+            portfolioState={computePortfolioState(
+              state, prices, analytics, signals,
+              strategyConfig.enabledAssets, portfolioConfig,
+              peakEquityRef.current, portfolioLogsRef.current,
+            )}
+            portfolioConfig={portfolioConfig}
+            onConfigChange={setPortfolioConfig}
+            enabledAssets={strategyConfig.enabledAssets}
+          />
         </div>
 
         {/* Portfolio and Asset breakdown */}

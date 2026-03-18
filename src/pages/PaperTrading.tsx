@@ -1,13 +1,16 @@
-import { useState, useMemo, memo } from 'react';
+import { useState, useMemo, useRef, memo } from 'react';
 import { Link } from 'react-router-dom';
 import { usePaperTrading, StatusMessage } from '@/hooks/usePaperTrading';
 import { DEFAULT_CONFIG, ASSET_INFO } from '@/config/trading';
 import { Asset, TradingConfig } from '@/types/trading';
+import { PortfolioConfig, DEFAULT_PORTFOLIO_CONFIG } from '@/types/portfolio';
+import { computePortfolioState } from '@/lib/portfolioManager';
 import { StrategyConfig } from '@/components/StrategySettings';
 import { PriceChart } from '@/components/trading/PriceChart';
 import { AssetDetailPanel } from '@/components/trading/AssetDetailPanel';
 import { TradeHistory } from '@/components/trading/TradeHistory';
 import { PerformanceStats } from '@/components/trading/PerformanceStats';
+import { PortfolioDashboard } from '@/components/trading/PortfolioDashboard';
 import { DecisionLog } from '@/components/trading/DecisionLog';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { getLogEntries, subscribeToLog } from '@/lib/logger';
@@ -32,6 +35,10 @@ import { format } from 'date-fns';
 const MemoizedPerformanceStats = memo(PerformanceStats);
 
 export default function PaperTrading() {
+  const [portfolioConfig, setPortfolioConfig] = useState<PortfolioConfig>(DEFAULT_PORTFOLIO_CONFIG);
+  const peakEquityRef = useRef(10000);
+  const portfolioLogsRef = useRef<any[]>([]);
+
   const [strategyConfig] = useState<StrategyConfig>({
     timeframe: DEFAULT_CONFIG.timeframe as '5m' | '15m' | '1h' | '4h',
     enabledAssets: DEFAULT_CONFIG.assets as Asset[],
@@ -296,6 +303,19 @@ export default function PaperTrading() {
           <TradeHistory trades={state.trades} />
           <MemoizedPerformanceStats state={state} />
         </div>
+
+        {/* Portfolio Dashboard */}
+        <PortfolioDashboard
+          portfolioState={computePortfolioState(
+            state, prices, analytics, signals,
+            config.assets.filter(a => enabledAssets[a]),
+            portfolioConfig,
+            peakEquityRef.current, portfolioLogsRef.current,
+          )}
+          portfolioConfig={portfolioConfig}
+          onConfigChange={setPortfolioConfig}
+          enabledAssets={config.assets.filter(a => enabledAssets[a])}
+        />
 
         {/* Decision Log */}
         <DecisionLog />
