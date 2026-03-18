@@ -14,6 +14,7 @@ import { PerformanceStats } from '@/components/trading/PerformanceStats';
 import { PortfolioDashboard } from '@/components/trading/PortfolioDashboard';
 import { DecisionLog } from '@/components/trading/DecisionLog';
 import { AlertsAndReports } from '@/components/trading/AlertsAndReports';
+import { StrategyDashboard } from '@/components/trading/StrategyDashboard';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { getLogEntries, subscribeToLog } from '@/lib/logger';
 import { formatCurrency } from '@/lib/performance';
