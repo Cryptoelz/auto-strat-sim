@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useBacktest } from '@/hooks/useBacktest';
 import { BacktestAuditPanel } from '@/components/backtest/BacktestAuditPanel';
+import { ScenarioTestingDashboard } from '@/components/backtest/ScenarioTestingDashboard';
 import { useBacktestConfig } from '@/hooks/useBacktestConfig';
 import { useBacktestShortcuts, BACKTEST_SHORTCUTS } from '@/hooks/useBacktestShortcuts';
 import { StrategyOptimizer } from '@/components/backtest/StrategyOptimizer';
