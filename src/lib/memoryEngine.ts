@@ -103,7 +103,7 @@ function buildStrategyMemory(
 
       if (config.adaptationEnabled && window.length >= 3) {
         // Gradual adjustment based on recent performance
-        const perfDelta = (winRate - 50) * config.adaptenceStrengthSafe(config);
+        const perfDelta = (winRate - 50) * adaptenceStrengthSafe(config);
         const pnlSignal = netPnl > 0 ? 2 : netPnl < -50 ? -4 : -1;
         const regimeBonus = regimeFit > 60 ? 2 : -2;
         
