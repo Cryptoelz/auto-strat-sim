@@ -33,6 +33,10 @@ const Index = () => {
   const decisionLog = useSyncExternalStore(subscribeToLog, getLogEntries);
   const blockedSignals = useMemo(() => decisionLog.filter(e => e.action === 'blocked'), [decisionLog]);
 
+  const [portfolioConfig, setPortfolioConfig] = useState<PortfolioConfig>(DEFAULT_PORTFOLIO_CONFIG);
+  const peakEquityRef = useRef(10000);
+  const portfolioLogsRef = useRef<any[]>([]);
+
   const [strategyConfig, setStrategyConfig] = useState<StrategyConfig>({
     timeframe: DEFAULT_CONFIG.timeframe as '5m' | '15m' | '1h' | '4h',
     enabledAssets: DEFAULT_CONFIG.assets as Asset[],
