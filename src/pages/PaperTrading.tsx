@@ -321,6 +321,16 @@ export default function PaperTrading() {
         {/* Decision Log */}
         <DecisionLog />
 
+        {/* Alerts, Reports & Daily Summary */}
+        <AlertsAndReports
+          state={state}
+          config={config}
+          portfolioConfig={portfolioConfig}
+          unrealizedPnl={unrealizedPnl}
+          maxDrawdown={maxDrawdown}
+          sessionStartTime={sessionStartTime}
+        />
+
         {/* Footer */}
         <footer className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-center">
           <p className="text-xs text-muted-foreground">
