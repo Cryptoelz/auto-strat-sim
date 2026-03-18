@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useBacktest } from '@/hooks/useBacktest';
+import { BacktestAuditPanel } from '@/components/backtest/BacktestAuditPanel';
 import { useBacktestConfig } from '@/hooks/useBacktestConfig';
 import { useBacktestShortcuts, BACKTEST_SHORTCUTS } from '@/hooks/useBacktestShortcuts';
 import { StrategyOptimizer } from '@/components/backtest/StrategyOptimizer';
