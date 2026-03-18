@@ -394,6 +394,9 @@ export default function PaperTrading() {
         {/* Readiness Review & Validation */}
         <ReadinessDashboard state={state} />
 
+        {/* Master Orchestration */}
+        <OrchestrationDashboard />
+
         {/* Decision Log */}
         <DecisionLog />
 
