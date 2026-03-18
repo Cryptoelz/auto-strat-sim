@@ -26,6 +26,8 @@ import { AgentDecisionDashboard } from '@/components/trading/AgentDecisionDashbo
 import { AgentMemoryDashboard } from '@/components/trading/AgentMemoryDashboard';
 import { AgentConfig, DEFAULT_AGENT_CONFIG } from '@/types/agent';
 import { MemoryConfig, DEFAULT_MEMORY_CONFIG } from '@/types/memory';
+import { GovernanceConfig, DEFAULT_GOVERNANCE_CONFIG, GovernanceStatus } from '@/types/governance';
+import { AgentGovernanceDashboard } from '@/components/trading/AgentGovernanceDashboard';
 import { computePortfolioState } from '@/lib/portfolioManager';
 import { getLogEntries, subscribeToLog } from '@/lib/logger';
 import { useSyncExternalStore } from 'react';
@@ -44,6 +46,8 @@ const Index = () => {
   const [multiStrategyConfig, setMultiStrategyConfig] = useState<MultiStrategyConfig>(DEFAULT_MULTI_STRATEGY_CONFIG);
   const [agentConfig, setAgentConfig] = useState<AgentConfig>(DEFAULT_AGENT_CONFIG);
   const [memoryConfig, setMemoryConfig] = useState<MemoryConfig>(DEFAULT_MEMORY_CONFIG);
+  const [governanceConfig, setGovernanceConfig] = useState<GovernanceConfig>(DEFAULT_GOVERNANCE_CONFIG);
+  const [prevGovStatus, setPrevGovStatus] = useState<GovernanceStatus | null>(null);
   const peakEquityRef = useRef(10000);
   const portfolioLogsRef = useRef<any[]>([]);
 
@@ -218,6 +222,19 @@ const Index = () => {
             portfolioDrawdown={0}
             agentConfig={agentConfig}
             onAgentConfigChange={setAgentConfig}
+          />
+        </div>
+
+        {/* Agent Governance & Guardrails */}
+        <div className="mt-4 sm:mt-6">
+          <AgentGovernanceDashboard
+            state={state}
+            analytics={analytics}
+            enabledAssets={strategyConfig.enabledAssets}
+            portfolioDrawdown={0}
+            governanceConfig={governanceConfig}
+            onGovernanceConfigChange={setGovernanceConfig}
+            prevStatus={prevGovStatus}
           />
         </div>
 

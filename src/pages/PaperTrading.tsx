@@ -7,6 +7,7 @@ import { PortfolioConfig, DEFAULT_PORTFOLIO_CONFIG } from '@/types/portfolio';
 import { MultiStrategyConfig, DEFAULT_MULTI_STRATEGY_CONFIG } from '@/types/strategy';
 import { AgentConfig, DEFAULT_AGENT_CONFIG } from '@/types/agent';
 import { MemoryConfig, DEFAULT_MEMORY_CONFIG } from '@/types/memory';
+import { GovernanceConfig, DEFAULT_GOVERNANCE_CONFIG, GovernanceStatus } from '@/types/governance';
 import { computePortfolioState } from '@/lib/portfolioManager';
 import { StrategyConfig } from '@/components/StrategySettings';
 import { PriceChart } from '@/components/trading/PriceChart';
@@ -19,6 +20,7 @@ import { AlertsAndReports } from '@/components/trading/AlertsAndReports';
 import { StrategyDashboard } from '@/components/trading/StrategyDashboard';
 import { AgentDecisionDashboard } from '@/components/trading/AgentDecisionDashboard';
 import { AgentMemoryDashboard } from '@/components/trading/AgentMemoryDashboard';
+import { AgentGovernanceDashboard } from '@/components/trading/AgentGovernanceDashboard';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { getLogEntries, subscribeToLog } from '@/lib/logger';
 import { formatCurrency } from '@/lib/performance';
@@ -46,6 +48,8 @@ export default function PaperTrading() {
   const [multiStrategyConfig, setMultiStrategyConfig] = useState<MultiStrategyConfig>(DEFAULT_MULTI_STRATEGY_CONFIG);
   const [agentConfig, setAgentConfig] = useState<AgentConfig>(DEFAULT_AGENT_CONFIG);
   const [memoryConfig, setMemoryConfig] = useState<MemoryConfig>(DEFAULT_MEMORY_CONFIG);
+  const [governanceConfig, setGovernanceConfig] = useState<GovernanceConfig>(DEFAULT_GOVERNANCE_CONFIG);
+  const [prevGovStatus, setPrevGovStatus] = useState<GovernanceStatus | null>(null);
   const peakEquityRef = useRef(10000);
   const portfolioLogsRef = useRef<any[]>([]);
 
@@ -355,6 +359,18 @@ export default function PaperTrading() {
           portfolioDrawdown={maxDrawdown}
           memoryConfig={memoryConfig}
           onMemoryConfigChange={setMemoryConfig}
+        />
+
+        {/* Agent Governance & Guardrails */}
+        <AgentGovernanceDashboard
+          state={state}
+          analytics={analytics}
+          enabledAssets={config.assets.filter(a => enabledAssets[a])}
+          portfolioDrawdown={maxDrawdown}
+          reconnectErrors={connectionStatus.missedCandles}
+          governanceConfig={governanceConfig}
+          onGovernanceConfigChange={setGovernanceConfig}
+          prevStatus={prevGovStatus}
         />
 
         {/* Decision Log */}
