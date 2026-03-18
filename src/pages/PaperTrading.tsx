@@ -22,6 +22,7 @@ import { StrategyDashboard } from '@/components/trading/StrategyDashboard';
 import { AgentDecisionDashboard } from '@/components/trading/AgentDecisionDashboard';
 import { AgentMemoryDashboard } from '@/components/trading/AgentMemoryDashboard';
 import { AgentGovernanceDashboard } from '@/components/trading/AgentGovernanceDashboard';
+import { OperatorControlDashboard } from '@/components/trading/OperatorControlDashboard';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { getLogEntries, subscribeToLog } from '@/lib/logger';
 import { formatCurrency } from '@/lib/performance';
