@@ -16,7 +16,9 @@ import { DecisionLog } from '@/components/trading/DecisionLog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DEFAULT_CONFIG } from '@/config/trading';
 import { StrategyConfig } from '@/components/StrategySettings';
-import { Asset } from '@/types/trading';
+import { Asset, DecisionLogEntry } from '@/types/trading';
+import { getLogEntries, subscribeToLog } from '@/lib/logger';
+import { useSyncExternalStore } from 'react';
 
 const MemoizedPortfolioAllocation = memo(PortfolioAllocation);
 const MemoizedAssetBreakdown = memo(AssetBreakdown);
