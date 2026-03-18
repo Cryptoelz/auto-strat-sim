@@ -13,6 +13,7 @@ import { AssetBreakdown } from '@/components/trading/AssetBreakdown';
 import { PortfolioAllocation } from '@/components/trading/PortfolioAllocation';
 import { PortfolioDashboard } from '@/components/trading/PortfolioDashboard';
 import { AlertsAndReports } from '@/components/trading/AlertsAndReports';
+import { StrategyDashboard } from '@/components/trading/StrategyDashboard';
 import { AgentStatusCard } from '@/components/trading/AgentStatusCard';
 import { DecisionLog } from '@/components/trading/DecisionLog';
 import { Skeleton } from '@/components/ui/skeleton';
