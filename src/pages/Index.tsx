@@ -160,9 +160,11 @@ const Index = () => {
               <PriceChart
                 asset={asset}
                 candles={candles[asset]}
-                position={state.positions[asset]}
+                position={state.positions[asset] ? { entryPrice: state.positions[asset]!.entryPrice, direction: state.positions[asset]!.direction } : null}
                 fastSMA={strategyConfig.fastSMA}
                 slowSMA={strategyConfig.slowSMA}
+                trades={state.trades}
+                blockedSignals={blockedSignals}
               />
               <AssetDetailPanel
                 asset={asset}
