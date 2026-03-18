@@ -94,6 +94,17 @@ export function DashboardHeader({
                 PAPER TRADING
               </Badge>
 
+              <Link to="/paper-trading">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-2 text-xs md:h-9 md:px-3 md:text-sm"
+                >
+                  <Radio className="h-3.5 w-3.5 md:mr-2 md:h-4 md:w-4" />
+                  <span className="hidden md:inline">Paper Trade</span>
+                </Button>
+              </Link>
+
               <Link to="/backtest">
                 <Button
                   variant="outline"
