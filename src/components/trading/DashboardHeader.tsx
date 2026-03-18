@@ -17,7 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { RefreshCw, RotateCcw, Clock, AlertTriangle, FlaskConical } from 'lucide-react';
+import { RefreshCw, RotateCcw, Clock, AlertTriangle, FlaskConical, Radio } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface DashboardHeaderProps {
