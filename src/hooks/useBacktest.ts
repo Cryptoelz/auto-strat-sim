@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { Asset, Candle } from '@/types/trading';
 import { BacktestConfig, BacktestTrade, BacktestResult, EquityPoint } from '@/types/backtest';
 import { runBacktestSimulation, BacktestEngineConfig } from '@/lib/backtest-engine';
+import { runAuditBacktest, AuditEntry } from '@/lib/backtest-audit';
 
 const BINANCE_API = 'https://api.binance.com/api/v3';
 
