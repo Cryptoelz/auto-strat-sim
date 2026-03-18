@@ -222,6 +222,22 @@ const Index = () => {
           <MemoizedTradeJournal trades={state.trades} />
         </div>
 
+        {/* Alerts, Reports & Daily Summary */}
+        <div className="mt-4 sm:mt-6">
+          <AlertsAndReports
+            state={state}
+            config={config}
+            portfolioConfig={portfolioConfig}
+            unrealizedPnl={Object.entries(state.positions).reduce((sum, [asset, pos]) => {
+              if (!pos || !prices[asset as Asset]) return sum;
+              const p = prices[asset as Asset]!;
+              return sum + (pos.direction === 'long' ? (p - pos.entryPrice) * pos.size : (pos.entryPrice - p) * pos.size);
+            }, 0)}
+            maxDrawdown={0}
+            sessionStartTime={Date.now()}
+          />
+        </div>
+
         {/* Footer disclaimer */}
         <footer className="mt-6 rounded-lg border border-border/50 bg-card/30 p-3 text-center sm:mt-8 sm:p-4">
           <p className="text-xs text-muted-foreground sm:text-sm">
