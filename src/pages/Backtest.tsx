@@ -7,6 +7,7 @@ import { useBacktestConfig } from '@/hooks/useBacktestConfig';
 import { useBacktestShortcuts, BACKTEST_SHORTCUTS } from '@/hooks/useBacktestShortcuts';
 import { StrategyOptimizer } from '@/components/backtest/StrategyOptimizer';
 import { WalkForwardAnalysis } from '@/components/backtest/WalkForwardAnalysis';
+import { FullOptimizer } from '@/components/backtest/FullOptimizer';
 import { ResultsDisplay } from '@/components/backtest/ResultsDisplay';
 import { ComparisonTable } from '@/components/backtest/ComparisonTable';
 import { BacktestConfigForm } from '@/components/backtest/BacktestConfigForm';
