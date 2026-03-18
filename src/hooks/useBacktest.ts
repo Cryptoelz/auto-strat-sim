@@ -61,12 +61,14 @@ export function useBacktest() {
   const [isRunning, setIsRunning] = useState(false);
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<BacktestResult | null>(null);
+  const [auditLog, setAuditLog] = useState<AuditEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const runBacktest = useCallback(async (config: BacktestConfig) => {
     setIsRunning(true);
     setProgress(0);
     setResult(null);
+    setAuditLog([]);
     setError(null);
 
     try {
