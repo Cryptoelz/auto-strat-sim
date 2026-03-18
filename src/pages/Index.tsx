@@ -26,6 +26,10 @@ const MemoizedTradeJournal = memo(TradeJournal);
 const MemoizedPerformanceStats = memo(PerformanceStats);
 
 const Index = () => {
+  // Subscribe to decision log for blocked signals
+  const decisionLog = useSyncExternalStore(subscribeToLog, getLogEntries);
+  const blockedSignals = useMemo(() => decisionLog.filter(e => e.action === 'blocked'), [decisionLog]);
+
   const [strategyConfig, setStrategyConfig] = useState<StrategyConfig>({
     timeframe: DEFAULT_CONFIG.timeframe as '5m' | '15m' | '1h' | '4h',
     enabledAssets: DEFAULT_CONFIG.assets as Asset[],
