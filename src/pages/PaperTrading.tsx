@@ -39,6 +39,7 @@ const MemoizedPerformanceStats = memo(PerformanceStats);
 
 export default function PaperTrading() {
   const [portfolioConfig, setPortfolioConfig] = useState<PortfolioConfig>(DEFAULT_PORTFOLIO_CONFIG);
+  const [multiStrategyConfig, setMultiStrategyConfig] = useState<MultiStrategyConfig>(DEFAULT_MULTI_STRATEGY_CONFIG);
   const peakEquityRef = useRef(10000);
   const portfolioLogsRef = useRef<any[]>([]);
 
