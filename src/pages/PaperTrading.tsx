@@ -6,6 +6,7 @@ import { Asset, TradingConfig } from '@/types/trading';
 import { PortfolioConfig, DEFAULT_PORTFOLIO_CONFIG } from '@/types/portfolio';
 import { MultiStrategyConfig, DEFAULT_MULTI_STRATEGY_CONFIG } from '@/types/strategy';
 import { AgentConfig, DEFAULT_AGENT_CONFIG } from '@/types/agent';
+import { MemoryConfig, DEFAULT_MEMORY_CONFIG } from '@/types/memory';
 import { computePortfolioState } from '@/lib/portfolioManager';
 import { StrategyConfig } from '@/components/StrategySettings';
 import { PriceChart } from '@/components/trading/PriceChart';

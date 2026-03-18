@@ -221,7 +221,18 @@ const Index = () => {
           />
         </div>
 
-        {/* Decision Log */}
+        {/* Agent Memory & Adaptation */}
+        <div className="mt-4 sm:mt-6">
+          <AgentMemoryDashboard
+            state={state}
+            analytics={analytics}
+            enabledAssets={strategyConfig.enabledAssets}
+            portfolioDrawdown={0}
+            memoryConfig={memoryConfig}
+            onMemoryConfigChange={setMemoryConfig}
+          />
+        </div>
+
         <div className="mt-4 sm:mt-6">
           <DecisionLog />
         </div>
