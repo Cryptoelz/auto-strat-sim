@@ -314,6 +314,14 @@ export function ResultsDisplay({
               <span className="font-medium">{result.totalTrades}</span>
             </div>
             <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Long Trades</span>
+              <span className="font-medium">{result.trades.filter(t => t.direction === 'long').length}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Short Trades</span>
+              <span className="font-medium">{result.trades.filter(t => t.direction === 'short').length}</span>
+            </div>
+            <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Winning Trades</span>
               <span className="font-medium text-trading-profit">{result.winningTrades}</span>
             </div>
