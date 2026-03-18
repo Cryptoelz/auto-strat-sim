@@ -32,6 +32,7 @@ import { OperatorState, OperatorConfig, DEFAULT_OPERATOR_STATE, DEFAULT_OPERATOR
 import { OperatorControlDashboard } from '@/components/trading/OperatorControlDashboard';
 import { ExperimentDashboard } from '@/components/trading/ExperimentDashboard';
 import { ReadinessDashboard } from '@/components/trading/ReadinessDashboard';
+import { OrchestrationDashboard } from '@/components/trading/OrchestrationDashboard';
 import { computePortfolioState } from '@/lib/portfolioManager';
 import { getLogEntries, subscribeToLog } from '@/lib/logger';
 import { useSyncExternalStore } from 'react';
