@@ -321,6 +321,14 @@ export default function PaperTrading() {
           enabledAssets={config.assets.filter(a => enabledAssets[a])}
         />
 
+        {/* Multi-Strategy Dashboard */}
+        <StrategyDashboard
+          candles={candles}
+          enabledAssets={config.assets.filter(a => enabledAssets[a])}
+          multiConfig={multiStrategyConfig}
+          onConfigChange={setMultiStrategyConfig}
+        />
+
         {/* Decision Log */}
         <DecisionLog />
 
