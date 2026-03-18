@@ -1,11 +1,10 @@
 import { useState, useCallback } from 'react';
 import { Asset, Candle } from '@/types/trading';
 import { BacktestConfig, BacktestTrade, BacktestResult, EquityPoint } from '@/types/backtest';
-import { calculateSMASeries, detectCrossover } from '@/lib/indicators';
+import { runBacktestSimulation, BacktestEngineConfig } from '@/lib/backtest-engine';
 
 const BINANCE_API = 'https://api.binance.com/api/v3';
 
-// Timeframe to milliseconds mapping
 const TIMEFRAME_MS: Record<string, number> = {
   '5m': 5 * 60 * 1000,
   '15m': 15 * 60 * 1000,
@@ -21,7 +20,7 @@ async function fetchHistoricalCandles(
 ): Promise<Candle[]> {
   const allCandles: Candle[] = [];
   let currentStart = startTime;
-  const limit = 1000; // Binance max limit
+  const limit = 1000;
 
   while (currentStart < endTime) {
     try {
@@ -46,11 +45,7 @@ async function fetchHistoricalCandles(
       }));
 
       allCandles.push(...candles);
-      
-      // Move start time to after the last candle
       currentStart = candles[candles.length - 1].timestamp + TIMEFRAME_MS[interval];
-      
-      // Rate limiting
       await new Promise(resolve => setTimeout(resolve, 100));
     } catch (error) {
       console.error(`Error fetching candles for ${asset}:`, error);
@@ -59,151 +54,6 @@ async function fetchHistoricalCandles(
   }
 
   return allCandles;
-}
-
-function runBacktestSimulation(
-  candles: Candle[],
-  asset: Asset,
-  config: BacktestConfig,
-  initialBalance: number
-): { trades: BacktestTrade[]; finalBalance: number } {
-  const trades: BacktestTrade[] = [];
-  let balance = initialBalance;
-  let position: { entryPrice: number; size: number; entryTime: number; stopLoss: number; takeProfit: number } | null = null;
-
-  if (candles.length < config.slowSMA + 1) {
-    return { trades, finalBalance: balance };
-  }
-
-  const fastSMA = calculateSMASeries(candles, config.fastSMA);
-  const slowSMA = calculateSMASeries(candles, config.slowSMA);
-
-  for (let i = config.slowSMA + 1; i < candles.length; i++) {
-    const candle = candles[i];
-    const currentPrice = candle.close;
-    
-    const fastCurrent = fastSMA[i];
-    const slowCurrent = slowSMA[i];
-    const fastPrevious = fastSMA[i - 1];
-    const slowPrevious = slowSMA[i - 1];
-
-    // Check stop loss / take profit for existing position
-    if (position) {
-      const pnlPercent = ((currentPrice - position.entryPrice) / position.entryPrice) * 100;
-      
-      let shouldClose = false;
-      let exitReason: 'stop_loss' | 'take_profit' | 'signal' = 'signal';
-
-      // Check if price hit stop loss (using candle low)
-      if (candle.low <= position.stopLoss) {
-        shouldClose = true;
-        exitReason = 'stop_loss';
-      }
-      // Check if price hit take profit (using candle high)
-      else if (candle.high >= position.takeProfit) {
-        shouldClose = true;
-        exitReason = 'take_profit';
-      }
-      // Check for sell signal
-      else {
-        const crossover = detectCrossover(fastCurrent, slowCurrent, fastPrevious, slowPrevious);
-        if (crossover === -1) {
-          shouldClose = true;
-          exitReason = 'signal';
-        }
-      }
-
-      if (shouldClose) {
-        const exitPrice = exitReason === 'stop_loss' 
-          ? position.stopLoss 
-          : exitReason === 'take_profit' 
-            ? position.takeProfit 
-            : currentPrice;
-        
-        const grossPnl = (exitPrice - position.entryPrice) * position.size;
-        const fee = position.size * exitPrice * (config.feePercent / 100);
-        const entryFee = position.size * position.entryPrice * (config.feePercent / 100);
-        const totalFees = fee + entryFee;
-        const netPnl = grossPnl - fee;
-        const pnlPercentFinal = (netPnl / (position.entryPrice * position.size)) * 100;
-
-        trades.push({
-          id: `bt-${asset}-${position.entryTime}`,
-          asset,
-          direction: 'long',
-          type: netPnl >= 0 ? 'win' : 'loss',
-          entryPrice: position.entryPrice,
-          exitPrice,
-          entryTime: position.entryTime,
-          exitTime: candle.timestamp,
-          pnl: netPnl,
-          pnlPercent: pnlPercentFinal / 100,
-          size: position.size,
-          fees: totalFees,
-          exitReason: exitReason === 'signal' ? 'bullish_crossover' : exitReason as any,
-          entryReason: 'signal',
-        });
-
-        balance += netPnl;
-        position = null;
-      }
-    }
-
-    // Check for buy signal (only if no position)
-    if (!position) {
-      const crossover = detectCrossover(fastCurrent, slowCurrent, fastPrevious, slowPrevious);
-      
-      if (crossover === 1) {
-        const positionValue = balance * (config.positionSizePercent / 100);
-        const fee = positionValue * (config.feePercent / 100);
-        const size = (positionValue - fee) / currentPrice;
-        
-        if (size > 0 && positionValue < balance) {
-          position = {
-            entryPrice: currentPrice,
-            size,
-            entryTime: candle.timestamp,
-            stopLoss: currentPrice * (1 - config.stopLossPercent / 100),
-            takeProfit: currentPrice * (1 + config.takeProfitPercent / 100),
-          };
-          balance -= fee; // Entry fee
-        }
-      }
-    }
-  }
-
-  // Close any remaining position at the end
-  if (position && candles.length > 0) {
-    const lastCandle = candles[candles.length - 1];
-    const exitPrice = lastCandle.close;
-    const grossPnl = (exitPrice - position.entryPrice) * position.size;
-    const fee = position.size * exitPrice * (config.feePercent / 100);
-    const entryFee = position.size * position.entryPrice * (config.feePercent / 100);
-    const totalFees = fee + entryFee;
-    const netPnl = grossPnl - fee;
-    const pnlPercent = (netPnl / (position.entryPrice * position.size)) * 100;
-
-    trades.push({
-      id: `bt-${asset}-${position.entryTime}`,
-      asset,
-      direction: 'long',
-      type: netPnl >= 0 ? 'win' : 'loss',
-      entryPrice: position.entryPrice,
-      exitPrice,
-      entryTime: position.entryTime,
-      exitTime: lastCandle.timestamp,
-      pnl: netPnl,
-      pnlPercent: pnlPercent / 100,
-      size: position.size,
-      fees: totalFees,
-      exitReason: 'bullish_crossover',
-      entryReason: 'signal',
-    });
-
-    balance += netPnl;
-  }
-
-  return { trades, finalBalance: balance };
 }
 
 export function useBacktest() {
@@ -233,6 +83,22 @@ export function useBacktest() {
         XLMUSDT: { trades: 0, pnl: 0, winRate: 0 },
       };
 
+      const engineConfig: BacktestEngineConfig = {
+        fastSMA: config.fastSMA,
+        slowSMA: config.slowSMA,
+        positionSizePercent: config.positionSizePercent,
+        stopLossPercent: config.stopLossPercent,
+        takeProfitPercent: config.takeProfitPercent,
+        feePercent: config.feePercent,
+        enableFilters: true,
+        atrPeriod: 14,
+        minAtrPercent: 0.5,
+        minSmaDistancePercent: 0.1,
+        cooldownCandles: 3,
+        maxDailyLossPercent: 5,
+        maxConsecutiveLosses: 5,
+      };
+
       for (let i = 0; i < config.assets.length; i++) {
         const asset = config.assets[i];
         setProgress(((i + 0.5) / config.assets.length) * 100);
@@ -244,7 +110,7 @@ export function useBacktest() {
           continue;
         }
 
-        const { trades, finalBalance } = runBacktestSimulation(candles, asset, config, balancePerAsset);
+        const { trades, finalBalance } = runBacktestSimulation(candles, asset, engineConfig, balancePerAsset);
         
         allTrades.push(...trades);
         totalBalance += (finalBalance - balancePerAsset);
@@ -265,7 +131,7 @@ export function useBacktest() {
       const totalPnl = totalBalance - config.initialBalance;
       const totalPnlPercent = (totalPnl / config.initialBalance) * 100;
 
-      // Calculate max drawdown and build equity curve
+      // Build equity curve and calculate max drawdown
       let peak = config.initialBalance;
       let maxDrawdown = 0;
       let runningBalance = config.initialBalance;
@@ -287,12 +153,12 @@ export function useBacktest() {
         });
       }
 
-      // Calculate profit factor
+      // Profit factor
       const grossProfit = winningTrades.reduce((sum, t) => sum + t.pnl, 0);
       const grossLoss = Math.abs(losingTrades.reduce((sum, t) => sum + t.pnl, 0));
       const profitFactor = grossLoss > 0 ? grossProfit / grossLoss : grossProfit > 0 ? Infinity : 0;
 
-      // Calculate average win/loss
+      // Average win/loss
       const averageWin = winningTrades.length > 0 
         ? winningTrades.reduce((sum, t) => sum + t.pnl, 0) / winningTrades.length 
         : 0;
@@ -300,25 +166,20 @@ export function useBacktest() {
         ? losingTrades.reduce((sum, t) => sum + t.pnl, 0) / losingTrades.length 
         : 0;
 
-      // Calculate risk-adjusted return metrics
+      // Risk-adjusted metrics
       const returns = allTrades.map(t => t.pnlPercent);
       const avgReturn = returns.length > 0 ? returns.reduce((a, b) => a + b, 0) / returns.length : 0;
       const stdDev = returns.length > 1 
         ? Math.sqrt(returns.reduce((sum, r) => sum + Math.pow(r - avgReturn, 2), 0) / (returns.length - 1))
         : 0;
-      
-      // Sharpe Ratio (annualized)
       const sharpeRatio = stdDev > 0 ? (avgReturn / stdDev) * Math.sqrt(252) : 0;
 
-      // Sortino Ratio - uses downside deviation (only negative returns)
       const negativeReturns = returns.filter(r => r < 0);
       const downsideDeviation = negativeReturns.length > 1
         ? Math.sqrt(negativeReturns.reduce((sum, r) => sum + Math.pow(r, 2), 0) / negativeReturns.length)
         : 0;
       const sortinoRatio = downsideDeviation > 0 ? (avgReturn / downsideDeviation) * Math.sqrt(252) : 0;
 
-      // Calmar Ratio - annualized return / max drawdown
-      // Estimate annualized return based on test period
       const testPeriodDays = (config.endDate.getTime() - config.startDate.getTime()) / (1000 * 60 * 60 * 24);
       const annualizedReturn = testPeriodDays > 0 ? (totalPnlPercent / testPeriodDays) * 365 : 0;
       const calmarRatio = maxDrawdown > 0 ? annualizedReturn / maxDrawdown : 0;

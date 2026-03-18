@@ -35,7 +35,7 @@ import { GitBranch, Play, RotateCcw, TrendingUp, TrendingDown, AlertTriangle, Ch
 import { cn } from '@/lib/utils';
 import { Asset, Candle } from '@/types/trading';
 import { WindowResult, WalkForwardResult } from '@/types/backtest';
-import { calculateSMASeries, detectCrossover } from '@/lib/indicators';
+import { runQuickBacktest } from '@/lib/backtest-engine';
 import { formatCurrency } from '@/lib/performance';
 import { format, addDays, differenceInDays } from 'date-fns';
 
@@ -102,100 +102,7 @@ async function fetchHistoricalCandles(
   return allCandles;
 }
 
-function runQuickBacktest(
-  candles: Candle[],
-  fastSMA: number,
-  slowSMA: number,
-  positionSizePercent: number,
-  stopLossPercent: number,
-  takeProfitPercent: number,
-  initialBalance: number
-): { pnl: number; wins: number; losses: number } {
-  let balance = initialBalance;
-  let wins = 0;
-  let losses = 0;
-  let position: { entryPrice: number; size: number; stopLoss: number; takeProfit: number } | null = null;
-
-  if (candles.length < slowSMA + 1) {
-    return { pnl: 0, wins: 0, losses: 0 };
-  }
-
-  const fastSMAValues = calculateSMASeries(candles, fastSMA);
-  const slowSMAValues = calculateSMASeries(candles, slowSMA);
-
-  for (let i = slowSMA + 1; i < candles.length; i++) {
-    const candle = candles[i];
-    const currentPrice = candle.close;
-    
-    const fastCurrent = fastSMAValues[i];
-    const slowCurrent = slowSMAValues[i];
-    const fastPrevious = fastSMAValues[i - 1];
-    const slowPrevious = slowSMAValues[i - 1];
-
-    if (position) {
-      let shouldClose = false;
-      let exitPrice = currentPrice;
-
-      if (candle.low <= position.stopLoss) {
-        shouldClose = true;
-        exitPrice = position.stopLoss;
-      } else if (candle.high >= position.takeProfit) {
-        shouldClose = true;
-        exitPrice = position.takeProfit;
-      } else {
-        const crossover = detectCrossover(fastCurrent, slowCurrent, fastPrevious, slowPrevious);
-        if (crossover === -1) {
-          shouldClose = true;
-        }
-      }
-
-      if (shouldClose) {
-        const grossPnl = (exitPrice - position.entryPrice) * position.size;
-        const fee = position.size * exitPrice * 0.001 + position.size * position.entryPrice * 0.001;
-        const netPnl = grossPnl - fee;
-
-        if (netPnl >= 0) wins++;
-        else losses++;
-
-        balance += netPnl;
-        position = null;
-      }
-    }
-
-    if (!position) {
-      const crossover = detectCrossover(fastCurrent, slowCurrent, fastPrevious, slowPrevious);
-      
-      if (crossover === 1) {
-        const positionValue = balance * (positionSizePercent / 100);
-        const fee = positionValue * 0.001;
-        const size = (positionValue - fee) / currentPrice;
-        
-        if (size > 0 && positionValue < balance) {
-          position = {
-            entryPrice: currentPrice,
-            size,
-            stopLoss: currentPrice * (1 - stopLossPercent / 100),
-            takeProfit: currentPrice * (1 + takeProfitPercent / 100),
-          };
-          balance -= fee;
-        }
-      }
-    }
-  }
-
-  if (position && candles.length > 0) {
-    const lastCandle = candles[candles.length - 1];
-    const exitPrice = lastCandle.close;
-    const grossPnl = (exitPrice - position.entryPrice) * position.size;
-    const fee = position.size * exitPrice * 0.001;
-    const netPnl = grossPnl - fee;
-    if (netPnl >= 0) wins++;
-    else losses++;
-    balance += netPnl;
-  }
-
-  return { pnl: balance - initialBalance, wins, losses };
-}
+// runQuickBacktest is now imported from '@/lib/backtest-engine'
 
 function findOptimalParameters(
   candles: Candle[],

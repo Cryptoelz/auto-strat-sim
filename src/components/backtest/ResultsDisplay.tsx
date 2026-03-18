@@ -101,7 +101,7 @@ export function ResultsDisplay({
       {result.equityCurve.length > 1 && (
         <StaggeredSection index={1}>
           <div className="space-y-4">
-            <EquityCurveChart data={result.equityCurve} initialBalance={initialBalance} />
+            <EquityCurveChart data={result.equityCurve} initialBalance={initialBalance} trades={result.trades} />
             <DrawdownChart data={result.equityCurve} maxDrawdown={result.maxDrawdown} />
           </div>
         </StaggeredSection>
@@ -312,6 +312,14 @@ export function ResultsDisplay({
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Total Trades</span>
               <span className="font-medium">{result.totalTrades}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Long Trades</span>
+              <span className="font-medium">{result.trades.filter(t => t.direction === 'long').length}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Short Trades</span>
+              <span className="font-medium">{result.trades.filter(t => t.direction === 'short').length}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Winning Trades</span>
