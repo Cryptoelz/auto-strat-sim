@@ -101,7 +101,7 @@ export function ResultsDisplay({
       {result.equityCurve.length > 1 && (
         <StaggeredSection index={1}>
           <div className="space-y-4">
-            <EquityCurveChart data={result.equityCurve} initialBalance={initialBalance} />
+            <EquityCurveChart data={result.equityCurve} initialBalance={initialBalance} trades={result.trades} />
             <DrawdownChart data={result.equityCurve} maxDrawdown={result.maxDrawdown} />
           </div>
         </StaggeredSection>
