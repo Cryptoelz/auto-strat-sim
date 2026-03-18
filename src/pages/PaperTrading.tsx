@@ -25,6 +25,7 @@ import { AgentGovernanceDashboard } from '@/components/trading/AgentGovernanceDa
 import { OperatorControlDashboard } from '@/components/trading/OperatorControlDashboard';
 import { ExperimentDashboard } from '@/components/trading/ExperimentDashboard';
 import { ReadinessDashboard } from '@/components/trading/ReadinessDashboard';
+import { OrchestrationDashboard } from '@/components/trading/OrchestrationDashboard';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { getLogEntries, subscribeToLog } from '@/lib/logger';
 import { formatCurrency } from '@/lib/performance';
@@ -392,6 +393,9 @@ export default function PaperTrading() {
 
         {/* Readiness Review & Validation */}
         <ReadinessDashboard state={state} />
+
+        {/* Master Orchestration */}
+        <OrchestrationDashboard />
 
         {/* Decision Log */}
         <DecisionLog />

@@ -32,6 +32,7 @@ import { OperatorState, OperatorConfig, DEFAULT_OPERATOR_STATE, DEFAULT_OPERATOR
 import { OperatorControlDashboard } from '@/components/trading/OperatorControlDashboard';
 import { ExperimentDashboard } from '@/components/trading/ExperimentDashboard';
 import { ReadinessDashboard } from '@/components/trading/ReadinessDashboard';
+import { OrchestrationDashboard } from '@/components/trading/OrchestrationDashboard';
 import { computePortfolioState } from '@/lib/portfolioManager';
 import { getLogEntries, subscribeToLog } from '@/lib/logger';
 import { useSyncExternalStore } from 'react';
@@ -323,6 +324,11 @@ const Index = () => {
             maxDrawdown={0}
             sessionStartTime={Date.now()}
           />
+        </div>
+
+        {/* Master Orchestration */}
+        <div className="mt-4 sm:mt-6">
+          <OrchestrationDashboard />
         </div>
 
         {/* Footer disclaimer */}
