@@ -191,6 +191,16 @@ const Index = () => {
           <MemoizedPerformanceStats state={state} />
         </div>
 
+        {/* Multi-Strategy Dashboard */}
+        <div className="mt-4 sm:mt-6">
+          <StrategyDashboard
+            candles={candles}
+            enabledAssets={strategyConfig.enabledAssets}
+            multiConfig={multiStrategyConfig}
+            onConfigChange={setMultiStrategyConfig}
+          />
+        </div>
+
         {/* Decision Log */}
         <div className="mt-4 sm:mt-6">
           <DecisionLog />
