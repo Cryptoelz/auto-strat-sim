@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { Asset, Candle } from '@/types/trading';
 import { BacktestConfig, BacktestTrade, BacktestResult, EquityPoint } from '@/types/backtest';
 import { runBacktestSimulation, BacktestEngineConfig } from '@/lib/backtest-engine';
+import { runAuditBacktest, AuditEntry } from '@/lib/backtest-audit';
 
 const BINANCE_API = 'https://api.binance.com/api/v3';
 
@@ -60,12 +61,14 @@ export function useBacktest() {
   const [isRunning, setIsRunning] = useState(false);
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<BacktestResult | null>(null);
+  const [auditLog, setAuditLog] = useState<AuditEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const runBacktest = useCallback(async (config: BacktestConfig) => {
     setIsRunning(true);
     setProgress(0);
     setResult(null);
+    setAuditLog([]);
     setError(null);
 
     try {
@@ -99,6 +102,8 @@ export function useBacktest() {
         maxConsecutiveLosses: 5,
       };
 
+      const allAudit: AuditEntry[] = [];
+
       for (let i = 0; i < config.assets.length; i++) {
         const asset = config.assets[i];
         setProgress(((i + 0.5) / config.assets.length) * 100);
@@ -110,7 +115,9 @@ export function useBacktest() {
           continue;
         }
 
-        const { trades, finalBalance } = runBacktestSimulation(candles, asset, engineConfig, balancePerAsset);
+        // Use audit engine to get both trades and audit log
+        const { trades, finalBalance, audit } = runAuditBacktest(candles, asset, engineConfig, balancePerAsset);
+        allAudit.push(...audit);
         
         allTrades.push(...trades);
         totalBalance += (finalBalance - balancePerAsset);
@@ -124,6 +131,8 @@ export function useBacktest() {
 
         setProgress(((i + 1) / config.assets.length) * 100);
       }
+
+      setAuditLog(allAudit);
 
       // Calculate overall statistics
       const winningTrades = allTrades.filter(t => t.type === 'win');
@@ -213,6 +222,7 @@ export function useBacktest() {
 
   const reset = useCallback(() => {
     setResult(null);
+    setAuditLog([]);
     setError(null);
     setProgress(0);
   }, []);
@@ -221,6 +231,7 @@ export function useBacktest() {
     isRunning,
     progress,
     result,
+    auditLog,
     error,
     runBacktest,
     reset,

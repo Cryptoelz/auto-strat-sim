@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useBacktest } from '@/hooks/useBacktest';
+import { BacktestAuditPanel } from '@/components/backtest/BacktestAuditPanel';
 import { useBacktestConfig } from '@/hooks/useBacktestConfig';
 import { useBacktestShortcuts, BACKTEST_SHORTCUTS } from '@/hooks/useBacktestShortcuts';
 import { StrategyOptimizer } from '@/components/backtest/StrategyOptimizer';
@@ -45,7 +46,7 @@ export default function Backtest() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [clearPresetsConfirmOpen, setClearPresetsConfirmOpen] = useState(false);
   const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
-  const { isRunning, progress, result, error, runBacktest, reset } = useBacktest();
+  const { isRunning, progress, result, auditLog, error, runBacktest, reset } = useBacktest();
   const config = useBacktestConfig();
   
   const lastRecordedResultRef = useRef<typeof result>(null);
@@ -386,14 +387,21 @@ export default function Backtest() {
             )}
 
             {result && !config.showComparison && (
-              <ResultsDisplay 
-                result={result} 
-                fastSMA={config.fastSMA} 
-                slowSMA={config.slowSMA} 
-                stopLossPercent={config.stopLossPercent} 
-                takeProfitPercent={config.takeProfitPercent} 
-                positionSizePercent={config.positionSizePercent} 
-              />
+              <>
+                <ResultsDisplay 
+                  result={result} 
+                  fastSMA={config.fastSMA} 
+                  slowSMA={config.slowSMA} 
+                  stopLossPercent={config.stopLossPercent} 
+                  takeProfitPercent={config.takeProfitPercent} 
+                  positionSizePercent={config.positionSizePercent} 
+                />
+                {auditLog.length > 0 && (
+                  <div className="mt-6">
+                    <BacktestAuditPanel audit={auditLog} />
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

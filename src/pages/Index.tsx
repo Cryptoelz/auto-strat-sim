@@ -16,7 +16,9 @@ import { DecisionLog } from '@/components/trading/DecisionLog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DEFAULT_CONFIG } from '@/config/trading';
 import { StrategyConfig } from '@/components/StrategySettings';
-import { Asset } from '@/types/trading';
+import { Asset, DecisionLogEntry } from '@/types/trading';
+import { getLogEntries, subscribeToLog } from '@/lib/logger';
+import { useSyncExternalStore } from 'react';
 
 const MemoizedPortfolioAllocation = memo(PortfolioAllocation);
 const MemoizedAssetBreakdown = memo(AssetBreakdown);
@@ -24,6 +26,10 @@ const MemoizedTradeJournal = memo(TradeJournal);
 const MemoizedPerformanceStats = memo(PerformanceStats);
 
 const Index = () => {
+  // Subscribe to decision log for blocked signals
+  const decisionLog = useSyncExternalStore(subscribeToLog, getLogEntries);
+  const blockedSignals = useMemo(() => decisionLog.filter(e => e.action === 'blocked'), [decisionLog]);
+
   const [strategyConfig, setStrategyConfig] = useState<StrategyConfig>({
     timeframe: DEFAULT_CONFIG.timeframe as '5m' | '15m' | '1h' | '4h',
     enabledAssets: DEFAULT_CONFIG.assets as Asset[],
@@ -154,9 +160,11 @@ const Index = () => {
               <PriceChart
                 asset={asset}
                 candles={candles[asset]}
-                position={state.positions[asset]}
+                position={state.positions[asset] ? { entryPrice: state.positions[asset]!.entryPrice, direction: state.positions[asset]!.direction } : null}
                 fastSMA={strategyConfig.fastSMA}
                 slowSMA={strategyConfig.slowSMA}
+                trades={state.trades}
+                blockedSignals={blockedSignals}
               />
               <AssetDetailPanel
                 asset={asset}
