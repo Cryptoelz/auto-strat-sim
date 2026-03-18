@@ -8,6 +8,7 @@ import { MultiStrategyConfig, DEFAULT_MULTI_STRATEGY_CONFIG } from '@/types/stra
 import { AgentConfig, DEFAULT_AGENT_CONFIG } from '@/types/agent';
 import { MemoryConfig, DEFAULT_MEMORY_CONFIG } from '@/types/memory';
 import { GovernanceConfig, DEFAULT_GOVERNANCE_CONFIG, GovernanceStatus } from '@/types/governance';
+import { OperatorState, OperatorConfig, DEFAULT_OPERATOR_STATE, DEFAULT_OPERATOR_CONFIG } from '@/types/operator';
 import { computePortfolioState } from '@/lib/portfolioManager';
 import { StrategyConfig } from '@/components/StrategySettings';
 import { PriceChart } from '@/components/trading/PriceChart';
@@ -21,6 +22,7 @@ import { StrategyDashboard } from '@/components/trading/StrategyDashboard';
 import { AgentDecisionDashboard } from '@/components/trading/AgentDecisionDashboard';
 import { AgentMemoryDashboard } from '@/components/trading/AgentMemoryDashboard';
 import { AgentGovernanceDashboard } from '@/components/trading/AgentGovernanceDashboard';
+import { OperatorControlDashboard } from '@/components/trading/OperatorControlDashboard';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { getLogEntries, subscribeToLog } from '@/lib/logger';
 import { formatCurrency } from '@/lib/performance';
@@ -50,6 +52,8 @@ export default function PaperTrading() {
   const [memoryConfig, setMemoryConfig] = useState<MemoryConfig>(DEFAULT_MEMORY_CONFIG);
   const [governanceConfig, setGovernanceConfig] = useState<GovernanceConfig>(DEFAULT_GOVERNANCE_CONFIG);
   const [prevGovStatus, setPrevGovStatus] = useState<GovernanceStatus | null>(null);
+  const [operatorState, setOperatorState] = useState<OperatorState>(DEFAULT_OPERATOR_STATE);
+  const [operatorConfig, setOperatorConfig] = useState<OperatorConfig>(DEFAULT_OPERATOR_CONFIG);
   const peakEquityRef = useRef(10000);
   const portfolioLogsRef = useRef<any[]>([]);
 
@@ -337,6 +341,14 @@ export default function PaperTrading() {
           enabledAssets={config.assets.filter(a => enabledAssets[a])}
           multiConfig={multiStrategyConfig}
           onConfigChange={setMultiStrategyConfig}
+        />
+
+        {/* Operator Controls & Policy */}
+        <OperatorControlDashboard
+          operatorState={operatorState}
+          onStateChange={setOperatorState}
+          operatorConfig={operatorConfig}
+          onConfigChange={setOperatorConfig}
         />
 
         {/* Agent Decision Engine */}

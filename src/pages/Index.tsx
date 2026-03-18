@@ -28,6 +28,8 @@ import { AgentConfig, DEFAULT_AGENT_CONFIG } from '@/types/agent';
 import { MemoryConfig, DEFAULT_MEMORY_CONFIG } from '@/types/memory';
 import { GovernanceConfig, DEFAULT_GOVERNANCE_CONFIG, GovernanceStatus } from '@/types/governance';
 import { AgentGovernanceDashboard } from '@/components/trading/AgentGovernanceDashboard';
+import { OperatorState, OperatorConfig, DEFAULT_OPERATOR_STATE, DEFAULT_OPERATOR_CONFIG } from '@/types/operator';
+import { OperatorControlDashboard } from '@/components/trading/OperatorControlDashboard';
 import { computePortfolioState } from '@/lib/portfolioManager';
 import { getLogEntries, subscribeToLog } from '@/lib/logger';
 import { useSyncExternalStore } from 'react';
@@ -48,6 +50,8 @@ const Index = () => {
   const [memoryConfig, setMemoryConfig] = useState<MemoryConfig>(DEFAULT_MEMORY_CONFIG);
   const [governanceConfig, setGovernanceConfig] = useState<GovernanceConfig>(DEFAULT_GOVERNANCE_CONFIG);
   const [prevGovStatus, setPrevGovStatus] = useState<GovernanceStatus | null>(null);
+  const [operatorState, setOperatorState] = useState<OperatorState>(DEFAULT_OPERATOR_STATE);
+  const [operatorConfig, setOperatorConfig] = useState<OperatorConfig>(DEFAULT_OPERATOR_CONFIG);
   const peakEquityRef = useRef(10000);
   const portfolioLogsRef = useRef<any[]>([]);
 
@@ -208,6 +212,16 @@ const Index = () => {
             enabledAssets={strategyConfig.enabledAssets}
             multiConfig={multiStrategyConfig}
             onConfigChange={setMultiStrategyConfig}
+          />
+        </div>
+
+        {/* Operator Controls & Policy */}
+        <div className="mt-4 sm:mt-6">
+          <OperatorControlDashboard
+            operatorState={operatorState}
+            onStateChange={setOperatorState}
+            operatorConfig={operatorConfig}
+            onConfigChange={setOperatorConfig}
           />
         </div>
 
