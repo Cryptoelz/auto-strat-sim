@@ -24,6 +24,7 @@ import { AgentMemoryDashboard } from '@/components/trading/AgentMemoryDashboard'
 import { AgentGovernanceDashboard } from '@/components/trading/AgentGovernanceDashboard';
 import { OperatorControlDashboard } from '@/components/trading/OperatorControlDashboard';
 import { ExperimentDashboard } from '@/components/trading/ExperimentDashboard';
+import { ReadinessDashboard } from '@/components/trading/ReadinessDashboard';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { getLogEntries, subscribeToLog } from '@/lib/logger';
 import { formatCurrency } from '@/lib/performance';
@@ -388,6 +389,9 @@ export default function PaperTrading() {
 
         {/* Experiment Management */}
         <ExperimentDashboard />
+
+        {/* Readiness Review & Validation */}
+        <ReadinessDashboard state={state} />
 
         {/* Decision Log */}
         <DecisionLog />

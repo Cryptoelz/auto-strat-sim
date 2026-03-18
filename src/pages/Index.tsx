@@ -31,6 +31,7 @@ import { AgentGovernanceDashboard } from '@/components/trading/AgentGovernanceDa
 import { OperatorState, OperatorConfig, DEFAULT_OPERATOR_STATE, DEFAULT_OPERATOR_CONFIG } from '@/types/operator';
 import { OperatorControlDashboard } from '@/components/trading/OperatorControlDashboard';
 import { ExperimentDashboard } from '@/components/trading/ExperimentDashboard';
+import { ReadinessDashboard } from '@/components/trading/ReadinessDashboard';
 import { computePortfolioState } from '@/lib/portfolioManager';
 import { getLogEntries, subscribeToLog } from '@/lib/logger';
 import { useSyncExternalStore } from 'react';
@@ -296,6 +297,11 @@ const Index = () => {
         {/* Experiment Management */}
         <div className="mt-4 sm:mt-6">
           <ExperimentDashboard />
+        </div>
+
+        {/* Readiness Review & Validation */}
+        <div className="mt-4 sm:mt-6">
+          <ReadinessDashboard state={state} />
         </div>
 
         {/* Trading Journal */}
