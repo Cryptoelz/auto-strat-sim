@@ -215,6 +215,16 @@ const Index = () => {
           />
         </div>
 
+        {/* Operator Controls & Policy */}
+        <div className="mt-4 sm:mt-6">
+          <OperatorControlDashboard
+            operatorState={operatorState}
+            onStateChange={setOperatorState}
+            operatorConfig={operatorConfig}
+            onConfigChange={setOperatorConfig}
+          />
+        </div>
+
         {/* Agent Decision Engine */}
         <div className="mt-4 sm:mt-6">
           <AgentDecisionDashboard
