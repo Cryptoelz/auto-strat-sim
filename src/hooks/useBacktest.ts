@@ -102,6 +102,8 @@ export function useBacktest() {
         maxConsecutiveLosses: 5,
       };
 
+      const allAudit: AuditEntry[] = [];
+
       for (let i = 0; i < config.assets.length; i++) {
         const asset = config.assets[i];
         setProgress(((i + 0.5) / config.assets.length) * 100);
@@ -113,7 +115,9 @@ export function useBacktest() {
           continue;
         }
 
-        const { trades, finalBalance } = runBacktestSimulation(candles, asset, engineConfig, balancePerAsset);
+        // Use audit engine to get both trades and audit log
+        const { trades, finalBalance, audit } = runAuditBacktest(candles, asset, engineConfig, balancePerAsset);
+        allAudit.push(...audit);
         
         allTrades.push(...trades);
         totalBalance += (finalBalance - balancePerAsset);
@@ -127,6 +131,8 @@ export function useBacktest() {
 
         setProgress(((i + 1) / config.assets.length) * 100);
       }
+
+      setAuditLog(allAudit);
 
       // Calculate overall statistics
       const winningTrades = allTrades.filter(t => t.type === 'win');
