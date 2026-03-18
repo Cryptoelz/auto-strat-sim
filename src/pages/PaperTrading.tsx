@@ -332,6 +332,18 @@ export default function PaperTrading() {
           onConfigChange={setMultiStrategyConfig}
         />
 
+        {/* Agent Decision Engine */}
+        <AgentDecisionDashboard
+          candles={candles}
+          analytics={analytics}
+          state={state}
+          enabledAssets={config.assets.filter(a => enabledAssets[a])}
+          multiConfig={multiStrategyConfig}
+          portfolioDrawdown={maxDrawdown}
+          agentConfig={agentConfig}
+          onAgentConfigChange={setAgentConfig}
+        />
+
         {/* Decision Log */}
         <DecisionLog />
 
