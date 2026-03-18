@@ -390,6 +390,9 @@ export default function PaperTrading() {
         {/* Experiment Management */}
         <ExperimentDashboard />
 
+        {/* Readiness Review & Validation */}
+        <ReadinessDashboard state={state} />
+
         {/* Decision Log */}
         <DecisionLog />
 
