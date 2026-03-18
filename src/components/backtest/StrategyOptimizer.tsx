@@ -26,7 +26,7 @@ import { Settings2, Play, Trophy, TrendingUp, TrendingDown, Zap, Target, AlertTr
 import { cn } from '@/lib/utils';
 import { Asset, Candle } from '@/types/trading';
 import { OptimizationResult } from '@/types/backtest';
-import { calculateSMASeries, detectCrossover } from '@/lib/indicators';
+import { runQuickBacktest } from '@/lib/backtest-engine';
 import { formatCurrency } from '@/lib/performance';
 
 interface StrategyOptimizerProps {
