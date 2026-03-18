@@ -1,13 +1,16 @@
-import { useState, useMemo, memo } from 'react';
+import { useState, useMemo, useRef, memo } from 'react';
 import { Link } from 'react-router-dom';
 import { usePaperTrading, StatusMessage } from '@/hooks/usePaperTrading';
 import { DEFAULT_CONFIG, ASSET_INFO } from '@/config/trading';
 import { Asset, TradingConfig } from '@/types/trading';
+import { PortfolioConfig, DEFAULT_PORTFOLIO_CONFIG } from '@/types/portfolio';
+import { computePortfolioState } from '@/lib/portfolioManager';
 import { StrategyConfig } from '@/components/StrategySettings';
 import { PriceChart } from '@/components/trading/PriceChart';
 import { AssetDetailPanel } from '@/components/trading/AssetDetailPanel';
 import { TradeHistory } from '@/components/trading/TradeHistory';
 import { PerformanceStats } from '@/components/trading/PerformanceStats';
+import { PortfolioDashboard } from '@/components/trading/PortfolioDashboard';
 import { DecisionLog } from '@/components/trading/DecisionLog';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { getLogEntries, subscribeToLog } from '@/lib/logger';

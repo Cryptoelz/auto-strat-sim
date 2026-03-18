@@ -192,6 +192,20 @@ const Index = () => {
           <DecisionLog />
         </div>
 
+        {/* Portfolio Dashboard */}
+        <div className="mt-4 sm:mt-6">
+          <PortfolioDashboard
+            portfolioState={computePortfolioState(
+              state, prices, analytics, signals,
+              strategyConfig.enabledAssets, portfolioConfig,
+              peakEquityRef.current, portfolioLogsRef.current,
+            )}
+            portfolioConfig={portfolioConfig}
+            onConfigChange={setPortfolioConfig}
+            enabledAssets={strategyConfig.enabledAssets}
+          />
+        </div>
+
         {/* Portfolio and Asset breakdown */}
         <div className="mt-4 grid gap-4 sm:mt-6 sm:gap-6 lg:grid-cols-2">
           <MemoizedPortfolioAllocation
