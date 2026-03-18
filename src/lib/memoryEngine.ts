@@ -134,11 +134,8 @@ function adaptenceStrengthSafe(config: MemoryConfig): number {
   return config.adaptationStrength * modeMultiplier;
 }
 
-// Patch: add to MemoryConfig at runtime
-(MemoryConfig as any); // type-only reference
-// We use the function directly instead of patching
-
-// ─── Risk Memory ─────────────────────────────────────────────────────
+// Helper to safely get adaptation strength
+function adaptenceStrengthSafe(config: MemoryConfig): number {
 
 function buildRiskMemory(
   state: TradingState,
