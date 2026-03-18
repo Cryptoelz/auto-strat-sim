@@ -343,6 +343,14 @@ export default function PaperTrading() {
           onConfigChange={setMultiStrategyConfig}
         />
 
+        {/* Operator Controls & Policy */}
+        <OperatorControlDashboard
+          operatorState={operatorState}
+          onStateChange={setOperatorState}
+          operatorConfig={operatorConfig}
+          onConfigChange={setOperatorConfig}
+        />
+
         {/* Agent Decision Engine */}
         <AgentDecisionDashboard
           candles={candles}
