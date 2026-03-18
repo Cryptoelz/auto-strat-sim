@@ -46,7 +46,7 @@ export default function Backtest() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [clearPresetsConfirmOpen, setClearPresetsConfirmOpen] = useState(false);
   const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
-  const { isRunning, progress, result, error, runBacktest, reset } = useBacktest();
+  const { isRunning, progress, result, auditLog, error, runBacktest, reset } = useBacktest();
   const config = useBacktestConfig();
   
   const lastRecordedResultRef = useRef<typeof result>(null);
