@@ -204,6 +204,20 @@ const Index = () => {
           />
         </div>
 
+        {/* Agent Decision Engine */}
+        <div className="mt-4 sm:mt-6">
+          <AgentDecisionDashboard
+            candles={candles}
+            analytics={analytics}
+            state={state}
+            enabledAssets={strategyConfig.enabledAssets}
+            multiConfig={multiStrategyConfig}
+            portfolioDrawdown={0}
+            agentConfig={agentConfig}
+            onAgentConfigChange={setAgentConfig}
+          />
+        </div>
+
         {/* Decision Log */}
         <div className="mt-4 sm:mt-6">
           <DecisionLog />
