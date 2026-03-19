@@ -383,7 +383,7 @@ function StatusMessageRow({ msg }: { msg: StatusMessage }) {
   const iconMap = {
     info: <CheckCircle2 className="h-3 w-3 text-primary shrink-0" />,
     trade: <Zap className="h-3 w-3 text-trading-profit shrink-0" />,
-    warning: <AlertTriangle className="h-3 w-3 text-yellow-500 shrink-0" />,
+    warning: <AlertTriangle className="h-3 w-3 text-trading-warning shrink-0" />,
     error: <AlertTriangle className="h-3 w-3 text-destructive shrink-0" />,
     blocked: <StopCircle className="h-3 w-3 text-muted-foreground shrink-0" />,
   };
