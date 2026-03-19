@@ -195,8 +195,13 @@ export function useUnifiedTradingEngine({
 
   const candleIntervalMs = TIMEFRAME_MS[config.timeframe] || CANDLE_INTERVAL_MS;
 
-  // ── Status message helper (paper mode) ──
+  // ── Status message helper (paper mode) + diagnostics tracking ──
   const addStatus = useCallback((type: StatusMessage['type'], message: string, asset?: Asset) => {
+    // Track soak diagnostics regardless of mode
+    if (type === 'error') diagnosticsRef.current.errorCount++;
+    if (type === 'warning') diagnosticsRef.current.warningCount++;
+    if (type === 'blocked') diagnosticsRef.current.blockedTradeCount++;
+
     if (!isPaperMode) return;
     setStatusMessages(prev => [{
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
