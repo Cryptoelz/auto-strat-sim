@@ -16,6 +16,7 @@ import OperatorControls from "./pages/OperatorControls";
 import Alerts from "./pages/Alerts";
 import Experiments from "./pages/Experiments";
 import Readiness from "./pages/Readiness";
+import Research from "./pages/Research";
 import SystemHealth from "./pages/SystemHealth";
 import NotFound from "./pages/NotFound";
 
