@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { useBacktest } from '@/hooks/useBacktest';
-import { useBacktest } from '@/hooks/useBacktest';
 import { BacktestAuditPanel } from '@/components/backtest/BacktestAuditPanel';
 import { ScenarioTestingDashboard } from '@/components/backtest/ScenarioTestingDashboard';
 import { useBacktestConfig } from '@/hooks/useBacktestConfig';
@@ -18,21 +17,13 @@ import { VersionPerformance } from '@/types/preset-version';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  Dialog, DialogContent, DialogDescription,
+  DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog';
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { AlertTriangle, BarChart3, Keyboard } from 'lucide-react';
 
