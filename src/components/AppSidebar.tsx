@@ -50,6 +50,7 @@ const NAV_SECTIONS = [
     label: 'Review',
     items: [
       { title: 'Experiments', url: '/experiments', icon: Beaker },
+      { title: 'Promotion', url: '/promotion', icon: ArrowUpCircle },
       { title: 'Readiness', url: '/readiness', icon: ClipboardCheck },
       { title: 'System Health', url: '/system-health', icon: Activity },
     ],
