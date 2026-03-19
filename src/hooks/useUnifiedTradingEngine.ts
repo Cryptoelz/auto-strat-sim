@@ -180,6 +180,19 @@ export function useUnifiedTradingEngine({
   const sessionRef = useRef(isPaperMode ? loadSession() : { startTime: Date.now(), maxDrawdown: 0 });
   const peakEquityRef = useRef(config.risk.positionSizePercent ? state.initialBalance : 10000);
 
+  // ── Soak diagnostics ref ──
+  const diagnosticsRef = useRef<SoakDiagnostics>({
+    sessionDurationMs: 0,
+    cycleCount: 0,
+    reconnectCount: 0,
+    errorCount: 0,
+    warningCount: 0,
+    blockedTradeCount: 0,
+    governanceTransitions: 0,
+    stateRestoreCount: 0,
+    lastCycleTimestamp: Date.now(),
+  });
+
   const candleIntervalMs = TIMEFRAME_MS[config.timeframe] || CANDLE_INTERVAL_MS;
 
   // ── Status message helper (paper mode) ──
