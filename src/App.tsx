@@ -18,6 +18,7 @@ import Experiments from "./pages/Experiments";
 import Readiness from "./pages/Readiness";
 import Research from "./pages/Research";
 import SystemHealth from "./pages/SystemHealth";
+import Promotion from "./pages/Promotion";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
