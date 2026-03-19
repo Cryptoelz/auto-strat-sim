@@ -1,5 +1,4 @@
 import { useState, useMemo, useRef, memo } from 'react';
-import { Link } from 'react-router-dom';
 import { usePaperTrading, StatusMessage } from '@/hooks/usePaperTrading';
 import { DEFAULT_CONFIG, ASSET_INFO } from '@/config/trading';
 import { Asset, TradingConfig } from '@/types/trading';
@@ -26,19 +25,17 @@ import { OperatorControlDashboard } from '@/components/trading/OperatorControlDa
 import { ExperimentDashboard } from '@/components/trading/ExperimentDashboard';
 import { ReadinessDashboard } from '@/components/trading/ReadinessDashboard';
 import { OrchestrationDashboard } from '@/components/trading/OrchestrationDashboard';
-import { ThemeToggle } from '@/components/ThemeToggle';
 import { getLogEntries, subscribeToLog } from '@/lib/logger';
 import { formatCurrency } from '@/lib/performance';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
-  ArrowLeft, Play, Pause, RotateCcw, Shield, Wifi, WifiOff,
+  Play, Pause, RotateCcw, Shield, Wifi, WifiOff,
   AlertTriangle, Activity, TrendingUp, TrendingDown, Zap, Target,
   StopCircle, CheckCircle2, Clock, DollarSign, BarChart3, Radio,
 } from 'lucide-react';
