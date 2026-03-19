@@ -119,7 +119,7 @@ export default function Trading() {
         state={state}
         enabledAssets={strategyConfig.enabledAssets}
         multiConfig={multiStrategyConfig}
-        portfolioDrawdown={0}
+        portfolioDrawdown={portfolioDrawdown}
         agentConfig={agentConfig}
         onAgentConfigChange={setAgentConfig}
       />
