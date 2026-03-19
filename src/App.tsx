@@ -41,6 +41,7 @@ const App = () => (
               <Route path="/operator" element={<OperatorControls />} />
               <Route path="/alerts" element={<Alerts />} />
               <Route path="/experiments" element={<Experiments />} />
+              <Route path="/research" element={<Research />} />
               <Route path="/readiness" element={<Readiness />} />
               <Route path="/system-health" element={<SystemHealth />} />
             </Route>

@@ -35,6 +35,7 @@ const NAV_SECTIONS = [
     items: [
       { title: 'Strategies', url: '/strategies', icon: Layers },
       { title: 'Portfolio', url: '/portfolio', icon: PieChart },
+      { title: 'Research', url: '/research', icon: Microscope },
     ],
   },
   {
