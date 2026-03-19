@@ -17,8 +17,6 @@ import { VersionHistoryPanel } from '@/components/backtest/config/VersionHistory
 import { VersionPerformance } from '@/types/preset-version';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ThemeToggle } from '@/components/ThemeToggle';
-import {
   Dialog,
   DialogContent,
   DialogDescription,
