@@ -129,7 +129,7 @@ export default function Trading() {
         state={state}
         analytics={analytics}
         enabledAssets={strategyConfig.enabledAssets}
-        portfolioDrawdown={0}
+        portfolioDrawdown={portfolioDrawdown}
         memoryConfig={memoryConfig}
         onMemoryConfigChange={setMemoryConfig}
       />
