@@ -620,6 +620,8 @@ export function generateResearchReport(
 
   const benchmarks: BenchmarkResult[] = [
     computeStrategyBenchmark(trades, initialBalance),
+    computeLongOnlySMABenchmark(trades, initialBalance),
+    computeLongShortSMABenchmark(trades, initialBalance),
   ];
   if (startPrice && endPrice) {
     benchmarks.push(computeBuyAndHoldBenchmark(startPrice, endPrice, initialBalance));
