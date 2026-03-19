@@ -312,7 +312,7 @@ export function AssetCorrelationCard({ trades }: AssetCorrelationCardProps) {
                     {stat.avgReturn >= 0 ? '+' : ''}{stat.avgReturn.toFixed(2)}%
                   </span>
                   <span className={`font-medium ${stat.totalPnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                    {formatCurrency(stat.totalPnl)}
+                    {formatCurrencyLocal(stat.totalPnl)}
                   </span>
                 </div>
               </div>
