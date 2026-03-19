@@ -119,61 +119,48 @@ export default function PaperTrading() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-8">
-          <Skeleton className="h-8 w-64 mb-4" />
-          <div className="grid gap-4 md:grid-cols-4">
-            {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-32" />)}
-          </div>
+      <div className="container mx-auto p-4 sm:p-6">
+        <Skeleton className="h-8 w-64 mb-4" />
+        <div className="grid gap-4 md:grid-cols-4">
+          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-32" />)}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="container mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
-      <header className="border-b border-border/50 bg-card/30 backdrop-blur sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link to="/">
-              <Button variant="ghost" size="sm" className="gap-2">
-                <ArrowLeft className="h-4 w-4" />Back
-              </Button>
-            </Link>
-            <div>
-              <h1 className="text-lg font-bold flex items-center gap-2">
-                <Radio className="h-5 w-5 text-primary animate-pulse" />
-                Paper Trading
-              </h1>
-              <p className="text-xs text-muted-foreground">Live simulation — no real orders</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {/* Connection Status */}
-            <Badge variant="outline" className={cn(
-              "text-xs",
-              connectionStatus.connected
-                ? "border-trading-profit/50 text-trading-profit"
-                : "border-trading-loss/50 text-trading-loss"
-            )}>
-              {connectionStatus.connected ? <Wifi className="h-3 w-3 mr-1" /> : <WifiOff className="h-3 w-3 mr-1" />}
-              {connectionStatus.connected ? 'LIVE' : connectionStatus.reconnecting ? 'RECONNECTING' : 'OFFLINE'}
-            </Badge>
-            {lastUpdate && (
-              <span className="text-xs text-muted-foreground hidden sm:block">
-                Updated {format(lastUpdate, 'HH:mm:ss')}
-              </span>
-            )}
-            <ThemeToggle />
-          </div>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-bold flex items-center gap-2 sm:text-xl">
+            <Radio className="h-5 w-5 text-primary animate-pulse" />
+            Paper Trading
+          </h1>
+          <p className="text-xs text-muted-foreground">Live simulation — no real orders</p>
         </div>
-      </header>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className={cn(
+            "text-xs",
+            connectionStatus.connected
+              ? "border-trading-profit/50 text-trading-profit"
+              : "border-trading-loss/50 text-trading-loss"
+          )}>
+            {connectionStatus.connected ? <Wifi className="h-3 w-3 mr-1" /> : <WifiOff className="h-3 w-3 mr-1" />}
+            {connectionStatus.connected ? 'LIVE' : connectionStatus.reconnecting ? 'RECONNECTING' : 'OFFLINE'}
+          </Badge>
+          {lastUpdate && (
+            <span className="text-xs text-muted-foreground hidden sm:block">
+              Updated {format(lastUpdate, 'HH:mm:ss')}
+            </span>
+          )}
+        </div>
+      </div>
 
       {/* Emergency Warning Banner */}
       {emergencyStop && (
-        <div className="bg-destructive/10 border-b border-destructive/30 px-4 py-2">
-          <div className="container mx-auto flex items-center justify-between">
+        <div className="rounded-lg bg-destructive/10 border border-destructive/30 px-4 py-2">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-destructive text-sm font-medium">
               <StopCircle className="h-4 w-4" />
               EMERGENCY STOP ACTIVE — All trading halted
@@ -186,8 +173,8 @@ export default function PaperTrading() {
       )}
 
       {/* Simulation Disclaimer */}
-      <div className="bg-primary/5 border-b border-primary/20 px-4 py-1.5">
-        <p className="container mx-auto text-xs text-center text-muted-foreground">
+      <div className="rounded-lg bg-primary/5 border border-primary/20 px-4 py-1.5 text-center">
+        <p className="text-xs text-muted-foreground">
           ⚠️ <strong>PAPER TRADING ONLY</strong> — No real orders are placed. All trades are simulated.
         </p>
       </div>
