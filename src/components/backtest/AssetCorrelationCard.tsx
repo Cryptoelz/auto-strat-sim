@@ -191,7 +191,7 @@ export function AssetCorrelationCard({ trades }: AssetCorrelationCardProps) {
     return 'bg-muted text-muted-foreground';
   };
 
-  const formatCurrency = (value: number) => {
+  const formatCurrencyLocal = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
@@ -312,7 +312,7 @@ export function AssetCorrelationCard({ trades }: AssetCorrelationCardProps) {
                     {stat.avgReturn >= 0 ? '+' : ''}{stat.avgReturn.toFixed(2)}%
                   </span>
                   <span className={`font-medium ${stat.totalPnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                    {formatCurrency(stat.totalPnl)}
+                    {formatCurrencyLocal(stat.totalPnl)}
                   </span>
                 </div>
               </div>

@@ -180,7 +180,7 @@ export function VolatilityAnalysisCard({ trades }: VolatilityAnalysisCardProps) 
     }
   };
 
-  const formatCurrency = (value: number) => {
+  const formatCurrencyLocal = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
