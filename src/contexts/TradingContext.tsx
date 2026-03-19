@@ -1,5 +1,5 @@
-import { createContext, useContext, useState, useMemo, useEffect, useRef, memo, ReactNode } from 'react';
-import { useTradingEngine } from '@/hooks/useTradingEngine';
+import { createContext, useContext, useState, useMemo, useEffect, useRef, ReactNode } from 'react';
+import { useUnifiedTradingEngine, StatusMessage, ConnectionStatus } from '@/hooks/useUnifiedTradingEngine';
 import { useNotifications } from '@/hooks/useNotifications';
 import { usePnlAlerts } from '@/hooks/usePnlAlerts';
 import { DEFAULT_CONFIG } from '@/config/trading';
@@ -11,22 +11,27 @@ import { AgentConfig, DEFAULT_AGENT_CONFIG } from '@/types/agent';
 import { MemoryConfig, DEFAULT_MEMORY_CONFIG } from '@/types/memory';
 import { GovernanceConfig, DEFAULT_GOVERNANCE_CONFIG, GovernanceStatus } from '@/types/governance';
 import { OperatorState, OperatorConfig, DEFAULT_OPERATOR_STATE, DEFAULT_OPERATOR_CONFIG } from '@/types/operator';
-import { computePortfolioState } from '@/lib/portfolioManager';
 import { getLogEntries, subscribeToLog } from '@/lib/logger';
 import { useSyncExternalStore } from 'react';
 
 interface TradingContextType {
-  // Engine
-  state: ReturnType<typeof useTradingEngine>['state'];
-  candles: ReturnType<typeof useTradingEngine>['candles'];
-  prices: ReturnType<typeof useTradingEngine>['prices'];
-  signals: ReturnType<typeof useTradingEngine>['signals'];
-  analytics: ReturnType<typeof useTradingEngine>['analytics'];
+  // Engine (from unified hook)
+  state: ReturnType<typeof useUnifiedTradingEngine>['state'];
+  candles: ReturnType<typeof useUnifiedTradingEngine>['candles'];
+  prices: ReturnType<typeof useUnifiedTradingEngine>['prices'];
+  signals: ReturnType<typeof useUnifiedTradingEngine>['signals'];
+  analytics: ReturnType<typeof useUnifiedTradingEngine>['analytics'];
   isLoading: boolean;
   lastUpdate: Date | null;
   toggleRunning: () => void;
   reset: () => void;
   refetch: () => void;
+  // Computed values (centralized)
+  equity: number;
+  unrealizedPnl: number;
+  peakEquity: number;
+  drawdown: number;
+  dailyPnl: number;
   // Config
   strategyConfig: StrategyConfig;
   setStrategyConfig: (c: StrategyConfig) => void;
@@ -59,9 +64,6 @@ interface TradingContextType {
   permission: NotificationPermission;
   isSupported: boolean;
   requestPermission: () => void;
-  // Refs
-  peakEquityRef: React.MutableRefObject<number>;
-  portfolioLogsRef: React.MutableRefObject<any[]>;
   // Session
   sessionStartTime: number;
 }
@@ -83,9 +85,6 @@ export function TradingProvider({ children }: { children: ReactNode }) {
   const [prevGovStatus, setPrevGovStatus] = useState<GovernanceStatus | null>(null);
   const [operatorState, setOperatorState] = useState<OperatorState>(DEFAULT_OPERATOR_STATE);
   const [operatorConfig, setOperatorConfig] = useState<OperatorConfig>(DEFAULT_OPERATOR_CONFIG);
-  const peakEquityRef = useRef(10000);
-  const portfolioLogsRef = useRef<any[]>([]);
-  const sessionStartTime = useRef(Date.now()).current;
 
   const [strategyConfig, setStrategyConfig] = useState<StrategyConfig>({
     timeframe: DEFAULT_CONFIG.timeframe as '5m' | '15m' | '1h' | '4h',
@@ -118,13 +117,11 @@ export function TradingProvider({ children }: { children: ReactNode }) {
     filters: strategyConfig.filters,
   }), [strategyConfig]);
 
-  const {
-    state, candles, prices, signals, analytics,
-    isLoading, lastUpdate, toggleRunning, reset, refetch,
-  } = useTradingEngine(config);
+  // Use unified engine in simulation mode
+  const engine = useUnifiedTradingEngine({ mode: 'simulation', config });
 
   usePnlAlerts({
-    state,
+    state: engine.state,
     profitTarget: strategyConfig.pnlAlertProfit,
     lossLimit: strategyConfig.pnlAlertLoss,
   });
@@ -135,7 +132,7 @@ export function TradingProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (permission !== 'granted') return;
     strategyConfig.enabledAssets.forEach((asset) => {
-      const signal = signals[asset];
+      const signal = engine.signals[asset];
       if (signal && signal.type !== 'HOLD') {
         const signalKey = `${signal.type}-${signal.timestamp}`;
         if (prevSignalsRef.current[asset] !== signalKey) {
@@ -144,14 +141,29 @@ export function TradingProvider({ children }: { children: ReactNode }) {
         }
       }
     });
-  }, [signals, permission, sendSignalNotification, strategyConfig.enabledAssets]);
+  }, [engine.signals, permission, sendSignalNotification, strategyConfig.enabledAssets]);
 
   const decisionLog = useSyncExternalStore(subscribeToLog, getLogEntries);
   const blockedSignals = useMemo(() => decisionLog.filter(e => e.action === 'blocked'), [decisionLog]);
 
   const value = useMemo<TradingContextType>(() => ({
-    state, candles, prices, signals, analytics,
-    isLoading, lastUpdate, toggleRunning, reset, refetch,
+    state: engine.state,
+    candles: engine.candles,
+    prices: engine.prices,
+    signals: engine.signals,
+    analytics: engine.analytics,
+    isLoading: engine.isLoading,
+    lastUpdate: engine.lastUpdate,
+    toggleRunning: engine.toggleRunning,
+    reset: engine.reset,
+    refetch: engine.refetch,
+    // Computed
+    equity: engine.equity,
+    unrealizedPnl: engine.unrealizedPnl,
+    peakEquity: engine.peakEquity,
+    drawdown: engine.drawdown,
+    dailyPnl: engine.dailyPnl,
+    // Config
     strategyConfig, setStrategyConfig, config,
     portfolioConfig, setPortfolioConfig,
     multiStrategyConfig, setMultiStrategyConfig,
@@ -162,19 +174,15 @@ export function TradingProvider({ children }: { children: ReactNode }) {
     operatorConfig, setOperatorConfig,
     blockedSignals, decisionLog,
     permission, isSupported, requestPermission,
-    peakEquityRef, portfolioLogsRef,
-    sessionStartTime,
+    sessionStartTime: engine.sessionStartTime,
   }), [
-    state, candles, prices, signals, analytics,
-    isLoading, lastUpdate, toggleRunning, reset, refetch,
-    strategyConfig, config,
+    engine, strategyConfig, config,
     portfolioConfig, multiStrategyConfig,
     agentConfig, memoryConfig,
     governanceConfig, prevGovStatus,
     operatorState, operatorConfig,
     blockedSignals, decisionLog,
     permission, isSupported, requestPermission,
-    sessionStartTime,
   ]);
 
   return <TradingCtx.Provider value={value}>{children}</TradingCtx.Provider>;

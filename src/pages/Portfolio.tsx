@@ -8,7 +8,7 @@ export default function Portfolio() {
   const {
     state, prices, analytics, signals, strategyConfig,
     portfolioConfig, setPortfolioConfig,
-    peakEquityRef, portfolioLogsRef,
+    peakEquity,
   } = useTradingContext();
 
   return (
@@ -21,7 +21,7 @@ export default function Portfolio() {
         portfolioState={computePortfolioState(
           state, prices, analytics, signals,
           strategyConfig.enabledAssets, portfolioConfig,
-          peakEquityRef.current, portfolioLogsRef.current,
+          peakEquity, [],
         )}
         portfolioConfig={portfolioConfig}
         onConfigChange={setPortfolioConfig}

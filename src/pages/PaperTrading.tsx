@@ -1,15 +1,10 @@
-import { useState, useMemo, useRef, memo } from 'react';
-import { usePaperTrading, StatusMessage } from '@/hooks/usePaperTrading';
+import { useMemo, memo } from 'react';
+import { useTradingContext } from '@/contexts/TradingContext';
+import { useUnifiedTradingEngine, StatusMessage } from '@/hooks/useUnifiedTradingEngine';
 import { DEFAULT_CONFIG, ASSET_INFO } from '@/config/trading';
 import { Asset, TradingConfig } from '@/types/trading';
-import { PortfolioConfig, DEFAULT_PORTFOLIO_CONFIG } from '@/types/portfolio';
-import { MultiStrategyConfig, DEFAULT_MULTI_STRATEGY_CONFIG } from '@/types/strategy';
-import { AgentConfig, DEFAULT_AGENT_CONFIG } from '@/types/agent';
-import { MemoryConfig, DEFAULT_MEMORY_CONFIG } from '@/types/memory';
-import { GovernanceConfig, DEFAULT_GOVERNANCE_CONFIG, GovernanceStatus } from '@/types/governance';
-import { OperatorState, OperatorConfig, DEFAULT_OPERATOR_STATE, DEFAULT_OPERATOR_CONFIG } from '@/types/operator';
 import { computePortfolioState } from '@/lib/portfolioManager';
-import { StrategyConfig } from '@/components/StrategySettings';
+import { computeTradeStats } from '@/lib/tradingCalculations';
 import { PriceChart } from '@/components/trading/PriceChart';
 import { AssetDetailPanel } from '@/components/trading/AssetDetailPanel';
 import { TradeHistory } from '@/components/trading/TradeHistory';
@@ -46,73 +41,36 @@ import { format } from 'date-fns';
 const MemoizedPerformanceStats = memo(PerformanceStats);
 
 export default function PaperTrading() {
-  const [portfolioConfig, setPortfolioConfig] = useState<PortfolioConfig>(DEFAULT_PORTFOLIO_CONFIG);
-  const [multiStrategyConfig, setMultiStrategyConfig] = useState<MultiStrategyConfig>(DEFAULT_MULTI_STRATEGY_CONFIG);
-  const [agentConfig, setAgentConfig] = useState<AgentConfig>(DEFAULT_AGENT_CONFIG);
-  const [memoryConfig, setMemoryConfig] = useState<MemoryConfig>(DEFAULT_MEMORY_CONFIG);
-  const [governanceConfig, setGovernanceConfig] = useState<GovernanceConfig>(DEFAULT_GOVERNANCE_CONFIG);
-  const [prevGovStatus, setPrevGovStatus] = useState<GovernanceStatus | null>(null);
-  const [operatorState, setOperatorState] = useState<OperatorState>(DEFAULT_OPERATOR_STATE);
-  const [operatorConfig, setOperatorConfig] = useState<OperatorConfig>(DEFAULT_OPERATOR_CONFIG);
-  const peakEquityRef = useRef(10000);
-  const portfolioLogsRef = useRef<any[]>([]);
+  // Pull shared config from TradingContext
+  const ctx = useTradingContext();
+  const {
+    strategyConfig, config,
+    portfolioConfig, setPortfolioConfig,
+    multiStrategyConfig, setMultiStrategyConfig,
+    agentConfig, setAgentConfig,
+    memoryConfig, setMemoryConfig,
+    governanceConfig, setGovernanceConfig, prevGovStatus,
+    operatorState, setOperatorState,
+    operatorConfig, setOperatorConfig,
+  } = ctx;
 
-  const [strategyConfig] = useState<StrategyConfig>({
-    timeframe: DEFAULT_CONFIG.timeframe as '5m' | '15m' | '1h' | '4h',
-    enabledAssets: DEFAULT_CONFIG.assets as Asset[],
-    fastSMA: DEFAULT_CONFIG.indicators.fastSMA,
-    slowSMA: DEFAULT_CONFIG.indicators.slowSMA,
-    positionSizePercent: DEFAULT_CONFIG.risk.positionSizePercent,
-    stopLossPercent: DEFAULT_CONFIG.risk.stopLossPercent,
-    takeProfitPercent: DEFAULT_CONFIG.risk.takeProfitPercent,
-    pnlAlertProfit: null,
-    pnlAlertLoss: null,
-    filters: { ...DEFAULT_CONFIG.filters },
-  });
-
-  const config: TradingConfig = useMemo(() => ({
-    ...DEFAULT_CONFIG,
-    timeframe: strategyConfig.timeframe,
-    assets: strategyConfig.enabledAssets,
-    indicators: { ...DEFAULT_CONFIG.indicators, fastSMA: strategyConfig.fastSMA, slowSMA: strategyConfig.slowSMA },
-    risk: { ...DEFAULT_CONFIG.risk, positionSizePercent: strategyConfig.positionSizePercent, stopLossPercent: strategyConfig.stopLossPercent, takeProfitPercent: strategyConfig.takeProfitPercent },
-    filters: strategyConfig.filters,
-  }), [strategyConfig]);
+  // Use unified engine in paper mode — uses same config from context
+  const engine = useUnifiedTradingEngine({ mode: 'paper', config });
 
   const {
     state, candles, prices, signals, analytics, isLoading, lastUpdate,
     connectionStatus, statusMessages, enabledAssets, emergencyStop,
-    maxDrawdown, dailyPnl, sessionStartTime,
+    equity, unrealizedPnl, drawdown, dailyPnl, sessionStartTime,
     toggleRunning, toggleAsset, triggerEmergencyStop, clearEmergencyStop, reset, refetch,
-  } = usePaperTrading(config);
+  } = engine;
 
   const decisionLog = useSyncExternalStore(subscribeToLog, getLogEntries);
   const blockedSignals = useMemo(() => decisionLog.filter(e => e.action === 'blocked'), [decisionLog]);
 
-  // Compute total unrealized PnL
-  const unrealizedPnl = useMemo(() => {
-    let total = 0;
-    for (const asset of config.assets) {
-      const pos = state.positions[asset];
-      const price = prices[asset];
-      if (pos && price) {
-        total += pos.direction === 'long'
-          ? (price - pos.entryPrice) * pos.size
-          : (pos.entryPrice - price) * pos.size;
-      }
-    }
-    return total;
-  }, [state.positions, prices, config.assets]);
-
-  const equity = state.balance + unrealizedPnl;
+  const { total, wins, winRate, longTrades, shortTrades, profitFactor } = useMemo(
+    () => computeTradeStats(state.trades), [state.trades],
+  );
   const totalRealizedPnl = state.trades.reduce((s, t) => s + t.pnl, 0);
-  const longTrades = state.trades.filter(t => t.direction === 'long').length;
-  const shortTrades = state.trades.filter(t => t.direction === 'short').length;
-  const wins = state.trades.filter(t => t.type === 'win').length;
-  const winRate = state.trades.length > 0 ? (wins / state.trades.length) * 100 : 0;
-  const grossProfit = state.trades.filter(t => t.pnl > 0).reduce((s, t) => s + t.pnl, 0);
-  const grossLoss = Math.abs(state.trades.filter(t => t.pnl < 0).reduce((s, t) => s + t.pnl, 0));
-  const profitFactor = grossLoss > 0 ? grossProfit / grossLoss : grossProfit > 0 ? Infinity : 0;
 
   if (isLoading) {
     return (
@@ -208,7 +166,7 @@ export default function PaperTrading() {
               {/* Per-asset toggles */}
               <div className="space-y-2">
                 <Label className="text-xs text-muted-foreground">Asset Controls</Label>
-                {config.assets.map(asset => (
+                {config.assets.map((asset: Asset) => (
                   <div key={asset} className="flex items-center justify-between">
                     <Label className="text-xs">{ASSET_INFO[asset].symbol}</Label>
                     <Switch checked={enabledAssets[asset]} onCheckedChange={() => toggleAsset(asset)} disabled={emergencyStop} />
@@ -255,8 +213,8 @@ export default function PaperTrading() {
               color={dailyPnl >= 0 ? "text-trading-profit" : "text-trading-loss"} />
             <MetricCard icon={Target} label="Win Rate" value={`${winRate.toFixed(1)}%`}
               color={winRate >= 50 ? "text-trading-profit" : "text-trading-loss"}
-              subtitle={`${state.trades.length} trades (${longTrades}L/${shortTrades}S)`} />
-            <MetricCard icon={AlertTriangle} label="Max DD" value={`${maxDrawdown.toFixed(2)}%`}
+              subtitle={`${total} trades (${longTrades}L/${shortTrades}S)`} />
+            <MetricCard icon={AlertTriangle} label="Max DD" value={`${drawdown.toFixed(2)}%`}
               color="text-trading-loss" subtitle={`PF: ${profitFactor === Infinity ? '∞' : profitFactor.toFixed(2)}`} />
           </div>
         </div>
@@ -287,7 +245,7 @@ export default function PaperTrading() {
 
         {/* Charts + Asset Monitoring */}
         <div className="grid gap-4 md:grid-cols-2">
-          {config.assets.filter(a => enabledAssets[a]).map(asset => (
+          {config.assets.filter((a: Asset) => enabledAssets[a]).map((asset: Asset) => (
             <div key={asset} className="space-y-3">
               <PriceChart
                 asset={asset}
@@ -313,19 +271,19 @@ export default function PaperTrading() {
         <PortfolioDashboard
           portfolioState={computePortfolioState(
             state, prices, analytics, signals,
-            config.assets.filter(a => enabledAssets[a]),
+            config.assets.filter((a: Asset) => enabledAssets[a]),
             portfolioConfig,
-            peakEquityRef.current, portfolioLogsRef.current,
+            engine.peakEquity, [],
           )}
           portfolioConfig={portfolioConfig}
           onConfigChange={setPortfolioConfig}
-          enabledAssets={config.assets.filter(a => enabledAssets[a])}
+          enabledAssets={config.assets.filter((a: Asset) => enabledAssets[a])}
         />
 
         {/* Multi-Strategy Dashboard */}
         <StrategyDashboard
           candles={candles}
-          enabledAssets={config.assets.filter(a => enabledAssets[a])}
+          enabledAssets={config.assets.filter((a: Asset) => enabledAssets[a])}
           multiConfig={multiStrategyConfig}
           onConfigChange={setMultiStrategyConfig}
         />
@@ -343,9 +301,9 @@ export default function PaperTrading() {
           candles={candles}
           analytics={analytics}
           state={state}
-          enabledAssets={config.assets.filter(a => enabledAssets[a])}
+          enabledAssets={config.assets.filter((a: Asset) => enabledAssets[a])}
           multiConfig={multiStrategyConfig}
-          portfolioDrawdown={maxDrawdown}
+          portfolioDrawdown={drawdown}
           agentConfig={agentConfig}
           onAgentConfigChange={setAgentConfig}
         />
@@ -354,8 +312,8 @@ export default function PaperTrading() {
         <AgentMemoryDashboard
           state={state}
           analytics={analytics}
-          enabledAssets={config.assets.filter(a => enabledAssets[a])}
-          portfolioDrawdown={maxDrawdown}
+          enabledAssets={config.assets.filter((a: Asset) => enabledAssets[a])}
+          portfolioDrawdown={drawdown}
           memoryConfig={memoryConfig}
           onMemoryConfigChange={setMemoryConfig}
         />
@@ -364,8 +322,8 @@ export default function PaperTrading() {
         <AgentGovernanceDashboard
           state={state}
           analytics={analytics}
-          enabledAssets={config.assets.filter(a => enabledAssets[a])}
-          portfolioDrawdown={maxDrawdown}
+          enabledAssets={config.assets.filter((a: Asset) => enabledAssets[a])}
+          portfolioDrawdown={drawdown}
           reconnectErrors={connectionStatus.missedCandles}
           governanceConfig={governanceConfig}
           onGovernanceConfigChange={setGovernanceConfig}
@@ -390,7 +348,7 @@ export default function PaperTrading() {
           config={config}
           portfolioConfig={portfolioConfig}
           unrealizedPnl={unrealizedPnl}
-          maxDrawdown={maxDrawdown}
+          maxDrawdown={drawdown}
           sessionStartTime={sessionStartTime}
         />
 
