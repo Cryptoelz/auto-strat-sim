@@ -86,6 +86,8 @@ export interface UnifiedEngineResult {
   toggleAsset: (asset: Asset) => void;
   triggerEmergencyStop: () => void;
   clearEmergencyStop: () => void;
+  // Soak-test diagnostics
+  diagnostics: SoakDiagnostics;
 }
 
 // ─── Constants ──────────────────────────────────────
