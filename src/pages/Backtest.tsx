@@ -91,57 +91,46 @@ export default function Backtest() {
 
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="container mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
-      <header className="border-b border-border/50 bg-card/30 backdrop-blur sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link to="/">
-              <Button variant="ghost" size="sm" className="gap-2">
-                <ArrowLeft className="h-4 w-4" />
-                Back to Dashboard
-              </Button>
-            </Link>
-            <div>
-              <h1 className="text-lg font-bold md:text-xl">Strategy Backtester</h1>
-              <p className="text-xs text-muted-foreground">Test your SMA crossover strategy on historical data</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Dialog open={shortcutsOpen} onOpenChange={setShortcutsOpen}>
-              <DialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9">
-                  <Keyboard className="h-4 w-4" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[340px]">
-                <DialogHeader>
-                  <DialogTitle>Keyboard Shortcuts</DialogTitle>
-                  <DialogDescription>
-                    Quick actions for the backtest page
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-2 py-4">
-                  {BACKTEST_SHORTCUTS.map((shortcut) => (
-                    <div
-                      key={shortcut.key}
-                      className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/30 px-3 py-2"
-                    >
-                      <span className="text-sm text-muted-foreground">
-                        {shortcut.description}
-                      </span>
-                      <kbd className="pointer-events-none inline-flex h-6 select-none items-center gap-1 rounded border bg-muted px-2 font-mono text-xs font-medium text-muted-foreground">
-                        {shortcut.key}
-                      </kbd>
-                    </div>
-                  ))}
-                </div>
-              </DialogContent>
-            </Dialog>
-            <ThemeToggle />
-          </div>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-bold sm:text-xl">Strategy Backtester</h1>
+          <p className="text-xs text-muted-foreground">Test your SMA crossover strategy on historical data</p>
         </div>
-      </header>
+        <div className="flex items-center gap-2">
+          <Dialog open={shortcutsOpen} onOpenChange={setShortcutsOpen}>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-9 w-9">
+                <Keyboard className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[340px]">
+              <DialogHeader>
+                <DialogTitle>Keyboard Shortcuts</DialogTitle>
+                <DialogDescription>
+                  Quick actions for the backtest page
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-2 py-4">
+                {BACKTEST_SHORTCUTS.map((shortcut) => (
+                  <div
+                    key={shortcut.key}
+                    className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/30 px-3 py-2"
+                  >
+                    <span className="text-sm text-muted-foreground">
+                      {shortcut.description}
+                    </span>
+                    <kbd className="pointer-events-none inline-flex h-6 select-none items-center gap-1 rounded border bg-muted px-2 font-mono text-xs font-medium text-muted-foreground">
+                      {shortcut.key}
+                    </kbd>
+                  </div>
+                ))}
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
 
       <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <AlertDialogContent>
