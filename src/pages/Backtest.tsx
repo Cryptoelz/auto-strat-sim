@@ -407,10 +407,9 @@ export default function Backtest() {
                 feePercent={config.feePercent}
                 initialBalance={config.initialBalance}
               />
-            </div>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
