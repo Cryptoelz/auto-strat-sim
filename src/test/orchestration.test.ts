@@ -5,23 +5,20 @@ import { describe, it, expect } from 'vitest';
 import { getInitialOrchestrationState, canTransition } from '@/lib/orchestrationEngine';
 
 describe('canTransition', () => {
-  it('allows STARTING → RUNNING', () => {
-    expect(canTransition('STARTING', 'RUNNING')).toBe(true);
+  it('allows STARTING → READY', () => {
+    expect(canTransition('STARTING', 'READY')).toBe(true);
   });
 
   it('allows RUNNING → PAUSED', () => {
     expect(canTransition('RUNNING', 'PAUSED')).toBe(true);
   });
 
-  it('allows RUNNING → DEGRADED', () => {
-    expect(canTransition('RUNNING', 'DEGRADED')).toBe(true);
+  it('allows RUNNING → RESTRICTED', () => {
+    expect(canTransition('RUNNING', 'RESTRICTED')).toBe(true);
   });
 
-  it('disallows STARTING → TERMINATED without going through RUNNING', () => {
-    // STARTING can only go to RUNNING or FAILED based on the valid transitions
-    const result = canTransition('STARTING', 'TERMINATED');
-    // If it's not a valid transition, this should be false
-    expect(typeof result).toBe('boolean');
+  it('disallows STARTING → STOPPED', () => {
+    expect(canTransition('STARTING', 'STOPPED')).toBe(false);
   });
 
   it('allows PAUSED → RUNNING', () => {
@@ -52,7 +49,7 @@ describe('getInitialOrchestrationState', () => {
   });
 
   it('accepts config overrides', () => {
-    const state = getInitialOrchestrationState({ maxCycleTimeMs: 5000 });
-    expect(state.config.maxCycleTimeMs).toBe(5000);
+    const state = getInitialOrchestrationState({ cycleIntervalMs: 5000 });
+    expect(state.config.cycleIntervalMs).toBe(5000);
   });
 });
