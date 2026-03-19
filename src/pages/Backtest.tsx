@@ -34,12 +34,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { 
-  ArrowLeft, 
-  AlertTriangle,
-  BarChart3,
-  Keyboard,
-} from 'lucide-react';
+import { AlertTriangle, BarChart3, Keyboard } from 'lucide-react';
 
 export default function Backtest() {
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
