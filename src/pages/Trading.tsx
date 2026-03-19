@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { useTradingContext } from '@/contexts/TradingContext';
 import { PriceChart } from '@/components/trading/PriceChart';
 import { AssetDetailPanel } from '@/components/trading/AssetDetailPanel';
@@ -15,6 +15,7 @@ import { DecisionLog } from '@/components/trading/DecisionLog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, RotateCcw } from 'lucide-react';
+import { Asset } from '@/types/trading';
 
 const MemoizedPerformanceStats = memo(PerformanceStats);
 const MemoizedPortfolioAllocation = memo(PortfolioAllocation);
@@ -30,7 +31,19 @@ export default function Trading() {
     agentConfig, setAgentConfig,
     memoryConfig, setMemoryConfig,
     blockedSignals,
+    peakEquityRef,
   } = useTradingContext();
+
+  const portfolioDrawdown = useMemo(() => {
+    let equity = state.balance;
+    for (const [asset, pos] of Object.entries(state.positions)) {
+      if (!pos || !prices[asset as Asset]) continue;
+      const p = prices[asset as Asset]!;
+      equity += pos.direction === 'long' ? (p - pos.entryPrice) * pos.size : (pos.entryPrice - p) * pos.size;
+    }
+    const peak = Math.max(peakEquityRef.current, equity);
+    return peak > 0 ? ((peak - equity) / peak) * 100 : 0;
+  }, [state, prices, peakEquityRef]);
 
   if (isLoading) {
     return (
