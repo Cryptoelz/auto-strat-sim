@@ -94,7 +94,7 @@ function AuditRow({ entry, runs }: { entry: PromotionAuditEntry; runs: Experimen
       <Icon className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <p className="text-xs font-medium text-foreground capitalize">{entry.type.replaceAll('_', ' ')}</p>
+          <p className="text-xs font-medium text-foreground capitalize">{entry.type.replace(/_/g, ' ')}</p>
           <VerdictBadge verdict={entry.status} />
           <span className="text-[10px] text-muted-foreground ml-auto shrink-0">
             {new Date(entry.timestamp).toLocaleString()}
