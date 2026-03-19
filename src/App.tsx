@@ -4,9 +4,19 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import Index from "./pages/Index";
+import { AppLayout } from "@/components/AppLayout";
+import Overview from "./pages/Overview";
+import Trading from "./pages/Trading";
 import Backtest from "./pages/Backtest";
 import PaperTrading from "./pages/PaperTrading";
+import Strategies from "./pages/Strategies";
+import Portfolio from "./pages/Portfolio";
+import Governance from "./pages/Governance";
+import OperatorControls from "./pages/OperatorControls";
+import Alerts from "./pages/Alerts";
+import Experiments from "./pages/Experiments";
+import Readiness from "./pages/Readiness";
+import SystemHealth from "./pages/SystemHealth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -19,9 +29,20 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/backtest" element={<Backtest />} />
-            <Route path="/paper-trading" element={<PaperTrading />} />
+            <Route element={<AppLayout />}>
+              <Route path="/" element={<Overview />} />
+              <Route path="/trading" element={<Trading />} />
+              <Route path="/backtest" element={<Backtest />} />
+              <Route path="/paper-trading" element={<PaperTrading />} />
+              <Route path="/strategies" element={<Strategies />} />
+              <Route path="/portfolio" element={<Portfolio />} />
+              <Route path="/governance" element={<Governance />} />
+              <Route path="/operator" element={<OperatorControls />} />
+              <Route path="/alerts" element={<Alerts />} />
+              <Route path="/experiments" element={<Experiments />} />
+              <Route path="/readiness" element={<Readiness />} />
+              <Route path="/system-health" element={<SystemHealth />} />
+            </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
