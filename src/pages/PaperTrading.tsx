@@ -401,7 +401,7 @@ function StatusMessageRow({ msg }: { msg: StatusMessage }) {
       )}
       <span className={cn("text-xs",
         msg.type === 'trade' && 'text-trading-profit',
-        msg.type === 'warning' && 'text-yellow-500',
+        msg.type === 'warning' && 'text-trading-warning',
         msg.type === 'error' && 'text-destructive',
         msg.type === 'blocked' && 'text-muted-foreground',
       )}>

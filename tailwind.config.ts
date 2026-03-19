@@ -63,6 +63,8 @@ export default {
           loss: "hsl(var(--trading-loss))",
           "loss-foreground": "hsl(var(--trading-loss-foreground))",
           neutral: "hsl(var(--trading-neutral))",
+          warning: "hsl(var(--trading-warning))",
+          "warning-foreground": "hsl(var(--trading-warning-foreground))",
           btc: "hsl(var(--trading-btc))",
           xrp: "hsl(var(--trading-xrp))",
           fet: "hsl(var(--trading-fet))",

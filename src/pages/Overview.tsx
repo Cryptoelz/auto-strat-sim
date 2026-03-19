@@ -244,7 +244,7 @@ export default function Overview() {
                 {recentBlocked.map((b, i) => (
                   <div key={i} className="flex items-center justify-between rounded-md border border-border/30 px-3 py-2 text-xs">
                     <div className="flex items-center gap-2">
-                      <AlertTriangle className="h-3 w-3 text-yellow-500" />
+                      <AlertTriangle className="h-3 w-3 text-trading-warning" />
                       <span>{b.asset}</span>
                     </div>
                     <span className="text-muted-foreground truncate max-w-[200px]">{b.reason}</span>
