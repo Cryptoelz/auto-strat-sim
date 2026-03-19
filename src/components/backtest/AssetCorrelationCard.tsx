@@ -191,7 +191,7 @@ export function AssetCorrelationCard({ trades }: AssetCorrelationCardProps) {
     return 'bg-muted text-muted-foreground';
   };
 
-  const formatCurrency = (value: number) => {
+  const formatCurrencyLocal = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
