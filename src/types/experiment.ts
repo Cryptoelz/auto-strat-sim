@@ -122,6 +122,7 @@ export interface ExperimentRun {
   tags: ExperimentTag[];
   notes: ExperimentNote[];
   isBaseline: boolean;
+  researchReport?: ResearchReport;
 }
 
 // ─── Experiment Note ─────────────────────────────────────────────────────────
