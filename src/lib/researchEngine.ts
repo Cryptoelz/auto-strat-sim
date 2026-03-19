@@ -11,8 +11,29 @@ import {
   RegimePerformance, VolatilityLevel,
   FailurePattern, FailurePatternType,
   StrategyScorecard, ResearchInsight, InsightCategory,
-  ImprovementSuggestion, ResearchReport,
+  ImprovementSuggestion, ResearchReport, SavedBaseline,
 } from '@/types/research';
+
+// ─── Baseline Persistence ────────────────────────────────────────────────────
+
+const BASELINE_KEY = 'research-saved-baseline';
+
+export function saveBaseline(baseline: SavedBaseline): void {
+  localStorage.setItem(BASELINE_KEY, JSON.stringify(baseline));
+}
+
+export function loadBaseline(): SavedBaseline | null {
+  try {
+    const raw = localStorage.getItem(BASELINE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearBaseline(): void {
+  localStorage.removeItem(BASELINE_KEY);
+}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -138,6 +159,35 @@ export function computeRandomEntryBenchmark(trades: Trade[]): BenchmarkResult {
     maxDrawdown: computeMaxDrawdown(trades) * 1.2, // random is typically worse
     winRate: 50,
     profitFactor: 1.0,
+    tradeCount: trades.length,
+  };
+}
+
+export function computeLongOnlySMABenchmark(trades: Trade[], initialBalance: number): BenchmarkResult {
+  const longTrades = trades.filter(t => t.direction === 'long');
+  const netPnl = longTrades.reduce((s, t) => s + t.pnl, 0);
+  return {
+    type: 'long_only_sma',
+    label: 'Long-Only SMA',
+    netPnl,
+    totalReturn: initialBalance > 0 ? (netPnl / initialBalance) * 100 : 0,
+    maxDrawdown: computeMaxDrawdown(longTrades),
+    winRate: computeWinRate(longTrades),
+    profitFactor: computeProfitFactor(longTrades),
+    tradeCount: longTrades.length,
+  };
+}
+
+export function computeLongShortSMABenchmark(trades: Trade[], initialBalance: number): BenchmarkResult {
+  const netPnl = trades.reduce((s, t) => s + t.pnl, 0);
+  return {
+    type: 'long_short_sma',
+    label: 'Long/Short SMA',
+    netPnl,
+    totalReturn: initialBalance > 0 ? (netPnl / initialBalance) * 100 : 0,
+    maxDrawdown: computeMaxDrawdown(trades),
+    winRate: computeWinRate(trades),
+    profitFactor: computeProfitFactor(trades),
     tradeCount: trades.length,
   };
 }
@@ -570,6 +620,8 @@ export function generateResearchReport(
 
   const benchmarks: BenchmarkResult[] = [
     computeStrategyBenchmark(trades, initialBalance),
+    computeLongOnlySMABenchmark(trades, initialBalance),
+    computeLongShortSMABenchmark(trades, initialBalance),
   ];
   if (startPrice && endPrice) {
     benchmarks.push(computeBuyAndHoldBenchmark(startPrice, endPrice, initialBalance));

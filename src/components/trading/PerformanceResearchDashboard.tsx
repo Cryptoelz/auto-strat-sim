@@ -1,23 +1,30 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import {
   TrendingUp, TrendingDown, AlertTriangle, Lightbulb, Target,
   BarChart3, Activity, Shield, ArrowUpRight, ArrowDownRight,
-  Minus, CheckCircle2, XCircle, Info, Zap,
+  Minus, CheckCircle2, XCircle, Info, Zap, Save, Trash2, Link2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTradingContext } from '@/contexts/TradingContext';
-import { generateResearchReport } from '@/lib/researchEngine';
+import {
+  generateResearchReport, saveBaseline, loadBaseline, clearBaseline,
+  computeBaselinePerformance,
+} from '@/lib/researchEngine';
+import { loadExperimentStore, createRun } from '@/lib/experimentEngine';
 import {
   ResearchReport, BenchmarkResult, RollingAnalysis,
   RegimePerformance, FailurePattern, StrategyScorecard,
   ResearchInsight, ImprovementSuggestion, InsightCategory,
+  SavedBaseline,
 } from '@/types/research';
+import { toast } from 'sonner';
 
 // ─── Grade Badge ─────────────────────────────────────────────────────────────
 
@@ -51,7 +58,7 @@ const INSIGHT_ICONS: Record<InsightCategory, typeof TrendingUp> = {
 const INSIGHT_COLORS: Record<InsightCategory, string> = {
   strength: 'text-emerald-400',
   weakness: 'text-orange-400',
-  risk: 'text-red-400',
+  risk: 'text-destructive',
   opportunity: 'text-blue-400',
   neutral: 'text-muted-foreground',
 };
@@ -61,30 +68,87 @@ const INSIGHT_COLORS: Record<InsightCategory, string> = {
 export function PerformanceResearchDashboard() {
   const { state } = useTradingContext();
   const trades = state.trades;
+  const [savedBaseline, setSavedBaseline] = useState<SavedBaseline | null>(() => loadBaseline());
 
   const report = useMemo<ResearchReport>(() => {
     if (trades.length === 0) {
       return {
-        generatedAt: Date.now(),
-        baseline: null,
-        benchmarks: [],
-        rollingAnalyses: [],
-        regimeBreakdown: [],
-        failurePatterns: [],
-        scorecards: [],
-        insights: [],
-        suggestions: [],
-        overallGrade: 'C',
-        readiness: 'not_ready',
+        generatedAt: Date.now(), baseline: null, benchmarks: [],
+        rollingAnalyses: [], regimeBreakdown: [], failurePatterns: [],
+        scorecards: [], insights: [], suggestions: [],
+        overallGrade: 'C', readiness: 'not_ready',
       };
     }
-    return generateResearchReport(
-      trades,
-      'sma_crossover',
-      'all',
-      state.initialBalance,
-    );
+    return generateResearchReport(trades, 'sma_crossover', 'all', state.initialBalance);
   }, [trades, state.initialBalance]);
+
+  const handleSaveBaseline = useCallback(() => {
+    const baseline: SavedBaseline = {
+      id: `bl-${Date.now()}`,
+      name: `Baseline ${new Date().toLocaleDateString()}`,
+      savedAt: Date.now(),
+      strategyId: 'sma_crossover',
+      config: { initialBalance: state.initialBalance },
+      performance: report.baseline,
+    };
+    saveBaseline(baseline);
+    setSavedBaseline(baseline);
+    toast.success('Baseline saved');
+  }, [report.baseline, state.initialBalance]);
+
+  const handleClearBaseline = useCallback(() => {
+    clearBaseline();
+    setSavedBaseline(null);
+    toast.info('Baseline cleared');
+  }, []);
+
+  const handleLinkToExperiment = useCallback(() => {
+    if (trades.length === 0) return;
+    const store = loadExperimentStore();
+    const { runId } = createRun(store, {
+      type: 'paper_trading',
+      name: `Research Run ${new Date().toLocaleString()}`,
+      startTime: trades[0]?.entryTime ?? Date.now(),
+      endTime: trades[trades.length - 1]?.exitTime ?? Date.now(),
+      duration: (trades[trades.length - 1]?.exitTime ?? Date.now()) - (trades[0]?.entryTime ?? Date.now()),
+      config: {
+        assets: ['BTCUSDT', 'XRPUSDT'],
+        strategies: ['SMA Crossover'],
+        strategyParams: { sma: { fastSMA: 20, slowSMA: 50 } },
+        filterThresholds: { minVolatility: 0.5 },
+        riskSettings: { positionSizePercent: 2, stopLossPercent: 2, takeProfitPercent: 4, feePercent: 0.1, initialBalance: state.initialBalance },
+        allocationSettings: { BTCUSDT: 60, XRPUSDT: 40 },
+        governanceSettings: { dailyLossLimit: 3, drawdownLimit: 15, consecutiveLossLimit: 5, flipTradeLimit: 4 },
+        operatorPolicy: { autonomyMode: 'PAPER_EXECUTION', activePolicies: [], activeOverrides: [] },
+        adaptationSettings: { learningRate: 0.1 },
+        timeframe: '15m',
+      },
+      versionIds: { sma: 'v1' },
+      datasetOrScenario: 'Live paper session',
+      timeRangeTested: 'Current session',
+      assetsIncluded: ['BTCUSDT', 'XRPUSDT'],
+      strategiesIncluded: ['SMA Crossover'],
+      operatorMode: 'PAPER_EXECUTION',
+      result: {
+        totalReturn: state.initialBalance > 0 ? ((trades.reduce((s, t) => s + t.pnl, 0)) / state.initialBalance) * 100 : 0,
+        netPnl: trades.reduce((s, t) => s + t.pnl, 0),
+        maxDrawdown: report.scorecards[0]?.maxDrawdown ?? 0,
+        winRate: report.scorecards[0]?.winRate ?? 0,
+        profitFactor: report.scorecards[0]?.profitFactor ?? 0,
+        tradeCount: trades.length,
+        longTradeCount: trades.filter(t => t.direction === 'long').length,
+        shortTradeCount: trades.filter(t => t.direction === 'short').length,
+        blockedTradeCount: 0,
+        governanceInterventions: 0,
+        avgHealthScore: 70,
+        robustnessScore: report.scorecards[0]?.robustnessScore ?? 0,
+        failurePointsDetected: report.failurePatterns.length,
+        summaryCommentary: `Research report: Grade ${report.overallGrade}, ${report.insights.length} insights, ${report.failurePatterns.length} failures`,
+      },
+      researchReport: report,
+    });
+    toast.success(`Linked to experiment run ${runId.slice(0, 8)}`);
+  }, [trades, state.initialBalance, report]);
 
   if (trades.length === 0) {
     return (
@@ -99,31 +163,53 @@ export function PerformanceResearchDashboard() {
   }
 
   return (
-    <Tabs defaultValue="overview" className="space-y-4">
-      <TabsList className="bg-muted/50">
-        <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
-        <TabsTrigger value="benchmarks" className="text-xs">Benchmarks</TabsTrigger>
-        <TabsTrigger value="rolling" className="text-xs">Rolling</TabsTrigger>
-        <TabsTrigger value="regimes" className="text-xs">Regimes</TabsTrigger>
-        <TabsTrigger value="failures" className="text-xs">Failures</TabsTrigger>
-        <TabsTrigger value="insights" className="text-xs">Insights</TabsTrigger>
-        <TabsTrigger value="suggestions" className="text-xs">Suggestions</TabsTrigger>
-      </TabsList>
+    <div className="space-y-4">
+      {/* Action bar */}
+      <div className="flex flex-wrap items-center gap-2">
+        <Button size="sm" variant="outline" onClick={handleSaveBaseline} className="text-xs gap-1.5">
+          <Save className="h-3.5 w-3.5" /> Save as Baseline
+        </Button>
+        {savedBaseline && (
+          <Button size="sm" variant="ghost" onClick={handleClearBaseline} className="text-xs gap-1.5 text-destructive">
+            <Trash2 className="h-3.5 w-3.5" /> Clear Baseline
+          </Button>
+        )}
+        <Button size="sm" variant="outline" onClick={handleLinkToExperiment} className="text-xs gap-1.5">
+          <Link2 className="h-3.5 w-3.5" /> Link to Experiment
+        </Button>
+        {savedBaseline && (
+          <Badge variant="outline" className="text-[10px]">
+            Baseline: {savedBaseline.name} ({new Date(savedBaseline.savedAt).toLocaleDateString()})
+          </Badge>
+        )}
+      </div>
 
-      <TabsContent value="overview"><OverviewTab report={report} /></TabsContent>
-      <TabsContent value="benchmarks"><BenchmarksTab benchmarks={report.benchmarks} /></TabsContent>
-      <TabsContent value="rolling"><RollingTab analyses={report.rollingAnalyses} /></TabsContent>
-      <TabsContent value="regimes"><RegimesTab breakdown={report.regimeBreakdown} /></TabsContent>
-      <TabsContent value="failures"><FailuresTab patterns={report.failurePatterns} /></TabsContent>
-      <TabsContent value="insights"><InsightsTab insights={report.insights} /></TabsContent>
-      <TabsContent value="suggestions"><SuggestionsTab suggestions={report.suggestions} /></TabsContent>
-    </Tabs>
+      <Tabs defaultValue="overview" className="space-y-4">
+        <TabsList className="bg-muted/50">
+          <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
+          <TabsTrigger value="benchmarks" className="text-xs">Benchmarks</TabsTrigger>
+          <TabsTrigger value="rolling" className="text-xs">Rolling</TabsTrigger>
+          <TabsTrigger value="regimes" className="text-xs">Regimes</TabsTrigger>
+          <TabsTrigger value="failures" className="text-xs">Failures</TabsTrigger>
+          <TabsTrigger value="insights" className="text-xs">Insights</TabsTrigger>
+          <TabsTrigger value="suggestions" className="text-xs">Suggestions</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview"><OverviewTab report={report} savedBaseline={savedBaseline} /></TabsContent>
+        <TabsContent value="benchmarks"><BenchmarksTab benchmarks={report.benchmarks} /></TabsContent>
+        <TabsContent value="rolling"><RollingTab analyses={report.rollingAnalyses} /></TabsContent>
+        <TabsContent value="regimes"><RegimesTab breakdown={report.regimeBreakdown} /></TabsContent>
+        <TabsContent value="failures"><FailuresTab patterns={report.failurePatterns} /></TabsContent>
+        <TabsContent value="insights"><InsightsTab insights={report.insights} /></TabsContent>
+        <TabsContent value="suggestions"><SuggestionsTab suggestions={report.suggestions} /></TabsContent>
+      </Tabs>
+    </div>
   );
 }
 
 // ─── Overview Tab ────────────────────────────────────────────────────────────
 
-function OverviewTab({ report }: { report: ResearchReport }) {
+function OverviewTab({ report, savedBaseline }: { report: ResearchReport; savedBaseline: SavedBaseline | null }) {
   const scorecard = report.scorecards[0];
   if (!scorecard) return null;
 
@@ -132,7 +218,6 @@ function OverviewTab({ report }: { report: ResearchReport }) {
 
   return (
     <div className="space-y-4">
-      {/* Top summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Card className="border-border/50">
           <CardContent className="p-4 text-center">
@@ -162,6 +247,26 @@ function OverviewTab({ report }: { report: ResearchReport }) {
         </Card>
       </div>
 
+      {/* Baseline comparison */}
+      {savedBaseline?.performance && report.baseline && (
+        <Card className="border-border/50 border-primary/20">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Target className="h-4 w-4 text-primary" />
+              vs Saved Baseline: {savedBaseline.name}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+              <BaselineDiff label="Net PnL" current={report.baseline.netPnl} baseline={savedBaseline.performance.netPnl} format="$" />
+              <BaselineDiff label="Win Rate" current={report.baseline.winRate} baseline={savedBaseline.performance.winRate} format="%" />
+              <BaselineDiff label="Max DD" current={report.baseline.maxDrawdown} baseline={savedBaseline.performance.maxDrawdown} format="%" invert />
+              <BaselineDiff label="Robustness" current={report.baseline.robustnessScore} baseline={savedBaseline.performance.robustnessScore} />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Scorecard */}
       <Card className="border-border/50">
         <CardHeader className="pb-2">
@@ -185,7 +290,6 @@ function OverviewTab({ report }: { report: ResearchReport }) {
         </CardContent>
       </Card>
 
-      {/* Quick insights */}
       {report.insights.length > 0 && (
         <Card className="border-border/50">
           <CardHeader className="pb-2">
@@ -211,7 +315,6 @@ function OverviewTab({ report }: { report: ResearchReport }) {
         </Card>
       )}
 
-      {/* Failure count */}
       {report.failurePatterns.length > 0 && (
         <Card className="border-border/50 border-destructive/20">
           <CardContent className="p-4 flex items-center gap-3">
@@ -231,6 +334,26 @@ function OverviewTab({ report }: { report: ResearchReport }) {
   );
 }
 
+// ─── Baseline Diff ───────────────────────────────────────────────────────────
+
+function BaselineDiff({ label, current, baseline, format, invert }: {
+  label: string; current: number; baseline: number; format?: string; invert?: boolean;
+}) {
+  const diff = current - baseline;
+  const improved = invert ? diff < 0 : diff > 0;
+  const prefix = format === '$' ? '$' : '';
+  const suffix = format === '%' ? '%' : '';
+  return (
+    <div>
+      <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{label}</p>
+      <p className="font-medium text-sm text-foreground">{prefix}{current.toFixed(1)}{suffix}</p>
+      <p className={cn('text-[10px]', improved ? 'text-emerald-400' : diff === 0 ? 'text-muted-foreground' : 'text-destructive')}>
+        {diff >= 0 ? '+' : ''}{prefix}{diff.toFixed(1)}{suffix} vs baseline
+      </p>
+    </div>
+  );
+}
+
 // ─── Benchmarks Tab ──────────────────────────────────────────────────────────
 
 function BenchmarksTab({ benchmarks }: { benchmarks: BenchmarkResult[] }) {
@@ -246,7 +369,7 @@ function BenchmarksTab({ benchmarks }: { benchmarks: BenchmarkResult[] }) {
                 <BarChart3 className="h-4 w-4 text-primary" />
                 <p className="text-sm font-medium text-foreground">{b.label}</p>
               </div>
-              <Badge variant="outline" className="text-[10px]">{b.type.replace('_', ' ')}</Badge>
+              <Badge variant="outline" className="text-[10px]">{b.type.replace(/_/g, ' ')}</Badge>
             </div>
             <div className="grid grid-cols-3 md:grid-cols-6 gap-3 text-xs">
               <MetricCell label="Net PnL" value={`$${b.netPnl.toFixed(2)}`} positive={b.netPnl > 0} />
@@ -285,13 +408,13 @@ function RollingTab({ analyses }: { analyses: RollingAnalysis[] }) {
               <>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-xs">
                   {a.points.slice(-1).map(p => (
-                    <>
-                      <MetricCell key={`pnl-${p.windowEnd}`} label="Net PnL" value={`$${p.netPnl.toFixed(2)}`} positive={p.netPnl > 0} />
-                      <MetricCell key={`wr-${p.windowEnd}`} label="Win Rate" value={`${p.winRate.toFixed(1)}%`} positive={p.winRate > 50} />
-                      <MetricCell key={`pf-${p.windowEnd}`} label="PF" value={p.profitFactor === Infinity ? '∞' : p.profitFactor.toFixed(2)} positive={p.profitFactor > 1} />
-                      <MetricCell key={`dd-${p.windowEnd}`} label="Max DD" value={`${p.maxDrawdown.toFixed(1)}%`} positive={p.maxDrawdown < 10} />
-                      <MetricCell key={`avg-${p.windowEnd}`} label="Avg Trade" value={`$${p.avgTrade.toFixed(2)}`} positive={p.avgTrade > 0} />
-                    </>
+                    <div key={p.windowEnd} className="contents">
+                      <MetricCell label="Net PnL" value={`$${p.netPnl.toFixed(2)}`} positive={p.netPnl > 0} />
+                      <MetricCell label="Win Rate" value={`${p.winRate.toFixed(1)}%`} positive={p.winRate > 50} />
+                      <MetricCell label="PF" value={p.profitFactor === Infinity ? '∞' : p.profitFactor.toFixed(2)} positive={p.profitFactor > 1} />
+                      <MetricCell label="Max DD" value={`${p.maxDrawdown.toFixed(1)}%`} positive={p.maxDrawdown < 10} />
+                      <MetricCell label="Avg Trade" value={`$${p.avgTrade.toFixed(2)}`} positive={p.avgTrade > 0} />
+                    </div>
                   ))}
                 </div>
                 {a.isDegrading && a.degradationReason && (

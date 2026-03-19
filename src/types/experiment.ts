@@ -1,4 +1,5 @@
 import { Asset } from '@/types/trading';
+import { ResearchReport } from '@/types/research';
 
 // ─── Run Types ───────────────────────────────────────────────────────────────
 
@@ -121,6 +122,7 @@ export interface ExperimentRun {
   tags: ExperimentTag[];
   notes: ExperimentNote[];
   isBaseline: boolean;
+  researchReport?: ResearchReport;
 }
 
 // ─── Experiment Note ─────────────────────────────────────────────────────────
