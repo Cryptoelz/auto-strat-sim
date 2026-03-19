@@ -127,7 +127,7 @@ export default function Overview() {
                 {Object.entries(state.positions).map(([asset, pos]) => {
                   if (!pos) return null;
                   const p = prices[asset as Asset];
-                  const pnl = p ? (pos.direction === 'long' ? (p - pos.entryPrice) * pos.size : (pos.entryPrice - p) * pos.size) : 0;
+                  const pnl = p ? computePositionPnl(pos.entryPrice, p, pos.size, pos.direction) : 0;
                   return (
                     <div key={asset} className="flex items-center justify-between rounded-lg border border-border/50 bg-card p-3">
                       <div className="flex items-center gap-2">
