@@ -324,6 +324,8 @@ export function useUnifiedTradingEngine({
       });
 
       setIsLoading(false);
+      diagnosticsRef.current.cycleCount++;
+      diagnosticsRef.current.lastCycleTimestamp = Date.now();
       addStatus('info', 'Market data loaded successfully');
     } catch (error) {
       console.error('Error fetching data:', error);
