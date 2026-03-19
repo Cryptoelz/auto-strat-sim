@@ -15,7 +15,7 @@ import { getLogEntries, subscribeToLog } from '@/lib/logger';
 import { useSyncExternalStore } from 'react';
 
 interface TradingContextType {
-  // Engine (from unified hook)
+  // Engine core
   state: ReturnType<typeof useUnifiedTradingEngine>['state'];
   candles: ReturnType<typeof useUnifiedTradingEngine>['candles'];
   prices: ReturnType<typeof useUnifiedTradingEngine>['prices'];
@@ -26,12 +26,21 @@ interface TradingContextType {
   toggleRunning: () => void;
   reset: () => void;
   refetch: () => void;
-  // Computed values (centralized)
+  // Computed values (single source of truth)
   equity: number;
   unrealizedPnl: number;
   peakEquity: number;
   drawdown: number;
   dailyPnl: number;
+  // Paper-mode controls (always available, active when on paper page)
+  connectionStatus: ConnectionStatus;
+  statusMessages: StatusMessage[];
+  enabledAssets: Record<Asset, boolean>;
+  emergencyStop: boolean;
+  sessionStartTime: number;
+  toggleAsset: (asset: Asset) => void;
+  triggerEmergencyStop: () => void;
+  clearEmergencyStop: () => void;
   // Config
   strategyConfig: StrategyConfig;
   setStrategyConfig: (c: StrategyConfig) => void;
@@ -64,8 +73,6 @@ interface TradingContextType {
   permission: NotificationPermission;
   isSupported: boolean;
   requestPermission: () => void;
-  // Session
-  sessionStartTime: number;
 }
 
 const TradingCtx = createContext<TradingContextType | null>(null);
@@ -117,8 +124,8 @@ export function TradingProvider({ children }: { children: ReactNode }) {
     filters: strategyConfig.filters,
   }), [strategyConfig]);
 
-  // Use unified engine in simulation mode
-  const engine = useUnifiedTradingEngine({ mode: 'simulation', config });
+  // Single unified engine in paper mode (superset of simulation — includes WebSocket + emergency stop)
+  const engine = useUnifiedTradingEngine({ mode: 'paper', config });
 
   usePnlAlerts({
     state: engine.state,
@@ -147,6 +154,7 @@ export function TradingProvider({ children }: { children: ReactNode }) {
   const blockedSignals = useMemo(() => decisionLog.filter(e => e.action === 'blocked'), [decisionLog]);
 
   const value = useMemo<TradingContextType>(() => ({
+    // Core engine state
     state: engine.state,
     candles: engine.candles,
     prices: engine.prices,
@@ -157,12 +165,21 @@ export function TradingProvider({ children }: { children: ReactNode }) {
     toggleRunning: engine.toggleRunning,
     reset: engine.reset,
     refetch: engine.refetch,
-    // Computed
+    // Computed (single source of truth)
     equity: engine.equity,
     unrealizedPnl: engine.unrealizedPnl,
     peakEquity: engine.peakEquity,
     drawdown: engine.drawdown,
     dailyPnl: engine.dailyPnl,
+    // Paper-mode controls
+    connectionStatus: engine.connectionStatus,
+    statusMessages: engine.statusMessages,
+    enabledAssets: engine.enabledAssets,
+    emergencyStop: engine.emergencyStop,
+    sessionStartTime: engine.sessionStartTime,
+    toggleAsset: engine.toggleAsset,
+    triggerEmergencyStop: engine.triggerEmergencyStop,
+    clearEmergencyStop: engine.clearEmergencyStop,
     // Config
     strategyConfig, setStrategyConfig, config,
     portfolioConfig, setPortfolioConfig,
@@ -174,7 +191,6 @@ export function TradingProvider({ children }: { children: ReactNode }) {
     operatorConfig, setOperatorConfig,
     blockedSignals, decisionLog,
     permission, isSupported, requestPermission,
-    sessionStartTime: engine.sessionStartTime,
   }), [
     engine, strategyConfig, config,
     portfolioConfig, multiStrategyConfig,

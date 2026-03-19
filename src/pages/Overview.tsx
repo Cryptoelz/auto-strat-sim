@@ -13,6 +13,7 @@ import { Asset } from '@/types/trading';
 import {
   DollarSign, TrendingUp, TrendingDown, Activity, Shield, Zap,
   ArrowRight, BarChart3, AlertTriangle, Clock, LineChart, Target,
+  ClipboardCheck, Layers,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -22,27 +23,9 @@ export default function Overview() {
     state, prices, signals, analytics, isLoading, lastUpdate,
     strategyConfig, operatorState, blockedSignals, decisionLog,
     sessionStartTime,
+    // Use centralized computed values — no local recalculation
+    equity, unrealizedPnl, drawdown,
   } = useTradingContext();
-
-  const equity = useMemo(() => {
-    let total = state.balance;
-    for (const [asset, pos] of Object.entries(state.positions)) {
-      if (!pos || !prices[asset as Asset]) continue;
-      const p = prices[asset as Asset]!;
-      total += pos.direction === 'long'
-        ? (p - pos.entryPrice) * pos.size
-        : (pos.entryPrice - p) * pos.size;
-    }
-    return total;
-  }, [state, prices]);
-
-  const unrealizedPnl = useMemo(() => {
-    return Object.entries(state.positions).reduce((sum, [asset, pos]) => {
-      if (!pos || !prices[asset as Asset]) return sum;
-      const p = prices[asset as Asset]!;
-      return sum + (pos.direction === 'long' ? (p - pos.entryPrice) * pos.size : (pos.entryPrice - p) * pos.size);
-    }, 0);
-  }, [state, prices]);
 
   const realizedPnl = state.balance - state.initialBalance;
   const totalReturn = ((equity - state.initialBalance) / state.initialBalance) * 100;
@@ -306,8 +289,6 @@ export default function Overview() {
 }
 
 // ─── Helpers ──────────────────────────────────────────
-
-import { ClipboardCheck, Layers } from 'lucide-react';
 
 function MetricCard({ icon: Icon, label, value, change, iconColor }: {
   icon: any; label: string; value: string; change: number | null; iconColor: string;
