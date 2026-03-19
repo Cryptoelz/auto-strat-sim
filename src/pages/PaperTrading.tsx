@@ -403,7 +403,7 @@ export default function PaperTrading() {
             ⚠️ <strong className="text-destructive">SIMULATION ONLY</strong> — No real orders. No real money. No leverage. No private API keys used.
           </p>
         </footer>
-      </main>
+      </div>
     </div>
   );
 }
