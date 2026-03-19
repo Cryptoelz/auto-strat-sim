@@ -5,7 +5,7 @@ export default function Governance() {
   const {
     state, analytics, strategyConfig,
     governanceConfig, setGovernanceConfig, prevGovStatus,
-    drawdown,
+    drawdown, connectionStatus,
   } = useTradingContext();
 
   return (
@@ -19,6 +19,7 @@ export default function Governance() {
         analytics={analytics}
         enabledAssets={strategyConfig.enabledAssets}
         portfolioDrawdown={drawdown}
+        reconnectErrors={connectionStatus.missedCandles}
         governanceConfig={governanceConfig}
         onGovernanceConfigChange={setGovernanceConfig}
         prevStatus={prevGovStatus}
