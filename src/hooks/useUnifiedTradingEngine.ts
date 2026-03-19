@@ -556,6 +556,13 @@ export function useUnifiedTradingEngine({
     const newState = resetState();
     setState(newState);
     peakEquityRef.current = newState.initialBalance;
+    diagnosticsRef.current = {
+      ...diagnosticsRef.current,
+      cycleCount: 0, errorCount: 0, warningCount: 0,
+      blockedTradeCount: 0, governanceTransitions: 0,
+      stateRestoreCount: 0, reconnectCount: 0,
+      lastCycleTimestamp: Date.now(),
+    };
     if (isPaperMode) {
       setStatusMessages([]);
       sessionRef.current = { startTime: Date.now(), maxDrawdown: 0 };
@@ -564,6 +571,9 @@ export function useUnifiedTradingEngine({
     }
     toast.info(isPaperMode ? 'Paper trading session reset' : 'Agent reset to initial state');
   }, [isPaperMode, addStatus]);
+
+  // ── Update soak diagnostics on each cycle ──
+  diagnosticsRef.current.sessionDurationMs = Date.now() - sessionRef.current.startTime;
 
   return {
     state, candles, htfCandles, prices, signals, analytics, isLoading, lastUpdate,
@@ -578,6 +588,8 @@ export function useUnifiedTradingEngine({
     connectionStatus, statusMessages, enabledAssets, emergencyStop,
     sessionStartTime: sessionRef.current.startTime,
     toggleAsset, triggerEmergencyStop, clearEmergencyStop,
+    // Soak diagnostics
+    diagnostics: diagnosticsRef.current,
   };
 }
 
