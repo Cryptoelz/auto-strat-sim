@@ -180,8 +180,7 @@ export default function Backtest() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <main className="container mx-auto px-4 py-6">
-        <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-3 mt-4">
           {/* Configuration Panel */}
           <BacktestConfigForm
             startDate={config.startDate}
