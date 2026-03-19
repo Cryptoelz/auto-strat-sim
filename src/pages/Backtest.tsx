@@ -17,6 +17,7 @@ import { VersionHistoryPanel } from '@/components/backtest/config/VersionHistory
 import { VersionPerformance } from '@/types/preset-version';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -24,7 +25,6 @@ import { Button } from '@/components/ui/button';
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
