@@ -179,7 +179,7 @@ export default function PaperTrading() {
         </p>
       </div>
 
-      <main className="container mx-auto px-3 py-4 sm:px-4 sm:py-6 space-y-4 sm:space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Controls & Live Metrics */}
         <div className="grid gap-3 md:grid-cols-5">
           {/* Safety Controls */}
