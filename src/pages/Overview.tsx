@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/lib/performance';
 import { ASSET_INFO } from '@/config/trading';
 import { Asset } from '@/types/trading';
+import { computePositionPnl } from '@/lib/tradingCalculations';
 import {
   DollarSign, TrendingUp, TrendingDown, Activity, Shield, Zap,
   ArrowRight, BarChart3, AlertTriangle, Clock, LineChart, Target,
