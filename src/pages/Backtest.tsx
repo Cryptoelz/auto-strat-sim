@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
-import { toast } from 'sonner';
+import { useBacktest } from '@/hooks/useBacktest';
 import { useBacktest } from '@/hooks/useBacktest';
 import { BacktestAuditPanel } from '@/components/backtest/BacktestAuditPanel';
 import { ScenarioTestingDashboard } from '@/components/backtest/ScenarioTestingDashboard';
