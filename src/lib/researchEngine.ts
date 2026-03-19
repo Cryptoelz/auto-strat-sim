@@ -11,8 +11,29 @@ import {
   RegimePerformance, VolatilityLevel,
   FailurePattern, FailurePatternType,
   StrategyScorecard, ResearchInsight, InsightCategory,
-  ImprovementSuggestion, ResearchReport,
+  ImprovementSuggestion, ResearchReport, SavedBaseline,
 } from '@/types/research';
+
+// ─── Baseline Persistence ────────────────────────────────────────────────────
+
+const BASELINE_KEY = 'research-saved-baseline';
+
+export function saveBaseline(baseline: SavedBaseline): void {
+  localStorage.setItem(BASELINE_KEY, JSON.stringify(baseline));
+}
+
+export function loadBaseline(): SavedBaseline | null {
+  try {
+    const raw = localStorage.getItem(BASELINE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearBaseline(): void {
+  localStorage.removeItem(BASELINE_KEY);
+}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
