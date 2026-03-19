@@ -16,6 +16,7 @@ import OperatorControls from "./pages/OperatorControls";
 import Alerts from "./pages/Alerts";
 import Experiments from "./pages/Experiments";
 import Readiness from "./pages/Readiness";
+import Research from "./pages/Research";
 import SystemHealth from "./pages/SystemHealth";
 import NotFound from "./pages/NotFound";
 
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="/operator" element={<OperatorControls />} />
               <Route path="/alerts" element={<Alerts />} />
               <Route path="/experiments" element={<Experiments />} />
+              <Route path="/research" element={<Research />} />
               <Route path="/readiness" element={<Readiness />} />
               <Route path="/system-health" element={<SystemHealth />} />
             </Route>
