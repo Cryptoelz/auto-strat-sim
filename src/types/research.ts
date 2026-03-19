@@ -33,7 +33,18 @@ export interface BaselinePerformance {
 
 // ─── Benchmarks ──────────────────────────────────────────────────────────────
 
-export type BenchmarkType = 'baseline' | 'buy_and_hold' | 'random_entry';
+export type BenchmarkType = 'baseline' | 'buy_and_hold' | 'random_entry' | 'long_only_sma' | 'long_short_sma';
+
+// ─── Saved Baseline ─────────────────────────────────────────────────────────
+
+export interface SavedBaseline {
+  id: string;
+  name: string;
+  savedAt: number;
+  strategyId: StrategyId;
+  config: Record<string, unknown>;
+  performance: BaselinePerformance | null;
+}
 
 export interface BenchmarkResult {
   type: BenchmarkType;

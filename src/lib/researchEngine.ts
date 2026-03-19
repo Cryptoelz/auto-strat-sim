@@ -163,6 +163,35 @@ export function computeRandomEntryBenchmark(trades: Trade[]): BenchmarkResult {
   };
 }
 
+export function computeLongOnlySMABenchmark(trades: Trade[], initialBalance: number): BenchmarkResult {
+  const longTrades = trades.filter(t => t.direction === 'long');
+  const netPnl = longTrades.reduce((s, t) => s + t.pnl, 0);
+  return {
+    type: 'long_only_sma',
+    label: 'Long-Only SMA',
+    netPnl,
+    totalReturn: initialBalance > 0 ? (netPnl / initialBalance) * 100 : 0,
+    maxDrawdown: computeMaxDrawdown(longTrades),
+    winRate: computeWinRate(longTrades),
+    profitFactor: computeProfitFactor(longTrades),
+    tradeCount: longTrades.length,
+  };
+}
+
+export function computeLongShortSMABenchmark(trades: Trade[], initialBalance: number): BenchmarkResult {
+  const netPnl = trades.reduce((s, t) => s + t.pnl, 0);
+  return {
+    type: 'long_short_sma',
+    label: 'Long/Short SMA',
+    netPnl,
+    totalReturn: initialBalance > 0 ? (netPnl / initialBalance) * 100 : 0,
+    maxDrawdown: computeMaxDrawdown(trades),
+    winRate: computeWinRate(trades),
+    profitFactor: computeProfitFactor(trades),
+    tradeCount: trades.length,
+  };
+}
+
 export function computeStrategyBenchmark(
   trades: Trade[],
   initialBalance: number,
