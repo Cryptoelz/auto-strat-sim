@@ -1,4 +1,5 @@
 import { Asset } from '@/types/trading';
+import { ResearchReport } from '@/types/research';
 
 // ─── Run Types ───────────────────────────────────────────────────────────────
 
