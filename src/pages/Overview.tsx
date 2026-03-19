@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/lib/performance';
 import { ASSET_INFO } from '@/config/trading';
 import { Asset } from '@/types/trading';
+import { computePositionPnl } from '@/lib/tradingCalculations';
 import {
   DollarSign, TrendingUp, TrendingDown, Activity, Shield, Zap,
   ArrowRight, BarChart3, AlertTriangle, Clock, LineChart, Target,
@@ -126,7 +127,7 @@ export default function Overview() {
                 {Object.entries(state.positions).map(([asset, pos]) => {
                   if (!pos) return null;
                   const p = prices[asset as Asset];
-                  const pnl = p ? (pos.direction === 'long' ? (p - pos.entryPrice) * pos.size : (pos.entryPrice - p) * pos.size) : 0;
+                  const pnl = p ? computePositionPnl(pos.entryPrice, p, pos.size, pos.direction) : 0;
                   return (
                     <div key={asset} className="flex items-center justify-between rounded-lg border border-border/50 bg-card p-3">
                       <div className="flex items-center gap-2">
@@ -243,7 +244,7 @@ export default function Overview() {
                 {recentBlocked.map((b, i) => (
                   <div key={i} className="flex items-center justify-between rounded-md border border-border/30 px-3 py-2 text-xs">
                     <div className="flex items-center gap-2">
-                      <AlertTriangle className="h-3 w-3 text-yellow-500" />
+                      <AlertTriangle className="h-3 w-3 text-trading-warning" />
                       <span>{b.asset}</span>
                     </div>
                     <span className="text-muted-foreground truncate max-w-[200px]">{b.reason}</span>

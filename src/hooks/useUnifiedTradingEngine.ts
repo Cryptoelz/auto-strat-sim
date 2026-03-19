@@ -39,6 +39,19 @@ export interface StatusMessage {
   asset?: Asset;
 }
 
+/** Soak-test diagnostics — tracks long-session health metrics */
+export interface SoakDiagnostics {
+  sessionDurationMs: number;
+  cycleCount: number;
+  reconnectCount: number;
+  errorCount: number;
+  warningCount: number;
+  blockedTradeCount: number;
+  governanceTransitions: number;
+  stateRestoreCount: number;
+  lastCycleTimestamp: number;
+}
+
 export interface UnifiedEngineOptions {
   mode?: EngineMode;
   config?: TradingConfig;
@@ -73,6 +86,8 @@ export interface UnifiedEngineResult {
   toggleAsset: (asset: Asset) => void;
   triggerEmergencyStop: () => void;
   clearEmergencyStop: () => void;
+  // Soak-test diagnostics
+  diagnostics: SoakDiagnostics;
 }
 
 // ─── Constants ──────────────────────────────────────
@@ -165,10 +180,28 @@ export function useUnifiedTradingEngine({
   const sessionRef = useRef(isPaperMode ? loadSession() : { startTime: Date.now(), maxDrawdown: 0 });
   const peakEquityRef = useRef(config.risk.positionSizePercent ? state.initialBalance : 10000);
 
+  // ── Soak diagnostics ref ──
+  const diagnosticsRef = useRef<SoakDiagnostics>({
+    sessionDurationMs: 0,
+    cycleCount: 0,
+    reconnectCount: 0,
+    errorCount: 0,
+    warningCount: 0,
+    blockedTradeCount: 0,
+    governanceTransitions: 0,
+    stateRestoreCount: 0,
+    lastCycleTimestamp: Date.now(),
+  });
+
   const candleIntervalMs = TIMEFRAME_MS[config.timeframe] || CANDLE_INTERVAL_MS;
 
-  // ── Status message helper (paper mode) ──
+  // ── Status message helper (paper mode) + diagnostics tracking ──
   const addStatus = useCallback((type: StatusMessage['type'], message: string, asset?: Asset) => {
+    // Track soak diagnostics regardless of mode
+    if (type === 'error') diagnosticsRef.current.errorCount++;
+    if (type === 'warning') diagnosticsRef.current.warningCount++;
+    if (type === 'blocked') diagnosticsRef.current.blockedTradeCount++;
+
     if (!isPaperMode) return;
     setStatusMessages(prev => [{
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
@@ -291,6 +324,8 @@ export function useUnifiedTradingEngine({
       });
 
       setIsLoading(false);
+      diagnosticsRef.current.cycleCount++;
+      diagnosticsRef.current.lastCycleTimestamp = Date.now();
       addStatus('info', 'Market data loaded successfully');
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -528,6 +563,13 @@ export function useUnifiedTradingEngine({
     const newState = resetState();
     setState(newState);
     peakEquityRef.current = newState.initialBalance;
+    diagnosticsRef.current = {
+      ...diagnosticsRef.current,
+      cycleCount: 0, errorCount: 0, warningCount: 0,
+      blockedTradeCount: 0, governanceTransitions: 0,
+      stateRestoreCount: 0, reconnectCount: 0,
+      lastCycleTimestamp: Date.now(),
+    };
     if (isPaperMode) {
       setStatusMessages([]);
       sessionRef.current = { startTime: Date.now(), maxDrawdown: 0 };
@@ -536,6 +578,9 @@ export function useUnifiedTradingEngine({
     }
     toast.info(isPaperMode ? 'Paper trading session reset' : 'Agent reset to initial state');
   }, [isPaperMode, addStatus]);
+
+  // ── Update soak diagnostics on each cycle ──
+  diagnosticsRef.current.sessionDurationMs = Date.now() - sessionRef.current.startTime;
 
   return {
     state, candles, htfCandles, prices, signals, analytics, isLoading, lastUpdate,
@@ -550,6 +595,8 @@ export function useUnifiedTradingEngine({
     connectionStatus, statusMessages, enabledAssets, emergencyStop,
     sessionStartTime: sessionRef.current.startTime,
     toggleAsset, triggerEmergencyStop, clearEmergencyStop,
+    // Soak diagnostics
+    diagnostics: diagnosticsRef.current,
   };
 }
 

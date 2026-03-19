@@ -42,6 +42,8 @@
     --trading-loss: 0 84% 60%;
     --trading-loss-foreground: 0 0% 100%;
     --trading-neutral: 220 10% 50%;
+    --trading-warning: 45 93% 47%;
+    --trading-warning-foreground: 0 0% 100%;
     --trading-btc: 43 96% 56%;
     --trading-xrp: 220 100% 50%;
     --trading-fet: 280 80% 55%;
@@ -94,6 +96,8 @@
     --trading-loss: 0 84% 60%;
     --trading-loss-foreground: 0 0% 100%;
     --trading-neutral: 220 10% 50%;
+    --trading-warning: 45 93% 47%;
+    --trading-warning-foreground: 0 0% 100%;
     --trading-btc: 43 96% 56%;
     --trading-xrp: 220 100% 60%;
     --trading-fet: 280 80% 55%;
