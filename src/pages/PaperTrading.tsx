@@ -1,8 +1,12 @@
+/**
+ * Paper Trading — Presentation layer only.
+ * All state and logic comes from TradingContext (single source of truth).
+ */
 import { useMemo, memo } from 'react';
 import { useTradingContext } from '@/contexts/TradingContext';
-import { useUnifiedTradingEngine, StatusMessage } from '@/hooks/useUnifiedTradingEngine';
-import { DEFAULT_CONFIG, ASSET_INFO } from '@/config/trading';
-import { Asset, TradingConfig } from '@/types/trading';
+import { StatusMessage } from '@/hooks/useUnifiedTradingEngine';
+import { ASSET_INFO } from '@/config/trading';
+import { Asset } from '@/types/trading';
 import { computePortfolioState } from '@/lib/portfolioManager';
 import { computeTradeStats } from '@/lib/tradingCalculations';
 import { PriceChart } from '@/components/trading/PriceChart';
@@ -20,7 +24,6 @@ import { OperatorControlDashboard } from '@/components/trading/OperatorControlDa
 import { ExperimentDashboard } from '@/components/trading/ExperimentDashboard';
 import { ReadinessDashboard } from '@/components/trading/ReadinessDashboard';
 import { OrchestrationDashboard } from '@/components/trading/OrchestrationDashboard';
-import { getLogEntries, subscribeToLog } from '@/lib/logger';
 import { formatCurrency } from '@/lib/performance';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -31,19 +34,25 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Play, Pause, RotateCcw, Shield, Wifi, WifiOff,
-  AlertTriangle, Activity, TrendingUp, TrendingDown, Zap, Target,
+  AlertTriangle, Activity, TrendingUp, Zap, Target,
   StopCircle, CheckCircle2, Clock, DollarSign, BarChart3, Radio,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useSyncExternalStore } from 'react';
 import { format } from 'date-fns';
 
 const MemoizedPerformanceStats = memo(PerformanceStats);
 
 export default function PaperTrading() {
-  // Pull shared config from TradingContext
   const ctx = useTradingContext();
   const {
+    // Core state (from single engine)
+    state, candles, prices, signals, analytics, isLoading, lastUpdate,
+    // Computed values (single source of truth)
+    equity, unrealizedPnl, drawdown, dailyPnl, peakEquity,
+    // Paper-mode controls
+    connectionStatus, statusMessages, enabledAssets, emergencyStop, sessionStartTime,
+    toggleRunning, toggleAsset, triggerEmergencyStop, clearEmergencyStop, reset, refetch,
+    // Config (from context — no local state)
     strategyConfig, config,
     portfolioConfig, setPortfolioConfig,
     multiStrategyConfig, setMultiStrategyConfig,
@@ -52,20 +61,8 @@ export default function PaperTrading() {
     governanceConfig, setGovernanceConfig, prevGovStatus,
     operatorState, setOperatorState,
     operatorConfig, setOperatorConfig,
+    blockedSignals,
   } = ctx;
-
-  // Use unified engine in paper mode — uses same config from context
-  const engine = useUnifiedTradingEngine({ mode: 'paper', config });
-
-  const {
-    state, candles, prices, signals, analytics, isLoading, lastUpdate,
-    connectionStatus, statusMessages, enabledAssets, emergencyStop,
-    equity, unrealizedPnl, drawdown, dailyPnl, sessionStartTime,
-    toggleRunning, toggleAsset, triggerEmergencyStop, clearEmergencyStop, reset, refetch,
-  } = engine;
-
-  const decisionLog = useSyncExternalStore(subscribeToLog, getLogEntries);
-  const blockedSignals = useMemo(() => decisionLog.filter(e => e.action === 'blocked'), [decisionLog]);
 
   const { total, wins, winRate, longTrades, shortTrades, profitFactor } = useMemo(
     () => computeTradeStats(state.trades), [state.trades],
@@ -273,7 +270,7 @@ export default function PaperTrading() {
             state, prices, analytics, signals,
             config.assets.filter((a: Asset) => enabledAssets[a]),
             portfolioConfig,
-            engine.peakEquity, [],
+            peakEquity, [],
           )}
           portfolioConfig={portfolioConfig}
           onConfigChange={setPortfolioConfig}
