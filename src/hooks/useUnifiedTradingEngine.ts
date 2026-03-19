@@ -39,6 +39,19 @@ export interface StatusMessage {
   asset?: Asset;
 }
 
+/** Soak-test diagnostics — tracks long-session health metrics */
+export interface SoakDiagnostics {
+  sessionDurationMs: number;
+  cycleCount: number;
+  reconnectCount: number;
+  errorCount: number;
+  warningCount: number;
+  blockedTradeCount: number;
+  governanceTransitions: number;
+  stateRestoreCount: number;
+  lastCycleTimestamp: number;
+}
+
 export interface UnifiedEngineOptions {
   mode?: EngineMode;
   config?: TradingConfig;
