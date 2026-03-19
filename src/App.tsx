@@ -18,6 +18,7 @@ import Experiments from "./pages/Experiments";
 import Readiness from "./pages/Readiness";
 import Research from "./pages/Research";
 import SystemHealth from "./pages/SystemHealth";
+import Promotion from "./pages/Promotion";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,6 +44,7 @@ const App = () => (
               <Route path="/experiments" element={<Experiments />} />
               <Route path="/research" element={<Research />} />
               <Route path="/readiness" element={<Readiness />} />
+              <Route path="/promotion" element={<Promotion />} />
               <Route path="/system-health" element={<SystemHealth />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
