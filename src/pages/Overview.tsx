@@ -180,15 +180,15 @@ export default function Overview() {
           <CardContent>
             <div className="space-y-2">
               {strategyConfig.enabledAssets.map((asset) => {
-                const info = ASSET_INFO[asset];
-                const price = prices[asset];
-                const a = analytics[asset];
-                const regime = a?.marketRegime || 'sideways';
-                return (
-                  <div key={asset} className="flex items-center justify-between rounded-lg border border-border/50 bg-card p-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium">{info?.label || asset}</span>
-                      <StatusBadge variant={regime === 'trending' ? 'bullish' : regime === 'volatile' ? 'warning' : 'sideways'} label={regime} />
+                  const info = ASSET_INFO[asset];
+                  const price = prices[asset];
+                  const a = analytics[asset];
+                  const regime = a?.marketRegime || 'sideways';
+                  return (
+                    <div key={asset} className="flex items-center justify-between rounded-lg border border-border/50 bg-card p-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">{info?.name || asset}</span>
+                        <StatusBadge variant={regime.includes('bullish') ? 'bullish' : regime.includes('bearish') ? 'bearish' : 'sideways'} label={regime} />
                     </div>
                     <p className="text-sm font-mono font-semibold">
                       {price ? formatCurrency(price) : '—'}
