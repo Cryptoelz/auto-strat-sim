@@ -164,7 +164,7 @@ export function seedExperiments(): void {
       sma_crossover: { smaFast: 20, smaSlow: 50, cooldownCandles: 1 },
     },
   };
-  createRun(s4, {
+  const { store: s5 } = createRun(s4, {
     type: 'backtest',
     name: 'Candidate 3 — Lower Cooldown (1)',
     startTime: now - 600000,
@@ -203,7 +203,7 @@ export function seedExperiments(): void {
       sma_crossover: { smaFast: 10, smaSlow: 30, cooldownCandles: 3, sidewaysFilter: 1, minSmaDistancePercent: 0.3 },
     },
   };
-  createRun(s4, {
+  createRun(s5, {
     type: 'backtest',
     name: 'Candidate 4 — Sideways Filter',
     startTime: now - 500000,
