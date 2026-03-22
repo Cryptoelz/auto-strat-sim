@@ -3,9 +3,9 @@ import {
 } from '@/types/experiment';
 import { loadExperimentStore, createRun, setBaseline } from './experimentEngine';
 
-const SEED_KEY = 'experiment-seed-v4';
+const SEED_KEY = 'experiment-seed-v5';
 
-function baselineConfig(): ConfigSnapshot {
+function baselineV1Config(): ConfigSnapshot {
   return {
     assets: ['BTCUSDT', 'XRPUSDT'],
     strategies: ['sma_crossover'],
@@ -28,16 +28,16 @@ function baselineConfig(): ConfigSnapshot {
   };
 }
 
-function candidateConfig(): ConfigSnapshot {
+function baselineV2Config(): ConfigSnapshot {
   return {
-    ...baselineConfig(),
+    ...baselineV1Config(),
     strategyParams: {
       sma_crossover: { smaFast: 10, smaSlow: 30 },
     },
   };
 }
 
-function baselineResult(): RunResult {
+function baselineV1Result(): RunResult {
   return {
     totalReturn: 6.8,
     netPnl: 680,
@@ -52,11 +52,11 @@ function baselineResult(): RunResult {
     avgHealthScore: 74,
     robustnessScore: 65,
     failurePointsDetected: 3,
-    summaryCommentary: 'Baseline v1: SMA 20/50 crossover. Stable trend-following with moderate drawdown. Sideways performance is the main weakness.',
+    summaryCommentary: 'Archived Baseline v1: SMA 20/50 crossover. Replaced by Baseline v2 (Faster SMA 10/30) which demonstrated higher avg PnL, lower variance, and consistent outperformance.',
   };
 }
 
-function candidateResult(): RunResult {
+function baselineV2Result(): RunResult {
   return {
     totalReturn: 9.4,
     netPnl: 940,
@@ -71,7 +71,7 @@ function candidateResult(): RunResult {
     avgHealthScore: 70,
     robustnessScore: 58,
     failurePointsDetected: 5,
-    summaryCommentary: 'Candidate 1 - Faster SMA 10/30. More trades and higher return but increased drawdown and lower win rate. Needs sideways-market evaluation.',
+    summaryCommentary: 'Baseline v2 (promoted from Candidate 1 — Faster SMA). Highest average PnL across scenarios, lowest variance (most stable), consistently outperformed Baseline v1.',
   };
 }
 
@@ -80,47 +80,48 @@ export function seedExperiments(): void {
 
   let store = loadExperimentStore();
 
-  // Create baseline run
   const now = Date.now();
-  const { store: s1, runId: baselineId } = createRun(store, {
+
+  // ── Archived Baseline v1 (kept for reference) ──────────────────────
+  const { store: s1 } = createRun(store, {
     type: 'backtest',
-    name: 'Baseline v1 — SMA 20/50',
+    name: 'Baseline v1 — SMA 20/50 (Archived)',
+    startTime: now - 7200000,
+    endTime: now - 5400000,
+    duration: 1800000,
+    config: baselineV1Config(),
+    versionIds: { sma_crossover: 'v1.0' },
+    datasetOrScenario: 'BTCUSDT + XRPUSDT 6-month historical',
+    timeRangeTested: '2025-07-01 to 2025-12-31',
+    assetsIncluded: ['BTCUSDT', 'XRPUSDT'],
+    strategiesIncluded: ['sma_crossover'],
+    operatorMode: 'PAPER_EXECUTION',
+    result: baselineV1Result(),
+  });
+
+  // ── Current Baseline v2 (promoted from Candidate 1) ────────────────
+  const { store: s2, runId: baselineV2Id } = createRun(s1, {
+    type: 'backtest',
+    name: 'Baseline v2 — Faster SMA 10/30',
     startTime: now - 3600000,
     endTime: now - 1800000,
     duration: 1800000,
-    config: baselineConfig(),
-    versionIds: { sma_crossover: 'v1.0' },
+    config: baselineV2Config(),
+    versionIds: { sma_crossover: 'v2.0' },
     datasetOrScenario: 'BTCUSDT + XRPUSDT 6-month historical',
     timeRangeTested: '2025-07-01 to 2025-12-31',
     assetsIncluded: ['BTCUSDT', 'XRPUSDT'],
     strategiesIncluded: ['sma_crossover'],
     operatorMode: 'PAPER_EXECUTION',
-    result: baselineResult(),
+    result: baselineV2Result(),
   });
 
-  // Set as baseline
-  const s2 = setBaseline(s1, baselineId);
+  // Set Baseline v2 as current baseline
+  const s3 = setBaseline(s2, baselineV2Id);
 
-  // Create candidate 1 run
-  const { store: s3 } = createRun(s2, {
-    type: 'backtest',
-    name: 'Candidate 1 — Faster SMA 10/30',
-    startTime: now - 1200000,
-    endTime: now - 600000,
-    duration: 600000,
-    config: candidateConfig(),
-    versionIds: { sma_crossover: 'v1.0' },
-    datasetOrScenario: 'BTCUSDT + XRPUSDT 6-month historical',
-    timeRangeTested: '2025-07-01 to 2025-12-31',
-    assetsIncluded: ['BTCUSDT', 'XRPUSDT'],
-    strategiesIncluded: ['sma_crossover'],
-    operatorMode: 'PAPER_EXECUTION',
-    result: candidateResult(),
-  });
-
-  // Create candidate 2 run — Higher Cooldown
+  // ── Candidate 2 — Higher Cooldown (5) ──────────────────────────────
   const candidate2Cfg: ConfigSnapshot = {
-    ...baselineConfig(),
+    ...baselineV1Config(),
     strategyParams: {
       sma_crossover: { smaFast: 20, smaSlow: 50, cooldownCandles: 5 },
     },
@@ -156,9 +157,9 @@ export function seedExperiments(): void {
     },
   });
 
-  // Create candidate 3 run — Lower Cooldown
+  // ── Candidate 3 — Lower Cooldown (1) ──────────────────────────────
   const candidate3Cfg: ConfigSnapshot = {
-    ...baselineConfig(),
+    ...baselineV1Config(),
     strategyParams: {
       sma_crossover: { smaFast: 20, smaSlow: 50, cooldownCandles: 1 },
     },
