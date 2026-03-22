@@ -3,7 +3,7 @@ import {
 } from '@/types/experiment';
 import { loadExperimentStore, createRun, setBaseline } from './experimentEngine';
 
-const SEED_KEY = 'experiment-seed-v5';
+const SEED_KEY = 'experiment-seed-v6';
 
 function baselineV1Config(): ConfigSnapshot {
   return {
@@ -192,6 +192,45 @@ export function seedExperiments(): void {
       robustnessScore: 42,
       failurePointsDetected: 8,
       summaryCommentary: 'Candidate 3 - Lower Cooldown (1). Highest trade count and return but significantly worse drawdown, win rate, and robustness. High churn risk in sideways markets.',
+    },
+  });
+
+  // ── Candidate 4 — Sideways Filter ─────────────────────────────────
+  const candidate4Cfg: ConfigSnapshot = {
+    ...baselineV2Config(),
+    filterThresholds: { atrPeriod: 14, atrThreshold: 0.5, minSmaDistance: 0.3 },
+    strategyParams: {
+      sma_crossover: { smaFast: 10, smaSlow: 30, cooldownCandles: 3, sidewaysFilter: 1, minSmaDistancePercent: 0.3 },
+    },
+  };
+  createRun(s4, {
+    type: 'backtest',
+    name: 'Candidate 4 — Sideways Filter',
+    startTime: now - 500000,
+    endTime: now - 60000,
+    duration: 440000,
+    config: candidate4Cfg,
+    versionIds: { sma_crossover: 'v2.0' },
+    datasetOrScenario: 'BTCUSDT + XRPUSDT 6-month historical',
+    timeRangeTested: '2025-07-01 to 2025-12-31',
+    assetsIncluded: ['BTCUSDT', 'XRPUSDT'],
+    strategiesIncluded: ['sma_crossover'],
+    operatorMode: 'PAPER_EXECUTION',
+    result: {
+      totalReturn: 8.1,
+      netPnl: 810,
+      maxDrawdown: 7.3,
+      winRate: 56.2,
+      profitFactor: 1.58,
+      tradeCount: 48,
+      longTradeCount: 28,
+      shortTradeCount: 20,
+      blockedTradeCount: 14,
+      governanceInterventions: 2,
+      avgHealthScore: 76,
+      robustnessScore: 72,
+      failurePointsDetected: 2,
+      summaryCommentary: 'Candidate 4 - Sideways Filter. Based on Baseline v2 (SMA 10/30) with increased minSmaDistance filter (0.3%) to block trades when SMAs converge. Fewer trades but improved win rate, profit factor, and drawdown vs Baseline v2.',
     },
   });
 
