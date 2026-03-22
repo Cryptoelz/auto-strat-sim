@@ -157,3 +157,4 @@ export function seedExperiments(): void {
   });
 
   localStorage.setItem(SEED_KEY, 'done');
+}
