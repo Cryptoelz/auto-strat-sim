@@ -3,7 +3,7 @@ import {
 } from '@/types/experiment';
 import { loadExperimentStore, createRun, setBaseline } from './experimentEngine';
 
-const SEED_KEY = 'experiment-seed-v3';
+const SEED_KEY = 'experiment-seed-v4';
 
 function baselineConfig(): ConfigSnapshot {
   return {
@@ -125,7 +125,7 @@ export function seedExperiments(): void {
       sma_crossover: { smaFast: 20, smaSlow: 50, cooldownCandles: 5 },
     },
   };
-  createRun(s3, {
+  const { store: s4 } = createRun(s3, {
     type: 'backtest',
     name: 'Candidate 2 — Higher Cooldown (5)',
     startTime: now - 900000,
@@ -153,6 +153,44 @@ export function seedExperiments(): void {
       robustnessScore: 71,
       failurePointsDetected: 2,
       summaryCommentary: 'Candidate 2 - Higher Cooldown (5). Fewer trades with improved win rate and lower drawdown. Reduced churn but slightly lower total return vs baseline.',
+    },
+  });
+
+  // Create candidate 3 run — Lower Cooldown
+  const candidate3Cfg: ConfigSnapshot = {
+    ...baselineConfig(),
+    strategyParams: {
+      sma_crossover: { smaFast: 20, smaSlow: 50, cooldownCandles: 1 },
+    },
+  };
+  createRun(s4, {
+    type: 'backtest',
+    name: 'Candidate 3 — Lower Cooldown (1)',
+    startTime: now - 600000,
+    endTime: now - 120000,
+    duration: 480000,
+    config: candidate3Cfg,
+    versionIds: { sma_crossover: 'v1.0' },
+    datasetOrScenario: 'BTCUSDT + XRPUSDT 6-month historical',
+    timeRangeTested: '2025-07-01 to 2025-12-31',
+    assetsIncluded: ['BTCUSDT', 'XRPUSDT'],
+    strategiesIncluded: ['sma_crossover'],
+    operatorMode: 'PAPER_EXECUTION',
+    result: {
+      totalReturn: 11.2,
+      netPnl: 1120,
+      maxDrawdown: 14.8,
+      winRate: 44.3,
+      profitFactor: 1.22,
+      tradeCount: 91,
+      longTradeCount: 52,
+      shortTradeCount: 39,
+      blockedTradeCount: 3,
+      governanceInterventions: 5,
+      avgHealthScore: 62,
+      robustnessScore: 42,
+      failurePointsDetected: 8,
+      summaryCommentary: 'Candidate 3 - Lower Cooldown (1). Highest trade count and return but significantly worse drawdown, win rate, and robustness. High churn risk in sideways markets.',
     },
   });
 
