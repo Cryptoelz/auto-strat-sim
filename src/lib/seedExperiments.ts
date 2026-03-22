@@ -3,7 +3,7 @@ import {
 } from '@/types/experiment';
 import { loadExperimentStore, createRun, setBaseline } from './experimentEngine';
 
-const SEED_KEY = 'experiment-seed-v3';
+const SEED_KEY = 'experiment-seed-v4';
 
 function baselineConfig(): ConfigSnapshot {
   return {
