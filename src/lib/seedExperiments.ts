@@ -203,7 +203,7 @@ export function seedExperiments(): void {
       sma_crossover: { smaFast: 10, smaSlow: 30, cooldownCandles: 3, sidewaysFilter: 1, minSmaDistancePercent: 0.3 },
     },
   };
-  createRun(s5, {
+  const { store: s6 } = createRun(s5, {
     type: 'backtest',
     name: 'Candidate 4 — Sideways Filter',
     startTime: now - 500000,
@@ -231,6 +231,45 @@ export function seedExperiments(): void {
       robustnessScore: 72,
       failurePointsDetected: 2,
       summaryCommentary: 'Candidate 4 - Sideways Filter. Based on Baseline v2 (SMA 10/30) with increased minSmaDistance filter (0.3%) to block trades when SMAs converge. Fewer trades but improved win rate, profit factor, and drawdown vs Baseline v2.',
+    },
+  });
+
+  // ── Candidate 5 — Strong Sideways Filter ──────────────────────────
+  const candidate5Cfg: ConfigSnapshot = {
+    ...baselineV2Config(),
+    filterThresholds: { atrPeriod: 14, atrThreshold: 0.5, minSmaDistance: 1.0 },
+    strategyParams: {
+      sma_crossover: { smaFast: 10, smaSlow: 30, cooldownCandles: 3, sidewaysFilter: 1, minSmaDistancePercent: 1.0 },
+    },
+  };
+  createRun(s6, {
+    type: 'backtest',
+    name: 'Candidate 5 — Strong Sideways Filter',
+    startTime: now - 400000,
+    endTime: now - 30000,
+    duration: 370000,
+    config: candidate5Cfg,
+    versionIds: { sma_crossover: 'v2.0' },
+    datasetOrScenario: 'BTCUSDT + XRPUSDT 6-month historical',
+    timeRangeTested: '2025-07-01 to 2025-12-31',
+    assetsIncluded: ['BTCUSDT', 'XRPUSDT'],
+    strategiesIncluded: ['sma_crossover'],
+    operatorMode: 'PAPER_EXECUTION',
+    result: {
+      totalReturn: 6.4,
+      netPnl: 640,
+      maxDrawdown: 4.8,
+      winRate: 61.5,
+      profitFactor: 1.74,
+      tradeCount: 26,
+      longTradeCount: 16,
+      shortTradeCount: 10,
+      blockedTradeCount: 31,
+      governanceInterventions: 1,
+      avgHealthScore: 81,
+      robustnessScore: 78,
+      failurePointsDetected: 1,
+      summaryCommentary: 'Candidate 5 - Strong Sideways Filter. Based on Baseline v2 (SMA 10/30) with aggressive minSmaDistance filter (1.0%) to block all trades when market lacks clear trend. Fewest trades, highest win rate and profit factor, lowest drawdown. Trades only in strong trends.',
     },
   });
 
