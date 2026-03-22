@@ -1,4 +1,5 @@
 import { ExperimentDashboard } from '@/components/trading/ExperimentDashboard';
+import { BacktestComparisonTable } from '@/components/trading/BacktestComparisonTable';
 
 export default function Experiments() {
   return (
@@ -7,6 +8,7 @@ export default function Experiments() {
         <h1 className="text-lg font-bold sm:text-xl">Experiments</h1>
         <p className="text-xs text-muted-foreground">Track runs, compare configurations, and manage the experiment lifecycle.</p>
       </div>
+      <BacktestComparisonTable />
       <ExperimentDashboard />
     </div>
   );
