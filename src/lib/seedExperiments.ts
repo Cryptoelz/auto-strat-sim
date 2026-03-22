@@ -125,7 +125,7 @@ export function seedExperiments(): void {
       sma_crossover: { smaFast: 20, smaSlow: 50, cooldownCandles: 5 },
     },
   };
-  createRun(s3, {
+  const { store: s4 } = createRun(s3, {
     type: 'backtest',
     name: 'Candidate 2 — Higher Cooldown (5)',
     startTime: now - 900000,
