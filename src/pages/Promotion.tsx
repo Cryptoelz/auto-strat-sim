@@ -1,6 +1,9 @@
+import { useEffect } from 'react';
 import { PromotionDashboard } from '@/components/trading/PromotionDashboard';
+import { seedExperiments } from '@/lib/seedExperiments';
 
 export default function Promotion() {
+  useEffect(() => { seedExperiments(); }, []);
   return (
     <div className="container mx-auto p-4 sm:p-6 space-y-6">
       <div>
