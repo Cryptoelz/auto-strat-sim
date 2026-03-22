@@ -101,7 +101,7 @@ export function seedExperiments(): void {
   // Set as baseline
   const s2 = setBaseline(s1, baselineId);
 
-  // Create candidate run
+  // Create candidate 1 run
   const { store: s3 } = createRun(s2, {
     type: 'backtest',
     name: 'Candidate 1 — Faster SMA 10/30',
@@ -118,5 +118,42 @@ export function seedExperiments(): void {
     result: candidateResult(),
   });
 
+  // Create candidate 2 run — Higher Cooldown
+  const candidate2Cfg: ConfigSnapshot = {
+    ...baselineConfig(),
+    strategyParams: {
+      sma_crossover: { smaFast: 20, smaSlow: 50, cooldownCandles: 5 },
+    },
+  };
+  createRun(s3, {
+    type: 'backtest',
+    name: 'Candidate 2 — Higher Cooldown (5)',
+    startTime: now - 900000,
+    endTime: now - 300000,
+    duration: 600000,
+    config: candidate2Cfg,
+    versionIds: { sma_crossover: 'v1.0' },
+    datasetOrScenario: 'BTCUSDT + XRPUSDT 6-month historical',
+    timeRangeTested: '2025-07-01 to 2025-12-31',
+    assetsIncluded: ['BTCUSDT', 'XRPUSDT'],
+    strategiesIncluded: ['sma_crossover'],
+    operatorMode: 'PAPER_EXECUTION',
+    result: {
+      totalReturn: 5.3,
+      netPnl: 530,
+      maxDrawdown: 6.4,
+      winRate: 55.8,
+      profitFactor: 1.48,
+      tradeCount: 34,
+      longTradeCount: 20,
+      shortTradeCount: 14,
+      blockedTradeCount: 4,
+      governanceInterventions: 1,
+      avgHealthScore: 78,
+      robustnessScore: 71,
+      failurePointsDetected: 2,
+      summaryCommentary: 'Candidate 2 - Higher Cooldown (5). Fewer trades with improved win rate and lower drawdown. Reduced churn but slightly lower total return vs baseline.',
+    },
+  });
+
   localStorage.setItem(SEED_KEY, 'done');
-}
