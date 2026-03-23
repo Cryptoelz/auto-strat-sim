@@ -3,7 +3,7 @@ import {
 } from '@/types/experiment';
 import { loadExperimentStore, createRun, setBaseline } from './experimentEngine';
 
-const SEED_KEY = 'experiment-seed-v10';
+const SEED_KEY = 'experiment-seed-v11';
 
 function baselineV1Config(): ConfigSnapshot {
   return {
@@ -100,7 +100,35 @@ function baselineV3Result(): RunResult {
     avgHealthScore: 81,
     robustnessScore: 78,
     failurePointsDetected: 1,
-    summaryCommentary: 'Baseline v3 (promoted from Candidate 5 — Strong Sideways Filter). Highest win rate (61.5%), best profit factor (1.74), lowest drawdown (4.8%). Trades only in strong trends with SMA distance filter (1.0%).',
+    summaryCommentary: 'Archived Baseline v3 (promoted from Candidate 5 — Strong Sideways Filter). Replaced by Baseline v4 (Entry Confirmation) which demonstrated higher win rate (65.0%), better profit factor (1.82), and lower drawdown (4.2%).',
+  };
+}
+
+function baselineV4Config(): ConfigSnapshot {
+  return {
+    ...baselineV3Config(),
+    strategyParams: {
+      sma_crossover: { smaFast: 10, smaSlow: 30, cooldownCandles: 3, sidewaysFilter: 1, minSmaDistancePercent: 1.0, entryConfirmationCandles: 1 },
+    },
+  };
+}
+
+function baselineV4Result(): RunResult {
+  return {
+    totalReturn: 5.8,
+    netPnl: 580,
+    maxDrawdown: 4.2,
+    winRate: 65.0,
+    profitFactor: 1.82,
+    tradeCount: 20,
+    longTradeCount: 13,
+    shortTradeCount: 7,
+    blockedTradeCount: 37,
+    governanceInterventions: 1,
+    avgHealthScore: 83,
+    robustnessScore: 80,
+    failurePointsDetected: 1,
+    summaryCommentary: 'Baseline v4 (promoted from Candidate 7 — Entry Confirmation). 1-candle confirmation delay after SMA crossover. Highest win rate (65.0%), best profit factor (1.82), lowest drawdown (4.2%). Reduced false entries while maintaining strong trend capture.',
   };
 }
 
@@ -145,10 +173,10 @@ export function seedExperiments(): void {
     result: baselineV2Result(),
   });
 
-  // ── Current Baseline v3 (promoted from Candidate 5) ────────────────
-  const { store: s2b, runId: baselineV3Id } = createRun(s2, {
+  // ── Archived Baseline v3 (kept for reference) ──────────────────────
+  const { store: s2b } = createRun(s2, {
     type: 'backtest',
-    name: 'Baseline v3 — Strong Sideways Filter',
+    name: 'Baseline v3 — Strong Sideways Filter (Archived)',
     startTime: now - 1500000,
     endTime: now - 900000,
     duration: 600000,
@@ -162,8 +190,25 @@ export function seedExperiments(): void {
     result: baselineV3Result(),
   });
 
-  // Set Baseline v3 as current baseline
-  const s3 = setBaseline(s2b, baselineV3Id);
+  // ── Current Baseline v4 (promoted from Candidate 7) ────────────────
+  const { store: s2c, runId: baselineV4Id } = createRun(s2b, {
+    type: 'backtest',
+    name: 'Baseline v4 — Entry Confirmation',
+    startTime: now - 800000,
+    endTime: now - 400000,
+    duration: 400000,
+    config: baselineV4Config(),
+    versionIds: { sma_crossover: 'v4.0' },
+    datasetOrScenario: 'BTCUSDT + XRPUSDT 6-month historical',
+    timeRangeTested: '2025-07-01 to 2025-12-31',
+    assetsIncluded: ['BTCUSDT', 'XRPUSDT'],
+    strategiesIncluded: ['sma_crossover'],
+    operatorMode: 'PAPER_EXECUTION',
+    result: baselineV4Result(),
+  });
+
+  // Set Baseline v4 as current baseline
+  const s3 = setBaseline(s2c, baselineV4Id);
 
   // ── Candidate 2 — Higher Cooldown (5) ──────────────────────────────
   const candidate2Cfg: ConfigSnapshot = {
@@ -316,44 +361,6 @@ export function seedExperiments(): void {
       robustnessScore: 82,
       failurePointsDetected: 0,
       summaryCommentary: 'Candidate 6 - Stronger Filter. Copied from Baseline v3 with minSmaDistance increased to 1.3%. Highest win rate and profit factor but fewer trades and lower total return due to aggressive filtering.',
-    },
-  });
-
-  // ── Candidate 7 — Entry Confirmation ────────────────────────────
-  const candidate7Cfg: ConfigSnapshot = {
-    ...baselineV3Config(),
-    strategyParams: {
-      sma_crossover: { smaFast: 10, smaSlow: 30, cooldownCandles: 3, sidewaysFilter: 1, minSmaDistancePercent: 1.0, entryConfirmationCandles: 1 },
-    },
-  };
-  const { store: s8 } = createRun(s7, {
-    type: 'backtest',
-    name: 'Candidate 7 — Entry Confirmation',
-    startTime: now - 300000,
-    endTime: now - 40000,
-    duration: 260000,
-    config: candidate7Cfg,
-    versionIds: { sma_crossover: 'v3.0' },
-    datasetOrScenario: 'BTCUSDT + XRPUSDT 6-month historical',
-    timeRangeTested: '2025-07-01 to 2025-12-31',
-    assetsIncluded: ['BTCUSDT', 'XRPUSDT'],
-    strategiesIncluded: ['sma_crossover'],
-    operatorMode: 'PAPER_EXECUTION',
-    result: {
-      totalReturn: 5.8,
-      netPnl: 580,
-      maxDrawdown: 4.2,
-      winRate: 65.0,
-      profitFactor: 1.82,
-      tradeCount: 20,
-      longTradeCount: 13,
-      shortTradeCount: 7,
-      blockedTradeCount: 37,
-      governanceInterventions: 1,
-      avgHealthScore: 83,
-      robustnessScore: 80,
-      failurePointsDetected: 1,
-      summaryCommentary: 'Candidate 7 - Entry Confirmation. Based on Baseline v3 with 1-candle confirmation delay. Waits 1 candle after SMA crossover before entering — only enters if signal still holds. Highest win rate (65.0%), improved drawdown (4.2%), fewer false entries. Slight reduction in total trades and return vs Baseline v3.',
     },
   });
 
