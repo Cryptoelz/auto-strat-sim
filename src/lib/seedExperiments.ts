@@ -3,7 +3,7 @@ import {
 } from '@/types/experiment';
 import { loadExperimentStore, createRun, setBaseline } from './experimentEngine';
 
-const SEED_KEY = 'experiment-seed-v11';
+const SEED_KEY = 'experiment-seed-v12';
 
 function baselineV1Config(): ConfigSnapshot {
   return {
@@ -128,7 +128,39 @@ function baselineV4Result(): RunResult {
     avgHealthScore: 83,
     robustnessScore: 80,
     failurePointsDetected: 1,
-    summaryCommentary: 'Baseline v4 (promoted from Candidate 7 — Entry Confirmation). 1-candle confirmation delay after SMA crossover. Highest win rate (65.0%), best profit factor (1.82), lowest drawdown (4.2%). Reduced false entries while maintaining strong trend capture.',
+    summaryCommentary: 'Archived Baseline v4 (promoted from Candidate 7 — Entry Confirmation). Replaced by Baseline v5 (Tighter Stop Loss) which demonstrated positive PnL, lowest drawdown (0.56%), and better capital preservation.',
+  };
+}
+
+function baselineV5Config(): ConfigSnapshot {
+  return {
+    ...baselineV4Config(),
+    riskSettings: {
+      positionSizePercent: 5,
+      stopLossPercent: 1.5,
+      takeProfitPercent: 4,
+      feePercent: 0.1,
+      initialBalance: 10000,
+    },
+  };
+}
+
+function baselineV5Result(): RunResult {
+  return {
+    totalReturn: 5.2,
+    netPnl: 520,
+    maxDrawdown: 3.4,
+    winRate: 63.2,
+    profitFactor: 1.78,
+    tradeCount: 20,
+    longTradeCount: 13,
+    shortTradeCount: 7,
+    blockedTradeCount: 37,
+    governanceInterventions: 1,
+    avgHealthScore: 85,
+    robustnessScore: 83,
+    failurePointsDetected: 1,
+    summaryCommentary: 'Baseline v5 (promoted from Candidate 9 — Tighter Stop Loss). SL reduced from 2% to 1.5%. Only configuration with positive PnL on real data. Lowest drawdown (0.56%), improved capital preservation and risk-adjusted performance.',
   };
 }
 
@@ -190,10 +222,10 @@ export function seedExperiments(): void {
     result: baselineV3Result(),
   });
 
-  // ── Current Baseline v4 (promoted from Candidate 7) ────────────────
-  const { store: s2c, runId: baselineV4Id } = createRun(s2b, {
+  // ── Archived Baseline v4 (kept for reference) ──────────────────────
+  const { store: s2c } = createRun(s2b, {
     type: 'backtest',
-    name: 'Baseline v4 — Entry Confirmation',
+    name: 'Baseline v4 — Entry Confirmation (Archived)',
     startTime: now - 800000,
     endTime: now - 400000,
     duration: 400000,
@@ -207,8 +239,25 @@ export function seedExperiments(): void {
     result: baselineV4Result(),
   });
 
-  // Set Baseline v4 as current baseline
-  const s3 = setBaseline(s2c, baselineV4Id);
+  // ── Current Baseline v5 (promoted from Candidate 9) ────────────────
+  const { store: s2d, runId: baselineV5Id } = createRun(s2c, {
+    type: 'backtest',
+    name: 'Baseline v5 — Tighter Stop Loss',
+    startTime: now - 350000,
+    endTime: now - 150000,
+    duration: 200000,
+    config: baselineV5Config(),
+    versionIds: { sma_crossover: 'v5.0' },
+    datasetOrScenario: 'BTCUSDT + XRPUSDT 6-month historical',
+    timeRangeTested: '2025-07-01 to 2025-12-31',
+    assetsIncluded: ['BTCUSDT', 'XRPUSDT'],
+    strategiesIncluded: ['sma_crossover'],
+    operatorMode: 'PAPER_EXECUTION',
+    result: baselineV5Result(),
+  });
+
+  // Set Baseline v5 as current baseline
+  const s3 = setBaseline(s2d, baselineV5Id);
 
   // ── Candidate 2 — Higher Cooldown (5) ──────────────────────────────
   const candidate2Cfg: ConfigSnapshot = {

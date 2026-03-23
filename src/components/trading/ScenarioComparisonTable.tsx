@@ -28,7 +28,8 @@ interface CandidateConfig {
 }
 
 const CANDIDATES: CandidateConfig[] = [
-  { name: 'Baseline v4 — Entry Confirmation', shortName: 'Baseline v4', fastSMA: 10, slowSMA: 30, stopLoss: 2, takeProfit: 4, cooldown: 3, isBaseline: true },
+  { name: 'Baseline v5 — Tighter Stop Loss', shortName: 'Baseline v5', fastSMA: 10, slowSMA: 30, stopLoss: 1.5, takeProfit: 4, cooldown: 3, isBaseline: true },
+  { name: 'Baseline v4 — Entry Confirmation (Archived)', shortName: 'Baseline v4 (Archived)', fastSMA: 10, slowSMA: 30, stopLoss: 2, takeProfit: 4, cooldown: 3, isBaseline: false },
   { name: 'Baseline v3 — Strong Sideways Filter (Archived)', shortName: 'Baseline v3 (Archived)', fastSMA: 10, slowSMA: 30, stopLoss: 2, takeProfit: 4, cooldown: 3, isBaseline: false },
   { name: 'Baseline v2 — Faster SMA 10/30 (Archived)', shortName: 'Baseline v2 (Archived)', fastSMA: 10, slowSMA: 30, stopLoss: 2, takeProfit: 4, cooldown: 3, isBaseline: false },
   { name: 'Baseline v1 — SMA 20/50 (Archived)', shortName: 'Baseline v1 (Archived)', fastSMA: 20, slowSMA: 50, stopLoss: 2, takeProfit: 4, cooldown: 3, isBaseline: false },
