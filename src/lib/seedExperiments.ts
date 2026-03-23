@@ -413,5 +413,43 @@ export function seedExperiments(): void {
     },
   });
 
+  // ── Candidate 11 — Asset Optimized Risk ──────────────────────────
+  const candidate11Cfg: ConfigSnapshot = {
+    ...baselineV5Config(),
+    strategyParams: {
+      sma_crossover: { smaFast: 10, smaSlow: 30, cooldownCandles: 3, entryConfirmation: 1, minSmaDistancePercent: 1.0, assetRisk: { BTCUSDT: { stopLoss: 1.0, takeProfit: 4 }, XRPUSDT: { stopLoss: 2.0, takeProfit: 5 } } },
+    },
+  };
+  const { store: s8 } = createRun(s7, {
+    type: 'backtest',
+    name: 'Candidate 11 — Asset Optimized Risk',
+    startTime: now - 200000,
+    endTime: now - 30000,
+    duration: 170000,
+    config: candidate11Cfg,
+    versionIds: { sma_crossover: 'v5.1' },
+    datasetOrScenario: 'BTCUSDT + XRPUSDT 6-month historical',
+    timeRangeTested: '2025-07-01 to 2025-12-31',
+    assetsIncluded: ['BTCUSDT', 'XRPUSDT'],
+    strategiesIncluded: ['sma_crossover'],
+    operatorMode: 'PAPER_EXECUTION',
+    result: {
+      totalReturn: 8.1,
+      netPnl: 810,
+      maxDrawdown: 3.1,
+      winRate: 65.4,
+      profitFactor: 1.92,
+      tradeCount: 38,
+      longTradeCount: 22,
+      shortTradeCount: 16,
+      blockedTradeCount: 18,
+      governanceInterventions: 0,
+      avgHealthScore: 86,
+      robustnessScore: 84,
+      failurePointsDetected: 0,
+      summaryCommentary: 'Candidate 11 - Asset Optimized Risk. BTC: SL 1.0% TP 4% (tighter stops for lower vol). XRP: SL 2.0% TP 5% (wider range for higher vol). Outperforms Baseline v5 with +$25 combined PnL, higher win rate, and lower drawdown.',
+    },
+  });
+
   localStorage.setItem(SEED_KEY, 'done');
 }
