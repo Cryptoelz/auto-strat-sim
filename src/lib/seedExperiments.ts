@@ -100,7 +100,7 @@ function baselineV3Result(): RunResult {
     avgHealthScore: 81,
     robustnessScore: 78,
     failurePointsDetected: 1,
-    summaryCommentary: 'Baseline v3 (promoted from Candidate 5 — Strong Sideways Filter). Highest win rate (61.5%), best profit factor (1.74), lowest drawdown (4.8%). Trades only in strong trends with aggressive SMA distance filter (1.3%).',
+    summaryCommentary: 'Baseline v3 (promoted from Candidate 5 — Strong Sideways Filter). Highest win rate (61.5%), best profit factor (1.74), lowest drawdown (4.8%). Trades only in strong trends with SMA distance filter (1.0%).',
   };
 }
 
