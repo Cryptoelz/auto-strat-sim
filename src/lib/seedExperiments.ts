@@ -173,10 +173,10 @@ export function seedExperiments(): void {
     result: baselineV2Result(),
   });
 
-  // ── Current Baseline v3 (promoted from Candidate 5) ────────────────
-  const { store: s2b, runId: baselineV3Id } = createRun(s2, {
+  // ── Archived Baseline v3 (kept for reference) ──────────────────────
+  const { store: s2b } = createRun(s2, {
     type: 'backtest',
-    name: 'Baseline v3 — Strong Sideways Filter',
+    name: 'Baseline v3 — Strong Sideways Filter (Archived)',
     startTime: now - 1500000,
     endTime: now - 900000,
     duration: 600000,
@@ -190,8 +190,25 @@ export function seedExperiments(): void {
     result: baselineV3Result(),
   });
 
-  // Set Baseline v3 as current baseline
-  const s3 = setBaseline(s2b, baselineV3Id);
+  // ── Current Baseline v4 (promoted from Candidate 7) ────────────────
+  const { store: s2c, runId: baselineV4Id } = createRun(s2b, {
+    type: 'backtest',
+    name: 'Baseline v4 — Entry Confirmation',
+    startTime: now - 800000,
+    endTime: now - 400000,
+    duration: 400000,
+    config: baselineV4Config(),
+    versionIds: { sma_crossover: 'v4.0' },
+    datasetOrScenario: 'BTCUSDT + XRPUSDT 6-month historical',
+    timeRangeTested: '2025-07-01 to 2025-12-31',
+    assetsIncluded: ['BTCUSDT', 'XRPUSDT'],
+    strategiesIncluded: ['sma_crossover'],
+    operatorMode: 'PAPER_EXECUTION',
+    result: baselineV4Result(),
+  });
+
+  // Set Baseline v4 as current baseline
+  const s3 = setBaseline(s2c, baselineV4Id);
 
   // ── Candidate 2 — Higher Cooldown (5) ──────────────────────────────
   const candidate2Cfg: ConfigSnapshot = {
