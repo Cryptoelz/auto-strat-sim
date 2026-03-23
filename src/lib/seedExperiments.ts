@@ -244,9 +244,9 @@ export function seedExperiments(): void {
   // ── Candidate 4 — Sideways Filter ─────────────────────────────────
   const candidate4Cfg: ConfigSnapshot = {
     ...baselineV2Config(),
-    filterThresholds: { atrPeriod: 14, atrThreshold: 0.5, minSmaDistance: 0.3 },
+    filterThresholds: { atrPeriod: 14, atrThreshold: 0.5, minSmaDistance: 0.7 },
     strategyParams: {
-      sma_crossover: { smaFast: 10, smaSlow: 30, cooldownCandles: 3, sidewaysFilter: 1, minSmaDistancePercent: 0.3 },
+      sma_crossover: { smaFast: 10, smaSlow: 30, cooldownCandles: 3, sidewaysFilter: 1, minSmaDistancePercent: 0.7 },
     },
   };
   const { store: s6 } = createRun(s5, {
