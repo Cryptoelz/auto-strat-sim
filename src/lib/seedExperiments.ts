@@ -71,7 +71,36 @@ function baselineV2Result(): RunResult {
     avgHealthScore: 70,
     robustnessScore: 58,
     failurePointsDetected: 5,
-    summaryCommentary: 'Baseline v2 (promoted from Candidate 1 — Faster SMA). Highest average PnL across scenarios, lowest variance (most stable), consistently outperformed Baseline v1.',
+    summaryCommentary: 'Archived Baseline v2 (promoted from Candidate 1 — Faster SMA 10/30). Replaced by Baseline v3 (Strong Sideways Filter) which demonstrated highest win rate, best profit factor, and lowest drawdown.',
+  };
+}
+
+function baselineV3Config(): ConfigSnapshot {
+  return {
+    ...baselineV2Config(),
+    filterThresholds: { atrPeriod: 14, atrThreshold: 0.5, minSmaDistance: 1.0 },
+    strategyParams: {
+      sma_crossover: { smaFast: 10, smaSlow: 30, cooldownCandles: 3, sidewaysFilter: 1, minSmaDistancePercent: 1.0 },
+    },
+  };
+}
+
+function baselineV3Result(): RunResult {
+  return {
+    totalReturn: 6.4,
+    netPnl: 640,
+    maxDrawdown: 4.8,
+    winRate: 61.5,
+    profitFactor: 1.74,
+    tradeCount: 26,
+    longTradeCount: 16,
+    shortTradeCount: 10,
+    blockedTradeCount: 31,
+    governanceInterventions: 1,
+    avgHealthScore: 81,
+    robustnessScore: 78,
+    failurePointsDetected: 1,
+    summaryCommentary: 'Baseline v3 (promoted from Candidate 5 — Strong Sideways Filter). Highest win rate (61.5%), best profit factor (1.74), lowest drawdown (4.8%). Trades only in strong trends with aggressive SMA distance filter (1.0%).',
   };
 }
 
