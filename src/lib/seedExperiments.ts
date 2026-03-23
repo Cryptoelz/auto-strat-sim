@@ -417,7 +417,7 @@ export function seedExperiments(): void {
   const candidate11Cfg: ConfigSnapshot = {
     ...baselineV5Config(),
     strategyParams: {
-      sma_crossover: { smaFast: 10, smaSlow: 30, cooldownCandles: 3, entryConfirmation: 1, minSmaDistancePercent: 1.0, assetRisk: { BTCUSDT: { stopLoss: 1.0, takeProfit: 4 }, XRPUSDT: { stopLoss: 2.0, takeProfit: 5 } } },
+      sma_crossover: { smaFast: 10, smaSlow: 30, cooldownCandles: 3, entryConfirmation: 1, minSmaDistancePercent: 1.0, btcStopLoss: 1.0, btcTakeProfit: 4, xrpStopLoss: 2.0, xrpTakeProfit: 5 },
     },
   };
   const { store: s8 } = createRun(s7, {
