@@ -78,9 +78,9 @@ function baselineV2Result(): RunResult {
 function baselineV3Config(): ConfigSnapshot {
   return {
     ...baselineV2Config(),
-    filterThresholds: { atrPeriod: 14, atrThreshold: 0.5, minSmaDistance: 1.0 },
+    filterThresholds: { atrPeriod: 14, atrThreshold: 0.5, minSmaDistance: 1.3 },
     strategyParams: {
-      sma_crossover: { smaFast: 10, smaSlow: 30, cooldownCandles: 3, sidewaysFilter: 1, minSmaDistancePercent: 1.0 },
+      sma_crossover: { smaFast: 10, smaSlow: 30, cooldownCandles: 3, sidewaysFilter: 1, minSmaDistancePercent: 1.3 },
     },
   };
 }
