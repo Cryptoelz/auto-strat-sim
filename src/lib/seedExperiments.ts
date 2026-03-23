@@ -100,7 +100,35 @@ function baselineV3Result(): RunResult {
     avgHealthScore: 81,
     robustnessScore: 78,
     failurePointsDetected: 1,
-    summaryCommentary: 'Baseline v3 (promoted from Candidate 5 — Strong Sideways Filter). Highest win rate (61.5%), best profit factor (1.74), lowest drawdown (4.8%). Trades only in strong trends with SMA distance filter (1.0%).',
+    summaryCommentary: 'Archived Baseline v3 (promoted from Candidate 5 — Strong Sideways Filter). Replaced by Baseline v4 (Entry Confirmation) which demonstrated higher win rate (65.0%), better profit factor (1.82), and lower drawdown (4.2%).',
+  };
+}
+
+function baselineV4Config(): ConfigSnapshot {
+  return {
+    ...baselineV3Config(),
+    strategyParams: {
+      sma_crossover: { smaFast: 10, smaSlow: 30, cooldownCandles: 3, sidewaysFilter: 1, minSmaDistancePercent: 1.0, entryConfirmationCandles: 1 },
+    },
+  };
+}
+
+function baselineV4Result(): RunResult {
+  return {
+    totalReturn: 5.8,
+    netPnl: 580,
+    maxDrawdown: 4.2,
+    winRate: 65.0,
+    profitFactor: 1.82,
+    tradeCount: 20,
+    longTradeCount: 13,
+    shortTradeCount: 7,
+    blockedTradeCount: 37,
+    governanceInterventions: 1,
+    avgHealthScore: 83,
+    robustnessScore: 80,
+    failurePointsDetected: 1,
+    summaryCommentary: 'Baseline v4 (promoted from Candidate 7 — Entry Confirmation). 1-candle confirmation delay after SMA crossover. Highest win rate (65.0%), best profit factor (1.82), lowest drawdown (4.2%). Reduced false entries while maintaining strong trend capture.',
   };
 }
 
