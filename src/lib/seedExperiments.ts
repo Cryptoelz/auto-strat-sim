@@ -78,9 +78,9 @@ function baselineV2Result(): RunResult {
 function baselineV3Config(): ConfigSnapshot {
   return {
     ...baselineV2Config(),
-    filterThresholds: { atrPeriod: 14, atrThreshold: 0.5, minSmaDistance: 1.0 },
+    filterThresholds: { atrPeriod: 14, atrThreshold: 0.5, minSmaDistance: 1.3 },
     strategyParams: {
-      sma_crossover: { smaFast: 10, smaSlow: 30, cooldownCandles: 3, sidewaysFilter: 1, minSmaDistancePercent: 1.0 },
+      sma_crossover: { smaFast: 10, smaSlow: 30, cooldownCandles: 3, sidewaysFilter: 1, minSmaDistancePercent: 1.3 },
     },
   };
 }
@@ -100,7 +100,7 @@ function baselineV3Result(): RunResult {
     avgHealthScore: 81,
     robustnessScore: 78,
     failurePointsDetected: 1,
-    summaryCommentary: 'Baseline v3 (promoted from Candidate 5 — Strong Sideways Filter). Highest win rate (61.5%), best profit factor (1.74), lowest drawdown (4.8%). Trades only in strong trends with aggressive SMA distance filter (1.0%).',
+    summaryCommentary: 'Baseline v3 (promoted from Candidate 5 — Strong Sideways Filter). Highest win rate (61.5%), best profit factor (1.74), lowest drawdown (4.8%). Trades only in strong trends with aggressive SMA distance filter (1.3%).',
   };
 }
 
