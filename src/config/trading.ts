@@ -8,7 +8,7 @@ export const DEFAULT_CONFIG: TradingConfig = {
     slowSMA: 50,
   },
   risk: {
-    positionSizePercent: 5,
+    positionSizePercent: 6,
     stopLossPercent: 2,
     takeProfitPercent: 4,
     cooldownCandles: 3,
