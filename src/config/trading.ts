@@ -9,7 +9,7 @@ export const DEFAULT_CONFIG: TradingConfig = {
   },
   risk: {
     positionSizePercent: 6,
-    stopLossPercent: 2,
+    stopLossPercent: 1.5,
     takeProfitPercent: 4,
     cooldownCandles: 3,
   },
