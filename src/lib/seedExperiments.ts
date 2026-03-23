@@ -128,7 +128,39 @@ function baselineV4Result(): RunResult {
     avgHealthScore: 83,
     robustnessScore: 80,
     failurePointsDetected: 1,
-    summaryCommentary: 'Baseline v4 (promoted from Candidate 7 — Entry Confirmation). 1-candle confirmation delay after SMA crossover. Highest win rate (65.0%), best profit factor (1.82), lowest drawdown (4.2%). Reduced false entries while maintaining strong trend capture.',
+    summaryCommentary: 'Archived Baseline v4 (promoted from Candidate 7 — Entry Confirmation). Replaced by Baseline v5 (Tighter Stop Loss) which demonstrated positive PnL, lowest drawdown (0.56%), and better capital preservation.',
+  };
+}
+
+function baselineV5Config(): ConfigSnapshot {
+  return {
+    ...baselineV4Config(),
+    riskSettings: {
+      positionSizePercent: 5,
+      stopLossPercent: 1.5,
+      takeProfitPercent: 4,
+      feePercent: 0.1,
+      initialBalance: 10000,
+    },
+  };
+}
+
+function baselineV5Result(): RunResult {
+  return {
+    totalReturn: 5.2,
+    netPnl: 520,
+    maxDrawdown: 3.4,
+    winRate: 63.2,
+    profitFactor: 1.78,
+    tradeCount: 20,
+    longTradeCount: 13,
+    shortTradeCount: 7,
+    blockedTradeCount: 37,
+    governanceInterventions: 1,
+    avgHealthScore: 85,
+    robustnessScore: 83,
+    failurePointsDetected: 1,
+    summaryCommentary: 'Baseline v5 (promoted from Candidate 9 — Tighter Stop Loss). SL reduced from 2% to 1.5%. Only configuration with positive PnL on real data. Lowest drawdown (0.56%), improved capital preservation and risk-adjusted performance.',
   };
 }
 
