@@ -280,5 +280,44 @@ export function seedExperiments(): void {
     },
   });
 
+  // ── Candidate 6 — Stronger Filter ───────────────────────────────
+  const candidate6Cfg: ConfigSnapshot = {
+    ...baselineV3Config(),
+    filterThresholds: { atrPeriod: 14, atrThreshold: 0.5, minSmaDistance: 1.3 },
+    strategyParams: {
+      sma_crossover: { smaFast: 10, smaSlow: 30, cooldownCandles: 3, sidewaysFilter: 1, minSmaDistancePercent: 1.3 },
+    },
+  };
+  const { store: s7 } = createRun(s6, {
+    type: 'backtest',
+    name: 'Candidate 6 — Stronger Filter',
+    startTime: now - 400000,
+    endTime: now - 50000,
+    duration: 350000,
+    config: candidate6Cfg,
+    versionIds: { sma_crossover: 'v3.0' },
+    datasetOrScenario: 'BTCUSDT + XRPUSDT 6-month historical',
+    timeRangeTested: '2025-07-01 to 2025-12-31',
+    assetsIncluded: ['BTCUSDT', 'XRPUSDT'],
+    strategiesIncluded: ['sma_crossover'],
+    operatorMode: 'PAPER_EXECUTION',
+    result: {
+      totalReturn: 4.9,
+      netPnl: 490,
+      maxDrawdown: 3.6,
+      winRate: 64.7,
+      profitFactor: 1.88,
+      tradeCount: 17,
+      longTradeCount: 11,
+      shortTradeCount: 6,
+      blockedTradeCount: 42,
+      governanceInterventions: 0,
+      avgHealthScore: 84,
+      robustnessScore: 82,
+      failurePointsDetected: 0,
+      summaryCommentary: 'Candidate 6 - Stronger Filter. Copied from Baseline v3 with minSmaDistance increased to 1.3%. Highest win rate and profit factor but fewer trades and lower total return due to aggressive filtering.',
+    },
+  });
+
   localStorage.setItem(SEED_KEY, 'done');
 }
