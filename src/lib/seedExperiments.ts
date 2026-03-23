@@ -3,7 +3,7 @@ import {
 } from '@/types/experiment';
 import { loadExperimentStore, createRun, setBaseline } from './experimentEngine';
 
-const SEED_KEY = 'experiment-seed-v8';
+const SEED_KEY = 'experiment-seed-v9';
 
 function baselineV1Config(): ConfigSnapshot {
   return {
@@ -277,6 +277,45 @@ export function seedExperiments(): void {
       robustnessScore: 72,
       failurePointsDetected: 2,
       summaryCommentary: 'Candidate 4 - Sideways Filter. Based on Baseline v2 (SMA 10/30) with increased minSmaDistance filter (0.7%) to block trades when SMAs converge. Fewer trades but improved win rate, profit factor, and drawdown vs Baseline v2.',
+    },
+  });
+
+  // ── Candidate 6 — Stronger Filter ───────────────────────────────
+  const candidate6Cfg: ConfigSnapshot = {
+    ...baselineV3Config(),
+    filterThresholds: { atrPeriod: 14, atrThreshold: 0.5, minSmaDistance: 1.3 },
+    strategyParams: {
+      sma_crossover: { smaFast: 10, smaSlow: 30, cooldownCandles: 3, sidewaysFilter: 1, minSmaDistancePercent: 1.3 },
+    },
+  };
+  const { store: s7 } = createRun(s6, {
+    type: 'backtest',
+    name: 'Candidate 6 — Stronger Filter',
+    startTime: now - 400000,
+    endTime: now - 50000,
+    duration: 350000,
+    config: candidate6Cfg,
+    versionIds: { sma_crossover: 'v3.0' },
+    datasetOrScenario: 'BTCUSDT + XRPUSDT 6-month historical',
+    timeRangeTested: '2025-07-01 to 2025-12-31',
+    assetsIncluded: ['BTCUSDT', 'XRPUSDT'],
+    strategiesIncluded: ['sma_crossover'],
+    operatorMode: 'PAPER_EXECUTION',
+    result: {
+      totalReturn: 4.9,
+      netPnl: 490,
+      maxDrawdown: 3.6,
+      winRate: 64.7,
+      profitFactor: 1.88,
+      tradeCount: 17,
+      longTradeCount: 11,
+      shortTradeCount: 6,
+      blockedTradeCount: 42,
+      governanceInterventions: 0,
+      avgHealthScore: 84,
+      robustnessScore: 82,
+      failurePointsDetected: 0,
+      summaryCommentary: 'Candidate 6 - Stronger Filter. Copied from Baseline v3 with minSmaDistance increased to 1.3%. Highest win rate and profit factor but fewer trades and lower total return due to aggressive filtering.',
     },
   });
 
