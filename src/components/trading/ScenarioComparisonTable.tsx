@@ -28,12 +28,12 @@ interface CandidateConfig {
 }
 
 const CANDIDATES: CandidateConfig[] = [
-  { name: 'Baseline v2 — Faster SMA 10/30', shortName: 'Baseline v2', fastSMA: 10, slowSMA: 30, stopLoss: 2, takeProfit: 4, cooldown: 3, isBaseline: true },
+  { name: 'Baseline v3 — Strong Sideways Filter', shortName: 'Baseline v3', fastSMA: 10, slowSMA: 30, stopLoss: 2, takeProfit: 4, cooldown: 3, isBaseline: true },
+  { name: 'Baseline v2 — Faster SMA 10/30 (Archived)', shortName: 'Baseline v2 (Archived)', fastSMA: 10, slowSMA: 30, stopLoss: 2, takeProfit: 4, cooldown: 3, isBaseline: false },
   { name: 'Baseline v1 — SMA 20/50 (Archived)', shortName: 'Baseline v1 (Archived)', fastSMA: 20, slowSMA: 50, stopLoss: 2, takeProfit: 4, cooldown: 3, isBaseline: false },
   { name: 'Candidate 2 — Higher Cooldown (5)', shortName: 'Cand. 2 (CD=5)', fastSMA: 20, slowSMA: 50, stopLoss: 2, takeProfit: 4, cooldown: 5, isBaseline: false },
   { name: 'Candidate 3 — Lower Cooldown (1)', shortName: 'Cand. 3 (CD=1)', fastSMA: 20, slowSMA: 50, stopLoss: 2, takeProfit: 4, cooldown: 1, isBaseline: false },
   { name: 'Candidate 4 — Sideways Filter', shortName: 'Cand. 4 (SW Filter)', fastSMA: 10, slowSMA: 30, stopLoss: 2, takeProfit: 4, cooldown: 3, isBaseline: false },
-  { name: 'Candidate 5 — Strong Sideways Filter', shortName: 'Cand. 5 (Strong SW)', fastSMA: 10, slowSMA: 30, stopLoss: 2, takeProfit: 4, cooldown: 3, isBaseline: false },
 ];
 
 const SCENARIO_IDS = ['strong-bull', 'strong-bear', 'sideways', 'high-vol-breakout', 'reversal-heavy'];

@@ -3,7 +3,7 @@ import {
 } from '@/types/experiment';
 import { loadExperimentStore, createRun, setBaseline } from './experimentEngine';
 
-const SEED_KEY = 'experiment-seed-v7';
+const SEED_KEY = 'experiment-seed-v8';
 
 function baselineV1Config(): ConfigSnapshot {
   return {
@@ -71,7 +71,36 @@ function baselineV2Result(): RunResult {
     avgHealthScore: 70,
     robustnessScore: 58,
     failurePointsDetected: 5,
-    summaryCommentary: 'Baseline v2 (promoted from Candidate 1 — Faster SMA). Highest average PnL across scenarios, lowest variance (most stable), consistently outperformed Baseline v1.',
+    summaryCommentary: 'Archived Baseline v2 (promoted from Candidate 1 — Faster SMA 10/30). Replaced by Baseline v3 (Strong Sideways Filter) which demonstrated highest win rate, best profit factor, and lowest drawdown.',
+  };
+}
+
+function baselineV3Config(): ConfigSnapshot {
+  return {
+    ...baselineV2Config(),
+    filterThresholds: { atrPeriod: 14, atrThreshold: 0.5, minSmaDistance: 1.0 },
+    strategyParams: {
+      sma_crossover: { smaFast: 10, smaSlow: 30, cooldownCandles: 3, sidewaysFilter: 1, minSmaDistancePercent: 1.0 },
+    },
+  };
+}
+
+function baselineV3Result(): RunResult {
+  return {
+    totalReturn: 6.4,
+    netPnl: 640,
+    maxDrawdown: 4.8,
+    winRate: 61.5,
+    profitFactor: 1.74,
+    tradeCount: 26,
+    longTradeCount: 16,
+    shortTradeCount: 10,
+    blockedTradeCount: 31,
+    governanceInterventions: 1,
+    avgHealthScore: 81,
+    robustnessScore: 78,
+    failurePointsDetected: 1,
+    summaryCommentary: 'Baseline v3 (promoted from Candidate 5 — Strong Sideways Filter). Highest win rate (61.5%), best profit factor (1.74), lowest drawdown (4.8%). Trades only in strong trends with aggressive SMA distance filter (1.0%).',
   };
 }
 
@@ -99,10 +128,10 @@ export function seedExperiments(): void {
     result: baselineV1Result(),
   });
 
-  // ── Current Baseline v2 (promoted from Candidate 1) ────────────────
-  const { store: s2, runId: baselineV2Id } = createRun(s1, {
+  // ── Archived Baseline v2 (kept for reference) ──────────────────────
+  const { store: s2 } = createRun(s1, {
     type: 'backtest',
-    name: 'Baseline v2 — Faster SMA 10/30',
+    name: 'Baseline v2 — Faster SMA 10/30 (Archived)',
     startTime: now - 3600000,
     endTime: now - 1800000,
     duration: 1800000,
@@ -116,8 +145,25 @@ export function seedExperiments(): void {
     result: baselineV2Result(),
   });
 
-  // Set Baseline v2 as current baseline
-  const s3 = setBaseline(s2, baselineV2Id);
+  // ── Current Baseline v3 (promoted from Candidate 5) ────────────────
+  const { store: s2b, runId: baselineV3Id } = createRun(s2, {
+    type: 'backtest',
+    name: 'Baseline v3 — Strong Sideways Filter',
+    startTime: now - 1500000,
+    endTime: now - 900000,
+    duration: 600000,
+    config: baselineV3Config(),
+    versionIds: { sma_crossover: 'v3.0' },
+    datasetOrScenario: 'BTCUSDT + XRPUSDT 6-month historical',
+    timeRangeTested: '2025-07-01 to 2025-12-31',
+    assetsIncluded: ['BTCUSDT', 'XRPUSDT'],
+    strategiesIncluded: ['sma_crossover'],
+    operatorMode: 'PAPER_EXECUTION',
+    result: baselineV3Result(),
+  });
+
+  // Set Baseline v3 as current baseline
+  const s3 = setBaseline(s2b, baselineV3Id);
 
   // ── Candidate 2 — Higher Cooldown (5) ──────────────────────────────
   const candidate2Cfg: ConfigSnapshot = {
@@ -231,45 +277,6 @@ export function seedExperiments(): void {
       robustnessScore: 72,
       failurePointsDetected: 2,
       summaryCommentary: 'Candidate 4 - Sideways Filter. Based on Baseline v2 (SMA 10/30) with increased minSmaDistance filter (0.3%) to block trades when SMAs converge. Fewer trades but improved win rate, profit factor, and drawdown vs Baseline v2.',
-    },
-  });
-
-  // ── Candidate 5 — Strong Sideways Filter ──────────────────────────
-  const candidate5Cfg: ConfigSnapshot = {
-    ...baselineV2Config(),
-    filterThresholds: { atrPeriod: 14, atrThreshold: 0.5, minSmaDistance: 1.0 },
-    strategyParams: {
-      sma_crossover: { smaFast: 10, smaSlow: 30, cooldownCandles: 3, sidewaysFilter: 1, minSmaDistancePercent: 1.0 },
-    },
-  };
-  createRun(s6, {
-    type: 'backtest',
-    name: 'Candidate 5 — Strong Sideways Filter',
-    startTime: now - 400000,
-    endTime: now - 30000,
-    duration: 370000,
-    config: candidate5Cfg,
-    versionIds: { sma_crossover: 'v2.0' },
-    datasetOrScenario: 'BTCUSDT + XRPUSDT 6-month historical',
-    timeRangeTested: '2025-07-01 to 2025-12-31',
-    assetsIncluded: ['BTCUSDT', 'XRPUSDT'],
-    strategiesIncluded: ['sma_crossover'],
-    operatorMode: 'PAPER_EXECUTION',
-    result: {
-      totalReturn: 6.4,
-      netPnl: 640,
-      maxDrawdown: 4.8,
-      winRate: 61.5,
-      profitFactor: 1.74,
-      tradeCount: 26,
-      longTradeCount: 16,
-      shortTradeCount: 10,
-      blockedTradeCount: 31,
-      governanceInterventions: 1,
-      avgHealthScore: 81,
-      robustnessScore: 78,
-      failurePointsDetected: 1,
-      summaryCommentary: 'Candidate 5 - Strong Sideways Filter. Based on Baseline v2 (SMA 10/30) with aggressive minSmaDistance filter (1.0%) to block all trades when market lacks clear trend. Fewest trades, highest win rate and profit factor, lowest drawdown. Trades only in strong trends.',
     },
   });
 
