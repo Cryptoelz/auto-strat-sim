@@ -464,7 +464,7 @@ export function seedExperiments(): void {
     strategyParams: {
       sma_crossover: {
         ...baselineV6Config().strategyParams.sma_crossover,
-        trailingStopEnabled: true,
+        trailingStopEnabled: 1,
         trailingStopActivation: 2.0,
         trailingStopDistance: 1.0,
         moveToBreakevenAt: 2.0,
