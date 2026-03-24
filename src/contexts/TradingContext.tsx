@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useMemo, useEffect, useRef, ReactN
 import { useUnifiedTradingEngine, StatusMessage, ConnectionStatus } from '@/hooks/useUnifiedTradingEngine';
 import { useNotifications } from '@/hooks/useNotifications';
 import { usePnlAlerts } from '@/hooks/usePnlAlerts';
+import { useSessionAlerts } from '@/hooks/useSessionAlerts';
 import { DEFAULT_CONFIG } from '@/config/trading';
 import { StrategyConfig } from '@/components/StrategySettings';
 import { Asset } from '@/types/trading';
@@ -131,6 +132,13 @@ export function TradingProvider({ children }: { children: ReactNode }) {
     state: engine.state,
     profitTarget: strategyConfig.pnlAlertProfit,
     lossLimit: strategyConfig.pnlAlertLoss,
+  });
+
+  useSessionAlerts({
+    state: engine.state,
+    drawdown: engine.drawdown,
+    sessionStartTime: engine.sessionStartTime,
+    isRunning: engine.state.isRunning,
   });
 
   const { permission, isSupported, requestPermission, sendSignalNotification } = useNotifications();
