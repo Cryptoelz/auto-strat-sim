@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useMemo, useEffect, useRef, ReactN
 import { useUnifiedTradingEngine, StatusMessage, ConnectionStatus } from '@/hooks/useUnifiedTradingEngine';
 import { useNotifications } from '@/hooks/useNotifications';
 import { usePnlAlerts } from '@/hooks/usePnlAlerts';
+import { useSessionAlerts } from '@/hooks/useSessionAlerts';
 import { DEFAULT_CONFIG } from '@/config/trading';
 import { StrategyConfig } from '@/components/StrategySettings';
 import { Asset } from '@/types/trading';
