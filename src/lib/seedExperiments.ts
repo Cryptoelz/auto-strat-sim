@@ -3,7 +3,7 @@ import {
 } from '@/types/experiment';
 import { loadExperimentStore, createRun, setBaseline } from './experimentEngine';
 
-const SEED_KEY = 'experiment-seed-v17';
+const SEED_KEY = 'experiment-seed-v18';
 
 function baselineV1Config(): ConfigSnapshot {
   return {
@@ -553,6 +553,55 @@ export function seedExperiments(): void {
       robustnessScore: 88,
       failurePointsDetected: 0,
       summaryCommentary: 'Candidate 13 - Adaptive Position Sizing. Dynamically adjusts position size based on ATR volatility (3-6%) and reduces size after consecutive losses. Lower drawdown (1.9% vs 2.3%) and smoother equity curve vs Baseline v7, with slightly lower PnL due to smaller positions in volatile periods. Best risk-adjusted returns of any configuration.',
+    },
+  });
+
+  // ── Mean Reversion Strategy (RSI 35/65 + trend filter) ────────────
+  const mrConfig: ConfigSnapshot = {
+    ...baselineV7Config(),
+    strategies: ['mean_reversion'],
+    strategyParams: {
+      mean_reversion: {
+        rsiPeriod: 14,
+        rsiBuyThreshold: 35,
+        rsiSellThreshold: 65,
+        trendSmaPeriod: 50,
+        trailingStopEnabled: 1,
+        trailingStopActivation: 2.0,
+        trailingStopDistance: 1.0,
+        cooldownCandles: 3,
+        entryConfirmation: 1,
+      },
+    },
+  };
+  const { store: s9 } = createRun(s8, {
+    type: 'backtest',
+    name: 'Mean Reversion Strategy — RSI + Trend Filter',
+    startTime: now - 140000,
+    endTime: now - 12000,
+    duration: 128000,
+    config: mrConfig,
+    versionIds: { mean_reversion: 'v1.0' },
+    datasetOrScenario: 'BTCUSDT + XRPUSDT 1h historical (1000 candles)',
+    timeRangeTested: '2025-01-15 to 2025-02-25',
+    assetsIncluded: ['BTCUSDT', 'XRPUSDT'],
+    strategiesIncluded: ['mean_reversion'],
+    operatorMode: 'PAPER_EXECUTION',
+    result: {
+      totalReturn: 1.7,
+      netPnl: 172,
+      maxDrawdown: 0.4,
+      winRate: 50.0,
+      profitFactor: 1.35,
+      tradeCount: 16,
+      longTradeCount: 9,
+      shortTradeCount: 7,
+      blockedTradeCount: 24,
+      governanceInterventions: 0,
+      avgHealthScore: 82,
+      robustnessScore: 76,
+      failurePointsDetected: 0,
+      summaryCommentary: 'Mean Reversion Strategy (RSI 35/65 + SMA50 trend filter). Excels in bearish regimes (+$10.87, 66.7% WR) where SMA crossover struggles (-$48.43). XRP shows strong MR results (71.4% WR, 2.21 PF). Fewer trades but complementary to SMA — generates signals when SMA is inactive. Combined portfolio potential for improved regime coverage.',
     },
   });
 
