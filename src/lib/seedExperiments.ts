@@ -458,5 +458,49 @@ export function seedExperiments(): void {
     },
   });
 
+  // ── Candidate 12 — Trailing Stop ──────────────────────────────────
+  const candidate12Cfg: ConfigSnapshot = {
+    ...baselineV6Config(),
+    strategyParams: {
+      sma_crossover: {
+        ...baselineV6Config().strategyParams.sma_crossover,
+        trailingStopEnabled: true,
+        trailingStopActivation: 2.0,
+        trailingStopDistance: 1.0,
+        moveToBreakevenAt: 2.0,
+      },
+    },
+  };
+  const { store: s8 } = createRun(s7, {
+    type: 'backtest',
+    name: 'Candidate 12 — Trailing Stop',
+    startTime: now - 180000,
+    endTime: now - 20000,
+    duration: 160000,
+    config: candidate12Cfg,
+    versionIds: { sma_crossover: 'v6.1' },
+    datasetOrScenario: 'BTCUSDT + XRPUSDT 6-month historical',
+    timeRangeTested: '2025-07-01 to 2025-12-31',
+    assetsIncluded: ['BTCUSDT', 'XRPUSDT'],
+    strategiesIncluded: ['sma_crossover'],
+    operatorMode: 'PAPER_EXECUTION',
+    result: {
+      totalReturn: 9.4,
+      netPnl: 940,
+      maxDrawdown: 2.3,
+      winRate: 67.1,
+      profitFactor: 2.08,
+      tradeCount: 38,
+      longTradeCount: 22,
+      shortTradeCount: 16,
+      blockedTradeCount: 18,
+      governanceInterventions: 0,
+      avgHealthScore: 89,
+      robustnessScore: 87,
+      failurePointsDetected: 0,
+      summaryCommentary: 'Candidate 12 - Trailing Stop. Adds breakeven move at +2% and 1% trailing stop to Baseline v6. Protects profits on winning trades, reduces drawdown from 3.1% to 2.3%, and improves profit factor from 1.92 to 2.08. Higher PnL (+$130 vs Baseline v6) with significantly better risk-adjusted returns.',
+    },
+  });
+
   localStorage.setItem(SEED_KEY, 'done');
 }
