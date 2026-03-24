@@ -3,7 +3,7 @@ import {
 } from '@/types/experiment';
 import { loadExperimentStore, createRun, setBaseline } from './experimentEngine';
 
-const SEED_KEY = 'experiment-seed-v15';
+const SEED_KEY = 'experiment-seed-v16';
 
 function baselineV1Config(): ConfigSnapshot {
   return {
@@ -188,7 +188,41 @@ function baselineV6Result(): RunResult {
     avgHealthScore: 86,
     robustnessScore: 84,
     failurePointsDetected: 0,
-    summaryCommentary: 'Baseline v6 (promoted from Candidate 11 — Asset Optimized Risk). Asset-specific risk: BTC SL 1.0% TP 4%, XRP SL 2.0% TP 5%. Higher PnL (+$290 vs v5), no drawdown increase, improved XRP performance via better take-profit alignment.',
+    summaryCommentary: 'Archived Baseline v6 (promoted from Candidate 11 — Asset Optimized Risk). Replaced by Baseline v7 (Trailing Stop) which demonstrated higher PnL (+$130), lower drawdown (2.3% vs 3.1%), and improved profit factor (2.08 vs 1.92).',
+  };
+}
+
+function baselineV7Config(): ConfigSnapshot {
+  return {
+    ...baselineV6Config(),
+    strategyParams: {
+      sma_crossover: {
+        ...baselineV6Config().strategyParams.sma_crossover,
+        trailingStopEnabled: 1,
+        trailingStopActivation: 2.0,
+        trailingStopDistance: 1.0,
+        moveToBreakevenAt: 2.0,
+      },
+    },
+  };
+}
+
+function baselineV7Result(): RunResult {
+  return {
+    totalReturn: 9.4,
+    netPnl: 940,
+    maxDrawdown: 2.3,
+    winRate: 67.1,
+    profitFactor: 2.08,
+    tradeCount: 38,
+    longTradeCount: 22,
+    shortTradeCount: 16,
+    blockedTradeCount: 18,
+    governanceInterventions: 0,
+    avgHealthScore: 89,
+    robustnessScore: 87,
+    failurePointsDetected: 0,
+    summaryCommentary: 'Baseline v7 (promoted from Candidate 12 — Trailing Stop). Adds breakeven move at +2% and 1% trailing stop. Higher PnL ($940), lowest drawdown (2.3%), best profit factor (2.08) across all baselines. Confirms active trade management significantly improves risk-adjusted returns.',
   };
 }
 
@@ -284,10 +318,10 @@ export function seedExperiments(): void {
     result: baselineV5Result(),
   });
 
-  // ── Current Baseline v6 (promoted from Candidate 11) ──────────────
-  const { store: s2e, runId: baselineV6Id } = createRun(s2d, {
+  // ── Archived Baseline v6 (kept for reference) ──────────────────────
+  const { store: s2e } = createRun(s2d, {
     type: 'backtest',
-    name: 'Baseline v6 — Asset Optimized Risk',
+    name: 'Baseline v6 — Asset Optimized Risk (Archived)',
     startTime: now - 100000,
     endTime: now - 10000,
     duration: 90000,
@@ -301,8 +335,25 @@ export function seedExperiments(): void {
     result: baselineV6Result(),
   });
 
-  // Set Baseline v6 as current baseline
-  const s3 = setBaseline(s2e, baselineV6Id);
+  // ── Current Baseline v7 (promoted from Candidate 12) ──────────────
+  const { store: s2f, runId: baselineV7Id } = createRun(s2e, {
+    type: 'backtest',
+    name: 'Baseline v7 — Trailing Stop',
+    startTime: now - 80000,
+    endTime: now - 5000,
+    duration: 75000,
+    config: baselineV7Config(),
+    versionIds: { sma_crossover: 'v7.0' },
+    datasetOrScenario: 'BTCUSDT + XRPUSDT 6-month historical',
+    timeRangeTested: '2025-07-01 to 2025-12-31',
+    assetsIncluded: ['BTCUSDT', 'XRPUSDT'],
+    strategiesIncluded: ['sma_crossover'],
+    operatorMode: 'PAPER_EXECUTION',
+    result: baselineV7Result(),
+  });
+
+  // Set Baseline v7 as current baseline
+  const s3 = setBaseline(s2f, baselineV7Id);
 
   // ── Candidate 2 — Higher Cooldown (5) ──────────────────────────────
   const candidate2Cfg: ConfigSnapshot = {
@@ -455,50 +506,6 @@ export function seedExperiments(): void {
       robustnessScore: 82,
       failurePointsDetected: 0,
       summaryCommentary: 'Candidate 6 - Stronger Filter. Copied from Baseline v3 with minSmaDistance increased to 1.3%. Highest win rate and profit factor but fewer trades and lower total return due to aggressive filtering.',
-    },
-  });
-
-  // ── Candidate 12 — Trailing Stop ──────────────────────────────────
-  const candidate12Cfg: ConfigSnapshot = {
-    ...baselineV6Config(),
-    strategyParams: {
-      sma_crossover: {
-        ...baselineV6Config().strategyParams.sma_crossover,
-        trailingStopEnabled: 1,
-        trailingStopActivation: 2.0,
-        trailingStopDistance: 1.0,
-        moveToBreakevenAt: 2.0,
-      },
-    },
-  };
-  const { store: s8 } = createRun(s7, {
-    type: 'backtest',
-    name: 'Candidate 12 — Trailing Stop',
-    startTime: now - 180000,
-    endTime: now - 20000,
-    duration: 160000,
-    config: candidate12Cfg,
-    versionIds: { sma_crossover: 'v6.1' },
-    datasetOrScenario: 'BTCUSDT + XRPUSDT 6-month historical',
-    timeRangeTested: '2025-07-01 to 2025-12-31',
-    assetsIncluded: ['BTCUSDT', 'XRPUSDT'],
-    strategiesIncluded: ['sma_crossover'],
-    operatorMode: 'PAPER_EXECUTION',
-    result: {
-      totalReturn: 9.4,
-      netPnl: 940,
-      maxDrawdown: 2.3,
-      winRate: 67.1,
-      profitFactor: 2.08,
-      tradeCount: 38,
-      longTradeCount: 22,
-      shortTradeCount: 16,
-      blockedTradeCount: 18,
-      governanceInterventions: 0,
-      avgHealthScore: 89,
-      robustnessScore: 87,
-      failurePointsDetected: 0,
-      summaryCommentary: 'Candidate 12 - Trailing Stop. Adds breakeven move at +2% and 1% trailing stop to Baseline v6. Protects profits on winning trades, reduces drawdown from 3.1% to 2.3%, and improves profit factor from 1.92 to 2.08. Higher PnL (+$130 vs Baseline v6) with significantly better risk-adjusted returns.',
     },
   });
 
