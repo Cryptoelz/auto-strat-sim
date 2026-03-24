@@ -352,7 +352,7 @@ export function seedExperiments(): void {
     result: baselineV7Result(),
   });
 
-  // ── Current Baseline v8 (promoted from Candidate 16) ──────────────
+  // ── Archived Baseline v8 (promoted from Candidate 16) ──────────────
   const baselineV8Cfg: ConfigSnapshot = {
     ...baselineV7Config(),
     strategies: ['sma_crossover', 'mean_reversion'],
@@ -376,9 +376,9 @@ export function seedExperiments(): void {
     },
     allocationSettings: { maxExposure: 20 },
   };
-  const { store: s2g, runId: baselineV8Id } = createRun(s2f, {
+  const { store: s2g } = createRun(s2f, {
     type: 'backtest',
-    name: 'Baseline v8 — Weighted Multi-Strategy Portfolio',
+    name: 'Baseline v8 — Weighted Multi-Strategy Portfolio (archived)',
     startTime: now - 70000,
     endTime: now - 2000,
     duration: 68000,
@@ -403,12 +403,70 @@ export function seedExperiments(): void {
       avgHealthScore: 90,
       robustnessScore: 88,
       failurePointsDetected: 0,
-      summaryCommentary: 'Baseline v8 (promoted from Candidate 16 — Weighted Multi-Strategy 70/30). Combines SMA Crossover (70%) and Mean Reversion (30%) for regime diversification. Retains 97% of Baseline v7 PnL ($910 vs $940) while reducing drawdown (2.0% vs 2.3%) and improving equity curve stability by 28%. Best balance between profit retention and risk reduction.',
+      summaryCommentary: 'Baseline v8 (archived). Weighted Multi-Strategy 70/30 SMA/MR. Superseded by Baseline v9 (Adaptive Allocation) which achieved higher PnL ($1,030 vs $910), lower drawdown (1.6% vs 2.0%), and better profit factor (2.18 vs 2.02).',
     },
   });
 
-  // Set Baseline v8 as current baseline
-  const s3 = setBaseline(s2g, baselineV8Id);
+  // ── Current Baseline v9 (promoted from Candidate 17) ──────────────
+  const baselineV9Cfg: ConfigSnapshot = {
+    ...baselineV8Cfg,
+    strategyParams: {
+      sma_crossover: {
+        ...baselineV8Cfg.strategyParams.sma_crossover,
+        capitalAllocation: 70,
+        adaptiveAllocation: 1,
+      },
+      mean_reversion: {
+        ...baselineV8Cfg.strategyParams.mean_reversion,
+        capitalAllocation: 30,
+        adaptiveAllocation: 1,
+      },
+    },
+    allocationSettings: {
+      maxExposure: 20,
+      adaptiveAllocation: 1,
+      strongTrendSma: 85,
+      strongTrendMr: 15,
+      weakTrendSma: 55,
+      weakTrendMr: 45,
+      choppySma: 45,
+      choppyMr: 55,
+    },
+  };
+  const { store: s2h, runId: baselineV9Id } = createRun(s2g, {
+    type: 'backtest',
+    name: 'Baseline v9 — Adaptive Allocation',
+    startTime: now - 60000,
+    endTime: now - 1000,
+    duration: 59000,
+    config: baselineV9Cfg,
+    versionIds: { sma_crossover: 'v7.0', mean_reversion: 'v1.0' },
+    datasetOrScenario: 'BTCUSDT + XRPUSDT 6-month historical',
+    timeRangeTested: '2025-07-01 to 2025-12-31',
+    assetsIncluded: ['BTCUSDT', 'XRPUSDT'],
+    strategiesIncluded: ['sma_crossover', 'mean_reversion'],
+    operatorMode: 'PAPER_EXECUTION',
+    isBaseline: true,
+    result: {
+      totalReturn: 10.3,
+      netPnl: 1030,
+      maxDrawdown: 1.6,
+      winRate: 66.2,
+      profitFactor: 2.18,
+      tradeCount: 52,
+      longTradeCount: 30,
+      shortTradeCount: 22,
+      blockedTradeCount: 19,
+      governanceInterventions: 0,
+      avgHealthScore: 93,
+      robustnessScore: 91,
+      failurePointsDetected: 0,
+      summaryCommentary: 'Baseline v9 (promoted from Candidate 17 — Adaptive Allocation). Dynamically shifts capital between SMA (40-90%) and Mean Reversion (10-60%) based on market regime. Strong trend → 85/15, Sideways → 55/45, Choppy → 45/55. Highest PnL ($1,030), lowest drawdown (1.6%), best profit factor (2.18) of any configuration. Confirms adaptive portfolio allocation maximizes strategy fit across all market conditions.',
+    },
+  });
+
+  // Set Baseline v9 as current baseline
+  const s3 = setBaseline(s2h, baselineV9Id);
 
   // ── Candidate 2 — Higher Cooldown (5) ──────────────────────────────
   const candidate2Cfg: ConfigSnapshot = {
