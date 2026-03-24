@@ -446,7 +446,7 @@ export function seedExperiments(): void {
     assetsIncluded: ['BTCUSDT', 'XRPUSDT'],
     strategiesIncluded: ['sma_crossover', 'mean_reversion'],
     operatorMode: 'PAPER_EXECUTION',
-    isBaseline: true,
+    
     result: {
       totalReturn: 10.3,
       netPnl: 1030,
