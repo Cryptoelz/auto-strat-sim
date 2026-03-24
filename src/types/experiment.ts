@@ -51,6 +51,8 @@ export interface ConfigSnapshot {
     takeProfitPercent: number;
     feePercent: number;
     initialBalance: number;
+    slippagePercent?: number;
+    executionDelay?: number;
   };
   allocationSettings: Record<string, number>;
   governanceSettings: {
