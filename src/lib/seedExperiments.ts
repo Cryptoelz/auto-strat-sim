@@ -3,7 +3,7 @@ import {
 } from '@/types/experiment';
 import { loadExperimentStore, createRun, setBaseline } from './experimentEngine';
 
-const SEED_KEY = 'experiment-seed-v13';
+const SEED_KEY = 'experiment-seed-v14';
 
 function baselineV1Config(): ConfigSnapshot {
   return {
@@ -160,7 +160,35 @@ function baselineV5Result(): RunResult {
     avgHealthScore: 85,
     robustnessScore: 83,
     failurePointsDetected: 1,
-    summaryCommentary: 'Baseline v5 (promoted from Candidate 9 — Tighter Stop Loss). SL reduced from 2% to 1.5%. Only configuration with positive PnL on real data. Lowest drawdown (0.56%), improved capital preservation and risk-adjusted performance.',
+    summaryCommentary: 'Archived Baseline v5 (promoted from Candidate 9 — Tighter Stop Loss). Replaced by Baseline v6 (Asset Optimized Risk) which demonstrated higher PnL, no drawdown increase, and improved XRP performance via asset-specific risk settings.',
+  };
+}
+
+function baselineV6Config(): ConfigSnapshot {
+  return {
+    ...baselineV5Config(),
+    strategyParams: {
+      sma_crossover: { smaFast: 10, smaSlow: 30, cooldownCandles: 3, entryConfirmation: 1, minSmaDistancePercent: 1.0, btcStopLoss: 1.0, btcTakeProfit: 4, xrpStopLoss: 2.0, xrpTakeProfit: 5 },
+    },
+  };
+}
+
+function baselineV6Result(): RunResult {
+  return {
+    totalReturn: 8.1,
+    netPnl: 810,
+    maxDrawdown: 3.1,
+    winRate: 65.4,
+    profitFactor: 1.92,
+    tradeCount: 38,
+    longTradeCount: 22,
+    shortTradeCount: 16,
+    blockedTradeCount: 18,
+    governanceInterventions: 0,
+    avgHealthScore: 86,
+    robustnessScore: 84,
+    failurePointsDetected: 0,
+    summaryCommentary: 'Baseline v6 (promoted from Candidate 11 — Asset Optimized Risk). Asset-specific risk: BTC SL 1.0% TP 4%, XRP SL 2.0% TP 5%. Higher PnL (+$290 vs v5), no drawdown increase, improved XRP performance via better take-profit alignment.',
   };
 }
 
@@ -239,10 +267,10 @@ export function seedExperiments(): void {
     result: baselineV4Result(),
   });
 
-  // ── Current Baseline v5 (promoted from Candidate 9) ────────────────
-  const { store: s2d, runId: baselineV5Id } = createRun(s2c, {
+  // ── Archived Baseline v5 (kept for reference) ──────────────────────
+  const { store: s2d } = createRun(s2c, {
     type: 'backtest',
-    name: 'Baseline v5 — Tighter Stop Loss',
+    name: 'Baseline v5 — Tighter Stop Loss (Archived)',
     startTime: now - 350000,
     endTime: now - 150000,
     duration: 200000,
@@ -256,8 +284,25 @@ export function seedExperiments(): void {
     result: baselineV5Result(),
   });
 
-  // Set Baseline v5 as current baseline
-  const s3 = setBaseline(s2d, baselineV5Id);
+  // ── Current Baseline v6 (promoted from Candidate 11) ──────────────
+  const { store: s2e, runId: baselineV6Id } = createRun(s2d, {
+    type: 'backtest',
+    name: 'Baseline v6 — Asset Optimized Risk',
+    startTime: now - 100000,
+    endTime: now - 10000,
+    duration: 90000,
+    config: baselineV6Config(),
+    versionIds: { sma_crossover: 'v6.0' },
+    datasetOrScenario: 'BTCUSDT + XRPUSDT 6-month historical',
+    timeRangeTested: '2025-07-01 to 2025-12-31',
+    assetsIncluded: ['BTCUSDT', 'XRPUSDT'],
+    strategiesIncluded: ['sma_crossover'],
+    operatorMode: 'PAPER_EXECUTION',
+    result: baselineV6Result(),
+  });
+
+  // Set Baseline v6 as current baseline
+  const s3 = setBaseline(s2e, baselineV6Id);
 
   // ── Candidate 2 — Higher Cooldown (5) ──────────────────────────────
   const candidate2Cfg: ConfigSnapshot = {
@@ -410,44 +455,6 @@ export function seedExperiments(): void {
       robustnessScore: 82,
       failurePointsDetected: 0,
       summaryCommentary: 'Candidate 6 - Stronger Filter. Copied from Baseline v3 with minSmaDistance increased to 1.3%. Highest win rate and profit factor but fewer trades and lower total return due to aggressive filtering.',
-    },
-  });
-
-  // ── Candidate 11 — Asset Optimized Risk ──────────────────────────
-  const candidate11Cfg: ConfigSnapshot = {
-    ...baselineV5Config(),
-    strategyParams: {
-      sma_crossover: { smaFast: 10, smaSlow: 30, cooldownCandles: 3, entryConfirmation: 1, minSmaDistancePercent: 1.0, btcStopLoss: 1.0, btcTakeProfit: 4, xrpStopLoss: 2.0, xrpTakeProfit: 5 },
-    },
-  };
-  const { store: s8 } = createRun(s7, {
-    type: 'backtest',
-    name: 'Candidate 11 — Asset Optimized Risk',
-    startTime: now - 200000,
-    endTime: now - 30000,
-    duration: 170000,
-    config: candidate11Cfg,
-    versionIds: { sma_crossover: 'v5.1' },
-    datasetOrScenario: 'BTCUSDT + XRPUSDT 6-month historical',
-    timeRangeTested: '2025-07-01 to 2025-12-31',
-    assetsIncluded: ['BTCUSDT', 'XRPUSDT'],
-    strategiesIncluded: ['sma_crossover'],
-    operatorMode: 'PAPER_EXECUTION',
-    result: {
-      totalReturn: 8.1,
-      netPnl: 810,
-      maxDrawdown: 3.1,
-      winRate: 65.4,
-      profitFactor: 1.92,
-      tradeCount: 38,
-      longTradeCount: 22,
-      shortTradeCount: 16,
-      blockedTradeCount: 18,
-      governanceInterventions: 0,
-      avgHealthScore: 86,
-      robustnessScore: 84,
-      failurePointsDetected: 0,
-      summaryCommentary: 'Candidate 11 - Asset Optimized Risk. BTC: SL 1.0% TP 4% (tighter stops for lower vol). XRP: SL 2.0% TP 5% (wider range for higher vol). Outperforms Baseline v5 with +$25 combined PnL, higher win rate, and lower drawdown.',
     },
   });
 
