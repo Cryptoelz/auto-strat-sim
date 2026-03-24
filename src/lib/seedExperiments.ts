@@ -188,7 +188,41 @@ function baselineV6Result(): RunResult {
     avgHealthScore: 86,
     robustnessScore: 84,
     failurePointsDetected: 0,
-    summaryCommentary: 'Baseline v6 (promoted from Candidate 11 — Asset Optimized Risk). Asset-specific risk: BTC SL 1.0% TP 4%, XRP SL 2.0% TP 5%. Higher PnL (+$290 vs v5), no drawdown increase, improved XRP performance via better take-profit alignment.',
+    summaryCommentary: 'Archived Baseline v6 (promoted from Candidate 11 — Asset Optimized Risk). Replaced by Baseline v7 (Trailing Stop) which demonstrated higher PnL (+$130), lower drawdown (2.3% vs 3.1%), and improved profit factor (2.08 vs 1.92).',
+  };
+}
+
+function baselineV7Config(): ConfigSnapshot {
+  return {
+    ...baselineV6Config(),
+    strategyParams: {
+      sma_crossover: {
+        ...baselineV6Config().strategyParams.sma_crossover,
+        trailingStopEnabled: 1,
+        trailingStopActivation: 2.0,
+        trailingStopDistance: 1.0,
+        moveToBreakevenAt: 2.0,
+      },
+    },
+  };
+}
+
+function baselineV7Result(): RunResult {
+  return {
+    totalReturn: 9.4,
+    netPnl: 940,
+    maxDrawdown: 2.3,
+    winRate: 67.1,
+    profitFactor: 2.08,
+    tradeCount: 38,
+    longTradeCount: 22,
+    shortTradeCount: 16,
+    blockedTradeCount: 18,
+    governanceInterventions: 0,
+    avgHealthScore: 89,
+    robustnessScore: 87,
+    failurePointsDetected: 0,
+    summaryCommentary: 'Baseline v7 (promoted from Candidate 12 — Trailing Stop). Adds breakeven move at +2% and 1% trailing stop. Higher PnL ($940), lowest drawdown (2.3%), best profit factor (2.08) across all baselines. Confirms active trade management significantly improves risk-adjusted returns.',
   };
 }
 
