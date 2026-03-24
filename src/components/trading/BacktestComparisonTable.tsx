@@ -30,7 +30,7 @@ function bestValue(runs: ExperimentRun[], key: keyof ExperimentRun['result'], hi
 export function BacktestComparisonTable() {
   const runs = useMemo(() => {
     const store = loadExperimentStore();
-    const names = ['Baseline v7', 'Baseline v6', 'Baseline v5', 'Baseline v4', 'Baseline v3', 'Baseline v2', 'Baseline v1', 'Candidate 2', 'Candidate 3', 'Candidate 4', 'Candidate 6', 'Candidate 13', 'Mean Reversion', 'Candidate 15'];
+    const names = ['Baseline v7', 'Baseline v6', 'Baseline v5', 'Baseline v4', 'Baseline v3', 'Baseline v2', 'Baseline v1', 'Candidate 2', 'Candidate 3', 'Candidate 4', 'Candidate 6', 'Candidate 13', 'Mean Reversion', 'Candidate 15', 'Candidate 16'];
     return store.runs
       .filter(r => names.some(n => r.name.includes(n)))
       .sort((a, b) => {
