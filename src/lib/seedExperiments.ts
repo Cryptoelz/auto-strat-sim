@@ -684,7 +684,7 @@ export function seedExperiments(): void {
     },
     allocationSettings: { maxExposure: 20 },
   };
-  createRun(s9, {
+  const { store: s10 } = createRun(s9, {
     type: 'backtest',
     name: 'Candidate 15 — Multi-Strategy Portfolio',
     startTime: now - 120000,
@@ -715,5 +715,59 @@ export function seedExperiments(): void {
     },
   });
 
-  localStorage.setItem(SEED_KEY, 'done');
+  // ── Candidate 17 — Adaptive Allocation ─────────────────────────────
+  const candidate17Cfg: ConfigSnapshot = {
+    ...baselineV8Cfg,
+    strategyParams: {
+      sma_crossover: {
+        ...baselineV8Cfg.strategyParams.sma_crossover,
+        capitalAllocation: 'adaptive',
+      },
+      mean_reversion: {
+        ...baselineV8Cfg.strategyParams.mean_reversion,
+        capitalAllocation: 'adaptive',
+      },
+    },
+    allocationSettings: {
+      maxExposure: 20,
+      adaptiveAllocation: 1,
+      strongTrendSma: 85,
+      strongTrendMr: 15,
+      weakTrendSma: 55,
+      weakTrendMr: 45,
+      choppySma: 45,
+      choppyMr: 55,
+      trendDetection: 'sma_slope_distance',
+    },
+  };
+  createRun(s10, {
+    type: 'backtest',
+    name: 'Candidate 17 — Adaptive Allocation',
+    startTime: now - 60000,
+    endTime: now - 1000,
+    duration: 59000,
+    config: candidate17Cfg,
+    versionIds: { sma_crossover: 'v7.0', mean_reversion: 'v1.0' },
+    datasetOrScenario: 'BTCUSDT + XRPUSDT 6-month historical',
+    timeRangeTested: '2025-07-01 to 2025-12-31',
+    assetsIncluded: ['BTCUSDT', 'XRPUSDT'],
+    strategiesIncluded: ['sma_crossover', 'mean_reversion'],
+    operatorMode: 'PAPER_EXECUTION',
+    result: {
+      totalReturn: 10.3,
+      netPnl: 1030,
+      maxDrawdown: 1.6,
+      winRate: 66.2,
+      profitFactor: 2.18,
+      tradeCount: 52,
+      longTradeCount: 30,
+      shortTradeCount: 22,
+      blockedTradeCount: 19,
+      governanceInterventions: 0,
+      avgHealthScore: 93,
+      robustnessScore: 91,
+      failurePointsDetected: 0,
+      summaryCommentary: 'Candidate 17 - Adaptive Allocation. Dynamically shifts capital between SMA (40-90%) and Mean Reversion (10-60%) based on market regime detected via SMA slope/distance. Strong trend → 85% SMA / 15% MR. Sideways → 55% SMA / 45% MR. Choppy/volatile → 45% SMA / 55% MR. Outperforms Baseline v8 on all metrics: +$120 PnL, -0.4% drawdown, +1.4% win rate, +0.16 profit factor. Per-regime: Bullish +$520 (vs $410), Bearish +$180 (vs $140), Sideways +$330 (vs $360 — MR captures more). Smoothest equity curve of any configuration.',
+    },
+  });
 }
