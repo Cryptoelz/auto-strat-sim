@@ -222,7 +222,7 @@ function baselineV7Result(): RunResult {
     avgHealthScore: 89,
     robustnessScore: 87,
     failurePointsDetected: 0,
-    summaryCommentary: 'Baseline v7 (promoted from Candidate 12 — Trailing Stop). Adds breakeven move at +2% and 1% trailing stop. Higher PnL ($940), lowest drawdown (2.3%), best profit factor (2.08) across all baselines. Confirms active trade management significantly improves risk-adjusted returns.',
+    summaryCommentary: 'Archived Baseline v7 (promoted from Candidate 12 — Trailing Stop). Replaced by Baseline v8 (Weighted Multi-Strategy 70/30) which retains 97% of PnL while reducing drawdown and improving equity curve stability.',
   };
 }
 
