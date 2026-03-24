@@ -721,11 +721,13 @@ export function seedExperiments(): void {
     strategyParams: {
       sma_crossover: {
         ...baselineV8Cfg.strategyParams.sma_crossover,
-        capitalAllocation: 'adaptive',
+        capitalAllocation: 70,
+        adaptiveAllocation: 1,
       },
       mean_reversion: {
         ...baselineV8Cfg.strategyParams.mean_reversion,
-        capitalAllocation: 'adaptive',
+        capitalAllocation: 30,
+        adaptiveAllocation: 1,
       },
     },
     allocationSettings: {
@@ -737,7 +739,6 @@ export function seedExperiments(): void {
       weakTrendMr: 45,
       choppySma: 45,
       choppyMr: 55,
-      trendDetection: 'sma_slope_distance',
     },
   };
   createRun(s10, {
