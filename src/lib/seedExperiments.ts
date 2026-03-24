@@ -3,7 +3,7 @@ import {
 } from '@/types/experiment';
 import { loadExperimentStore, createRun, setBaseline } from './experimentEngine';
 
-const SEED_KEY = 'experiment-seed-v20';
+const SEED_KEY = 'experiment-seed-v21';
 
 function baselineV1Config(): ConfigSnapshot {
   return {
@@ -222,7 +222,7 @@ function baselineV7Result(): RunResult {
     avgHealthScore: 89,
     robustnessScore: 87,
     failurePointsDetected: 0,
-    summaryCommentary: 'Baseline v7 (promoted from Candidate 12 — Trailing Stop). Adds breakeven move at +2% and 1% trailing stop. Higher PnL ($940), lowest drawdown (2.3%), best profit factor (2.08) across all baselines. Confirms active trade management significantly improves risk-adjusted returns.',
+    summaryCommentary: 'Archived Baseline v7 (promoted from Candidate 12 — Trailing Stop). Replaced by Baseline v8 (Weighted Multi-Strategy 70/30) which retains 97% of PnL while reducing drawdown and improving equity curve stability.',
   };
 }
 
@@ -335,10 +335,10 @@ export function seedExperiments(): void {
     result: baselineV6Result(),
   });
 
-  // ── Current Baseline v7 (promoted from Candidate 12) ──────────────
-  const { store: s2f, runId: baselineV7Id } = createRun(s2e, {
+  // ── Archived Baseline v7 (kept for reference) ──────────────────────
+  const { store: s2f } = createRun(s2e, {
     type: 'backtest',
-    name: 'Baseline v7 — Trailing Stop',
+    name: 'Baseline v7 — Trailing Stop (Archived)',
     startTime: now - 80000,
     endTime: now - 5000,
     duration: 75000,
@@ -352,8 +352,63 @@ export function seedExperiments(): void {
     result: baselineV7Result(),
   });
 
-  // Set Baseline v7 as current baseline
-  const s3 = setBaseline(s2f, baselineV7Id);
+  // ── Current Baseline v8 (promoted from Candidate 16) ──────────────
+  const baselineV8Cfg: ConfigSnapshot = {
+    ...baselineV7Config(),
+    strategies: ['sma_crossover', 'mean_reversion'],
+    strategyParams: {
+      sma_crossover: {
+        ...baselineV7Config().strategyParams.sma_crossover,
+        capitalAllocation: 70,
+      },
+      mean_reversion: {
+        rsiPeriod: 14,
+        rsiBuyThreshold: 35,
+        rsiSellThreshold: 65,
+        trendSmaPeriod: 50,
+        trailingStopEnabled: 1,
+        trailingStopActivation: 2.0,
+        trailingStopDistance: 1.0,
+        cooldownCandles: 3,
+        entryConfirmation: 1,
+        capitalAllocation: 30,
+      },
+    },
+    allocationSettings: { maxExposure: 20 },
+  };
+  const { store: s2g, runId: baselineV8Id } = createRun(s2f, {
+    type: 'backtest',
+    name: 'Baseline v8 — Weighted Multi-Strategy Portfolio',
+    startTime: now - 70000,
+    endTime: now - 2000,
+    duration: 68000,
+    config: baselineV8Cfg,
+    versionIds: { sma_crossover: 'v7.0', mean_reversion: 'v1.0' },
+    datasetOrScenario: 'BTCUSDT + XRPUSDT 6-month historical',
+    timeRangeTested: '2025-07-01 to 2025-12-31',
+    assetsIncluded: ['BTCUSDT', 'XRPUSDT'],
+    strategiesIncluded: ['sma_crossover', 'mean_reversion'],
+    operatorMode: 'PAPER_EXECUTION',
+    result: {
+      totalReturn: 9.1,
+      netPnl: 910,
+      maxDrawdown: 2.0,
+      winRate: 64.8,
+      profitFactor: 2.02,
+      tradeCount: 48,
+      longTradeCount: 28,
+      shortTradeCount: 20,
+      blockedTradeCount: 21,
+      governanceInterventions: 0,
+      avgHealthScore: 90,
+      robustnessScore: 88,
+      failurePointsDetected: 0,
+      summaryCommentary: 'Baseline v8 (promoted from Candidate 16 — Weighted Multi-Strategy 70/30). Combines SMA Crossover (70%) and Mean Reversion (30%) for regime diversification. Retains 97% of Baseline v7 PnL ($910 vs $940) while reducing drawdown (2.0% vs 2.3%) and improving equity curve stability by 28%. Best balance between profit retention and risk reduction.',
+    },
+  });
+
+  // Set Baseline v8 as current baseline
+  const s3 = setBaseline(s2g, baselineV8Id);
 
   // ── Candidate 2 — Higher Cooldown (5) ──────────────────────────────
   const candidate2Cfg: ConfigSnapshot = {
@@ -657,61 +712,6 @@ export function seedExperiments(): void {
       robustnessScore: 89,
       failurePointsDetected: 0,
       summaryCommentary: 'Candidate 15 - Multi-Strategy Portfolio (50/50 SMA + Mean Reversion). Lowest drawdown (1.8%) of any configuration due to regime diversification. SMA contributes $470 PnL (trending markets), MR contributes $390 PnL (sideways/reversal). Strategy correlation: 0.12 (near-independent). Smoother equity curve with 34% fewer peak-to-trough swings vs Baseline v7 alone.',
-    },
-  });
-
-  // ── Candidate 16 — Weighted Multi-Strategy Portfolio (70/30) ─────
-  const candidate16Cfg: ConfigSnapshot = {
-    ...baselineV7Config(),
-    strategies: ['sma_crossover', 'mean_reversion'],
-    strategyParams: {
-      sma_crossover: {
-        ...baselineV7Config().strategyParams.sma_crossover,
-        capitalAllocation: 70,
-      },
-      mean_reversion: {
-        rsiPeriod: 14,
-        rsiBuyThreshold: 35,
-        rsiSellThreshold: 65,
-        trendSmaPeriod: 50,
-        trailingStopEnabled: 1,
-        trailingStopActivation: 2.0,
-        trailingStopDistance: 1.0,
-        cooldownCandles: 3,
-        entryConfirmation: 1,
-        capitalAllocation: 30,
-      },
-    },
-    allocationSettings: { maxExposure: 20 },
-  };
-  createRun(s9, {
-    type: 'backtest',
-    name: 'Candidate 16 — Weighted Multi-Strategy Portfolio',
-    startTime: now - 90000,
-    endTime: now - 3000,
-    duration: 87000,
-    config: candidate16Cfg,
-    versionIds: { sma_crossover: 'v7.0', mean_reversion: 'v1.0' },
-    datasetOrScenario: 'BTCUSDT + XRPUSDT 6-month historical',
-    timeRangeTested: '2025-07-01 to 2025-12-31',
-    assetsIncluded: ['BTCUSDT', 'XRPUSDT'],
-    strategiesIncluded: ['sma_crossover', 'mean_reversion'],
-    operatorMode: 'PAPER_EXECUTION',
-    result: {
-      totalReturn: 9.1,
-      netPnl: 910,
-      maxDrawdown: 2.0,
-      winRate: 64.8,
-      profitFactor: 2.02,
-      tradeCount: 48,
-      longTradeCount: 28,
-      shortTradeCount: 20,
-      blockedTradeCount: 21,
-      governanceInterventions: 0,
-      avgHealthScore: 90,
-      robustnessScore: 88,
-      failurePointsDetected: 0,
-      summaryCommentary: 'Candidate 16 - Weighted Multi-Strategy Portfolio (70/30 SMA/MR). SMA contributes $637 PnL (70% allocation, trending markets), MR contributes $273 PnL (30% allocation, sideways/reversal). Retains most of Baseline v7 profit ($910 vs $940) while achieving significantly lower drawdown (2.0% vs 2.3%). Better profit factor (2.02) and win rate (64.8%) than 50/50 split. Equity curve volatility reduced 28% vs Baseline v7 alone. Optimal balance between profit retention and risk reduction.',
     },
   });
 
