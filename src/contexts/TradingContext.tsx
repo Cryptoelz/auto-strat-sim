@@ -134,6 +134,13 @@ export function TradingProvider({ children }: { children: ReactNode }) {
     lossLimit: strategyConfig.pnlAlertLoss,
   });
 
+  useSessionAlerts({
+    state: engine.state,
+    drawdown: engine.drawdown,
+    sessionStartTime: engine.sessionStartTime,
+    isRunning: engine.state.isRunning,
+  });
+
   const { permission, isSupported, requestPermission, sendSignalNotification } = useNotifications();
   const prevSignalsRef = useRef<Record<Asset, string | null>>({ BTCUSDT: null, XRPUSDT: null, FETUSDT: null, XLMUSDT: null });
 
