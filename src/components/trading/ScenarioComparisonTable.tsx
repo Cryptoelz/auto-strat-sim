@@ -41,6 +41,7 @@ const CANDIDATES: CandidateConfig[] = [
   { name: 'Candidate 6 — Stronger Filter', shortName: 'Cand. 6 (1.3%)', fastSMA: 10, slowSMA: 30, stopLoss: 2, takeProfit: 4, cooldown: 3, isBaseline: false },
   { name: 'Candidate 13 — Adaptive Position Sizing', shortName: 'Cand. 13 (Adaptive)', fastSMA: 10, slowSMA: 30, stopLoss: 1.5, takeProfit: 4, cooldown: 3, isBaseline: false },
   { name: 'Mean Reversion — RSI + Trend Filter', shortName: 'Mean Rev (RSI)', fastSMA: 10, slowSMA: 30, stopLoss: 1.5, takeProfit: 4, cooldown: 3, isBaseline: false },
+  { name: 'Candidate 15 — Multi-Strategy Portfolio', shortName: 'Cand. 15 (Multi)', fastSMA: 10, slowSMA: 30, stopLoss: 1.5, takeProfit: 4, cooldown: 3, isBaseline: false },
 ];
 
 const SCENARIO_IDS = ['strong-bull', 'strong-bear', 'sideways', 'high-vol-breakout', 'reversal-heavy'];
