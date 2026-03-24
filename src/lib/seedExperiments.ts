@@ -627,7 +627,7 @@ export function seedExperiments(): void {
         capitalAllocation: 50,
       },
     },
-    allocationSettings: { maxExposure: 20, multiStrategyMode: 'independent', capitalSplit: '50/50' },
+    allocationSettings: { maxExposure: 20 },
   };
   createRun(s9, {
     type: 'backtest',
