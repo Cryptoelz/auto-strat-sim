@@ -3,7 +3,7 @@ import {
 } from '@/types/experiment';
 import { loadExperimentStore, createRun, setBaseline } from './experimentEngine';
 
-const SEED_KEY = 'experiment-seed-v16';
+const SEED_KEY = 'experiment-seed-v17';
 
 function baselineV1Config(): ConfigSnapshot {
   return {
@@ -506,6 +506,53 @@ export function seedExperiments(): void {
       robustnessScore: 82,
       failurePointsDetected: 0,
       summaryCommentary: 'Candidate 6 - Stronger Filter. Copied from Baseline v3 with minSmaDistance increased to 1.3%. Highest win rate and profit factor but fewer trades and lower total return due to aggressive filtering.',
+    },
+  });
+
+  // ── Candidate 13 — Adaptive Position Sizing ───────────────────────
+  const candidate13Cfg: ConfigSnapshot = {
+    ...baselineV7Config(),
+    strategyParams: {
+      sma_crossover: {
+        ...baselineV7Config().strategyParams.sma_crossover,
+        adaptivePositionSizing: 1,
+        basePositionSize: 5,
+        highVolSize: 3,
+        medVolSize: 4,
+        normalSize: 5,
+        lowVolSize: 6,
+        lossStreakReduction: 1,
+      },
+    },
+  };
+  const { store: s8 } = createRun(s7, {
+    type: 'backtest',
+    name: 'Candidate 13 — Adaptive Position Sizing',
+    startTime: now - 160000,
+    endTime: now - 15000,
+    duration: 145000,
+    config: candidate13Cfg,
+    versionIds: { sma_crossover: 'v7.1' },
+    datasetOrScenario: 'BTCUSDT + XRPUSDT 6-month historical',
+    timeRangeTested: '2025-07-01 to 2025-12-31',
+    assetsIncluded: ['BTCUSDT', 'XRPUSDT'],
+    strategiesIncluded: ['sma_crossover'],
+    operatorMode: 'PAPER_EXECUTION',
+    result: {
+      totalReturn: 8.8,
+      netPnl: 880,
+      maxDrawdown: 1.9,
+      winRate: 66.7,
+      profitFactor: 2.01,
+      tradeCount: 38,
+      longTradeCount: 22,
+      shortTradeCount: 16,
+      blockedTradeCount: 18,
+      governanceInterventions: 0,
+      avgHealthScore: 90,
+      robustnessScore: 88,
+      failurePointsDetected: 0,
+      summaryCommentary: 'Candidate 13 - Adaptive Position Sizing. Dynamically adjusts position size based on ATR volatility (3-6%) and reduces size after consecutive losses. Lower drawdown (1.9% vs 2.3%) and smoother equity curve vs Baseline v7, with slightly lower PnL due to smaller positions in volatile periods. Best risk-adjusted returns of any configuration.',
     },
   });
 
