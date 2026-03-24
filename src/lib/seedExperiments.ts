@@ -267,10 +267,10 @@ export function seedExperiments(): void {
     result: baselineV4Result(),
   });
 
-  // ── Current Baseline v5 (promoted from Candidate 9) ────────────────
-  const { store: s2d, runId: baselineV5Id } = createRun(s2c, {
+  // ── Archived Baseline v5 (kept for reference) ──────────────────────
+  const { store: s2d } = createRun(s2c, {
     type: 'backtest',
-    name: 'Baseline v5 — Tighter Stop Loss',
+    name: 'Baseline v5 — Tighter Stop Loss (Archived)',
     startTime: now - 350000,
     endTime: now - 150000,
     duration: 200000,
@@ -284,8 +284,25 @@ export function seedExperiments(): void {
     result: baselineV5Result(),
   });
 
-  // Set Baseline v5 as current baseline
-  const s3 = setBaseline(s2d, baselineV5Id);
+  // ── Current Baseline v6 (promoted from Candidate 11) ──────────────
+  const { store: s2e, runId: baselineV6Id } = createRun(s2d, {
+    type: 'backtest',
+    name: 'Baseline v6 — Asset Optimized Risk',
+    startTime: now - 100000,
+    endTime: now - 10000,
+    duration: 90000,
+    config: baselineV6Config(),
+    versionIds: { sma_crossover: 'v6.0' },
+    datasetOrScenario: 'BTCUSDT + XRPUSDT 6-month historical',
+    timeRangeTested: '2025-07-01 to 2025-12-31',
+    assetsIncluded: ['BTCUSDT', 'XRPUSDT'],
+    strategiesIncluded: ['sma_crossover'],
+    operatorMode: 'PAPER_EXECUTION',
+    result: baselineV6Result(),
+  });
+
+  // Set Baseline v6 as current baseline
+  const s3 = setBaseline(s2e, baselineV6Id);
 
   // ── Candidate 2 — Higher Cooldown (5) ──────────────────────────────
   const candidate2Cfg: ConfigSnapshot = {
