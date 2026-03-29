@@ -3,7 +3,7 @@ import {
 } from '@/types/experiment';
 import { loadExperimentStore, createRun, setBaseline } from './experimentEngine';
 
-const SEED_KEY = 'experiment-seed-v24';
+const SEED_KEY = 'experiment-seed-v25';
 
 function baselineV1Config(): ConfigSnapshot {
   return {
@@ -783,7 +783,7 @@ export function seedExperiments(): void {
       executionDelay: 1,
     },
   };
-  createRun(s10, {
+  const { store: s11 } = createRun(s10, {
     type: 'backtest',
     name: 'Candidate 18 — Real World Conditions',
     startTime: now - 50000,
@@ -811,6 +811,51 @@ export function seedExperiments(): void {
       robustnessScore: 87,
       failurePointsDetected: 0,
       summaryCommentary: 'Candidate 18 - Real World Conditions. Baseline v9 with execution realism: 0.1% fees, 0.075% avg slippage, 1-candle execution delay. PnL reduced from $1,030 → $838 (-18.6%). Drawdown increased slightly (1.6% → 2.1%). Win rate drops 2.7pp due to slippage eating into marginal winners. Profit factor down from 2.18 → 1.92. Strategy remains profitable and robust under realistic conditions — confirms viability for live deployment. Fee impact: -$104, Slippage impact: -$78, Delay impact: -$10.',
+    },
+  });
+
+  // ── Candidate 19 — Relaxed Filter ──────────────────────────────────
+  const candidate19Cfg: ConfigSnapshot = {
+    ...baselineV9Cfg,
+    filterThresholds: {
+      ...baselineV9Cfg.filterThresholds,
+      minSmaDistance: 0.7,
+    },
+    riskSettings: {
+      ...baselineV9Cfg.riskSettings,
+      feePercent: 0.1,
+      slippagePercent: 0.075,
+      executionDelay: 1,
+    },
+  };
+  createRun(s11, {
+    type: 'backtest',
+    name: 'Candidate 19 — Relaxed Filter (0.7% SMA Distance)',
+    startTime: now - 40000,
+    endTime: now - 200,
+    duration: 39800,
+    config: candidate19Cfg,
+    versionIds: { sma_crossover: 'v7.0', mean_reversion: 'v1.0' },
+    datasetOrScenario: 'BTCUSDT + XRPUSDT 6-month historical (real-world conditions)',
+    timeRangeTested: '2025-07-01 to 2025-12-31',
+    assetsIncluded: ['BTCUSDT', 'XRPUSDT'],
+    strategiesIncluded: ['sma_crossover', 'mean_reversion'],
+    operatorMode: 'PAPER_EXECUTION',
+    result: {
+      totalReturn: 9.1,
+      netPnl: 912,
+      maxDrawdown: 2.4,
+      winRate: 61.2,
+      profitFactor: 1.85,
+      tradeCount: 64,
+      longTradeCount: 37,
+      shortTradeCount: 27,
+      blockedTradeCount: 12,
+      governanceInterventions: 0,
+      avgHealthScore: 88,
+      robustnessScore: 85,
+      failurePointsDetected: 0,
+      summaryCommentary: 'Candidate 19 - Relaxed Filter. Baseline v9 with SMA distance filter reduced from 1.0% → 0.7%. Trade count increased 23% (52 → 64 trades) with 7 fewer blocked signals. PnL improved +$74 vs Candidate 18 ($912 vs $838) due to capturing previously filtered valid setups. Win rate drops 2.3pp (63.5% → 61.2%) as some lower-conviction entries are admitted. Drawdown slightly higher (2.1% → 2.4%). Profit factor marginally lower (1.92 → 1.85). Net effect: more trades with slightly lower quality but higher total return. Suitable for live paper trading comparison against Baseline v9.',
     },
   });
 
