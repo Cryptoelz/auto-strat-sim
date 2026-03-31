@@ -3,7 +3,7 @@ import {
 } from '@/types/experiment';
 import { loadExperimentStore, createRun, setBaseline } from './experimentEngine';
 
-const SEED_KEY = 'experiment-seed-v25';
+const SEED_KEY = 'experiment-seed-v26';
 
 function baselineV1Config(): ConfigSnapshot {
   return {
@@ -857,7 +857,47 @@ export function seedExperiments(): void {
       failurePointsDetected: 0,
       summaryCommentary: 'Candidate 19 - Relaxed Filter. Baseline v9 with SMA distance filter reduced from 1.0% → 0.7%. Trade count increased 23% (52 → 64 trades) with 7 fewer blocked signals. PnL improved +$74 vs Candidate 18 ($912 vs $838) due to capturing previously filtered valid setups. Win rate drops 2.3pp (63.5% → 61.2%) as some lower-conviction entries are admitted. Drawdown slightly higher (2.1% → 2.4%). Profit factor marginally lower (1.92 → 1.85). Net effect: more trades with slightly lower quality but higher total return. Suitable for live paper trading comparison against Baseline v9.',
     },
+   });
+
+  // ── Candidate 20 — Balanced Filter ─────────────────────────────────
+  const candidate20Cfg: ConfigSnapshot = {
+    ...candidate19Cfg,
+    filterThresholds: {
+      ...candidate19Cfg.filterThresholds,
+      minSmaDistance: 0.5,
+    },
+  };
+  createRun(s11, {
+    type: 'backtest',
+    name: 'Candidate 20 — Balanced Filter (0.5% SMA Distance)',
+    startTime: now - 41000,
+    endTime: now - 300,
+    duration: 40700,
+    config: candidate20Cfg,
+    versionIds: { sma_crossover: 'v7.0', mean_reversion: 'v1.0' },
+    datasetOrScenario: 'BTCUSDT + XRPUSDT 6-month historical (real-world conditions)',
+    timeRangeTested: '2025-07-01 to 2025-12-31',
+    assetsIncluded: ['BTCUSDT', 'XRPUSDT'],
+    strategiesIncluded: ['sma_crossover', 'mean_reversion'],
+    operatorMode: 'PAPER_EXECUTION',
+    result: {
+      totalReturn: 9.6,
+      netPnl: 958,
+      maxDrawdown: 2.8,
+      winRate: 59.4,
+      profitFactor: 1.78,
+      tradeCount: 78,
+      longTradeCount: 44,
+      shortTradeCount: 34,
+      blockedTradeCount: 8,
+      governanceInterventions: 0,
+      avgHealthScore: 86,
+      robustnessScore: 82,
+      failurePointsDetected: 0,
+      summaryCommentary: 'Candidate 20 - Balanced Filter. Based on Candidate 19 with SMA distance filter further reduced from 0.7% → 0.5%. Trade count increased 22% (64 → 78 trades) with 4 fewer blocked signals. PnL improved +$46 vs Candidate 19 ($958 vs $912) from capturing low-volatility setups. Win rate drops 1.8pp (61.2% → 59.4%) as more marginal entries are admitted. Drawdown rises to 2.8% (vs 2.4%), approaching the 3% alert threshold. Profit factor decreases (1.85 → 1.78). Trade quality slightly lower but total return highest among real-world candidates. Good adaptation to low-volatility regimes. Approaching quality floor — further filter reduction not recommended.',
+    },
   });
 
 }
+
 
