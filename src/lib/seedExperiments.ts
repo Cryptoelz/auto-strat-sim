@@ -465,8 +465,8 @@ export function seedExperiments(): void {
     },
   });
 
-  // Set Baseline v9 as current baseline
-  const s3 = setBaseline(s2h, baselineV9Id);
+  // Keep s2h for chaining (baseline set later after C23)
+  const s3 = s2h;
 
   // ── Candidate 2 — Higher Cooldown (5) ──────────────────────────────
   const candidate2Cfg: ConfigSnapshot = {
