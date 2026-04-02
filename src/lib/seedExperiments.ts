@@ -940,7 +940,7 @@ export function seedExperiments(): void {
       avgHealthScore: 85,
       robustnessScore: 80,
       failurePointsDetected: 1,
-      summaryCommentary: 'Candidate 22 - Long + Short Strategy. Based on Candidate 20 (0.5% SMA distance) with explicit short trading: bearish crossover entry with 1-candle confirmation, HTF bearish/weak trend filter for shorts, position flip on opposite signal. Trade count +23% (78 → 96) with balanced long/short split (48/48). Short trades: 54.2% WR, 1.64 PF — profitable but lower quality than longs (61.5% WR, 2.01 PF). PnL +$184 vs C20 ($1,142 vs $958) from capturing bearish moves. Drawdown at 3.1% — exceeds 3% alert threshold, driven by short-side whipsaws in choppy conditions. Overall: significant PnL uplift with manageable risk increase. Shorts add regime coverage but require tighter monitoring.',
+      summaryCommentary: 'Archived Candidate 22 - Long + Short Strategy. Superseded by Candidate 23 (Smarter Shorts) → promoted to Baseline v11. Drawdown (3.1%) exceeded threshold; short-side whipsaws in choppy conditions were the primary issue. Candidate 23 resolved this with stricter short filters.',
     },
   });
 
