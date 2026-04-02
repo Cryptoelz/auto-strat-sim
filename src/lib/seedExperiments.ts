@@ -915,7 +915,7 @@ export function seedExperiments(): void {
   };
   createRun(s12, {
     type: 'backtest',
-    name: 'Candidate 22 — Long + Short Strategy',
+    name: 'Candidate 22 — Long + Short Strategy (Archived)',
     startTime: now - 38000,
     endTime: now - 100,
     duration: 37900,
