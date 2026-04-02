@@ -908,7 +908,7 @@ export function seedExperiments(): void {
         ...candidate20Cfg.strategyParams.sma_crossover,
         shortEnabled: 1,
         shortEntryConfirmation: 1,
-        shortTrendFilter: 'bearish_or_weak',
+        shortTrendFilter: 1, // 1 = bearish_or_weak
         flipOnOppositeSignal: 1,
       },
     },
