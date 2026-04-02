@@ -3,7 +3,7 @@ import {
 } from '@/types/experiment';
 import { loadExperimentStore, createRun, setBaseline } from './experimentEngine';
 
-const SEED_KEY = 'experiment-seed-v28';
+const SEED_KEY = 'experiment-seed-v29';
 
 function baselineV1Config(): ConfigSnapshot {
   return {
@@ -407,7 +407,7 @@ export function seedExperiments(): void {
     },
   });
 
-  // ── Current Baseline v9 (promoted from Candidate 17) ──────────────
+  // ── Archived Baseline v9 (promoted from Candidate 17) ──────────────
   const baselineV9Cfg: ConfigSnapshot = {
     ...baselineV8Cfg,
     strategyParams: {
@@ -435,7 +435,7 @@ export function seedExperiments(): void {
   };
   const { store: s2h, runId: baselineV9Id } = createRun(s2g, {
     type: 'backtest',
-    name: 'Baseline v9 — Adaptive Allocation',
+    name: 'Baseline v9 — Adaptive Allocation (Archived)',
     startTime: now - 60000,
     endTime: now - 1000,
     duration: 59000,
@@ -461,12 +461,12 @@ export function seedExperiments(): void {
       avgHealthScore: 93,
       robustnessScore: 91,
       failurePointsDetected: 0,
-      summaryCommentary: 'Baseline v9 (promoted from Candidate 17 — Adaptive Allocation). Dynamically shifts capital between SMA (40-90%) and Mean Reversion (10-60%) based on market regime. Strong trend → 85/15, Sideways → 55/45, Choppy → 45/55. Highest PnL ($1,030), lowest drawdown (1.6%), best profit factor (2.18) of any configuration. Confirms adaptive portfolio allocation maximizes strategy fit across all market conditions.',
+      summaryCommentary: 'Archived Baseline v9 (promoted from Candidate 17 — Adaptive Allocation). Superseded by Baseline v11 (Smarter Shorts) which adds long+short capability with stricter short filters, achieving $1,084 PnL, 2.6% drawdown, and 1.91 profit factor.',
     },
   });
 
-  // Set Baseline v9 as current baseline
-  const s3 = setBaseline(s2h, baselineV9Id);
+  // Keep s2h for chaining (baseline set later after C23)
+  const s3 = s2h;
 
   // ── Candidate 2 — Higher Cooldown (5) ──────────────────────────────
   const candidate2Cfg: ConfigSnapshot = {
@@ -915,7 +915,7 @@ export function seedExperiments(): void {
   };
   createRun(s12, {
     type: 'backtest',
-    name: 'Candidate 22 — Long + Short Strategy',
+    name: 'Candidate 22 — Long + Short Strategy (Archived)',
     startTime: now - 38000,
     endTime: now - 100,
     duration: 37900,
@@ -940,12 +940,12 @@ export function seedExperiments(): void {
       avgHealthScore: 85,
       robustnessScore: 80,
       failurePointsDetected: 1,
-      summaryCommentary: 'Candidate 22 - Long + Short Strategy. Based on Candidate 20 (0.5% SMA distance) with explicit short trading: bearish crossover entry with 1-candle confirmation, HTF bearish/weak trend filter for shorts, position flip on opposite signal. Trade count +23% (78 → 96) with balanced long/short split (48/48). Short trades: 54.2% WR, 1.64 PF — profitable but lower quality than longs (61.5% WR, 2.01 PF). PnL +$184 vs C20 ($1,142 vs $958) from capturing bearish moves. Drawdown at 3.1% — exceeds 3% alert threshold, driven by short-side whipsaws in choppy conditions. Overall: significant PnL uplift with manageable risk increase. Shorts add regime coverage but require tighter monitoring.',
+      summaryCommentary: 'Archived Candidate 22 - Long + Short Strategy. Superseded by Candidate 23 (Smarter Shorts) → promoted to Baseline v11. Drawdown (3.1%) exceeded threshold; short-side whipsaws in choppy conditions were the primary issue. Candidate 23 resolved this with stricter short filters.',
     },
   });
 
 
-  // ── Candidate 23 — Smarter Shorts ──────────────────────────────────
+  // ── Baseline v11 (promoted from Candidate 23 — Smarter Shorts) ─────
   const candidate23Cfg: ConfigSnapshot = {
     ...candidate22Cfg,
     strategyParams: {
@@ -958,9 +958,9 @@ export function seedExperiments(): void {
       },
     },
   };
-  createRun(s12, {
+  const { store: s13, runId: baselineV11Id } = createRun(s12, {
     type: 'backtest',
-    name: 'Candidate 23 — Smarter Shorts',
+    name: 'Baseline v11 — Smarter Shorts (promoted from C23)',
     startTime: now - 36000,
     endTime: now - 80,
     duration: 35920,
@@ -985,9 +985,13 @@ export function seedExperiments(): void {
       avgHealthScore: 88,
       robustnessScore: 84,
       failurePointsDetected: 0,
-      summaryCommentary: 'Candidate 23 - Smarter Shorts. Based on C22 with stricter short filters: SMA distance ≥0.6% (vs 0.5% for longs), ATR ≥0.35%, HTF must be clearly bearish (not just weak). Short trade count dropped 29% (48 → 34) by filtering low-conviction setups. Short WR improved 54.2% → 61.8%, short PF improved 1.64 → 1.88. Drawdown back to 2.6% — well under 3% threshold. PnL slightly lower than C22 ($1,084 vs $1,142) but risk-adjusted returns significantly better (PF 1.91 vs 1.82). Eliminated whipsaw shorts in choppy/weak-trend conditions. Long performance unchanged (48 trades, 61.5% WR, 2.01 PF).',
+      summaryCommentary: 'Baseline v11 (promoted from Candidate 23 — Smarter Shorts). Long+Short system with asymmetric filters: longs at 0.5% SMA distance, shorts at 0.6% + ATR ≥0.35% + bearish-only HTF. Drawdown 2.6% (under 3% threshold), PF 1.91, 82 trades (48L/34S). Short WR 61.8%, short PF 1.88. Promoted over C22 for superior risk-adjusted returns and elimination of short-side whipsaws. Represents first balanced long/short baseline with controlled drawdown.',
     },
   });
 
+  // Set Baseline v11 as current baseline
+  setBaseline(s13, baselineV11Id);
+
 }
+
 

@@ -1,11 +1,12 @@
 import { TradingConfig, TradingState, Asset } from '@/types/trading';
 
 /**
- * Baseline v9 — Adaptive Allocation + Real-World Conditions
+ * Baseline v11 — Smarter Shorts (promoted from Candidate 23)
  *
  * Strategy: Multi-strategy (SMA Crossover 70% / Mean Reversion 30%)
- *   with adaptive regime-based allocation.
- * SMA: 10/30 crossover, 1.0% SMA distance filter, 1-candle confirmation
+ *   with adaptive regime-based allocation + long/short capability.
+ * SMA: 10/30 crossover, 0.5% SMA distance (longs), 0.6% (shorts)
+ * Shorts: ATR ≥0.35%, HTF bearish only, 1-candle confirmation, flip on opposite
  * Risk: 5% position size, asset-specific SL/TP (applied in execution),
  *   trailing stop (breakeven at +2%, 1% trail), cooldown 3 candles
  * Execution realism: 0.1% fees, 0.075% slippage, 1-candle delay
