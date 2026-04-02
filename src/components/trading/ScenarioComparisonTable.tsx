@@ -48,6 +48,7 @@ const CANDIDATES: CandidateConfig[] = [
   { name: 'Candidate 19 — Relaxed Filter', shortName: 'Cand. 19 (0.7%)', fastSMA: 10, slowSMA: 30, stopLoss: 1.5, takeProfit: 4, cooldown: 3, isBaseline: false },
   { name: 'Candidate 20 — Balanced Filter', shortName: 'Cand. 20 (0.5%)', fastSMA: 10, slowSMA: 30, stopLoss: 1.5, takeProfit: 4, cooldown: 3, isBaseline: false },
   { name: 'Candidate 22 — Long + Short Strategy', shortName: 'Cand. 22 (L+S)', fastSMA: 10, slowSMA: 30, stopLoss: 1.5, takeProfit: 4, cooldown: 3, isBaseline: false },
+  { name: 'Candidate 23 — Smarter Shorts', shortName: 'Cand. 23 (Smart S)', fastSMA: 10, slowSMA: 30, stopLoss: 1.5, takeProfit: 4, cooldown: 3, isBaseline: false },
 ];
 
 const SCENARIO_IDS = ['strong-bull', 'strong-bear', 'sideways', 'high-vol-breakout', 'reversal-heavy'];

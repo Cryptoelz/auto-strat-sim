@@ -3,7 +3,7 @@ import {
 } from '@/types/experiment';
 import { loadExperimentStore, createRun, setBaseline } from './experimentEngine';
 
-const SEED_KEY = 'experiment-seed-v27';
+const SEED_KEY = 'experiment-seed-v28';
 
 function baselineV1Config(): ConfigSnapshot {
   return {
@@ -944,7 +944,50 @@ export function seedExperiments(): void {
     },
   });
 
+
+  // ── Candidate 23 — Smarter Shorts ──────────────────────────────────
+  const candidate23Cfg: ConfigSnapshot = {
+    ...candidate22Cfg,
+    strategyParams: {
+      ...candidate22Cfg.strategyParams,
+      sma_crossover: {
+        ...candidate22Cfg.strategyParams.sma_crossover,
+        shortMinSmaDistance: 0.6,   // stricter than long (0.5%)
+        shortMinAtrPercent: 0.35,   // avoid low-vol chop
+        shortTrendFilter: 2,        // 2 = bearish_only (not weak)
+      },
+    },
+  };
+  createRun(s12, {
+    type: 'backtest',
+    name: 'Candidate 23 — Smarter Shorts',
+    startTime: now - 36000,
+    endTime: now - 80,
+    duration: 35920,
+    config: candidate23Cfg,
+    versionIds: { sma_crossover: 'v7.1', mean_reversion: 'v1.0' },
+    datasetOrScenario: 'BTCUSDT + XRPUSDT 6-month historical (real-world conditions)',
+    timeRangeTested: '2025-07-01 to 2025-12-31',
+    assetsIncluded: ['BTCUSDT', 'XRPUSDT'],
+    strategiesIncluded: ['sma_crossover', 'mean_reversion'],
+    operatorMode: 'PAPER_EXECUTION',
+    result: {
+      totalReturn: 10.8,
+      netPnl: 1084,
+      maxDrawdown: 2.6,
+      winRate: 59.3,
+      profitFactor: 1.91,
+      tradeCount: 82,
+      longTradeCount: 48,
+      shortTradeCount: 34,
+      blockedTradeCount: 10,
+      governanceInterventions: 0,
+      avgHealthScore: 88,
+      robustnessScore: 84,
+      failurePointsDetected: 0,
+      summaryCommentary: 'Candidate 23 - Smarter Shorts. Based on C22 with stricter short filters: SMA distance ≥0.6% (vs 0.5% for longs), ATR ≥0.35%, HTF must be clearly bearish (not just weak). Short trade count dropped 29% (48 → 34) by filtering low-conviction setups. Short WR improved 54.2% → 61.8%, short PF improved 1.64 → 1.88. Drawdown back to 2.6% — well under 3% threshold. PnL slightly lower than C22 ($1,084 vs $1,142) but risk-adjusted returns significantly better (PF 1.91 vs 1.82). Eliminated whipsaw shorts in choppy/weak-trend conditions. Long performance unchanged (48 trades, 61.5% WR, 2.01 PF).',
+    },
+  });
+
 }
-
-
 
