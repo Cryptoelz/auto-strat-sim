@@ -435,7 +435,7 @@ export function seedExperiments(): void {
   };
   const { store: s2h, runId: baselineV9Id } = createRun(s2g, {
     type: 'backtest',
-    name: 'Baseline v9 — Adaptive Allocation',
+    name: 'Baseline v9 — Adaptive Allocation (Archived)',
     startTime: now - 60000,
     endTime: now - 1000,
     duration: 59000,
