@@ -407,7 +407,7 @@ export function seedExperiments(): void {
     },
   });
 
-  // ── Current Baseline v9 (promoted from Candidate 17) ──────────────
+  // ── Archived Baseline v9 (promoted from Candidate 17) ──────────────
   const baselineV9Cfg: ConfigSnapshot = {
     ...baselineV8Cfg,
     strategyParams: {
