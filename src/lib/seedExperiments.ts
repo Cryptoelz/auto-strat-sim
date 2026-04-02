@@ -945,7 +945,7 @@ export function seedExperiments(): void {
   });
 
 
-  // ── Candidate 23 — Smarter Shorts ──────────────────────────────────
+  // ── Baseline v11 (promoted from Candidate 23 — Smarter Shorts) ─────
   const candidate23Cfg: ConfigSnapshot = {
     ...candidate22Cfg,
     strategyParams: {
@@ -958,9 +958,9 @@ export function seedExperiments(): void {
       },
     },
   };
-  createRun(s12, {
+  const { store: s13, runId: baselineV11Id } = createRun(s12, {
     type: 'backtest',
-    name: 'Candidate 23 — Smarter Shorts',
+    name: 'Baseline v11 — Smarter Shorts (promoted from C23)',
     startTime: now - 36000,
     endTime: now - 80,
     duration: 35920,
@@ -985,9 +985,13 @@ export function seedExperiments(): void {
       avgHealthScore: 88,
       robustnessScore: 84,
       failurePointsDetected: 0,
-      summaryCommentary: 'Candidate 23 - Smarter Shorts. Based on C22 with stricter short filters: SMA distance ≥0.6% (vs 0.5% for longs), ATR ≥0.35%, HTF must be clearly bearish (not just weak). Short trade count dropped 29% (48 → 34) by filtering low-conviction setups. Short WR improved 54.2% → 61.8%, short PF improved 1.64 → 1.88. Drawdown back to 2.6% — well under 3% threshold. PnL slightly lower than C22 ($1,084 vs $1,142) but risk-adjusted returns significantly better (PF 1.91 vs 1.82). Eliminated whipsaw shorts in choppy/weak-trend conditions. Long performance unchanged (48 trades, 61.5% WR, 2.01 PF).',
+      summaryCommentary: 'Baseline v11 (promoted from Candidate 23 — Smarter Shorts). Long+Short system with asymmetric filters: longs at 0.5% SMA distance, shorts at 0.6% + ATR ≥0.35% + bearish-only HTF. Drawdown 2.6% (under 3% threshold), PF 1.91, 82 trades (48L/34S). Short WR 61.8%, short PF 1.88. Promoted over C22 for superior risk-adjusted returns and elimination of short-side whipsaws. Represents first balanced long/short baseline with controlled drawdown.',
     },
   });
 
+  // Set Baseline v11 as current baseline
+  setBaseline(s13, baselineV11Id);
+
 }
+
 
