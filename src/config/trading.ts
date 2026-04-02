@@ -1,7 +1,7 @@
 import { TradingConfig, TradingState, Asset } from '@/types/trading';
 
 /**
- * Baseline v9 — Adaptive Allocation + Real-World Conditions
+ * Baseline v11 — Smarter Shorts (promoted from Candidate 23)
  *
  * Strategy: Multi-strategy (SMA Crossover 70% / Mean Reversion 30%)
  *   with adaptive regime-based allocation.
