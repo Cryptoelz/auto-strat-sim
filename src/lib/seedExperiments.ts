@@ -461,7 +461,7 @@ export function seedExperiments(): void {
       avgHealthScore: 93,
       robustnessScore: 91,
       failurePointsDetected: 0,
-      summaryCommentary: 'Baseline v9 (promoted from Candidate 17 — Adaptive Allocation). Dynamically shifts capital between SMA (40-90%) and Mean Reversion (10-60%) based on market regime. Strong trend → 85/15, Sideways → 55/45, Choppy → 45/55. Highest PnL ($1,030), lowest drawdown (1.6%), best profit factor (2.18) of any configuration. Confirms adaptive portfolio allocation maximizes strategy fit across all market conditions.',
+      summaryCommentary: 'Archived Baseline v9 (promoted from Candidate 17 — Adaptive Allocation). Superseded by Baseline v11 (Smarter Shorts) which adds long+short capability with stricter short filters, achieving $1,084 PnL, 2.6% drawdown, and 1.91 profit factor.',
     },
   });
 
