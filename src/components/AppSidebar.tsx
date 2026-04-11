@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, LineChart, FlaskConical, Layers, PieChart,
   Shield, UserCog, Bell, Beaker, ClipboardCheck, Activity,
-  Radio, Microscope, ArrowUpCircle,
+  Radio, Microscope, ArrowUpCircle, BarChart3,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
@@ -36,6 +36,7 @@ const NAV_SECTIONS = [
       { title: 'Strategies', url: '/strategies', icon: Layers },
       { title: 'Portfolio', url: '/portfolio', icon: PieChart },
       { title: 'Research', url: '/research', icon: Microscope },
+      { title: 'Session Analytics', url: '/session-analytics', icon: BarChart3 },
     ],
   },
   {
