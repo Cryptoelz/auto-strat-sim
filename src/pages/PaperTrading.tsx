@@ -16,6 +16,7 @@ import { PerformanceStats } from '@/components/trading/PerformanceStats';
 import { PortfolioDashboard } from '@/components/trading/PortfolioDashboard';
 import { DecisionLog } from '@/components/trading/DecisionLog';
 import { AlertsAndReports } from '@/components/trading/AlertsAndReports';
+import { SessionHistoryPanel } from '@/components/trading/SessionHistoryPanel';
 import { StrategyDashboard } from '@/components/trading/StrategyDashboard';
 import { AgentDecisionDashboard } from '@/components/trading/AgentDecisionDashboard';
 import { AgentMemoryDashboard } from '@/components/trading/AgentMemoryDashboard';
@@ -348,6 +349,9 @@ export default function PaperTrading() {
           maxDrawdown={drawdown}
           sessionStartTime={sessionStartTime}
         />
+
+        {/* Session History */}
+        <SessionHistoryPanel />
 
         {/* Footer */}
         <footer className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-center">

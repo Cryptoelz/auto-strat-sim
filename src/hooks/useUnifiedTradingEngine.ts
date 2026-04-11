@@ -18,6 +18,7 @@ import { fetchCandles, fetchAllPrices, fetchHTFCandles } from '@/lib/marketData'
 import { generateSignal, isInCooldown, CANDLE_INTERVAL_MS } from '@/lib/signalEngine';
 import { checkAndExecuteRiskLimits, openLong, openShort, flipPosition } from '@/lib/executionSimulator';
 import { saveState, loadState, resetState } from '@/lib/stateManager';
+import { archiveSession } from '@/lib/sessionHistory';
 import { canExecuteTrade } from '@/lib/riskManager';
 import { runFilters, getHTFTrend } from '@/lib/filters';
 import { calculateATR, calculateATRPercent, calculateSMA, calculateSMASlope, calculateSMADistance, detectMarketRegime } from '@/lib/indicators';
@@ -560,6 +561,11 @@ export function useUnifiedTradingEngine({
   }, [addStatus]);
 
   const reset = useCallback(() => {
+    // Archive current session before resetting (paper mode only, if trades exist)
+    if (isPaperMode && state.trades.length > 0) {
+      archiveSession(state, sessionRef.current.startTime, sessionRef.current.maxDrawdown);
+    }
+
     const newState = resetState();
     setState(newState);
     peakEquityRef.current = newState.initialBalance;
@@ -574,10 +580,10 @@ export function useUnifiedTradingEngine({
       setStatusMessages([]);
       sessionRef.current = { startTime: Date.now(), maxDrawdown: 0 };
       saveSession(sessionRef.current);
-      addStatus('info', 'Session reset');
+      addStatus('info', 'Session reset (previous session archived)');
     }
-    toast.info(isPaperMode ? 'Paper trading session reset' : 'Agent reset to initial state');
-  }, [isPaperMode, addStatus]);
+    toast.info(isPaperMode ? 'Paper trading session reset (archived)' : 'Agent reset to initial state');
+  }, [isPaperMode, addStatus, state]);
 
   // ── Update soak diagnostics on each cycle ──
   diagnosticsRef.current.sessionDurationMs = Date.now() - sessionRef.current.startTime;
