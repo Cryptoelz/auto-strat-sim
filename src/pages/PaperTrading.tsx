@@ -350,6 +350,9 @@ export default function PaperTrading() {
           sessionStartTime={sessionStartTime}
         />
 
+        {/* Session History */}
+        <SessionHistoryPanel />
+
         {/* Footer */}
         <footer className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-center">
           <p className="text-xs text-muted-foreground">
