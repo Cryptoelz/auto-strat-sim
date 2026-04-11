@@ -18,6 +18,7 @@ import { fetchCandles, fetchAllPrices, fetchHTFCandles } from '@/lib/marketData'
 import { generateSignal, isInCooldown, CANDLE_INTERVAL_MS } from '@/lib/signalEngine';
 import { checkAndExecuteRiskLimits, openLong, openShort, flipPosition } from '@/lib/executionSimulator';
 import { saveState, loadState, resetState } from '@/lib/stateManager';
+import { archiveSession } from '@/lib/sessionHistory';
 import { canExecuteTrade } from '@/lib/riskManager';
 import { runFilters, getHTFTrend } from '@/lib/filters';
 import { calculateATR, calculateATRPercent, calculateSMA, calculateSMASlope, calculateSMADistance, detectMarketRegime } from '@/lib/indicators';
