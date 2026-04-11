@@ -561,6 +561,11 @@ export function useUnifiedTradingEngine({
   }, [addStatus]);
 
   const reset = useCallback(() => {
+    // Archive current session before resetting (paper mode only, if trades exist)
+    if (isPaperMode && state.trades.length > 0) {
+      archiveSession(state, sessionRef.current.startTime, sessionRef.current.maxDrawdown);
+    }
+
     const newState = resetState();
     setState(newState);
     peakEquityRef.current = newState.initialBalance;
@@ -575,10 +580,10 @@ export function useUnifiedTradingEngine({
       setStatusMessages([]);
       sessionRef.current = { startTime: Date.now(), maxDrawdown: 0 };
       saveSession(sessionRef.current);
-      addStatus('info', 'Session reset');
+      addStatus('info', 'Session reset (previous session archived)');
     }
-    toast.info(isPaperMode ? 'Paper trading session reset' : 'Agent reset to initial state');
-  }, [isPaperMode, addStatus]);
+    toast.info(isPaperMode ? 'Paper trading session reset (archived)' : 'Agent reset to initial state');
+  }, [isPaperMode, addStatus, state]);
 
   // ── Update soak diagnostics on each cycle ──
   diagnosticsRef.current.sessionDurationMs = Date.now() - sessionRef.current.startTime;
