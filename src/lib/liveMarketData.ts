@@ -203,12 +203,47 @@ export class LiveMarketDataManager {
     }
   }
 
+  private startDecayTimer(): void {
+    if (this.decayTimer) return;
+    this.decayTimer = setInterval(() => this.refreshErrorWindow(), ERROR_DECAY_TICK_MS);
+  }
+
+  private stopDecayTimer(): void {
+    if (this.decayTimer) {
+      clearInterval(this.decayTimer);
+      this.decayTimer = null;
+    }
+  }
+
+  /**
+   * Drop error timestamps older than the rolling window and update
+   * `missedCandles` to reflect only recent issues. This is the decay
+   * mechanism that lets governance recover automatically.
+   */
+  private refreshErrorWindow(): void {
+    const cutoff = Date.now() - ERROR_ROLLING_WINDOW_MS;
+    this.recentErrorTimestamps = this.recentErrorTimestamps.filter(t => t >= cutoff);
+    if (this.status.missedCandles !== this.recentErrorTimestamps.length) {
+      this.updateStatus({ missedCandles: this.recentErrorTimestamps.length });
+    }
+  }
+
+  /**
+   * Manual override — operator clears all tracked connection errors so
+   * governance immediately re-evaluates with fresh data quality.
+   */
+  clearErrors(): void {
+    this.recentErrorTimestamps = [];
+    this.updateStatus({ missedCandles: 0, error: null });
+  }
+
   private cleanup(): void {
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
     this.stopHeartbeat();
+    this.stopDecayTimer();
     if (this.ws) {
       this.ws.onopen = null;
       this.ws.onmessage = null;
