@@ -38,6 +38,10 @@ interface KlineMessage {
 const WS_BASE = 'wss://stream.binance.com:9443/ws';
 const MAX_RECONNECT_DELAY = 30000;
 const INITIAL_RECONNECT_DELAY = 1000;
+// Only count missed-candle errors that occurred within this rolling window.
+// Anything older decays away so governance reflects CURRENT data quality.
+const ERROR_ROLLING_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
+const ERROR_DECAY_TICK_MS = 15_000;
 
 export class LiveMarketDataManager {
   private ws: WebSocket | null = null;
