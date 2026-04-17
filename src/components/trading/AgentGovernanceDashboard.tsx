@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
@@ -11,7 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import {
   Shield, ShieldAlert, ShieldOff, ShieldCheck, Lock,
   AlertTriangle, Activity, Heart, Settings, History,
-  CheckCircle2, XCircle, ArrowRight, TrendingDown,
+  CheckCircle2, XCircle, ArrowRight, TrendingDown, WifiOff,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { GovernanceStatus, GovernanceConfig, GovernanceState, DEFAULT_GOVERNANCE_CONFIG } from '@/types/governance';
@@ -36,12 +37,13 @@ interface Props {
   onGovernanceConfigChange: (config: GovernanceConfig) => void;
   prevStatus: GovernanceStatus | null;
   candleIntervalMs?: number;
+  onClearConnectionErrors?: () => void;
 }
 
 export function AgentGovernanceDashboard({
   state, analytics, enabledAssets, portfolioDrawdown,
   reconnectErrors = 0, governanceConfig, onGovernanceConfigChange,
-  prevStatus, candleIntervalMs = 300000,
+  prevStatus, candleIntervalMs = 300000, onClearConnectionErrors,
 }: Props) {
   const recentFlipCount = useMemo(
     () => countRecentFlips(state, governanceConfig.antiFlipWindow, candleIntervalMs),
