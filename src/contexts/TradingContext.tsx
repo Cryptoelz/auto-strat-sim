@@ -42,6 +42,7 @@ interface TradingContextType {
   toggleAsset: (asset: Asset) => void;
   triggerEmergencyStop: () => void;
   clearEmergencyStop: () => void;
+  clearConnectionErrors: () => void;
   // Config
   strategyConfig: StrategyConfig;
   setStrategyConfig: (c: StrategyConfig) => void;
@@ -188,6 +189,7 @@ export function TradingProvider({ children }: { children: ReactNode }) {
     toggleAsset: engine.toggleAsset,
     triggerEmergencyStop: engine.triggerEmergencyStop,
     clearEmergencyStop: engine.clearEmergencyStop,
+    clearConnectionErrors: engine.clearConnectionErrors,
     // Config
     strategyConfig, setStrategyConfig, config,
     portfolioConfig, setPortfolioConfig,
