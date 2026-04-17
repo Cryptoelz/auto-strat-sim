@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
@@ -11,7 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import {
   Shield, ShieldAlert, ShieldOff, ShieldCheck, Lock,
   AlertTriangle, Activity, Heart, Settings, History,
-  CheckCircle2, XCircle, ArrowRight, TrendingDown,
+  CheckCircle2, XCircle, ArrowRight, TrendingDown, WifiOff,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { GovernanceStatus, GovernanceConfig, GovernanceState, DEFAULT_GOVERNANCE_CONFIG } from '@/types/governance';
@@ -36,12 +37,13 @@ interface Props {
   onGovernanceConfigChange: (config: GovernanceConfig) => void;
   prevStatus: GovernanceStatus | null;
   candleIntervalMs?: number;
+  onClearConnectionErrors?: () => void;
 }
 
 export function AgentGovernanceDashboard({
   state, analytics, enabledAssets, portfolioDrawdown,
   reconnectErrors = 0, governanceConfig, onGovernanceConfigChange,
-  prevStatus, candleIntervalMs = 300000,
+  prevStatus, candleIntervalMs = 300000, onClearConnectionErrors,
 }: Props) {
   const recentFlipCount = useMemo(
     () => countRecentFlips(state, governanceConfig.antiFlipWindow, candleIntervalMs),
@@ -83,6 +85,22 @@ export function AgentGovernanceDashboard({
         <div className={cn('rounded-md px-3 py-2 mb-3 text-xs', stateInfo.bg, stateInfo.color)}>
           {status.explanation}
         </div>
+
+        {/* Connection error override */}
+        {onClearConnectionErrors && reconnectErrors > 0 && (
+          <div className="rounded-md border border-border/50 bg-muted/30 px-3 py-2 mb-3 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <WifiOff className="h-3.5 w-3.5 text-orange-500" />
+              <span>
+                <strong className="text-foreground">{reconnectErrors}</strong> recent connection issue(s) tracked.
+                These decay automatically over ~5 minutes if the connection stays healthy.
+              </span>
+            </div>
+            <Button size="sm" variant="outline" className="text-xs h-7 shrink-0" onClick={onClearConnectionErrors}>
+              Clear Connection Errors
+            </Button>
+          </div>
+        )}
 
         {status.manualReviewRequired && (
           <div className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 mb-3 text-xs text-destructive flex items-center gap-2">

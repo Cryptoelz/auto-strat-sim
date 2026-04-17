@@ -52,7 +52,7 @@ export default function PaperTrading() {
     equity, unrealizedPnl, drawdown, dailyPnl, peakEquity,
     // Paper-mode controls
     connectionStatus, statusMessages, enabledAssets, emergencyStop, sessionStartTime,
-    toggleRunning, toggleAsset, triggerEmergencyStop, clearEmergencyStop, reset, refetch,
+    toggleRunning, toggleAsset, triggerEmergencyStop, clearEmergencyStop, clearConnectionErrors, reset, refetch,
     // Config (from context — no local state)
     strategyConfig, config,
     portfolioConfig, setPortfolioConfig,
@@ -326,6 +326,7 @@ export default function PaperTrading() {
           governanceConfig={governanceConfig}
           onGovernanceConfigChange={setGovernanceConfig}
           prevStatus={prevGovStatus}
+          onClearConnectionErrors={clearConnectionErrors}
         />
 
         {/* Experiment Management */}

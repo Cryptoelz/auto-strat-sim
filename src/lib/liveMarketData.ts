@@ -38,6 +38,10 @@ interface KlineMessage {
 const WS_BASE = 'wss://stream.binance.com:9443/ws';
 const MAX_RECONNECT_DELAY = 30000;
 const INITIAL_RECONNECT_DELAY = 1000;
+// Only count missed-candle errors that occurred within this rolling window.
+// Anything older decays away so governance reflects CURRENT data quality.
+const ERROR_ROLLING_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
+const ERROR_DECAY_TICK_MS = 15_000;
 
 export class LiveMarketDataManager {
   private ws: WebSocket | null = null;
@@ -58,6 +62,10 @@ export class LiveMarketDataManager {
   };
   private lastCandleTime: Record<string, number> = {};
   private destroyed = false;
+  // Rolling timestamps of recent missed-candle events. Only entries within
+  // ERROR_ROLLING_WINDOW_MS contribute to `missedCandles`.
+  private recentErrorTimestamps: number[] = [];
+  private decayTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor(
     assets: Asset[],
@@ -88,8 +96,17 @@ export class LiveMarketDataManager {
 
       this.ws.onopen = () => {
         this.reconnectDelay = INITIAL_RECONNECT_DELAY;
-        this.updateStatus({ connected: true, reconnecting: false, error: null });
+        // Successful (re)connection clears recent error history so governance
+        // does not stay RESTRICTED based on stale failures.
+        this.recentErrorTimestamps = [];
+        this.updateStatus({
+          connected: true,
+          reconnecting: false,
+          error: null,
+          missedCandles: 0,
+        });
         this.startHeartbeat();
+        this.startDecayTimer();
       };
 
       this.ws.onmessage = (event) => {
@@ -124,7 +141,11 @@ export class LiveMarketDataManager {
               const gap = kline.t - this.lastCandleTime[key];
               if (gap > expectedInterval * 1.5) {
                 const missed = Math.round(gap / expectedInterval) - 1;
-                this.updateStatus({ missedCandles: this.status.missedCandles + missed });
+                const now = Date.now();
+                for (let i = 0; i < missed; i++) {
+                  this.recentErrorTimestamps.push(now);
+                }
+                this.refreshErrorWindow();
               }
             }
             this.lastCandleTime[key] = kline.t;
@@ -182,12 +203,47 @@ export class LiveMarketDataManager {
     }
   }
 
+  private startDecayTimer(): void {
+    if (this.decayTimer) return;
+    this.decayTimer = setInterval(() => this.refreshErrorWindow(), ERROR_DECAY_TICK_MS);
+  }
+
+  private stopDecayTimer(): void {
+    if (this.decayTimer) {
+      clearInterval(this.decayTimer);
+      this.decayTimer = null;
+    }
+  }
+
+  /**
+   * Drop error timestamps older than the rolling window and update
+   * `missedCandles` to reflect only recent issues. This is the decay
+   * mechanism that lets governance recover automatically.
+   */
+  private refreshErrorWindow(): void {
+    const cutoff = Date.now() - ERROR_ROLLING_WINDOW_MS;
+    this.recentErrorTimestamps = this.recentErrorTimestamps.filter(t => t >= cutoff);
+    if (this.status.missedCandles !== this.recentErrorTimestamps.length) {
+      this.updateStatus({ missedCandles: this.recentErrorTimestamps.length });
+    }
+  }
+
+  /**
+   * Manual override — operator clears all tracked connection errors so
+   * governance immediately re-evaluates with fresh data quality.
+   */
+  clearErrors(): void {
+    this.recentErrorTimestamps = [];
+    this.updateStatus({ missedCandles: 0, error: null });
+  }
+
   private cleanup(): void {
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
     this.stopHeartbeat();
+    this.stopDecayTimer();
     if (this.ws) {
       this.ws.onopen = null;
       this.ws.onmessage = null;

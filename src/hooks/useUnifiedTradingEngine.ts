@@ -87,6 +87,7 @@ export interface UnifiedEngineResult {
   toggleAsset: (asset: Asset) => void;
   triggerEmergencyStop: () => void;
   clearEmergencyStop: () => void;
+  clearConnectionErrors: () => void;
   // Soak-test diagnostics
   diagnostics: SoakDiagnostics;
 }
@@ -560,6 +561,13 @@ export function useUnifiedTradingEngine({
     addStatus('info', 'Emergency stop cleared — ready to resume');
   }, [addStatus]);
 
+  const clearConnectionErrors = useCallback(() => {
+    wsManagerRef.current?.clearErrors();
+    setConnectionStatus(prev => ({ ...prev, missedCandles: 0, error: null }));
+    addStatus('info', 'Connection errors cleared — governance re-evaluating');
+    toast.success('Connection errors cleared');
+  }, [addStatus]);
+
   const reset = useCallback(() => {
     // Archive current session before resetting (paper mode only, if trades exist)
     if (isPaperMode && state.trades.length > 0) {
@@ -576,6 +584,10 @@ export function useUnifiedTradingEngine({
       stateRestoreCount: 0, reconnectCount: 0,
       lastCycleTimestamp: Date.now(),
     };
+    // Reset connection error tracking on session reset so governance does not
+    // remain RESTRICTED based on errors from the previous session.
+    wsManagerRef.current?.clearErrors();
+    setConnectionStatus(prev => ({ ...prev, missedCandles: 0, error: null }));
     if (isPaperMode) {
       setStatusMessages([]);
       sessionRef.current = { startTime: Date.now(), maxDrawdown: 0 };
@@ -600,7 +612,7 @@ export function useUnifiedTradingEngine({
     // Paper extras
     connectionStatus, statusMessages, enabledAssets, emergencyStop,
     sessionStartTime: sessionRef.current.startTime,
-    toggleAsset, triggerEmergencyStop, clearEmergencyStop,
+    toggleAsset, triggerEmergencyStop, clearEmergencyStop, clearConnectionErrors,
     // Soak diagnostics
     diagnostics: diagnosticsRef.current,
   };
