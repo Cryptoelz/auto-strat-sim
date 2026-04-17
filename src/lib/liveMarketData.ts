@@ -62,6 +62,10 @@ export class LiveMarketDataManager {
   };
   private lastCandleTime: Record<string, number> = {};
   private destroyed = false;
+  // Rolling timestamps of recent missed-candle events. Only entries within
+  // ERROR_ROLLING_WINDOW_MS contribute to `missedCandles`.
+  private recentErrorTimestamps: number[] = [];
+  private decayTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor(
     assets: Asset[],
@@ -92,8 +96,17 @@ export class LiveMarketDataManager {
 
       this.ws.onopen = () => {
         this.reconnectDelay = INITIAL_RECONNECT_DELAY;
-        this.updateStatus({ connected: true, reconnecting: false, error: null });
+        // Successful (re)connection clears recent error history so governance
+        // does not stay RESTRICTED based on stale failures.
+        this.recentErrorTimestamps = [];
+        this.updateStatus({
+          connected: true,
+          reconnecting: false,
+          error: null,
+          missedCandles: 0,
+        });
         this.startHeartbeat();
+        this.startDecayTimer();
       };
 
       this.ws.onmessage = (event) => {
@@ -128,7 +141,11 @@ export class LiveMarketDataManager {
               const gap = kline.t - this.lastCandleTime[key];
               if (gap > expectedInterval * 1.5) {
                 const missed = Math.round(gap / expectedInterval) - 1;
-                this.updateStatus({ missedCandles: this.status.missedCandles + missed });
+                const now = Date.now();
+                for (let i = 0; i < missed; i++) {
+                  this.recentErrorTimestamps.push(now);
+                }
+                this.refreshErrorWindow();
               }
             }
             this.lastCandleTime[key] = kline.t;
