@@ -86,6 +86,22 @@ export function AgentGovernanceDashboard({
           {status.explanation}
         </div>
 
+        {/* Connection error override */}
+        {onClearConnectionErrors && reconnectErrors > 0 && (
+          <div className="rounded-md border border-border/50 bg-muted/30 px-3 py-2 mb-3 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <WifiOff className="h-3.5 w-3.5 text-orange-500" />
+              <span>
+                <strong className="text-foreground">{reconnectErrors}</strong> recent connection issue(s) tracked.
+                These decay automatically over ~5 minutes if the connection stays healthy.
+              </span>
+            </div>
+            <Button size="sm" variant="outline" className="text-xs h-7 shrink-0" onClick={onClearConnectionErrors}>
+              Clear Connection Errors
+            </Button>
+          </div>
+        )}
+
         {status.manualReviewRequired && (
           <div className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 mb-3 text-xs text-destructive flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 shrink-0" />
