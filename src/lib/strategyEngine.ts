@@ -374,6 +374,117 @@ function generateSniperSignal(
   };
 }
 
+// ─── Sniper v2: stricter research branch ─────────────────────────────
+function generateSniperV2Signal(
+  asset: Asset, candles: Candle[], params: StrategyParams,
+): StrategySignal {
+  const fastP = params.sniperSmaFast ?? 20;
+  const slowP = params.sniperSmaSlow ?? 50;
+  const htfP = params.sniperHtfSma ?? 100;
+  const htf4hP = (params.sniperHtf4hSma ?? 50) * 16; // ~4h proxy on 15m bars
+  const longDist = params.sniperLongDistance ?? 1.0;
+  const shortDist = params.sniperShortDistance ?? 1.2;
+  const lookback = params.sniperBreakoutLookback ?? 35;
+  const atrP = params.sniperAtrPeriod ?? 14;
+  const confirmStrength = params.sniperConfirmStrength ?? 0.65;
+  const minAtrPct = params.sniperMinAtrPct ?? 0.6;
+  const volPct = params.sniperVolumePercentile ?? 0.5;
+
+  const closed = candles.slice(0, -1);
+  const minBars = Math.max(htfP, htf4hP, slowP, lookback, atrP) + 5;
+  if (closed.length < minBars) {
+    return holdSignal(asset, candles, 'sniper_v2', { reason: 'insufficient_history' });
+  }
+
+  const idx = closed.length - 1;
+  const last = closed[idx];
+  const fastSeries = calculateSMASeries(closed, fastP);
+  const slowSeries = calculateSMASeries(closed, slowP);
+  const htfSeries = calculateSMASeries(closed, htfP);
+  const htf4hSeries = calculateSMASeries(closed, htf4hP);
+  const fast = fastSeries[idx];
+  const slow = slowSeries[idx];
+  const htf = htfSeries[idx];
+  const htf4h = htf4hSeries[idx];
+  if (fast === null || slow === null || htf === null || htf4h === null) {
+    return holdSignal(asset, candles, 'sniper_v2', { reason: 'indicators_warmup' });
+  }
+
+  const price = last.close;
+  const smaDistancePct = (Math.abs(fast - slow) / price) * 100;
+  const atrNow = calculateATR(closed, atrP);
+  const atrPrev = calculateATR(closed.slice(0, -3), atrP);
+  const atrExpanding = atrNow !== null && atrPrev !== null && atrNow > atrPrev;
+  const atrPct = atrNow !== null ? (atrNow / price) * 100 : 0;
+
+  const window = closed.slice(-1 - lookback, -1);
+  const recentHigh = window.reduce((m, c) => Math.max(m, c.high), -Infinity);
+  const recentLow = window.reduce((m, c) => Math.min(m, c.low), Infinity);
+
+  const range = Math.max(last.high - last.low, 1e-9);
+  const closePos = (last.close - last.low) / range;
+  const bullishBody = last.close > last.open;
+  const bearishBody = last.close < last.open;
+  const lastBody = Math.abs(last.close - last.open);
+
+  const bodies = window.map(c => Math.abs(c.close - c.open)).sort((a, b) => a - b);
+  const threshIdx = Math.min(bodies.length - 1, Math.floor(bodies.length * volPct));
+  const medianBody = bodies[threshIdx] ?? 0;
+  const strongBody = lastBody >= medianBody;
+
+  const htfBullish = price > htf && fast > htf && price > htf4h;
+  const htfBearish = price < htf && fast < htf && price < htf4h;
+  const alignBull = fast > slow && htfBullish;
+  const alignBear = fast < slow && htfBearish;
+  const longBreakout = last.close > recentHigh;
+  const shortBreakdown = last.close < recentLow;
+  const atrOk = atrPct >= minAtrPct;
+
+  const baseMeta = {
+    fast, slow, htf, htf4h,
+    smaDistancePct: Number(smaDistancePct.toFixed(3)),
+    atrPct: Number(atrPct.toFixed(3)),
+    atrExpanding: atrExpanding ? 1 : 0,
+    recentHigh, recentLow,
+    closePos: Number(closePos.toFixed(3)),
+    lookback,
+    bodyPercentile: Number(volPct.toFixed(2)),
+    strongBody: strongBody ? 1 : 0,
+  };
+
+  if (alignBull && smaDistancePct >= longDist && atrExpanding && atrOk &&
+      longBreakout && bullishBody && closePos >= confirmStrength && strongBody) {
+    return {
+      type: 'BUY', strategyId: 'sniper_v2', asset,
+      timestamp: last.timestamp, price: last.close, confidence: 94,
+      metadata: { ...baseMeta, side: 'long', trigger: 'v2_breakout_confirmation' },
+    };
+  }
+  if (alignBear && smaDistancePct >= shortDist && atrExpanding && atrOk &&
+      shortBreakdown && bearishBody && (1 - closePos) >= confirmStrength && strongBody) {
+    return {
+      type: 'SELL', strategyId: 'sniper_v2', asset,
+      timestamp: last.timestamp, price: last.close, confidence: 94,
+      metadata: { ...baseMeta, side: 'short', trigger: 'v2_breakdown_confirmation' },
+    };
+  }
+
+  const rejections: string[] = [];
+  if (!alignBull && !alignBear) rejections.push('no_htf_alignment');
+  if (!atrExpanding) rejections.push('atr_not_expanding');
+  if (!atrOk) rejections.push('atr_pct_below_floor');
+  if (smaDistancePct < Math.min(longDist, shortDist)) rejections.push('sma_distance_too_small');
+  if (!longBreakout && !shortBreakdown) rejections.push('no_structural_break');
+  if (closePos < confirmStrength && (1 - closePos) < confirmStrength) rejections.push('weak_confirmation_close');
+  if (!strongBody) rejections.push('weak_breakout_strength');
+
+  return {
+    type: 'HOLD', strategyId: 'sniper_v2', asset,
+    timestamp: last.timestamp, price: last.close, confidence: 0,
+    metadata: { ...baseMeta, rejections: rejections.join(',') || 'no_setup' },
+  };
+}
+
 // ─── Main Entry Point ────────────────────────────────────────────────
 
 export function generateStrategySignal(
