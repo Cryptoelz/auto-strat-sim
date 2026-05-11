@@ -2,7 +2,7 @@ import { Asset, Candle, SignalType, MarketRegime } from './trading';
 
 // ─── Strategy Types ──────────────────────────────────────────────────
 
-export type StrategyId = 'sma_crossover' | 'ema_crossover' | 'rsi_trend' | 'sniper';
+export type StrategyId = 'sma_crossover' | 'ema_crossover' | 'rsi_trend' | 'sniper' | 'sniper_v2';
 
 export type StrategySelectionMode =
   | 'single'           // one active strategy
