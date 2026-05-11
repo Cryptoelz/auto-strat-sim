@@ -38,6 +38,16 @@ export interface StrategyParams {
   rsiPeriod?: number;
   rsiOverbought?: number;
   rsiOversold?: number;
+  // Sniper (ultra-selective trend continuation)
+  sniperSmaFast?: number;
+  sniperSmaSlow?: number;
+  sniperHtfSma?: number;
+  sniperLongDistance?: number;    // SMA distance threshold for longs (%)
+  sniperShortDistance?: number;   // SMA distance threshold for shorts (%)
+  sniperBreakoutLookback?: number;
+  sniperAtrPeriod?: number;
+  sniperConfirmStrength?: number; // 0-1 close position within bar range
+  trailingStopPercent?: number;
   // Common
   stopLossPercent?: number;
   takeProfitPercent?: number;
