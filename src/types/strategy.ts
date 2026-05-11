@@ -47,6 +47,9 @@ export interface StrategyParams {
   sniperBreakoutLookback?: number;
   sniperAtrPeriod?: number;
   sniperConfirmStrength?: number; // 0-1 close position within bar range
+  sniperMinAtrPct?: number;       // v2: minimum ATR % required
+  sniperHtf4hSma?: number;        // v2: 4h higher-timeframe SMA period
+  sniperVolumePercentile?: number;// v2: breakout candle strength percentile threshold (0-1)
   trailingStopPercent?: number;
   // Common
   stopLossPercent?: number;
