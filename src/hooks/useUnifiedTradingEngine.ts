@@ -404,7 +404,7 @@ export function useUnifiedTradingEngine({
             if (!isInCooldown(newState.lastTradeTime[asset], Date.now(), config.risk.cooldownCandles, candleIntervalMs)) {
               const validation = canExecuteTrade(newState.balance, price, config);
               if (validation.valid) {
-                newState = openLong(newState, asset, price, config);
+                newState = openLong(newState, asset, price, config, assetAnalytic?.marketRegime);
                 const msg = explainOpen(asset, 'long', price, assetAnalytic?.marketRegime || 'sideways', signal.type);
                 toast.success(`📈 ${asset} LONG opened at $${price.toFixed(2)}`);
                 addStatus('trade', msg, asset);
