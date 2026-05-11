@@ -90,6 +90,9 @@ function buildStrategyMemory(
         regimeFit = regime !== 'sideways' ? 80 : 30;
       } else if (stratId === 'rsi_trend') {
         regimeFit = regime === 'sideways' ? 60 : 70;
+      } else if (stratId === 'sniper') {
+        // Sniper is ultra-selective trend specialist — strong fit only in clear trends
+        regimeFit = regime !== 'sideways' ? 90 : 15;
       }
 
       // False signal rate proxy: losses / total
