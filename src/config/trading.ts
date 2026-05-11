@@ -45,10 +45,12 @@ export const DEFAULT_CONFIG: TradingConfig = {
   },
 };
 
-/** Asset-specific risk profiles (Baseline v9) */
+/** Asset-specific risk profiles (Baseline v9, conservative starts for ETH/SOL) */
 export const ASSET_RISK_PROFILES: Record<string, { stopLossPercent: number; takeProfitPercent: number }> = {
   BTCUSDT: { stopLossPercent: 1.0, takeProfitPercent: 4.0 },
   XRPUSDT: { stopLossPercent: 2.0, takeProfitPercent: 5.0 },
+  ETHUSDT: { stopLossPercent: 1.2, takeProfitPercent: 4.2 }, // BTC-like vol profile
+  SOLUSDT: { stopLossPercent: 2.0, takeProfitPercent: 5.5 }, // higher vol
 };
 
 /** Trailing stop configuration (Baseline v9) */
@@ -67,7 +69,7 @@ export const SESSION_ALERT_THRESHOLDS = {
 
 export const INITIAL_BALANCE = 10000;
 
-export const ALL_ASSETS: Asset[] = ['BTCUSDT', 'XRPUSDT', 'FETUSDT', 'XLMUSDT'];
+export const ALL_ASSETS: Asset[] = ['BTCUSDT', 'XRPUSDT', 'FETUSDT', 'XLMUSDT', 'ETHUSDT', 'SOLUSDT'];
 
 export const getInitialState = (): TradingState => ({
   balance: INITIAL_BALANCE,
@@ -77,6 +79,8 @@ export const getInitialState = (): TradingState => ({
     XRPUSDT: null,
     FETUSDT: null,
     XLMUSDT: null,
+    ETHUSDT: null,
+    SOLUSDT: null,
   },
   trades: [],
   lastSignal: {
@@ -84,12 +88,16 @@ export const getInitialState = (): TradingState => ({
     XRPUSDT: null,
     FETUSDT: null,
     XLMUSDT: null,
+    ETHUSDT: null,
+    SOLUSDT: null,
   },
   lastTradeTime: {
     BTCUSDT: 0,
     XRPUSDT: 0,
     FETUSDT: 0,
     XLMUSDT: 0,
+    ETHUSDT: 0,
+    SOLUSDT: 0,
   },
   isRunning: true,
   isPaused: false,
@@ -105,6 +113,8 @@ export const ASSET_INFO: Record<Asset, { name: string; symbol: string; color: st
   XRPUSDT: { name: 'Ripple', symbol: 'XRP', color: 'trading-xrp' },
   FETUSDT: { name: 'Fetch.ai', symbol: 'FET', color: 'trading-fet' },
   XLMUSDT: { name: 'Stellar', symbol: 'XLM', color: 'trading-xlm' },
+  ETHUSDT: { name: 'Ethereum', symbol: 'ETH', color: 'trading-eth' },
+  SOLUSDT: { name: 'Solana', symbol: 'SOL', color: 'trading-sol' },
 };
 
 export const CANDLE_LIMIT = 100;

@@ -73,7 +73,7 @@ type CustomPreset = {
   slowSMA: number;
 } | null;
 
-const VALID_ASSETS: Asset[] = ['BTCUSDT', 'XRPUSDT', 'FETUSDT', 'XLMUSDT'];
+const VALID_ASSETS: Asset[] = ['BTCUSDT', 'XRPUSDT', 'FETUSDT', 'XLMUSDT', 'ETHUSDT', 'SOLUSDT'];
 const VALID_TIMEFRAMES = ['5m', '15m', '1h', '4h'] as const;
 
 /**
