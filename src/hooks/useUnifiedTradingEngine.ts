@@ -421,7 +421,7 @@ export function useUnifiedTradingEngine({
             const validation = canExecuteTrade(newState.balance + position.size * position.entryPrice, price, config);
             if (validation.valid) {
               const oldDir = position.direction;
-              newState = flipPosition(newState, asset, price, 'short', 'flip_to_short', config);
+              newState = flipPosition(newState, asset, price, 'short', 'flip_to_short', config, assetAnalytic?.marketRegime);
               const closeTrade = newState.trades[newState.trades.length - 2];
               const pnlText = closeTrade?.pnl >= 0 ? `+$${closeTrade.pnl.toFixed(2)}` : `-$${Math.abs(closeTrade.pnl).toFixed(2)}`;
               toast.success(`🔄 ${asset} FLIP: LONG→SHORT at $${price.toFixed(2)} (P&L: ${pnlText})`);
