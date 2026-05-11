@@ -60,6 +60,7 @@ export interface Position {
   size: number;
   stopLoss: number;
   takeProfit: number;
+  entryRegime?: MarketRegime;
 }
 
 export interface Trade {
@@ -76,6 +77,8 @@ export interface Trade {
   fees: number;
   type: 'win' | 'loss';
   exitReason: TradeReason;
+  entryRegime?: MarketRegime;
+  exitRegime?: MarketRegime;
 }
 
 export interface DecisionLogEntry {
