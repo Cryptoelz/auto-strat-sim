@@ -731,3 +731,42 @@ function Stat({ label, value, color }: { label: string; value: string; color?: s
     </div>
   );
 }
+
+function ConditionListCard({
+  title, icon: Icon, items, positive = false, empty,
+}: {
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+  items: Array<{ label: string; trades: number; winRate: number; pnl: number; avgPnl: number }>;
+  positive?: boolean;
+  empty: string;
+}) {
+  return (
+    <Card className={cn('border-border/50', positive && 'border-l-4 border-l-trading-profit')}>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm flex items-center gap-2">
+          <Icon className={cn('h-4 w-4', positive ? 'text-trading-profit' : 'text-trading-loss')} /> {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {items.length === 0 ? (
+          <p className="text-xs text-muted-foreground italic">{empty}</p>
+        ) : (
+          <ul className="space-y-2">
+            {items.slice(0, 4).map((it, i) => (
+              <li key={i} className="flex items-center justify-between gap-2 text-xs">
+                <span className="truncate">{it.label}</span>
+                <span className="flex items-center gap-2 flex-shrink-0">
+                  <span className="text-muted-foreground text-[10px]">{it.trades}t · {it.winRate.toFixed(0)}%</span>
+                  <span className={cn('font-mono font-semibold', it.pnl >= 0 ? 'text-trading-profit' : 'text-trading-loss')}>
+                    {it.pnl >= 0 ? '+' : ''}{formatCurrency(it.pnl)}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
