@@ -217,7 +217,7 @@ function explainDrawdownEvent(s: ArchivedSession): DrawdownEvent | null {
   if (maxStreak >= 2) parts.push(`including a ${maxStreak}-trade losing streak`);
   if (worstAsset) parts.push(`${worstAsset} accounted for the largest share of losses`);
   if (dominantRegime) parts.push(`most losses occurred in ${regimeLabel} conditions`);
-  if (topExitReason) parts.push(`primary exit reason was ${topExitReason.replaceAll('_', ' ')}`);
+  if (topExitReason) parts.push(`primary exit reason was ${topExitReason.replace(/_/g, ' ')}`);
 
   return {
     sessionId: s.id,
