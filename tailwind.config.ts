@@ -69,6 +69,8 @@ export default {
           xrp: "hsl(var(--trading-xrp))",
           fet: "hsl(var(--trading-fet))",
           xlm: "hsl(var(--trading-xlm))",
+          eth: "hsl(var(--trading-eth))",
+          sol: "hsl(var(--trading-sol))",
           "sma-fast": "hsl(var(--trading-sma-fast))",
           "sma-slow": "hsl(var(--trading-sma-slow))",
         },

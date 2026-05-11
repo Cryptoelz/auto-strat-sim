@@ -1,6 +1,6 @@
 // Core trading types
 
-export type Asset = 'BTCUSDT' | 'XRPUSDT' | 'FETUSDT' | 'XLMUSDT';
+export type Asset = 'BTCUSDT' | 'XRPUSDT' | 'FETUSDT' | 'XLMUSDT' | 'ETHUSDT' | 'SOLUSDT';
 
 export type SignalType = 'BUY' | 'SELL' | 'HOLD';
 

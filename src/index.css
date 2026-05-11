@@ -48,6 +48,8 @@
     --trading-xrp: 220 100% 50%;
     --trading-fet: 280 80% 55%;
     --trading-xlm: 170 70% 50%;
+    --trading-eth: 230 60% 60%;
+    --trading-sol: 145 80% 55%;
     --trading-sma-fast: 280 100% 70%;
     --trading-sma-slow: 45 100% 51%;
 
@@ -102,6 +104,8 @@
     --trading-xrp: 220 100% 60%;
     --trading-fet: 280 80% 55%;
     --trading-xlm: 170 70% 50%;
+    --trading-eth: 230 65% 65%;
+    --trading-sol: 145 80% 60%;
     --trading-sma-fast: 280 100% 70%;
     --trading-sma-slow: 45 100% 51%;
 
