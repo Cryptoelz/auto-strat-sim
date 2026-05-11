@@ -16,7 +16,7 @@ import { Asset, Candle, TradingConfig, TradingState, Signal, AssetAnalytics, Fil
 import { DEFAULT_CONFIG } from '@/config/trading';
 import { fetchCandles, fetchAllPrices, fetchHTFCandles } from '@/lib/marketData';
 import { generateSignal, isInCooldown, CANDLE_INTERVAL_MS } from '@/lib/signalEngine';
-import { checkAndExecuteRiskLimits, openLong, openShort, flipPosition } from '@/lib/executionSimulator';
+import { checkAndExecuteRiskLimits, openLong, openShort, flipPosition, classifyVolatility } from '@/lib/executionSimulator';
 import { saveState, loadState, resetState } from '@/lib/stateManager';
 import { archiveSession } from '@/lib/sessionHistory';
 import { canExecuteTrade } from '@/lib/riskManager';
