@@ -106,6 +106,19 @@ export function classifyTradeRegime(t: Trade): MarketRegime {
   return 'sideways';
 }
 
+/** True if the trade carries the archived per-trade context (v11.1+). */
+export function hasArchivedContext(t: Trade): boolean {
+  return t.entryRegime != null;
+}
+
+/** Coverage % of trades that carry archived context vs. heuristic fallback. */
+export function archivedContextCoverage(sessions: ArchivedSession[]): { archived: number; heuristic: number; percent: number } {
+  let archived = 0, heuristic = 0;
+  for (const s of sessions) for (const t of s.trades) (hasArchivedContext(t) ? archived++ : heuristic++);
+  const total = archived + heuristic;
+  return { archived, heuristic, percent: total > 0 ? (archived / total) * 100 : 0 };
+}
+
 export function computeRegimeMetrics(sessions: ArchivedSession[]): RegimeMetrics[] {
   const buckets: Record<MarketRegime, Trade[]> = {
     trending_bullish: [],
