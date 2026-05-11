@@ -16,6 +16,13 @@ import {
   computeEquityCurve, computeSessionPnlSeries, generateHubInsights,
   exportSessionReportCsv, downloadCsv, archivedContextCoverage,
 } from '@/lib/analyticsHub';
+import {
+  regimeDirectionMatrix, strategyRegimeMatrix, volatilityAssetMatrix,
+  continuationVsCrossoverByRegime, convictionRangeMetrics,
+  strongestRegimes, weakestForDirection, detectFailurePatterns,
+  dangerousConditions, generateContextInsights,
+} from '@/lib/contextIntelligence';
+import { HeatmapMatrix } from '@/components/trading/HeatmapMatrix';
 import { formatCurrency } from '@/lib/performance';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -25,7 +32,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
   Gauge, TrendingUp, TrendingDown, Target, AlertTriangle, Trophy,
-  Skull, Download, Sparkles, Activity, Layers, Ban,
+  Skull, Download, Sparkles, Activity, Layers, Ban, Brain, Flame, ShieldAlert,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -43,6 +50,19 @@ export default function AnalyticsHub() {
     () => generateHubInsights(sessions, summaries, assetMetrics, regimeMetrics),
     [sessions, summaries, assetMetrics, regimeMetrics],
   );
+
+  // ── Context Intelligence ──
+  const regimeDirMatrix = useMemo(() => regimeDirectionMatrix(sessions), [sessions]);
+  const stratRegMatrix = useMemo(() => strategyRegimeMatrix(sessions), [sessions]);
+  const volAssetMatrix = useMemo(() => volatilityAssetMatrix(sessions), [sessions]);
+  const cvcMatrix = useMemo(() => continuationVsCrossoverByRegime(sessions), [sessions]);
+  const convBins = useMemo(() => convictionRangeMetrics(sessions), [sessions]);
+  const strongRegimes = useMemo(() => strongestRegimes(sessions, 3), [sessions]);
+  const weakLongs = useMemo(() => weakestForDirection(sessions, 'long', 2), [sessions]);
+  const weakShorts = useMemo(() => weakestForDirection(sessions, 'short', 2), [sessions]);
+  const failures = useMemo(() => detectFailurePatterns(sessions, 3), [sessions]);
+  const warnings = useMemo(() => dangerousConditions(sessions), [sessions]);
+  const ctxInsights = useMemo(() => generateContextInsights(sessions), [sessions]);
 
   const totalPnl = summaries.reduce((s, x) => s + x.totalPnl, 0);
   const avgWinRate = summaries.length > 0 ? summaries.reduce((s, x) => s + x.winRate, 0) / summaries.length : 0;
@@ -107,6 +127,9 @@ export default function AnalyticsHub() {
           <TabsTrigger value="regimes" className="text-xs">Regimes</TabsTrigger>
           <TabsTrigger value="exits" className="text-xs">Trade Outcomes</TabsTrigger>
           <TabsTrigger value="sessions" className="text-xs">Sessions</TabsTrigger>
+          <TabsTrigger value="intelligence" className="text-xs gap-1">
+            <Brain className="h-3 w-3" /> Intelligence
+          </TabsTrigger>
           <TabsTrigger value="insights" className="text-xs">AI Insights</TabsTrigger>
         </TabsList>
 
@@ -405,6 +428,210 @@ export default function AnalyticsHub() {
           </Card>
         </TabsContent>
 
+        {/* ── Context Intelligence ── */}
+        <TabsContent value="intelligence" className="space-y-4">
+          {/* Dangerous conditions banner */}
+          {warnings.length > 0 && (
+            <Card className="border-trading-warning/40 bg-trading-warning/5">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <ShieldAlert className="h-4 w-4 text-trading-warning" /> Most Dangerous Conditions
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Recurring contexts where the system loses money — candidates for filter rules.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-1.5 text-xs">
+                  {warnings.map((w, i) => (
+                    <li key={i} className="text-foreground/85">{w}</li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Strongest regimes + weakest long/short */}
+          <div className="grid gap-4 md:grid-cols-3">
+            <ConditionListCard
+              title="Strongest Regimes"
+              icon={Trophy}
+              positive
+              items={strongRegimes}
+              empty="Not enough archived trades yet."
+            />
+            <ConditionListCard
+              title="Weakest Conditions for Longs"
+              icon={TrendingDown}
+              items={weakLongs}
+              empty="No qualifying long context yet."
+            />
+            <ConditionListCard
+              title="Weakest Conditions for Shorts"
+              icon={TrendingDown}
+              items={weakShorts}
+              empty="No qualifying short context yet."
+            />
+          </div>
+
+          {/* Regime × Direction matrix */}
+          <Card className="border-border/50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Layers className="h-4 w-4 text-primary" /> Regime × Direction Performance
+              </CardTitle>
+              <CardDescription className="text-xs">PnL by entry regime and trade direction (color = signed PnL).</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <HeatmapMatrix cells={regimeDirMatrix} rowLabel="Regime" colLabel="Direction" />
+            </CardContent>
+          </Card>
+
+          {/* Continuation vs Crossover */}
+          <Card className="border-border/50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Activity className="h-4 w-4 text-primary" /> Continuation vs Crossover by Regime
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Continuation = closed at SL/TP. Crossover = closed via opposite-signal flip.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <HeatmapMatrix cells={cvcMatrix} rowLabel="Regime" colLabel="Exit Style" />
+            </CardContent>
+          </Card>
+
+          {/* Volatility × Asset */}
+          <Card className="border-border/50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Flame className="h-4 w-4 text-primary" /> Volatility × Asset
+              </CardTitle>
+              <CardDescription className="text-xs">Which volatility tier each asset extracts edge from.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <HeatmapMatrix cells={volAssetMatrix} rowLabel="Volatility" colLabel="Asset" />
+            </CardContent>
+          </Card>
+
+          {/* Strategy × Regime */}
+          <Card className="border-border/50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Target className="h-4 w-4 text-primary" /> Strategy × Regime
+              </CardTitle>
+              <CardDescription className="text-xs">
+                {stratRegMatrix.length === 0
+                  ? 'No strategy attribution captured yet. Wire additional strategies to unlock this matrix.'
+                  : 'Per-strategy regime fit. Becomes more informative as the agent runs multiple strategies.'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <HeatmapMatrix cells={stratRegMatrix} rowLabel="Strategy" colLabel="Regime" />
+            </CardContent>
+          </Card>
+
+          {/* Conviction bins */}
+          <Card className="border-border/50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" /> Conviction-Score Performance
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Trade outcomes grouped by conviction score band (requires agent-decision-engine to capture conviction at entry).
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {convBins.every(b => b.trades === 0) ? (
+                <p className="text-xs text-muted-foreground italic text-center py-4">
+                  No conviction scores captured yet. The unified engine currently runs SMA-crossover signals directly; conviction-band analysis activates once the agent decision engine writes conviction to each trade.
+                </p>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {convBins.map(b => (
+                    <div key={b.range} className="rounded-lg border border-border/50 p-3">
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Conviction {b.range}</div>
+                      <div className={cn('text-base font-mono font-semibold mt-1', b.pnl >= 0 ? 'text-trading-profit' : 'text-trading-loss')}>
+                        {b.pnl >= 0 ? '+' : ''}{formatCurrency(b.pnl)}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground mt-0.5">
+                        {b.trades}t · {b.winRate.toFixed(0)}% WR
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Failure patterns */}
+          <Card className="border-border/50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-trading-loss" /> Recurring Failure Patterns
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Context combinations that consistently lose money (≥3 trades, ≥60% loss rate).
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {failures.length === 0 ? (
+                <p className="text-xs text-muted-foreground italic text-center py-4">No recurring failure patterns detected — the system has no systematic blind spots in archived context yet.</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-xs">Pattern</TableHead>
+                      <TableHead className="text-xs text-right">Trades</TableHead>
+                      <TableHead className="text-xs text-right">Loss Rate</TableHead>
+                      <TableHead className="text-xs text-right">Cumulative PnL</TableHead>
+                      <TableHead className="text-xs text-right">Severity</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {failures.map((f, i) => (
+                      <TableRow key={i}>
+                        <TableCell className="text-xs">{f.description}</TableCell>
+                        <TableCell className="text-xs text-right font-mono">{f.trades}</TableCell>
+                        <TableCell className="text-xs text-right font-mono text-trading-loss">{f.lossRate.toFixed(0)}%</TableCell>
+                        <TableCell className="text-xs text-right font-mono text-trading-loss">{formatCurrency(f.pnl)}</TableCell>
+                        <TableCell className="text-xs text-right">
+                          <Badge variant={f.severity === 'high' ? 'destructive' : 'secondary'} className="text-[10px]">
+                            {f.severity}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Plain-English context insights */}
+          <Card className="border-border/50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Brain className="h-4 w-4 text-primary" /> Context Intelligence — Plain-English Summary
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Derived from archived per-trade context. Use to inform adaptive allocation research.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-xs">
+                {ctxInsights.map((line, i) => (
+                  <li key={i} className="flex items-start gap-2 leading-relaxed">
+                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0" />
+                    <span>{line}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* ── AI insights ── */}
         <TabsContent value="insights" className="space-y-4">
           <Card className="border-border/50">
@@ -502,5 +729,44 @@ function Stat({ label, value, color }: { label: string; value: string; color?: s
       <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{label}</p>
       <p className={cn('font-mono font-semibold', color)}>{value}</p>
     </div>
+  );
+}
+
+function ConditionListCard({
+  title, icon: Icon, items, positive = false, empty,
+}: {
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+  items: Array<{ label: string; trades: number; winRate: number; pnl: number; avgPnl: number }>;
+  positive?: boolean;
+  empty: string;
+}) {
+  return (
+    <Card className={cn('border-border/50', positive && 'border-l-4 border-l-trading-profit')}>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm flex items-center gap-2">
+          <Icon className={cn('h-4 w-4', positive ? 'text-trading-profit' : 'text-trading-loss')} /> {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {items.length === 0 ? (
+          <p className="text-xs text-muted-foreground italic">{empty}</p>
+        ) : (
+          <ul className="space-y-2">
+            {items.slice(0, 4).map((it, i) => (
+              <li key={i} className="flex items-center justify-between gap-2 text-xs">
+                <span className="truncate">{it.label}</span>
+                <span className="flex items-center gap-2 flex-shrink-0">
+                  <span className="text-muted-foreground text-[10px]">{it.trades}t · {it.winRate.toFixed(0)}%</span>
+                  <span className={cn('font-mono font-semibold', it.pnl >= 0 ? 'text-trading-profit' : 'text-trading-loss')}>
+                    {it.pnl >= 0 ? '+' : ''}{formatCurrency(it.pnl)}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
   );
 }
