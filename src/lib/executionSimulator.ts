@@ -1,4 +1,7 @@
-import { Asset, MarketRegime, Position, PositionDirection, Trade, TradeReason, TradingConfig, TradingState } from '@/types/trading';
+import {
+  Asset, EntryContext, ExitContext, Position, PositionDirection,
+  Trade, TradeReason, TradingConfig, TradingState,
+} from '@/types/trading';
 import {
   calculatePositionSize,
   calculateStopLoss,
@@ -19,15 +22,15 @@ function applySlippage(price: number, direction: PositionDirection, slippagePerc
   return direction === 'long' ? price + slippage : price - slippage;
 }
 
-export function openLong(state: TradingState, asset: Asset, price: number, config: TradingConfig, regime?: MarketRegime): TradingState {
-  return openPosition(state, asset, price, 'long', config, regime);
+export function openLong(state: TradingState, asset: Asset, price: number, config: TradingConfig, ctx?: EntryContext): TradingState {
+  return openPosition(state, asset, price, 'long', config, ctx);
 }
 
-export function openShort(state: TradingState, asset: Asset, price: number, config: TradingConfig, regime?: MarketRegime): TradingState {
-  return openPosition(state, asset, price, 'short', config, regime);
+export function openShort(state: TradingState, asset: Asset, price: number, config: TradingConfig, ctx?: EntryContext): TradingState {
+  return openPosition(state, asset, price, 'short', config, ctx);
 }
 
-function openPosition(state: TradingState, asset: Asset, price: number, direction: PositionDirection, config: TradingConfig, regime?: MarketRegime): TradingState {
+function openPosition(state: TradingState, asset: Asset, price: number, direction: PositionDirection, config: TradingConfig, ctx?: EntryContext): TradingState {
   const fillPrice = applySlippage(price, direction, config.filters.slippagePercent);
   const positionSize = calculatePositionSize(state.balance, fillPrice, config.risk.positionSizePercent);
   const positionValue = positionSize * fillPrice;
@@ -42,7 +45,13 @@ function openPosition(state: TradingState, asset: Asset, price: number, directio
     size: positionSize,
     stopLoss: calculateStopLoss(fillPrice, config.risk.stopLossPercent, direction),
     takeProfit: calculateTakeProfit(fillPrice, config.risk.takeProfitPercent, direction),
-    entryRegime: regime,
+    entryRegime: ctx?.regime,
+    entryVolatilityLevel: ctx?.volatilityLevel,
+    entryAtrPercent: ctx?.atrPercent,
+    entrySmaDistance: ctx?.smaDistance,
+    strategySource: ctx?.strategySource,
+    governanceState: ctx?.governanceState,
+    convictionScore: ctx?.convictionScore,
   };
 
   return {
@@ -59,7 +68,7 @@ export function closePosition(
   exitPrice: number,
   exitReason: TradeReason,
   config: TradingConfig,
-  exitRegime?: MarketRegime,
+  exitCtx?: ExitContext,
 ): TradingState {
   const position = state.positions[asset];
   if (!position) return state;
@@ -88,8 +97,17 @@ export function closePosition(
     fees,
     type: pnl >= 0 ? 'win' : 'loss',
     exitReason,
+    // Archived context from the position snapshot taken at entry
     entryRegime: position.entryRegime,
-    exitRegime,
+    entryVolatilityLevel: position.entryVolatilityLevel,
+    entryAtrPercent: position.entryAtrPercent,
+    entrySmaDistance: position.entrySmaDistance,
+    strategySource: position.strategySource,
+    governanceState: position.governanceState,
+    convictionScore: position.convictionScore,
+    // Context observed at exit
+    exitRegime: exitCtx?.regime,
+    exitVolatilityLevel: exitCtx?.volatilityLevel,
   };
 
   const entryValue = position.size * position.entryPrice;
@@ -110,12 +128,16 @@ export function flipPosition(
   newDirection: PositionDirection,
   exitReason: TradeReason,
   config: TradingConfig,
-  regime?: MarketRegime,
+  ctx?: EntryContext,
 ): TradingState {
-  let newState = closePosition(state, asset, price, exitReason, config, regime);
+  // Use the same context snapshot for the close (as exit) and for the new entry
+  let newState = closePosition(state, asset, price, exitReason, config, {
+    regime: ctx?.regime,
+    volatilityLevel: ctx?.volatilityLevel,
+  });
   newState = newDirection === 'long'
-    ? openLong(newState, asset, price, config, regime)
-    : openShort(newState, asset, price, config, regime);
+    ? openLong(newState, asset, price, config, ctx)
+    : openShort(newState, asset, price, config, ctx);
   return newState;
 }
 
@@ -123,7 +145,7 @@ export function checkAndExecuteRiskLimits(
   state: TradingState,
   prices: Record<Asset, number | null>,
   config: TradingConfig,
-  regimes?: Partial<Record<Asset, MarketRegime>>,
+  exitContexts?: Partial<Record<Asset, ExitContext>>,
 ): TradingState {
   let newState = { ...state };
 
@@ -132,13 +154,20 @@ export function checkAndExecuteRiskLimits(
     const price = prices[asset];
     if (!position || !price) continue;
 
-    const regime = regimes?.[asset];
+    const exitCtx = exitContexts?.[asset];
     if (shouldTriggerStopLoss(position, price)) {
-      newState = closePosition(newState, asset, price, 'stop_loss', config, regime);
+      newState = closePosition(newState, asset, price, 'stop_loss', config, exitCtx);
     } else if (shouldTriggerTakeProfit(position, price)) {
-      newState = closePosition(newState, asset, price, 'take_profit', config, regime);
+      newState = closePosition(newState, asset, price, 'take_profit', config, exitCtx);
     }
   }
 
   return newState;
+}
+
+/** Classify ATR % into a coarse volatility level (mirrors agentDecisionEngine). */
+export function classifyVolatility(atrPercent: number | null | undefined): 'low' | 'moderate' | 'high' {
+  if (atrPercent == null || atrPercent < 0.5) return 'low';
+  if (atrPercent < 1.5) return 'moderate';
+  return 'high';
 }
