@@ -209,8 +209,11 @@ export function exportSessionReportCsv(sessions: ArchivedSession[]): string {
     'session_id', 'start', 'end', 'trades', 'pnl', 'win_rate', 'max_dd', 'profit_factor',
     'long_trades', 'short_trades', 'trade_id', 'asset', 'direction', 'entry_price',
     'exit_price', 'pnl_$', 'pnl_%', 'exit_reason',
+    'entry_regime', 'exit_regime', 'entry_volatility', 'exit_volatility',
+    'entry_atr_pct', 'entry_sma_distance', 'strategy_source', 'governance_state', 'conviction_score',
   ];
   const rows: string[] = [headers.join(',')];
+  const blank = (n: number) => Array(n).fill('');
   for (const s of sessions) {
     const meta = [
       s.id,
@@ -225,7 +228,7 @@ export function exportSessionReportCsv(sessions: ArchivedSession[]): string {
       s.shortTrades,
     ];
     if (s.trades.length === 0) {
-      rows.push([...meta, '', '', '', '', '', '', '', ''].join(','));
+      rows.push([...meta, ...blank(headers.length - meta.length)].join(','));
       continue;
     }
     for (const t of s.trades) {
@@ -239,6 +242,15 @@ export function exportSessionReportCsv(sessions: ArchivedSession[]): string {
         t.pnl.toFixed(2),
         t.pnlPercent.toFixed(2),
         t.exitReason,
+        t.entryRegime ?? '',
+        t.exitRegime ?? '',
+        t.entryVolatilityLevel ?? '',
+        t.exitVolatilityLevel ?? '',
+        t.entryAtrPercent != null ? t.entryAtrPercent.toFixed(3) : '',
+        t.entrySmaDistance != null ? t.entrySmaDistance.toFixed(3) : '',
+        t.strategySource ?? '',
+        t.governanceState ?? '',
+        t.convictionScore != null ? t.convictionScore.toFixed(1) : '',
       ].join(','));
     }
   }
