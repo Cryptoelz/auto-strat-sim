@@ -22,18 +22,18 @@ import {
 } from 'lucide-react';
 
 const bandColor: Record<string, string> = {
-  strong: 'text-success border-success/40 bg-success/10',
+  strong: 'text-trading-profit border-trading-profit/40 bg-trading-profit/10',
   healthy: 'text-primary border-primary/40 bg-primary/10',
-  cautious: 'text-warning border-warning/40 bg-warning/10',
+  cautious: 'text-trading-warning border-trading-warning/40 bg-trading-warning/10',
   weak: 'text-destructive border-destructive/40 bg-destructive/10',
 };
 
 const severityColor: Record<string, string> = {
-  positive: 'border-success/40 bg-success/5',
+  positive: 'border-trading-profit/40 bg-trading-profit/5',
   info: 'border-primary/30 bg-primary/5',
-  caution: 'border-warning/40 bg-warning/5',
+  caution: 'border-trading-warning/40 bg-trading-warning/5',
   critical: 'border-destructive/40 bg-destructive/10',
-  warning: 'border-warning/40 bg-warning/5',
+  warning: 'border-trading-warning/40 bg-trading-warning/5',
   neutral: 'border-muted-foreground/30 bg-muted/30',
 };
 
