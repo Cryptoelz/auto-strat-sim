@@ -299,10 +299,17 @@ export function useUnifiedTradingEngine({
         setAnalytics(newAnalytics);
         setSignals(newSignals);
 
-        // Check risk limits — pass current regime per asset for trade attribution
-        const regimeMap: Partial<Record<Asset, typeof newAnalytics[Asset]['marketRegime']>> = {};
-        for (const a of config.assets) regimeMap[a] = newAnalytics[a]?.marketRegime;
-        const newState = checkAndExecuteRiskLimits(prev, currentPrices, config, regimeMap);
+        // Check risk limits — pass current regime/volatility per asset for exit context
+        const exitContexts: Partial<Record<Asset, { regime?: typeof newAnalytics[Asset]['marketRegime']; volatilityLevel?: 'low' | 'moderate' | 'high' }>> = {};
+        for (const a of config.assets) {
+          const an = newAnalytics[a];
+          if (!an) continue;
+          exitContexts[a] = {
+            regime: an.marketRegime,
+            volatilityLevel: classifyVolatility(an.atrPercent),
+          };
+        }
+        const newState = checkAndExecuteRiskLimits(prev, currentPrices, config, exitContexts);
         if (newState !== prev) {
           saveState(newState);
           // Log closed positions
