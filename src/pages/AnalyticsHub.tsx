@@ -32,7 +32,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
   Gauge, TrendingUp, TrendingDown, Target, AlertTriangle, Trophy,
-  Skull, Download, Sparkles, Activity, Layers, Ban,
+  Skull, Download, Sparkles, Activity, Layers, Ban, Brain, Flame, ShieldAlert,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
