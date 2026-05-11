@@ -127,6 +127,9 @@ export default function AnalyticsHub() {
           <TabsTrigger value="regimes" className="text-xs">Regimes</TabsTrigger>
           <TabsTrigger value="exits" className="text-xs">Trade Outcomes</TabsTrigger>
           <TabsTrigger value="sessions" className="text-xs">Sessions</TabsTrigger>
+          <TabsTrigger value="intelligence" className="text-xs gap-1">
+            <Brain className="h-3 w-3" /> Intelligence
+          </TabsTrigger>
           <TabsTrigger value="insights" className="text-xs">AI Insights</TabsTrigger>
         </TabsList>
 
