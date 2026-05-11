@@ -2,7 +2,7 @@ import { Asset, Candle, SignalType, MarketRegime } from './trading';
 
 // ─── Strategy Types ──────────────────────────────────────────────────
 
-export type StrategyId = 'sma_crossover' | 'ema_crossover' | 'rsi_trend' | 'sniper';
+export type StrategyId = 'sma_crossover' | 'ema_crossover' | 'rsi_trend' | 'sniper' | 'sniper_v2';
 
 export type StrategySelectionMode =
   | 'single'           // one active strategy
@@ -47,6 +47,9 @@ export interface StrategyParams {
   sniperBreakoutLookback?: number;
   sniperAtrPeriod?: number;
   sniperConfirmStrength?: number; // 0-1 close position within bar range
+  sniperMinAtrPct?: number;       // v2: minimum ATR % required
+  sniperHtf4hSma?: number;        // v2: 4h higher-timeframe SMA period
+  sniperVolumePercentile?: number;// v2: breakout candle strength percentile threshold (0-1)
   trailingStopPercent?: number;
   // Common
   stopLossPercent?: number;
@@ -98,7 +101,7 @@ export interface MultiStrategyConfig {
 export const DEFAULT_MULTI_STRATEGY_CONFIG: MultiStrategyConfig = {
   selectionMode: 'compare',
   switchRule: 'fixed',
-  activeStrategies: ['sma_crossover', 'ema_crossover', 'rsi_trend', 'sniper'],
+  activeStrategies: ['sma_crossover', 'ema_crossover', 'rsi_trend', 'sniper', 'sniper_v2'],
   activeStrategyPerAsset: {
     BTCUSDT: 'sma_crossover',
     XRPUSDT: 'sma_crossover',
@@ -124,6 +127,23 @@ export const DEFAULT_MULTI_STRATEGY_CONFIG: MultiStrategyConfig = {
       takeProfitPercent: 6,
       trailingStopPercent: 1,
       cooldownCandles: 8,
+    },
+    sniper_v2: {
+      sniperSmaFast: 20,
+      sniperSmaSlow: 50,
+      sniperHtfSma: 100,
+      sniperHtf4hSma: 50,
+      sniperLongDistance: 1.0,
+      sniperShortDistance: 1.2,
+      sniperBreakoutLookback: 35,
+      sniperAtrPeriod: 14,
+      sniperConfirmStrength: 0.65,
+      sniperMinAtrPct: 0.6,
+      sniperVolumePercentile: 0.5,
+      stopLossPercent: 1.2,
+      takeProfitPercent: 6,
+      trailingStopPercent: 1,
+      cooldownCandles: 12,
     },
   },
   rollingWindowCandles: 100,
