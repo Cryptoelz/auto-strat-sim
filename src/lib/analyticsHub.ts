@@ -94,17 +94,15 @@ export function computeAssetMetrics(sessions: ArchivedSession[]): AssetMetrics[]
 }
 
 /**
- * Estimate the prevailing regime for a trade using direction + outcome:
- *  - long wins, short losses → trending_bullish
- *  - short wins, long losses → trending_bearish
- *  - mixed (stop-out etc.) → sideways
- * This is a heuristic since per-trade regime isn't archived.
+ * Resolve the regime for a trade. Prefers the regime captured at entry
+ * (recorded since v11.1). Falls back to a direction+outcome heuristic for
+ * older archived trades that pre-date per-trade regime capture.
  */
 export function classifyTradeRegime(t: Trade): MarketRegime {
+  if (t.entryRegime) return t.entryRegime;
   const won = t.pnl > 0;
   if (t.direction === 'long' && won) return 'trending_bullish';
   if (t.direction === 'short' && won) return 'trending_bearish';
-  if (t.direction === 'long' && !won) return 'sideways';
   return 'sideways';
 }
 
