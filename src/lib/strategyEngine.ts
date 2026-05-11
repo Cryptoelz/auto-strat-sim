@@ -296,7 +296,7 @@ function generateSniperSignal(
     fast, slow, htf,
     smaDistancePct: Number(smaDistancePct.toFixed(3)),
     atrPct: Number(atrPct.toFixed(3)),
-    atrExpanding,
+    atrExpanding: atrExpanding ? 1 : 0,
     recentHigh, recentLow,
     closePos: Number(closePos.toFixed(3)),
     lookback,
