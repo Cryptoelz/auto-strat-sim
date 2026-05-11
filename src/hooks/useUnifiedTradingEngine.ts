@@ -408,7 +408,7 @@ export function useUnifiedTradingEngine({
             const validation = canExecuteTrade(newState.balance + position.size * position.entryPrice, price, config);
             if (validation.valid) {
               const oldDir = position.direction;
-              newState = flipPosition(newState, asset, price, 'long', 'flip_to_long', config, assetAnalytic?.marketRegime);
+              newState = flipPosition(newState, asset, price, 'long', 'flip_to_long', config, entryCtx);
               const closeTrade = newState.trades[newState.trades.length - 2];
               const pnlText = closeTrade?.pnl >= 0 ? `+$${closeTrade.pnl.toFixed(2)}` : `-$${Math.abs(closeTrade.pnl).toFixed(2)}`;
               toast.success(`🔄 ${asset} FLIP: SHORT→LONG at $${price.toFixed(2)} (P&L: ${pnlText})`);
@@ -421,7 +421,7 @@ export function useUnifiedTradingEngine({
             if (!isInCooldown(newState.lastTradeTime[asset], Date.now(), config.risk.cooldownCandles, candleIntervalMs)) {
               const validation = canExecuteTrade(newState.balance, price, config);
               if (validation.valid) {
-                newState = openLong(newState, asset, price, config, assetAnalytic?.marketRegime);
+                newState = openLong(newState, asset, price, config, entryCtx);
                 const msg = explainOpen(asset, 'long', price, assetAnalytic?.marketRegime || 'sideways', signal.type);
                 toast.success(`📈 ${asset} LONG opened at $${price.toFixed(2)}`);
                 addStatus('trade', msg, asset);
@@ -438,7 +438,7 @@ export function useUnifiedTradingEngine({
             const validation = canExecuteTrade(newState.balance + position.size * position.entryPrice, price, config);
             if (validation.valid) {
               const oldDir = position.direction;
-              newState = flipPosition(newState, asset, price, 'short', 'flip_to_short', config, assetAnalytic?.marketRegime);
+              newState = flipPosition(newState, asset, price, 'short', 'flip_to_short', config, entryCtx);
               const closeTrade = newState.trades[newState.trades.length - 2];
               const pnlText = closeTrade?.pnl >= 0 ? `+$${closeTrade.pnl.toFixed(2)}` : `-$${Math.abs(closeTrade.pnl).toFixed(2)}`;
               toast.success(`🔄 ${asset} FLIP: LONG→SHORT at $${price.toFixed(2)} (P&L: ${pnlText})`);
@@ -451,7 +451,7 @@ export function useUnifiedTradingEngine({
             if (!isInCooldown(newState.lastTradeTime[asset], Date.now(), config.risk.cooldownCandles, candleIntervalMs)) {
               const validation = canExecuteTrade(newState.balance, price, config);
               if (validation.valid) {
-                newState = openShort(newState, asset, price, config, assetAnalytic?.marketRegime);
+                newState = openShort(newState, asset, price, config, entryCtx);
                 const msg = explainOpen(asset, 'short', price, assetAnalytic?.marketRegime || 'sideways', signal.type);
                 toast.success(`📉 ${asset} SHORT opened at $${price.toFixed(2)}`);
                 addStatus('trade', msg, asset);
