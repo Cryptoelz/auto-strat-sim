@@ -235,6 +235,123 @@ function holdSignal(asset: Asset, candles: Candle[], strategyId: StrategyId, met
   };
 }
 
+// ─── Sniper System: ultra-selective trend continuation ───────────────
+
+function generateSniperSignal(
+  asset: Asset, candles: Candle[], params: StrategyParams,
+): StrategySignal {
+  const fastP = params.sniperSmaFast ?? 20;
+  const slowP = params.sniperSmaSlow ?? 50;
+  const htfP = params.sniperHtfSma ?? 100;
+  const longDist = params.sniperLongDistance ?? 0.8;
+  const shortDist = params.sniperShortDistance ?? 0.9;
+  const lookback = params.sniperBreakoutLookback ?? 20;
+  const atrP = params.sniperAtrPeriod ?? 14;
+  const confirmStrength = params.sniperConfirmStrength ?? 0.65;
+
+  const closed = candles.slice(0, -1);
+  const minBars = Math.max(htfP, slowP, lookback, atrP) + 5;
+  if (closed.length < minBars) {
+    return holdSignal(asset, candles, 'sniper', { reason: 'insufficient_history' });
+  }
+
+  const idx = closed.length - 1;
+  const last = closed[idx];
+  const fastSeries = calculateSMASeries(closed, fastP);
+  const slowSeries = calculateSMASeries(closed, slowP);
+  const htfSeries = calculateSMASeries(closed, htfP);
+  const fast = fastSeries[idx];
+  const slow = slowSeries[idx];
+  const htf = htfSeries[idx];
+  if (fast === null || slow === null || htf === null) {
+    return holdSignal(asset, candles, 'sniper', { reason: 'indicators_warmup' });
+  }
+
+  const price = last.close;
+  const smaDistancePct = (Math.abs(fast - slow) / price) * 100;
+  const atrNow = calculateATR(closed, atrP);
+  const atrPrev = calculateATR(closed.slice(0, -3), atrP);
+  const atrExpanding = atrNow !== null && atrPrev !== null && atrNow > atrPrev;
+  const atrPct = atrNow !== null ? (atrNow / price) * 100 : 0;
+
+  // Structural breakout uses prior N closed bars (excluding current confirmation bar)
+  const window = closed.slice(-1 - lookback, -1);
+  const recentHigh = window.reduce((m, c) => Math.max(m, c.high), -Infinity);
+  const recentLow = window.reduce((m, c) => Math.min(m, c.low), Infinity);
+
+  const range = Math.max(last.high - last.low, 1e-9);
+  const closePos = (last.close - last.low) / range; // 0 = at low, 1 = at high
+  const bullishBody = last.close > last.open;
+  const bearishBody = last.close < last.open;
+
+  const htfBullish = price > htf && fast > htf;
+  const htfBearish = price < htf && fast < htf;
+  const alignBull = fast > slow && htfBullish;
+  const alignBear = fast < slow && htfBearish;
+
+  const longBreakout = last.close > recentHigh;
+  const shortBreakdown = last.close < recentLow;
+
+  const baseMeta = {
+    fast, slow, htf,
+    smaDistancePct: Number(smaDistancePct.toFixed(3)),
+    atrPct: Number(atrPct.toFixed(3)),
+    atrExpanding,
+    recentHigh, recentLow,
+    closePos: Number(closePos.toFixed(3)),
+    lookback,
+  };
+
+  // LONG
+  if (
+    alignBull &&
+    smaDistancePct >= longDist &&
+    atrExpanding &&
+    longBreakout &&
+    bullishBody &&
+    closePos >= confirmStrength
+  ) {
+    return {
+      type: 'BUY', strategyId: 'sniper', asset,
+      timestamp: last.timestamp, price: last.close,
+      confidence: 92,
+      metadata: { ...baseMeta, side: 'long', trigger: 'breakout_confirmation' },
+    };
+  }
+
+  // SHORT
+  if (
+    alignBear &&
+    smaDistancePct >= shortDist &&
+    atrExpanding &&
+    shortBreakdown &&
+    bearishBody &&
+    (1 - closePos) >= confirmStrength
+  ) {
+    return {
+      type: 'SELL', strategyId: 'sniper', asset,
+      timestamp: last.timestamp, price: last.close,
+      confidence: 92,
+      metadata: { ...baseMeta, side: 'short', trigger: 'breakdown_confirmation' },
+    };
+  }
+
+  // Reasoning for rejection — useful for analytics/intelligence layer
+  const rejections: string[] = [];
+  if (!alignBull && !alignBear) rejections.push('no_htf_alignment');
+  if (!atrExpanding) rejections.push('atr_not_expanding');
+  if (smaDistancePct < Math.min(longDist, shortDist)) rejections.push('sma_distance_too_small');
+  if (!longBreakout && !shortBreakdown) rejections.push('no_structural_break');
+  if (closePos < confirmStrength && (1 - closePos) < confirmStrength) rejections.push('weak_confirmation_close');
+
+  return {
+    type: 'HOLD', strategyId: 'sniper', asset,
+    timestamp: last.timestamp, price: last.close,
+    confidence: 0,
+    metadata: { ...baseMeta, rejections: rejections.join(',') || 'no_setup' },
+  };
+}
+
 // ─── Main Entry Point ────────────────────────────────────────────────
 
 export function generateStrategySignal(
@@ -247,6 +364,7 @@ export function generateStrategySignal(
     case 'sma_crossover': return generateSMACrossoverSignal(asset, candles, params);
     case 'ema_crossover': return generateEMACrossoverSignal(asset, candles, params);
     case 'rsi_trend': return generateRSITrendSignal(asset, candles, params);
+    case 'sniper': return generateSniperSignal(asset, candles, params);
     default: return holdSignal(asset, candles, strategyId, {});
   }
 }
