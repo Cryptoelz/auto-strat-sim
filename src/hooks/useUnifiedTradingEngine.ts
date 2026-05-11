@@ -299,8 +299,10 @@ export function useUnifiedTradingEngine({
         setAnalytics(newAnalytics);
         setSignals(newSignals);
 
-        // Check risk limits
-        const newState = checkAndExecuteRiskLimits(prev, currentPrices, config);
+        // Check risk limits — pass current regime per asset for trade attribution
+        const regimeMap: Partial<Record<Asset, typeof newAnalytics[Asset]['marketRegime']>> = {};
+        for (const a of config.assets) regimeMap[a] = newAnalytics[a]?.marketRegime;
+        const newState = checkAndExecuteRiskLimits(prev, currentPrices, config, regimeMap);
         if (newState !== prev) {
           saveState(newState);
           // Log closed positions
