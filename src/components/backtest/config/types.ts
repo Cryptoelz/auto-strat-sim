@@ -78,4 +78,4 @@ export const TIMEFRAME_OPTIONS = [
   { value: '4h', label: '4 Hours' },
 ];
 
-export const AVAILABLE_ASSETS: Asset[] = ['BTCUSDT', 'XRPUSDT', 'FETUSDT', 'XLMUSDT'];
+export const AVAILABLE_ASSETS: Asset[] = ['BTCUSDT', 'XRPUSDT', 'FETUSDT', 'XLMUSDT', 'ETHUSDT', 'SOLUSDT'];

@@ -20,17 +20,21 @@ export interface PortfolioConfig {
 }
 
 export const DEFAULT_PORTFOLIO_CONFIG: PortfolioConfig = {
-  allocationMode: 'equal',
+  // Fixed allocation by default — careful diversification preserving Baseline v11
+  // stability. BTC anchor, ETH secondary, XRP legacy, SOL small probe.
+  allocationMode: 'fixed',
   maxPortfolioExposurePercent: 20,
   maxAssetExposurePercent: 15,
   maxSimultaneousPositions: 2,
   maxPortfolioDailyLossPercent: 5,
   maxPortfolioDrawdownPercent: 10,
   fixedAllocations: {
-    BTCUSDT: 50,
-    XRPUSDT: 50,
+    BTCUSDT: 40,
+    XRPUSDT: 20,
     FETUSDT: 0,
     XLMUSDT: 0,
+    ETHUSDT: 30,
+    SOLUSDT: 10,
   },
   correlationExposureCap: 15,
 };

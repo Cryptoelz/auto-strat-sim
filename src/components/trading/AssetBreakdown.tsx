@@ -59,6 +59,24 @@ export function AssetBreakdown({ trades }: AssetBreakdownProps) {
         totalPnl: 0,
         totalPnlPercent: 0,
       },
+      ETHUSDT: {
+        asset: 'ETHUSDT',
+        totalTrades: 0,
+        wins: 0,
+        losses: 0,
+        winRate: 0,
+        totalPnl: 0,
+        totalPnlPercent: 0,
+      },
+      SOLUSDT: {
+        asset: 'SOLUSDT',
+        totalTrades: 0,
+        wins: 0,
+        losses: 0,
+        winRate: 0,
+        totalPnl: 0,
+        totalPnlPercent: 0,
+      },
     };
 
     trades.forEach((trade) => {
@@ -97,6 +115,8 @@ export function AssetBreakdown({ trades }: AssetBreakdownProps) {
     XRPUSDT: 'hsl(220, 100%, 60%)',
     FETUSDT: 'hsl(280, 80%, 55%)',
     XLMUSDT: 'hsl(170, 70%, 50%)',
+    ETHUSDT: 'hsl(230, 65%, 65%)',
+    SOLUSDT: 'hsl(145, 80%, 60%)',
   };
 
   return (
@@ -111,7 +131,7 @@ export function AssetBreakdown({ trades }: AssetBreakdownProps) {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {/* Asset stats */}
           <div className="space-y-3">
-            {(['BTCUSDT', 'XRPUSDT', 'FETUSDT', 'XLMUSDT'] as Asset[]).map((asset) => {
+            {(['BTCUSDT', 'XRPUSDT', 'FETUSDT', 'XLMUSDT', 'ETHUSDT', 'SOLUSDT'] as Asset[]).map((asset) => {
               const stats = assetStats[asset];
               const info = ASSET_INFO[asset];
               return (

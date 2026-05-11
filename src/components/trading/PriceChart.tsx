@@ -35,6 +35,8 @@ const ASSET_COLORS: Record<Asset, string> = {
   XRPUSDT: 'hsl(220, 100%, 60%)',
   FETUSDT: 'hsl(280, 80%, 55%)',
   XLMUSDT: 'hsl(170, 70%, 50%)',
+  ETHUSDT: 'hsl(230, 65%, 65%)',
+  SOLUSDT: 'hsl(145, 80%, 60%)',
 };
 
 interface ChartDataPoint {

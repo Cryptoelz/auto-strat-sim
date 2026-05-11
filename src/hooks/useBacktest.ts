@@ -84,6 +84,8 @@ export function useBacktest() {
         XRPUSDT: { trades: 0, pnl: 0, winRate: 0 },
         FETUSDT: { trades: 0, pnl: 0, winRate: 0 },
         XLMUSDT: { trades: 0, pnl: 0, winRate: 0 },
+        ETHUSDT: { trades: 0, pnl: 0, winRate: 0 },
+        SOLUSDT: { trades: 0, pnl: 0, winRate: 0 },
       };
 
       const engineConfig: BacktestEngineConfig = {

@@ -94,6 +94,8 @@ export const DEFAULT_MULTI_STRATEGY_CONFIG: MultiStrategyConfig = {
     XRPUSDT: 'sma_crossover',
     FETUSDT: 'sma_crossover',
     XLMUSDT: 'sma_crossover',
+    ETHUSDT: 'sma_crossover',
+    SOLUSDT: 'sma_crossover',
   },
   strategyParams: {
     sma_crossover: { smaFast: 20, smaSlow: 50, stopLossPercent: 2, takeProfitPercent: 4, cooldownCandles: 3 },

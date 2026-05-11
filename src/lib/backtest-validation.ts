@@ -3,7 +3,7 @@ import { z } from 'zod';
 /**
  * Valid trading assets
  */
-export const AssetSchema = z.enum(['BTCUSDT', 'XRPUSDT', 'FETUSDT', 'XLMUSDT']);
+export const AssetSchema = z.enum(['BTCUSDT', 'XRPUSDT', 'FETUSDT', 'XLMUSDT', 'ETHUSDT', 'SOLUSDT']);
 
 /**
  * Valid candle timeframes
