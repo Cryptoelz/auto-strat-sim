@@ -119,6 +119,28 @@ export const STRATEGY_DEFINITIONS: StrategyDefinition[] = [
       cooldownCandles: 8,
     },
   },
+  {
+    id: 'sniper_v2',
+    name: 'Sniper System v2 (research)',
+    description: 'Sniper v2 research branch: stricter HTF, ATR floor, wider SMA distances, longer breakout lookback, 4h confirmation, breakout strength percentile, and extended cooldown. Targets only the strongest directional expansions.',
+    defaultParams: {
+      sniperSmaFast: 20,
+      sniperSmaSlow: 50,
+      sniperHtfSma: 100,
+      sniperHtf4hSma: 50,
+      sniperLongDistance: 1.0,
+      sniperShortDistance: 1.2,
+      sniperBreakoutLookback: 35,
+      sniperAtrPeriod: 14,
+      sniperConfirmStrength: 0.65,
+      sniperMinAtrPct: 0.6,
+      sniperVolumePercentile: 0.5,
+      stopLossPercent: 1.2,
+      takeProfitPercent: 6,
+      trailingStopPercent: 1,
+      cooldownCandles: 12,
+    },
+  },
 ];
 
 export function getStrategyDefinition(id: StrategyId): StrategyDefinition {
