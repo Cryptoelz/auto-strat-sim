@@ -498,6 +498,7 @@ export function generateStrategySignal(
     case 'ema_crossover': return generateEMACrossoverSignal(asset, candles, params);
     case 'rsi_trend': return generateRSITrendSignal(asset, candles, params);
     case 'sniper': return generateSniperSignal(asset, candles, params);
+    case 'sniper_v2': return generateSniperV2Signal(asset, candles, params);
     default: return holdSignal(asset, candles, strategyId, {});
   }
 }
