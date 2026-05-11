@@ -14,7 +14,7 @@ import { summarizeSession, findBestWorst } from '@/lib/sessionAnalytics';
 import {
   computeAssetMetrics, computeRegimeMetrics, computeBlockedTradeMetrics,
   computeEquityCurve, computeSessionPnlSeries, generateHubInsights,
-  exportSessionReportCsv, downloadCsv,
+  exportSessionReportCsv, downloadCsv, archivedContextCoverage,
 } from '@/lib/analyticsHub';
 import { formatCurrency } from '@/lib/performance';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -35,6 +35,7 @@ export default function AnalyticsHub() {
   const assetMetrics = useMemo(() => computeAssetMetrics(sessions), [sessions]);
   const regimeMetrics = useMemo(() => computeRegimeMetrics(sessions), [sessions]);
   const blockedMetrics = useMemo(() => computeBlockedTradeMetrics(sessions), [sessions]);
+  const coverage = useMemo(() => archivedContextCoverage(sessions), [sessions]);
   const equityCurve = useMemo(() => computeEquityCurve(sessions), [sessions]);
   const sessionSeries = useMemo(() => computeSessionPnlSeries(summaries), [summaries]);
   const { best, worst } = useMemo(() => findBestWorst(summaries), [summaries]);
@@ -270,10 +271,21 @@ export default function AnalyticsHub() {
         <TabsContent value="regimes" className="space-y-4">
           <Card className="border-border/50">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Regime Distribution & PnL</CardTitle>
-              <CardDescription className="text-xs">
-                Estimated from trade direction × outcome (per-trade regime not archived)
-              </CardDescription>
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div>
+                  <CardTitle className="text-sm">Regime Distribution & PnL</CardTitle>
+                  <CardDescription className="text-xs">
+                    {coverage.percent >= 100
+                      ? 'Using archived per-trade regime context for all trades.'
+                      : coverage.percent > 0
+                        ? `Using archived regime for ${coverage.archived} trades; ${coverage.heuristic} legacy trades fall back to heuristic classification.`
+                        : 'No archived per-trade regime yet — using heuristic classification (trade direction × outcome).'}
+                  </CardDescription>
+                </div>
+                <Badge variant={coverage.percent >= 100 ? 'default' : coverage.percent > 0 ? 'secondary' : 'outline'} className="text-[10px]">
+                  {coverage.percent.toFixed(0)}% archived context
+                </Badge>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 md:grid-cols-2">

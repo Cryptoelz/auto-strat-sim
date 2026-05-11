@@ -8,6 +8,25 @@ export type PositionDirection = 'long' | 'short';
 
 export type MarketRegime = 'trending_bullish' | 'trending_bearish' | 'sideways';
 
+export type VolatilityLevel = 'low' | 'moderate' | 'high';
+
+/** Per-trade context captured at entry (snapshot of conditions). */
+export interface EntryContext {
+  regime?: MarketRegime;
+  volatilityLevel?: VolatilityLevel;
+  atrPercent?: number;
+  smaDistance?: number;
+  strategySource?: string;
+  governanceState?: string;
+  convictionScore?: number;
+}
+
+/** Per-trade context captured at exit (snapshot of conditions). */
+export interface ExitContext {
+  regime?: MarketRegime;
+  volatilityLevel?: VolatilityLevel;
+}
+
 export type TradeReason =
   | 'bullish_crossover'
   | 'bearish_crossover'
@@ -60,7 +79,14 @@ export interface Position {
   size: number;
   stopLoss: number;
   takeProfit: number;
+  // Captured snapshot at entry (used to attribute the resulting trade)
   entryRegime?: MarketRegime;
+  entryVolatilityLevel?: VolatilityLevel;
+  entryAtrPercent?: number;
+  entrySmaDistance?: number;
+  strategySource?: string;
+  governanceState?: string;
+  convictionScore?: number;
 }
 
 export interface Trade {
@@ -77,8 +103,16 @@ export interface Trade {
   fees: number;
   type: 'win' | 'loss';
   exitReason: TradeReason;
+  // Archived market/strategy context (since baseline v11.1)
   entryRegime?: MarketRegime;
   exitRegime?: MarketRegime;
+  entryVolatilityLevel?: VolatilityLevel;
+  exitVolatilityLevel?: VolatilityLevel;
+  entryAtrPercent?: number;
+  entrySmaDistance?: number;
+  strategySource?: string;
+  governanceState?: string;
+  convictionScore?: number;
 }
 
 export interface DecisionLogEntry {

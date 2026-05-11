@@ -16,7 +16,7 @@ import { Asset, Candle, TradingConfig, TradingState, Signal, AssetAnalytics, Fil
 import { DEFAULT_CONFIG } from '@/config/trading';
 import { fetchCandles, fetchAllPrices, fetchHTFCandles } from '@/lib/marketData';
 import { generateSignal, isInCooldown, CANDLE_INTERVAL_MS } from '@/lib/signalEngine';
-import { checkAndExecuteRiskLimits, openLong, openShort, flipPosition } from '@/lib/executionSimulator';
+import { checkAndExecuteRiskLimits, openLong, openShort, flipPosition, classifyVolatility } from '@/lib/executionSimulator';
 import { saveState, loadState, resetState } from '@/lib/stateManager';
 import { archiveSession } from '@/lib/sessionHistory';
 import { canExecuteTrade } from '@/lib/riskManager';
@@ -299,10 +299,17 @@ export function useUnifiedTradingEngine({
         setAnalytics(newAnalytics);
         setSignals(newSignals);
 
-        // Check risk limits — pass current regime per asset for trade attribution
-        const regimeMap: Partial<Record<Asset, typeof newAnalytics[Asset]['marketRegime']>> = {};
-        for (const a of config.assets) regimeMap[a] = newAnalytics[a]?.marketRegime;
-        const newState = checkAndExecuteRiskLimits(prev, currentPrices, config, regimeMap);
+        // Check risk limits — pass current regime/volatility per asset for exit context
+        const exitContexts: Partial<Record<Asset, { regime?: typeof newAnalytics[Asset]['marketRegime']; volatilityLevel?: 'low' | 'moderate' | 'high' }>> = {};
+        for (const a of config.assets) {
+          const an = newAnalytics[a];
+          if (!an) continue;
+          exitContexts[a] = {
+            regime: an.marketRegime,
+            volatilityLevel: classifyVolatility(an.atrPercent),
+          };
+        }
+        const newState = checkAndExecuteRiskLimits(prev, currentPrices, config, exitContexts);
         if (newState !== prev) {
           saveState(newState);
           // Log closed positions
@@ -371,6 +378,16 @@ export function useUnifiedTradingEngine({
 
         if (!signal || !price || signal.type === 'HOLD') continue;
 
+        // Build per-trade entry context snapshot
+        const entryCtx = {
+          regime: assetAnalytic?.marketRegime,
+          volatilityLevel: classifyVolatility(assetAnalytic?.atrPercent ?? null),
+          atrPercent: assetAnalytic?.atrPercent ?? undefined,
+          smaDistance: assetAnalytic?.smaDistance ?? undefined,
+          strategySource: 'sma_crossover',
+          governanceState: newState.isPaused ? 'paused' : (isPaperMode && emergencyStop ? 'halted' : 'active'),
+        };
+
         // Check if filters block this signal
         if (assetAnalytic?.filterBlocked) {
           const prevSig = prevSignalsRef.current?.[asset];
@@ -391,7 +408,7 @@ export function useUnifiedTradingEngine({
             const validation = canExecuteTrade(newState.balance + position.size * position.entryPrice, price, config);
             if (validation.valid) {
               const oldDir = position.direction;
-              newState = flipPosition(newState, asset, price, 'long', 'flip_to_long', config, assetAnalytic?.marketRegime);
+              newState = flipPosition(newState, asset, price, 'long', 'flip_to_long', config, entryCtx);
               const closeTrade = newState.trades[newState.trades.length - 2];
               const pnlText = closeTrade?.pnl >= 0 ? `+$${closeTrade.pnl.toFixed(2)}` : `-$${Math.abs(closeTrade.pnl).toFixed(2)}`;
               toast.success(`🔄 ${asset} FLIP: SHORT→LONG at $${price.toFixed(2)} (P&L: ${pnlText})`);
@@ -404,7 +421,7 @@ export function useUnifiedTradingEngine({
             if (!isInCooldown(newState.lastTradeTime[asset], Date.now(), config.risk.cooldownCandles, candleIntervalMs)) {
               const validation = canExecuteTrade(newState.balance, price, config);
               if (validation.valid) {
-                newState = openLong(newState, asset, price, config, assetAnalytic?.marketRegime);
+                newState = openLong(newState, asset, price, config, entryCtx);
                 const msg = explainOpen(asset, 'long', price, assetAnalytic?.marketRegime || 'sideways', signal.type);
                 toast.success(`📈 ${asset} LONG opened at $${price.toFixed(2)}`);
                 addStatus('trade', msg, asset);
@@ -421,7 +438,7 @@ export function useUnifiedTradingEngine({
             const validation = canExecuteTrade(newState.balance + position.size * position.entryPrice, price, config);
             if (validation.valid) {
               const oldDir = position.direction;
-              newState = flipPosition(newState, asset, price, 'short', 'flip_to_short', config, assetAnalytic?.marketRegime);
+              newState = flipPosition(newState, asset, price, 'short', 'flip_to_short', config, entryCtx);
               const closeTrade = newState.trades[newState.trades.length - 2];
               const pnlText = closeTrade?.pnl >= 0 ? `+$${closeTrade.pnl.toFixed(2)}` : `-$${Math.abs(closeTrade.pnl).toFixed(2)}`;
               toast.success(`🔄 ${asset} FLIP: LONG→SHORT at $${price.toFixed(2)} (P&L: ${pnlText})`);
@@ -434,7 +451,7 @@ export function useUnifiedTradingEngine({
             if (!isInCooldown(newState.lastTradeTime[asset], Date.now(), config.risk.cooldownCandles, candleIntervalMs)) {
               const validation = canExecuteTrade(newState.balance, price, config);
               if (validation.valid) {
-                newState = openShort(newState, asset, price, config, assetAnalytic?.marketRegime);
+                newState = openShort(newState, asset, price, config, entryCtx);
                 const msg = explainOpen(asset, 'short', price, assetAnalytic?.marketRegime || 'sideways', signal.type);
                 toast.success(`📉 ${asset} SHORT opened at $${price.toFixed(2)}`);
                 addStatus('trade', msg, asset);
