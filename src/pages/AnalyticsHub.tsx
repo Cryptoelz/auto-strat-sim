@@ -35,6 +35,7 @@ export default function AnalyticsHub() {
   const assetMetrics = useMemo(() => computeAssetMetrics(sessions), [sessions]);
   const regimeMetrics = useMemo(() => computeRegimeMetrics(sessions), [sessions]);
   const blockedMetrics = useMemo(() => computeBlockedTradeMetrics(sessions), [sessions]);
+  const coverage = useMemo(() => archivedContextCoverage(sessions), [sessions]);
   const equityCurve = useMemo(() => computeEquityCurve(sessions), [sessions]);
   const sessionSeries = useMemo(() => computeSessionPnlSeries(summaries), [summaries]);
   const { best, worst } = useMemo(() => findBestWorst(summaries), [summaries]);
