@@ -434,7 +434,7 @@ export function useUnifiedTradingEngine({
             if (!isInCooldown(newState.lastTradeTime[asset], Date.now(), config.risk.cooldownCandles, candleIntervalMs)) {
               const validation = canExecuteTrade(newState.balance, price, config);
               if (validation.valid) {
-                newState = openShort(newState, asset, price, config);
+                newState = openShort(newState, asset, price, config, assetAnalytic?.marketRegime);
                 const msg = explainOpen(asset, 'short', price, assetAnalytic?.marketRegime || 'sideways', signal.type);
                 toast.success(`📉 ${asset} SHORT opened at $${price.toFixed(2)}`);
                 addStatus('trade', msg, asset);
