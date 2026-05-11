@@ -378,6 +378,16 @@ export function useUnifiedTradingEngine({
 
         if (!signal || !price || signal.type === 'HOLD') continue;
 
+        // Build per-trade entry context snapshot
+        const entryCtx = {
+          regime: assetAnalytic?.marketRegime,
+          volatilityLevel: classifyVolatility(assetAnalytic?.atrPercent ?? null),
+          atrPercent: assetAnalytic?.atrPercent ?? undefined,
+          smaDistance: assetAnalytic?.smaDistance ?? undefined,
+          strategySource: 'sma_crossover',
+          governanceState: newState.isPaused ? 'paused' : (isPaperMode && emergencyStop ? 'halted' : 'active'),
+        };
+
         // Check if filters block this signal
         if (assetAnalytic?.filterBlocked) {
           const prevSig = prevSignalsRef.current?.[asset];
