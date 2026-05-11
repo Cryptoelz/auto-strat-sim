@@ -20,6 +20,7 @@ import Research from "./pages/Research";
 import SystemHealth from "./pages/SystemHealth";
 import Promotion from "./pages/Promotion";
 import SessionAnalytics from "./pages/SessionAnalytics";
+import AnalyticsHub from "./pages/AnalyticsHub";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -48,6 +49,7 @@ const App = () => (
               <Route path="/promotion" element={<Promotion />} />
               <Route path="/system-health" element={<SystemHealth />} />
               <Route path="/session-analytics" element={<SessionAnalytics />} />
+              <Route path="/analytics-hub" element={<AnalyticsHub />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
