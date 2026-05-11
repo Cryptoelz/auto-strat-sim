@@ -8,6 +8,25 @@ export type PositionDirection = 'long' | 'short';
 
 export type MarketRegime = 'trending_bullish' | 'trending_bearish' | 'sideways';
 
+export type VolatilityLevel = 'low' | 'moderate' | 'high';
+
+/** Per-trade context captured at entry (snapshot of conditions). */
+export interface EntryContext {
+  regime?: MarketRegime;
+  volatilityLevel?: VolatilityLevel;
+  atrPercent?: number;
+  smaDistance?: number;
+  strategySource?: string;
+  governanceState?: string;
+  convictionScore?: number;
+}
+
+/** Per-trade context captured at exit (snapshot of conditions). */
+export interface ExitContext {
+  regime?: MarketRegime;
+  volatilityLevel?: VolatilityLevel;
+}
+
 export type TradeReason =
   | 'bullish_crossover'
   | 'bearish_crossover'
