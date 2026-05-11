@@ -51,6 +51,19 @@ export default function AnalyticsHub() {
     [sessions, summaries, assetMetrics, regimeMetrics],
   );
 
+  // ── Context Intelligence ──
+  const regimeDirMatrix = useMemo(() => regimeDirectionMatrix(sessions), [sessions]);
+  const stratRegMatrix = useMemo(() => strategyRegimeMatrix(sessions), [sessions]);
+  const volAssetMatrix = useMemo(() => volatilityAssetMatrix(sessions), [sessions]);
+  const cvcMatrix = useMemo(() => continuationVsCrossoverByRegime(sessions), [sessions]);
+  const convBins = useMemo(() => convictionRangeMetrics(sessions), [sessions]);
+  const strongRegimes = useMemo(() => strongestRegimes(sessions, 3), [sessions]);
+  const weakLongs = useMemo(() => weakestForDirection(sessions, 'long', 2), [sessions]);
+  const weakShorts = useMemo(() => weakestForDirection(sessions, 'short', 2), [sessions]);
+  const failures = useMemo(() => detectFailurePatterns(sessions, 3), [sessions]);
+  const warnings = useMemo(() => dangerousConditions(sessions), [sessions]);
+  const ctxInsights = useMemo(() => generateContextInsights(sessions), [sessions]);
+
   const totalPnl = summaries.reduce((s, x) => s + x.totalPnl, 0);
   const avgWinRate = summaries.length > 0 ? summaries.reduce((s, x) => s + x.winRate, 0) / summaries.length : 0;
   const avgDd = summaries.length > 0 ? summaries.reduce((s, x) => s + x.maxDrawdown, 0) / summaries.length : 0;
