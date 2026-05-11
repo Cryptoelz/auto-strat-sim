@@ -100,6 +100,25 @@ export const STRATEGY_DEFINITIONS: StrategyDefinition[] = [
     description: 'Long when RSI recovers from oversold in bullish trend, short when RSI falls from overbought in bearish trend.',
     defaultParams: { rsiPeriod: 14, rsiOverbought: 70, rsiOversold: 30, stopLossPercent: 2, takeProfitPercent: 4, cooldownCandles: 3 },
   },
+  {
+    id: 'sniper',
+    name: 'Sniper System',
+    description: 'Ultra-selective high-conviction trend-continuation specialist. Requires aligned HTF trend, wide SMA distance, expanding ATR, structural breakout, and a strong confirmation candle close.',
+    defaultParams: {
+      sniperSmaFast: 20,
+      sniperSmaSlow: 50,
+      sniperHtfSma: 100,
+      sniperLongDistance: 0.8,
+      sniperShortDistance: 0.9,
+      sniperBreakoutLookback: 20,
+      sniperAtrPeriod: 14,
+      sniperConfirmStrength: 0.65,
+      stopLossPercent: 1.2,
+      takeProfitPercent: 6,
+      trailingStopPercent: 1,
+      cooldownCandles: 8,
+    },
+  },
 ];
 
 export function getStrategyDefinition(id: StrategyId): StrategyDefinition {
