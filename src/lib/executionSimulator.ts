@@ -1,4 +1,4 @@
-import { Asset, Position, PositionDirection, Trade, TradeReason, TradingConfig, TradingState } from '@/types/trading';
+import { Asset, MarketRegime, Position, PositionDirection, Trade, TradeReason, TradingConfig, TradingState } from '@/types/trading';
 import {
   calculatePositionSize,
   calculateStopLoss,
@@ -19,15 +19,15 @@ function applySlippage(price: number, direction: PositionDirection, slippagePerc
   return direction === 'long' ? price + slippage : price - slippage;
 }
 
-export function openLong(state: TradingState, asset: Asset, price: number, config: TradingConfig): TradingState {
-  return openPosition(state, asset, price, 'long', config);
+export function openLong(state: TradingState, asset: Asset, price: number, config: TradingConfig, regime?: MarketRegime): TradingState {
+  return openPosition(state, asset, price, 'long', config, regime);
 }
 
-export function openShort(state: TradingState, asset: Asset, price: number, config: TradingConfig): TradingState {
-  return openPosition(state, asset, price, 'short', config);
+export function openShort(state: TradingState, asset: Asset, price: number, config: TradingConfig, regime?: MarketRegime): TradingState {
+  return openPosition(state, asset, price, 'short', config, regime);
 }
 
-function openPosition(state: TradingState, asset: Asset, price: number, direction: PositionDirection, config: TradingConfig): TradingState {
+function openPosition(state: TradingState, asset: Asset, price: number, direction: PositionDirection, config: TradingConfig, regime?: MarketRegime): TradingState {
   const fillPrice = applySlippage(price, direction, config.filters.slippagePercent);
   const positionSize = calculatePositionSize(state.balance, fillPrice, config.risk.positionSizePercent);
   const positionValue = positionSize * fillPrice;
@@ -42,6 +42,7 @@ function openPosition(state: TradingState, asset: Asset, price: number, directio
     size: positionSize,
     stopLoss: calculateStopLoss(fillPrice, config.risk.stopLossPercent, direction),
     takeProfit: calculateTakeProfit(fillPrice, config.risk.takeProfitPercent, direction),
+    entryRegime: regime,
   };
 
   return {
@@ -57,7 +58,8 @@ export function closePosition(
   asset: Asset,
   exitPrice: number,
   exitReason: TradeReason,
-  config: TradingConfig
+  config: TradingConfig,
+  exitRegime?: MarketRegime,
 ): TradingState {
   const position = state.positions[asset];
   if (!position) return state;
@@ -86,6 +88,8 @@ export function closePosition(
     fees,
     type: pnl >= 0 ? 'win' : 'loss',
     exitReason,
+    entryRegime: position.entryRegime,
+    exitRegime,
   };
 
   const entryValue = position.size * position.entryPrice;
@@ -105,19 +109,21 @@ export function flipPosition(
   price: number,
   newDirection: PositionDirection,
   exitReason: TradeReason,
-  config: TradingConfig
+  config: TradingConfig,
+  regime?: MarketRegime,
 ): TradingState {
-  let newState = closePosition(state, asset, price, exitReason, config);
+  let newState = closePosition(state, asset, price, exitReason, config, regime);
   newState = newDirection === 'long'
-    ? openLong(newState, asset, price, config)
-    : openShort(newState, asset, price, config);
+    ? openLong(newState, asset, price, config, regime)
+    : openShort(newState, asset, price, config, regime);
   return newState;
 }
 
 export function checkAndExecuteRiskLimits(
   state: TradingState,
   prices: Record<Asset, number | null>,
-  config: TradingConfig
+  config: TradingConfig,
+  regimes?: Partial<Record<Asset, MarketRegime>>,
 ): TradingState {
   let newState = { ...state };
 
@@ -126,10 +132,11 @@ export function checkAndExecuteRiskLimits(
     const price = prices[asset];
     if (!position || !price) continue;
 
+    const regime = regimes?.[asset];
     if (shouldTriggerStopLoss(position, price)) {
-      newState = closePosition(newState, asset, price, 'stop_loss', config);
+      newState = closePosition(newState, asset, price, 'stop_loss', config, regime);
     } else if (shouldTriggerTakeProfit(position, price)) {
-      newState = closePosition(newState, asset, price, 'take_profit', config);
+      newState = closePosition(newState, asset, price, 'take_profit', config, regime);
     }
   }
 
