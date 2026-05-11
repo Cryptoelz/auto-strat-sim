@@ -413,6 +413,19 @@ export function StrategyDashboard({
                             <ParamInput label="Oversold" value={params.rsiOversold ?? 30} onChange={v => updateParam(def.id, 'rsiOversold', v)} />
                           </>
                         )}
+                        {def.id === 'sniper' && (
+                          <>
+                            <ParamInput label="Fast SMA" value={params.sniperSmaFast ?? 20} onChange={v => updateParam(def.id, 'sniperSmaFast', v)} />
+                            <ParamInput label="Slow SMA" value={params.sniperSmaSlow ?? 50} onChange={v => updateParam(def.id, 'sniperSmaSlow', v)} />
+                            <ParamInput label="HTF SMA" value={params.sniperHtfSma ?? 100} onChange={v => updateParam(def.id, 'sniperHtfSma', v)} />
+                            <ParamInput label="Long Dist %" value={params.sniperLongDistance ?? 0.8} onChange={v => updateParam(def.id, 'sniperLongDistance', v)} step={0.1} />
+                            <ParamInput label="Short Dist %" value={params.sniperShortDistance ?? 0.9} onChange={v => updateParam(def.id, 'sniperShortDistance', v)} step={0.1} />
+                            <ParamInput label="Breakout LB" value={params.sniperBreakoutLookback ?? 20} onChange={v => updateParam(def.id, 'sniperBreakoutLookback', v)} />
+                            <ParamInput label="ATR Period" value={params.sniperAtrPeriod ?? 14} onChange={v => updateParam(def.id, 'sniperAtrPeriod', v)} />
+                            <ParamInput label="Confirm Str" value={params.sniperConfirmStrength ?? 0.65} onChange={v => updateParam(def.id, 'sniperConfirmStrength', v)} step={0.05} />
+                            <ParamInput label="Trail Stop %" value={params.trailingStopPercent ?? 1} onChange={v => updateParam(def.id, 'trailingStopPercent', v)} step={0.1} />
+                          </>
+                        )}
                         <ParamInput label="SL %" value={params.stopLossPercent ?? 2} onChange={v => updateParam(def.id, 'stopLossPercent', v)} step={0.5} />
                         <ParamInput label="TP %" value={params.takeProfitPercent ?? 4} onChange={v => updateParam(def.id, 'takeProfitPercent', v)} step={0.5} />
                         <ParamInput label="Cooldown" value={params.cooldownCandles ?? 3} onChange={v => updateParam(def.id, 'cooldownCandles', v)} />

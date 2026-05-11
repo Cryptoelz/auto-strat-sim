@@ -2,7 +2,7 @@ import { Asset, Candle, SignalType, MarketRegime } from './trading';
 
 // ─── Strategy Types ──────────────────────────────────────────────────
 
-export type StrategyId = 'sma_crossover' | 'ema_crossover' | 'rsi_trend';
+export type StrategyId = 'sma_crossover' | 'ema_crossover' | 'rsi_trend' | 'sniper';
 
 export type StrategySelectionMode =
   | 'single'           // one active strategy
@@ -38,6 +38,16 @@ export interface StrategyParams {
   rsiPeriod?: number;
   rsiOverbought?: number;
   rsiOversold?: number;
+  // Sniper (ultra-selective trend continuation)
+  sniperSmaFast?: number;
+  sniperSmaSlow?: number;
+  sniperHtfSma?: number;
+  sniperLongDistance?: number;    // SMA distance threshold for longs (%)
+  sniperShortDistance?: number;   // SMA distance threshold for shorts (%)
+  sniperBreakoutLookback?: number;
+  sniperAtrPeriod?: number;
+  sniperConfirmStrength?: number; // 0-1 close position within bar range
+  trailingStopPercent?: number;
   // Common
   stopLossPercent?: number;
   takeProfitPercent?: number;
@@ -88,7 +98,7 @@ export interface MultiStrategyConfig {
 export const DEFAULT_MULTI_STRATEGY_CONFIG: MultiStrategyConfig = {
   selectionMode: 'compare',
   switchRule: 'fixed',
-  activeStrategies: ['sma_crossover', 'ema_crossover', 'rsi_trend'],
+  activeStrategies: ['sma_crossover', 'ema_crossover', 'rsi_trend', 'sniper'],
   activeStrategyPerAsset: {
     BTCUSDT: 'sma_crossover',
     XRPUSDT: 'sma_crossover',
@@ -101,6 +111,20 @@ export const DEFAULT_MULTI_STRATEGY_CONFIG: MultiStrategyConfig = {
     sma_crossover: { smaFast: 20, smaSlow: 50, stopLossPercent: 2, takeProfitPercent: 4, cooldownCandles: 3 },
     ema_crossover: { emaFast: 12, emaSlow: 26, stopLossPercent: 2, takeProfitPercent: 4, cooldownCandles: 3 },
     rsi_trend: { rsiPeriod: 14, rsiOverbought: 70, rsiOversold: 30, stopLossPercent: 2, takeProfitPercent: 4, cooldownCandles: 3 },
+    sniper: {
+      sniperSmaFast: 20,
+      sniperSmaSlow: 50,
+      sniperHtfSma: 100,
+      sniperLongDistance: 0.8,
+      sniperShortDistance: 0.9,
+      sniperBreakoutLookback: 20,
+      sniperAtrPeriod: 14,
+      sniperConfirmStrength: 0.65,
+      stopLossPercent: 1.2,
+      takeProfitPercent: 6,
+      trailingStopPercent: 1,
+      cooldownCandles: 8,
+    },
   },
   rollingWindowCandles: 100,
   minCandlesBeforeSwitch: 20,
