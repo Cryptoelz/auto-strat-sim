@@ -14,7 +14,7 @@ import { summarizeSession, findBestWorst } from '@/lib/sessionAnalytics';
 import {
   computeAssetMetrics, computeRegimeMetrics, computeBlockedTradeMetrics,
   computeEquityCurve, computeSessionPnlSeries, generateHubInsights,
-  exportSessionReportCsv, downloadCsv,
+  exportSessionReportCsv, downloadCsv, archivedContextCoverage,
 } from '@/lib/analyticsHub';
 import { formatCurrency } from '@/lib/performance';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
