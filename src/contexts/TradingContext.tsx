@@ -143,7 +143,7 @@ export function TradingProvider({ children }: { children: ReactNode }) {
   });
 
   const { permission, isSupported, requestPermission, sendSignalNotification } = useNotifications();
-  const prevSignalsRef = useRef<Record<Asset, string | null>>({ BTCUSDT: null, XRPUSDT: null, FETUSDT: null, XLMUSDT: null });
+  const prevSignalsRef = useRef<Record<Asset, string | null>>({ BTCUSDT: null, XRPUSDT: null, FETUSDT: null, XLMUSDT: null, ETHUSDT: null, SOLUSDT: null });
 
   useEffect(() => {
     if (permission !== 'granted') return;

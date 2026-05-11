@@ -261,7 +261,7 @@ export function computePortfolioState(
 ): PortfolioState {
   // Compute exposure per asset
   const exposureByAsset: Record<Asset, number> = {
-    BTCUSDT: 0, XRPUSDT: 0, FETUSDT: 0, XLMUSDT: 0,
+    BTCUSDT: 0, XRPUSDT: 0, FETUSDT: 0, XLMUSDT: 0, ETHUSDT: 0, SOLUSDT: 0,
   };
   let portfolioUnrealizedPnl = 0;
   let allocatedCapital = 0;

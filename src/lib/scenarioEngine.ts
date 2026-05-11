@@ -448,7 +448,12 @@ export function runScenarioTestSuite(
 
   for (const scenario of scenarios) {
     for (const asset of assets) {
-      const basePrice = asset === 'BTCUSDT' ? 65000 : asset === 'XRPUSDT' ? 0.55 : asset === 'FETUSDT' ? 2.0 : 0.15;
+      const basePrice =
+        asset === 'BTCUSDT' ? 65000 :
+        asset === 'ETHUSDT' ? 3500 :
+        asset === 'SOLUSDT' ? 150 :
+        asset === 'XRPUSDT' ? 0.55 :
+        asset === 'FETUSDT' ? 2.0 : 0.15;
       const candles = generateSyntheticCandles(scenario, basePrice, config, scenario.id.length * 7 + basePrice);
       const raw = runScenarioBacktest(candles, asset, fastSMA, slowSMA, positionSizePercent, stopLossPercent, takeProfitPercent, feePercent, config.slippageMultiplier, config.feeMultiplier, initialBalance);
       const result: ScenarioResult = { ...raw, scenarioId: scenario.id, scenarioName: scenario.name, category: scenario.category, explanation: '' };

@@ -106,20 +106,20 @@ const TIMEFRAME_MS: Record<string, number> = {
 };
 
 const EMPTY_CANDLES = (): Record<Asset, Candle[]> => ({
-  BTCUSDT: [], XRPUSDT: [], FETUSDT: [], XLMUSDT: [],
+  BTCUSDT: [], XRPUSDT: [], FETUSDT: [], XLMUSDT: [], ETHUSDT: [], SOLUSDT: [],
 });
 
 const EMPTY_PRICES = (): Record<Asset, number | null> => ({
-  BTCUSDT: null, XRPUSDT: null, FETUSDT: null, XLMUSDT: null,
+  BTCUSDT: null, XRPUSDT: null, FETUSDT: null, XLMUSDT: null, ETHUSDT: null, SOLUSDT: null,
 });
 
 const EMPTY_SIGNALS = (): Record<Asset, Signal | null> => ({
-  BTCUSDT: null, XRPUSDT: null, FETUSDT: null, XLMUSDT: null,
+  BTCUSDT: null, XRPUSDT: null, FETUSDT: null, XLMUSDT: null, ETHUSDT: null, SOLUSDT: null,
 });
 
 const EMPTY_ANALYTICS = (): Record<Asset, AssetAnalytics> => {
   const init = {} as Record<Asset, AssetAnalytics>;
-  for (const a of ['BTCUSDT', 'XRPUSDT', 'FETUSDT', 'XLMUSDT'] as Asset[]) {
+  for (const a of ['BTCUSDT', 'XRPUSDT', 'FETUSDT', 'XLMUSDT', 'ETHUSDT', 'SOLUSDT'] as Asset[]) {
     init[a] = {
       price: null, smaFast: null, smaSlow: null, smaDistance: null,
       smaFastSlope: null, smaSlowSlope: null, htfTrend: 'neutral',
