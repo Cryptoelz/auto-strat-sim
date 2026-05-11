@@ -79,7 +79,14 @@ export interface Position {
   size: number;
   stopLoss: number;
   takeProfit: number;
+  // Captured snapshot at entry (used to attribute the resulting trade)
   entryRegime?: MarketRegime;
+  entryVolatilityLevel?: VolatilityLevel;
+  entryAtrPercent?: number;
+  entrySmaDistance?: number;
+  strategySource?: string;
+  governanceState?: string;
+  convictionScore?: number;
 }
 
 export interface Trade {
@@ -96,8 +103,16 @@ export interface Trade {
   fees: number;
   type: 'win' | 'loss';
   exitReason: TradeReason;
+  // Archived market/strategy context (since baseline v11.1)
   entryRegime?: MarketRegime;
   exitRegime?: MarketRegime;
+  entryVolatilityLevel?: VolatilityLevel;
+  exitVolatilityLevel?: VolatilityLevel;
+  entryAtrPercent?: number;
+  entrySmaDistance?: number;
+  strategySource?: string;
+  governanceState?: string;
+  convictionScore?: number;
 }
 
 export interface DecisionLogEntry {
