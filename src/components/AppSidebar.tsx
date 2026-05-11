@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, LineChart, FlaskConical, Layers, PieChart,
   Shield, UserCog, Bell, Beaker, ClipboardCheck, Activity,
-  Radio, Microscope, ArrowUpCircle, BarChart3, Gauge, FileText, Sparkles, Scale,
+  Radio, Microscope, ArrowUpCircle, BarChart3, Gauge, FileText, Sparkles, Scale, SlidersHorizontal,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
@@ -46,6 +46,7 @@ const NAV_SECTIONS = [
   {
     label: 'Controls',
     items: [
+      { title: 'Participation', url: '/participation', icon: SlidersHorizontal },
       { title: 'Governance', url: '/governance', icon: Shield },
       { title: 'Operator', url: '/operator', icon: UserCog },
       { title: 'Alerts', url: '/alerts', icon: Bell },
