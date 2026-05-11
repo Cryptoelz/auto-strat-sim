@@ -10,7 +10,7 @@ import {
 import { ASSET_INFO } from '@/config/trading';
 import { getStrategyDefinition } from './strategyEngine';
 
-const STRATEGY_IDS: StrategyId[] = ['sma_crossover', 'ema_crossover', 'rsi_trend', 'sniper'];
+const STRATEGY_IDS: StrategyId[] = ['sma_crossover', 'ema_crossover', 'rsi_trend', 'sniper', 'sniper_v2'];
 
 // ─── Market Memory ──────────────────────────────────────────────────
 
