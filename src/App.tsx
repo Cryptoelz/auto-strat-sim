@@ -22,6 +22,7 @@ import Promotion from "./pages/Promotion";
 import SessionAnalytics from "./pages/SessionAnalytics";
 import AnalyticsHub from "./pages/AnalyticsHub";
 import WeeklyReview from "./pages/WeeklyReview";
+import CommandCenter from "./pages/CommandCenter";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -52,6 +53,7 @@ const App = () => (
               <Route path="/session-analytics" element={<SessionAnalytics />} />
               <Route path="/analytics-hub" element={<AnalyticsHub />} />
               <Route path="/weekly-review" element={<WeeklyReview />} />
+              <Route path="/command-center" element={<CommandCenter />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
