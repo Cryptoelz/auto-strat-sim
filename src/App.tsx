@@ -24,6 +24,7 @@ import AnalyticsHub from "./pages/AnalyticsHub";
 import WeeklyReview from "./pages/WeeklyReview";
 import CommandCenter from "./pages/CommandCenter";
 import BaselineValidation from "./pages/BaselineValidation";
+import ParticipationController from "./pages/ParticipationController";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -56,6 +57,7 @@ const App = () => (
               <Route path="/weekly-review" element={<WeeklyReview />} />
               <Route path="/command-center" element={<CommandCenter />} />
               <Route path="/baseline-validation" element={<BaselineValidation />} />
+              <Route path="/participation" element={<ParticipationController />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
