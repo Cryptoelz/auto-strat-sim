@@ -16,6 +16,13 @@ import {
   computeEquityCurve, computeSessionPnlSeries, generateHubInsights,
   exportSessionReportCsv, downloadCsv, archivedContextCoverage,
 } from '@/lib/analyticsHub';
+import {
+  regimeDirectionMatrix, strategyRegimeMatrix, volatilityAssetMatrix,
+  continuationVsCrossoverByRegime, convictionRangeMetrics,
+  strongestRegimes, weakestForDirection, detectFailurePatterns,
+  dangerousConditions, generateContextInsights,
+} from '@/lib/contextIntelligence';
+import { HeatmapMatrix } from '@/components/trading/HeatmapMatrix';
 import { formatCurrency } from '@/lib/performance';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
