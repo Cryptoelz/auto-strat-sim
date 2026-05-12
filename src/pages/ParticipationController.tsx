@@ -121,6 +121,13 @@ export default function ParticipationController() {
         </CardContent>
       </Card>
 
+      {/* Status flags */}
+      <div className="flex flex-wrap gap-2">
+        {result.regimeOverrideActive && <Badge className="bg-primary/15 text-primary border-primary/30">Regime Override Active</Badge>}
+        {result.neutralStartup && <Badge variant="outline">Neutral Startup (PF→{result.effectiveProfitFactor.toFixed(2)})</Badge>}
+        {result.trendBiasActive && <Badge className="bg-primary/15 text-primary border-primary/30">Trend Bias Active</Badge>}
+      </div>
+
       {/* Reasoning */}
       <Card>
         <CardHeader><CardTitle className="text-sm">Reasoning</CardTitle></CardHeader>
