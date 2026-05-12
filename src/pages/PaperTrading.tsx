@@ -94,6 +94,7 @@ export default function PaperTrading() {
           <p className="text-xs text-muted-foreground">Live simulation — no real orders</p>
         </div>
         <div className="flex items-center gap-2">
+          <CleanSessionButton />
           <Badge variant="outline" className={cn(
             "text-xs",
             connectionStatus.connected
