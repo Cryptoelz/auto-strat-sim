@@ -17,6 +17,7 @@ import { PortfolioDashboard } from '@/components/trading/PortfolioDashboard';
 import { DecisionLog } from '@/components/trading/DecisionLog';
 import { AlertsAndReports } from '@/components/trading/AlertsAndReports';
 import { SessionHistoryPanel } from '@/components/trading/SessionHistoryPanel';
+import { CleanSessionButton } from '@/components/trading/CleanSessionButton';
 import { StrategyDashboard } from '@/components/trading/StrategyDashboard';
 import { AgentDecisionDashboard } from '@/components/trading/AgentDecisionDashboard';
 import { AgentMemoryDashboard } from '@/components/trading/AgentMemoryDashboard';
