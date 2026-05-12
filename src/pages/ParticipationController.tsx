@@ -10,6 +10,8 @@ import {
   deriveInputsFromTrades,
   ParticipationInputs,
   RiskMode,
+  MPC_VERSION,
+  MPC_PROMOTED_AT,
 } from '@/lib/participationController';
 
 const MODE_VARIANT: Record<RiskMode, string> = {
