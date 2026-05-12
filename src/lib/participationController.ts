@@ -1,5 +1,16 @@
+/**
+ * Market Participation Controller — ACTIVE
+ * Version: v2 (Confidence Recovery)  •  Promoted: 2026-05-12
+ *
+ * v2 adds: regime override, neutral-startup PF blending, asymmetric
+ * EMA recovery curve, and trend-continuation bias.
+ * v1 archived at: src/lib/archive/participationController.v1.ts
+ */
 import { Trade } from '@/types/trading';
 import { StrategyId } from '@/types/strategy';
+
+export const MPC_VERSION = 'v2' as const;
+export const MPC_PROMOTED_AT = '2026-05-12';
 
 export type RiskMode = 'aggressive' | 'balanced' | 'defensive' | 'preservation';
 
