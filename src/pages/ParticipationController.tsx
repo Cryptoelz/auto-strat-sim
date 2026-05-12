@@ -10,6 +10,8 @@ import {
   deriveInputsFromTrades,
   ParticipationInputs,
   RiskMode,
+  MPC_VERSION,
+  MPC_PROMOTED_AT,
 } from '@/lib/participationController';
 
 const MODE_VARIANT: Record<RiskMode, string> = {
@@ -48,7 +50,11 @@ export default function ParticipationController() {
     <div className="container mx-auto p-4 sm:p-6 space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-lg font-bold sm:text-xl">Market Participation Controller</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg font-bold sm:text-xl">Market Participation Controller</h1>
+            <Badge className="bg-primary/15 text-primary border-primary/30">{MPC_VERSION.toUpperCase()} • active</Badge>
+            <span className="text-[10px] text-muted-foreground">promoted {MPC_PROMOTED_AT}</span>
+          </div>
           <p className="text-xs text-muted-foreground max-w-2xl">
             Controls how active the system should be based on current market quality.
             Avoid forcing trades in poor conditions; lean in when the regime is favorable.
