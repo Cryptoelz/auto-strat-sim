@@ -24,6 +24,7 @@ import { runFilters, getHTFTrend } from '@/lib/filters';
 import { calculateATR, calculateATRPercent, calculateSMA, calculateSMASlope, calculateSMADistance, detectMarketRegime } from '@/lib/indicators';
 import { playSignalSound } from '@/lib/sounds';
 import { logDecision, explainOpen, explainFlip, explainBlock, explainClose, explainRiskPause } from '@/lib/logger';
+import { scoreDistanceContribution } from '@/lib/agentDecisionEngine';
 import { LiveMarketDataManager, ConnectionStatus } from '@/lib/liveMarketData';
 import { computeUnrealizedPnl, computeEquity, computeDrawdown, computeDailyPnl } from '@/lib/tradingCalculations';
 import { toast } from 'sonner';
