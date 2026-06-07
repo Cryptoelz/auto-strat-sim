@@ -118,11 +118,14 @@ function computeWaterfall(
     if (!htfOK) continue;
     afterHTF++;
 
-    // ---- SMA distance filter.
+    // ---- SMA distance (informational only — scored, never blocks).
     const f = fast[i] as number, s = slow[i] as number;
     const distPct = Math.abs((f - s) / s) * 100;
-    if (distPct < cfg.minDistancePct) continue;
+    // distance no longer filters; record it for the contribution stat
     afterDist++;
+    // (distPct kept in scope above for any future aggregation; the stage is
+    // intentionally pass-through to reflect the conviction-factor promotion.)
+    void distPct;
 
     // ---- 1-candle confirmation: next closed candle continues in direction
     //      AND volatility (ATR%) is above threshold at confirmation.
@@ -142,7 +145,7 @@ function computeWaterfall(
 
   wf.stages[0].count = raw;
   wf.stages[1].count = afterHTF;       wf.stages[1].blocked = raw - afterHTF;
-  wf.stages[2].count = afterDist;      wf.stages[2].blocked = afterHTF - afterDist;
+  wf.stages[2].count = afterDist;      wf.stages[2].blocked = 0;
   wf.stages[3].count = afterConf;      wf.stages[3].blocked = afterDist - afterConf;
   wf.stages[4].count = afterMPC;       wf.stages[4].blocked = afterConf - afterMPC;
   wf.stages[5].count = afterGov;       wf.stages[5].blocked = afterMPC - afterGov;
