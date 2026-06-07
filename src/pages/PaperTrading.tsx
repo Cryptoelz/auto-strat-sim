@@ -248,6 +248,9 @@ export default function PaperTrading() {
         {/* Signal Path Diagnostics — waterfall + live widget */}
         <SignalPathDiagnostics />
 
+        {/* Distance Filter Audit — per-signal rejection breakdown */}
+        <DistanceFilterAudit />
+
         {/* Charts + Asset Monitoring */}
         <div className="grid gap-4 md:grid-cols-2">
           {config.assets.filter((a: Asset) => enabledAssets[a]).map((asset: Asset) => (
