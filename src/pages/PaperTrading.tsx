@@ -256,6 +256,9 @@ export default function PaperTrading() {
         {/* Distance Threshold Sensitivity — sweeps 1.0/0.75/0.5/0.25/0.10% */}
         <DistanceThresholdSensitivity />
 
+        {/* No-Distance Diagnostic — funnel comparison of current vs distance=0 */}
+        <NoDistanceDiagnostic />
+
         {/* Charts + Asset Monitoring */}
         <div className="grid gap-4 md:grid-cols-2">
           {config.assets.filter((a: Asset) => enabledAssets[a]).map((asset: Asset) => (
