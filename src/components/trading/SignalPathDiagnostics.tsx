@@ -324,9 +324,10 @@ export function SignalPathDiagnostics() {
         </div>
 
         <p className="text-[10px] text-muted-foreground">
-          MPC / Governance stages are evaluated against the current live gate state — when
-          either is closed it suppresses every confirmed signal in the window, surfacing
-          why no trades fire even in healthy markets.
+          Distance is no longer a pass/fail gate — it contributes to conviction
+          (+0/+5/+10/+15 by band). MPC / Governance stages reflect the current
+          live gate state; when either is closed it suppresses every confirmed
+          signal in the window.
           {lastRun && <> Last run {new Date(lastRun).toLocaleTimeString()}.</>}
         </p>
       </CardContent>
