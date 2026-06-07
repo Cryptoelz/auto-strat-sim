@@ -116,7 +116,7 @@ export function DistanceThresholdSensitivity() {
             positionSizePercent: strategyConfig.positionSizePercent,
             stopLossPercent: strategyConfig.stopLossPercent,
             takeProfitPercent: strategyConfig.takeProfitPercent,
-            feePercent: strategyConfig.filters.feePercent ?? 0.1,
+            feePercent: 0.1,
             enableFilters: true,
             atrPeriod: strategyConfig.filters.atrPeriod,
             minAtrPercent: 0, // isolate distance filter effect
