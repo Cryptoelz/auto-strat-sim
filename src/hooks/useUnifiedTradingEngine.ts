@@ -808,6 +808,7 @@ export function useUnifiedTradingEngine({
     // Distance-confirmation pipeline
     pendingCrossovers,
     signalConfirmStats,
+    executionAttempts,
   };
 }
 
