@@ -12,7 +12,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { Asset, Candle, TradingConfig, TradingState, Signal, AssetAnalytics, FilterBlockReason } from '@/types/trading';
+import { Asset, Candle, TradingConfig, TradingState, Signal, AssetAnalytics, FilterBlockReason, ExecutionAttempt, ExecutionOutcome, GateResult } from '@/types/trading';
 import { DEFAULT_CONFIG } from '@/config/trading';
 import { fetchCandles, fetchAllPrices, fetchHTFCandles } from '@/lib/marketData';
 import { generateSignal, isInCooldown, CANDLE_INTERVAL_MS } from '@/lib/signalEngine';
