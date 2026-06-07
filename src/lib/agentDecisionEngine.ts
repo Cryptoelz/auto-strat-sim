@@ -34,12 +34,25 @@ function scoreVolatilityQuality(atrPercent: number | null): number {
   return 3; // too low
 }
 
+/**
+ * Distance contribution — promoted from hard gate to conviction factor.
+ *
+ * Scoring table (per spec):
+ *   < 0.05%        → +0   (no separation)
+ *   0.05% – 0.15%  → +5   (early development)
+ *   0.15% – 0.25%  → +10  (forming)
+ *   ≥ 0.25%        → +15  (full separation)
+ */
+export function scoreDistanceContribution(distancePct: number | null): number {
+  const dist = Math.abs(distancePct ?? 0);
+  if (dist >= 0.25) return 15;
+  if (dist >= 0.15) return 10;
+  if (dist >= 0.05) return 5;
+  return 0;
+}
+
 function scoreTrendQuality(analytics: AssetAnalytics): number {
-  const dist = Math.abs(analytics.smaDistance ?? 0);
-  if (dist >= 1.0) return 15;
-  if (dist >= 0.5) return 10;
-  if (dist >= 0.2) return 7;
-  return 3;
+  return scoreDistanceContribution(analytics.smaDistance ?? 0);
 }
 
 function scoreRecentPerf(snapshot: RecentPerformanceSnapshot | undefined): number {

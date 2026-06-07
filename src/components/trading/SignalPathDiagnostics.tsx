@@ -56,13 +56,13 @@ function emptyWaterfall(asset: Asset): AssetWaterfall {
   return {
     asset,
     stages: [
-      { key: 'raw',          label: 'Raw Signals',     count: 0, blocked: 0 },
-      { key: 'htf',          label: 'HTF Filter',      count: 0, blocked: 0 },
-      { key: 'distance',     label: 'Distance Filter', count: 0, blocked: 0 },
-      { key: 'confirmation', label: 'Confirmation',    count: 0, blocked: 0 },
-      { key: 'mpc',          label: 'MPC',             count: 0, blocked: 0 },
-      { key: 'governance',   label: 'Governance',      count: 0, blocked: 0 },
-      { key: 'executed',     label: 'Executed Trades', count: 0, blocked: 0 },
+      { key: 'raw',          label: 'Raw Signals',         count: 0, blocked: 0 },
+      { key: 'htf',          label: 'HTF Filter',          count: 0, blocked: 0 },
+      { key: 'distance',     label: 'Distance (scored)',   count: 0, blocked: 0 },
+      { key: 'confirmation', label: 'Confirmation',        count: 0, blocked: 0 },
+      { key: 'mpc',          label: 'MPC',                 count: 0, blocked: 0 },
+      { key: 'governance',   label: 'Governance',          count: 0, blocked: 0 },
+      { key: 'executed',     label: 'Executed Trades',     count: 0, blocked: 0 },
     ],
     topBlock: null,
   };
@@ -118,11 +118,14 @@ function computeWaterfall(
     if (!htfOK) continue;
     afterHTF++;
 
-    // ---- SMA distance filter.
+    // ---- SMA distance (informational only — scored, never blocks).
     const f = fast[i] as number, s = slow[i] as number;
     const distPct = Math.abs((f - s) / s) * 100;
-    if (distPct < cfg.minDistancePct) continue;
+    // distance no longer filters; record it for the contribution stat
     afterDist++;
+    // (distPct kept in scope above for any future aggregation; the stage is
+    // intentionally pass-through to reflect the conviction-factor promotion.)
+    void distPct;
 
     // ---- 1-candle confirmation: next closed candle continues in direction
     //      AND volatility (ATR%) is above threshold at confirmation.
@@ -142,7 +145,7 @@ function computeWaterfall(
 
   wf.stages[0].count = raw;
   wf.stages[1].count = afterHTF;       wf.stages[1].blocked = raw - afterHTF;
-  wf.stages[2].count = afterDist;      wf.stages[2].blocked = afterHTF - afterDist;
+  wf.stages[2].count = afterDist;      wf.stages[2].blocked = 0;
   wf.stages[3].count = afterConf;      wf.stages[3].blocked = afterDist - afterConf;
   wf.stages[4].count = afterMPC;       wf.stages[4].blocked = afterConf - afterMPC;
   wf.stages[5].count = afterGov;       wf.stages[5].blocked = afterMPC - afterGov;
@@ -279,7 +282,7 @@ export function SignalPathDiagnostics() {
           />
         </div>
 
-        {/* Distance-confirmation pipeline (post-crossover gate) */}
+        {/* Post-crossover confirmation pipeline (HTF re-check; distance is scored, not gated) */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           <LiveStat
             icon={Clock}
@@ -288,19 +291,19 @@ export function SignalPathDiagnostics() {
           />
           <LiveStat
             icon={CheckCircle2}
-            label="Dist. Confirmation Passed"
+            label="Confirmation Passed"
             value={signalConfirmStats.passed}
             tone="good"
           />
           <LiveStat
             icon={XCircle}
-            label="Dist. Confirmation Failed"
+            label="Dropped (HTF re-check)"
             value={signalConfirmStats.failed}
             tone="warn"
           />
           <LiveStat
             icon={Hourglass}
-            label="Expired Pending Signals"
+            label="Expired (SMA flip)"
             value={signalConfirmStats.expired}
             tone="warn"
           />
@@ -321,9 +324,10 @@ export function SignalPathDiagnostics() {
         </div>
 
         <p className="text-[10px] text-muted-foreground">
-          MPC / Governance stages are evaluated against the current live gate state — when
-          either is closed it suppresses every confirmed signal in the window, surfacing
-          why no trades fire even in healthy markets.
+          Distance is no longer a pass/fail gate — it contributes to conviction
+          (+0/+5/+10/+15 by band). MPC / Governance stages reflect the current
+          live gate state; when either is closed it suppresses every confirmed
+          signal in the window.
           {lastRun && <> Last run {new Date(lastRun).toLocaleTimeString()}.</>}
         </p>
       </CardContent>
