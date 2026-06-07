@@ -541,7 +541,7 @@ export function useUnifiedTradingEngine({
 
 
 
-        if (signal.type === 'BUY') {
+        if (fxSignal.type === 'BUY') {
           if (position?.direction === 'short') {
             const validation = canExecuteTrade(newState.balance + position.size * position.entryPrice, price, config);
             if (validation.valid) {
@@ -553,17 +553,17 @@ export function useUnifiedTradingEngine({
               const msg = explainFlip(asset, oldDir, 'long', price, assetAnalytic?.marketRegime || 'sideways');
               addStatus('trade', msg, asset);
               newState = updateRiskTracking(newState, closeTrade, config, candleIntervalMs, addStatus);
-              logDecision({ asset, action: 'flipped', explanation: msg, signal: signal.type, regime: assetAnalytic?.marketRegime });
+              logDecision({ asset, action: 'flipped', explanation: msg, signal: fxSignal.type, regime: assetAnalytic?.marketRegime });
             }
           } else if (!position) {
             if (!isInCooldown(newState.lastTradeTime[asset], Date.now(), config.risk.cooldownCandles, candleIntervalMs)) {
               const validation = canExecuteTrade(newState.balance, price, config);
               if (validation.valid) {
                 newState = openLong(newState, asset, price, config, entryCtx);
-                const msg = explainOpen(asset, 'long', price, assetAnalytic?.marketRegime || 'sideways', signal.type);
+                const msg = explainOpen(asset, 'long', price, assetAnalytic?.marketRegime || 'sideways', fxSignal.type);
                 toast.success(`📈 ${asset} LONG opened at $${price.toFixed(2)}`);
                 addStatus('trade', msg, asset);
-                logDecision({ asset, action: 'opened_long', explanation: msg, signal: signal.type, regime: assetAnalytic?.marketRegime });
+                logDecision({ asset, action: 'opened_long', explanation: msg, signal: fxSignal.type, regime: assetAnalytic?.marketRegime });
               }
             } else if (isPaperMode) {
               addStatus('blocked', `Waiting for cooldown on ${asset}`, asset);
@@ -571,7 +571,7 @@ export function useUnifiedTradingEngine({
           }
         }
 
-        if (signal.type === 'SELL') {
+        if (fxSignal.type === 'SELL') {
           if (position?.direction === 'long') {
             const validation = canExecuteTrade(newState.balance + position.size * position.entryPrice, price, config);
             if (validation.valid) {
@@ -583,27 +583,39 @@ export function useUnifiedTradingEngine({
               const msg = explainFlip(asset, oldDir, 'short', price, assetAnalytic?.marketRegime || 'sideways');
               addStatus('trade', msg, asset);
               newState = updateRiskTracking(newState, closeTrade, config, candleIntervalMs, addStatus);
-              logDecision({ asset, action: 'flipped', explanation: msg, signal: signal.type, regime: assetAnalytic?.marketRegime });
+              logDecision({ asset, action: 'flipped', explanation: msg, signal: fxSignal.type, regime: assetAnalytic?.marketRegime });
             }
           } else if (!position) {
             if (!isInCooldown(newState.lastTradeTime[asset], Date.now(), config.risk.cooldownCandles, candleIntervalMs)) {
               const validation = canExecuteTrade(newState.balance, price, config);
               if (validation.valid) {
                 newState = openShort(newState, asset, price, config, entryCtx);
-                const msg = explainOpen(asset, 'short', price, assetAnalytic?.marketRegime || 'sideways', signal.type);
+                const msg = explainOpen(asset, 'short', price, assetAnalytic?.marketRegime || 'sideways', fxSignal.type);
                 toast.success(`📉 ${asset} SHORT opened at $${price.toFixed(2)}`);
                 addStatus('trade', msg, asset);
-                logDecision({ asset, action: 'opened_short', explanation: msg, signal: signal.type, regime: assetAnalytic?.marketRegime });
+                logDecision({ asset, action: 'opened_short', explanation: msg, signal: fxSignal.type, regime: assetAnalytic?.marketRegime });
               }
             }
           }
         }
       }
 
+      // Commit pending + stats deltas (outside the per-asset loop so we set state once).
+      setPendingCrossovers(pendingDraft);
+      if (statsRegistered || statsPassed || statsFailed || statsExpired) {
+        setSignalConfirmStats(prev => ({
+          registered: prev.registered + statsRegistered,
+          passed: prev.passed + statsPassed,
+          failed: prev.failed + statsFailed,
+          expired: prev.expired + statsExpired,
+        }));
+      }
+
       if (newState !== prev) saveState(newState);
       return newState;
     });
-  }, [state.isRunning, emergencyStop, isPaperMode, signals, prices, config, analytics, enabledAssets, candleIntervalMs, addStatus]);
+  }, [state.isRunning, emergencyStop, isPaperMode, signals, prices, config, analytics, enabledAssets, candleIntervalMs, addStatus, pendingCrossovers, candles]);
+
 
   // ── Computed values ──
   const unrealizedPnl = useMemo(() => computeUnrealizedPnl(state.positions, prices), [state.positions, prices]);
