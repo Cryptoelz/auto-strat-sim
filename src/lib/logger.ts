@@ -18,7 +18,7 @@ const FILTER_EXPLANATIONS: Record<FilterBlockReason, string> = {
   trend_filter: 'HTF trend filter does not align with signal direction',
   volatility_filter: 'ATR is below minimum threshold (low volatility)',
   regime_filter: 'market regime conflicts with signal direction',
-  sma_distance_filter: 'SMA distance is too small (low conviction)',
+  sma_distance_filter: 'SMA distance contributed 0 conviction (informational — not a hard gate)',
   cooldown_active: 'cooldown period is still active',
   insufficient_balance: 'insufficient balance to open position',
   daily_loss_pause: 'daily loss limit has been reached',
@@ -53,15 +53,29 @@ export function subscribeToLog(listener: () => void): () => void {
 
 // Helper functions to generate explanations
 
+/** Suffix appended to entry explanations when SMA distance was captured. */
+function distanceSuffix(distancePct?: number | null, contribution?: number): string {
+  if (distancePct == null) return '';
+  const contrib = contribution ?? 0;
+  const tier =
+    contrib >= 15 ? 'full separation' :
+    contrib >= 10 ? 'forming' :
+    contrib >= 5  ? 'early development' :
+    'no separation';
+  return ` SMA distance ${distancePct.toFixed(3)}% (${tier}) contributed +${contrib} to conviction.`;
+}
+
 export function explainOpen(
   asset: Asset,
   direction: 'long' | 'short',
   price: number,
   regime: MarketRegime,
-  signal: SignalType
+  signal: SignalType,
+  distancePct?: number | null,
+  distanceContribution?: number,
 ): string {
   const crossType = signal === 'BUY' ? 'fast SMA crossed above slow SMA' : 'fast SMA crossed below slow SMA';
-  return `Opened ${direction.toUpperCase()} on ${asset} at $${price.toFixed(2)} because ${crossType}, volatility filter passed, and regime is ${REGIME_LABELS[regime]}.`;
+  return `Opened ${direction.toUpperCase()} on ${asset} at $${price.toFixed(2)} because ${crossType}, volatility filter passed, and regime is ${REGIME_LABELS[regime]}.${distanceSuffix(distancePct, distanceContribution)}`;
 }
 
 export function explainFlip(
@@ -69,10 +83,12 @@ export function explainFlip(
   fromDir: 'long' | 'short',
   toDir: 'long' | 'short',
   price: number,
-  regime: MarketRegime
+  regime: MarketRegime,
+  distancePct?: number | null,
+  distanceContribution?: number,
 ): string {
   const crossType = toDir === 'long' ? 'bullish' : 'bearish';
-  return `Closed ${fromDir.toUpperCase()} and flipped to ${toDir.toUpperCase()} on ${asset} at $${price.toFixed(2)} due to confirmed ${crossType} crossover. Regime: ${REGIME_LABELS[regime]}.`;
+  return `Closed ${fromDir.toUpperCase()} and flipped to ${toDir.toUpperCase()} on ${asset} at $${price.toFixed(2)} due to confirmed ${crossType} crossover. Regime: ${REGIME_LABELS[regime]}.${distanceSuffix(distancePct, distanceContribution)}`;
 }
 
 export function explainBlock(
