@@ -19,6 +19,7 @@ import { AlertsAndReports } from '@/components/trading/AlertsAndReports';
 import { SessionHistoryPanel } from '@/components/trading/SessionHistoryPanel';
 import { CleanSessionButton } from '@/components/trading/CleanSessionButton';
 import { SignalPathDiagnostics } from '@/components/trading/SignalPathDiagnostics';
+import { DistanceFilterAudit } from '@/components/trading/DistanceFilterAudit';
 import { StrategyDashboard } from '@/components/trading/StrategyDashboard';
 import { AgentDecisionDashboard } from '@/components/trading/AgentDecisionDashboard';
 import { AgentMemoryDashboard } from '@/components/trading/AgentMemoryDashboard';
@@ -246,6 +247,9 @@ export default function PaperTrading() {
 
         {/* Signal Path Diagnostics — waterfall + live widget */}
         <SignalPathDiagnostics />
+
+        {/* Distance Filter Audit — per-signal rejection breakdown */}
+        <DistanceFilterAudit />
 
         {/* Charts + Asset Monitoring */}
         <div className="grid gap-4 md:grid-cols-2">
