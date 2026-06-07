@@ -74,6 +74,7 @@ interface TradingContextType {
   // Distance-confirmation pipeline
   pendingCrossovers: ReturnType<typeof useUnifiedTradingEngine>['pendingCrossovers'];
   signalConfirmStats: ReturnType<typeof useUnifiedTradingEngine>['signalConfirmStats'];
+  executionAttempts: ReturnType<typeof useUnifiedTradingEngine>['executionAttempts'];
   // Notifications
   permission: NotificationPermission;
   isSupported: boolean;
