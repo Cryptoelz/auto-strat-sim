@@ -205,6 +205,11 @@ export function useUnifiedTradingEngine({
   const [signalConfirmStats, setSignalConfirmStats] = useState<SignalConfirmStats>({
     registered: 0, passed: 0, failed: 0, expired: 0,
   });
+  const [executionAttempts, setExecutionAttempts] = useState<ExecutionAttempt[]>([]);
+  const MAX_ATTEMPTS = 50;
+  const pushAttempt = useCallback((a: ExecutionAttempt) => {
+    setExecutionAttempts(prev => [a, ...prev].slice(0, MAX_ATTEMPTS));
+  }, []);
 
   // ── Tracking refs ──
   const prevSignalsRef = useRef<Record<Asset, Signal | null> | null>(null);
