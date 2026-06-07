@@ -111,6 +111,8 @@ export interface UnifiedEngineResult {
   // Distance-confirmation pipeline (post-crossover gate)
   pendingCrossovers: Record<Asset, PendingCrossover | null>;
   signalConfirmStats: SignalConfirmStats;
+  /** Rolling buffer (most-recent-first) of execution-path attempts. */
+  executionAttempts: ExecutionAttempt[];
 }
 
 // ─── Constants ──────────────────────────────────────
