@@ -115,6 +115,53 @@ export interface Trade {
   convictionScore?: number;
 }
 
+/** Detailed per-signal execution-path audit record.
+ *  Created once a confirmed signal reaches the final execution branch — captures
+ *  every gate evaluation (MPC / Governance / Allocation / Risk / Cooldown /
+ *  Max Positions / Exposure) and the final outcome so we can explain why an
+ *  approved signal did or did not become a paper trade. */
+export type ExecutionOutcome =
+  | 'executed_open'
+  | 'executed_flip'
+  | 'skipped_same_direction'
+  | 'cooldown_active'
+  | 'insufficient_balance'
+  | 'position_too_small'
+  | 'blocked_by_filter'
+  | 'blocked_by_governance'
+  | 'blocked_by_mpc'
+  | 'blocked_by_allocation'
+  | 'blocked_by_max_positions';
+
+export interface GateResult {
+  pass: boolean;
+  detail: string;
+}
+
+export interface ExecutionAttempt {
+  id: string;
+  timestamp: number;
+  asset: Asset;
+  side: PositionDirection;
+  price: number;
+  smaDistance: number | null;
+  convictionScore: number;
+  mpc: GateResult;
+  governance: GateResult;
+  allocation: GateResult;
+  exposure: GateResult;
+  cooldown: GateResult;
+  maxPositions: GateResult;
+  risk: GateResult;
+  positionSizing: {
+    sizeUnits: number;
+    sizeUsd: number;
+    positionPercent: number;
+  };
+  outcome: ExecutionOutcome;
+  outcomeDetail: string;
+}
+
 export interface DecisionLogEntry {
   id: string;
   timestamp: number;
