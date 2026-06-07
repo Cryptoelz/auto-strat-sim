@@ -421,12 +421,15 @@ export function useUnifiedTradingEngine({
           governanceState: newState.isPaused ? 'paused' : (isPaperMode && emergencyStop ? 'halted' : 'active'),
         };
 
-        // ─── Distance-confirmation pipeline ─────────────────────────────
-        // Re-purposes the SMA distance filter as a POST-crossover confirmation.
-        // On the cross bar, fast ≈ slow by definition, so the legacy at-cross
-        // check rejected every signal. We now register the cross as "pending"
-        // and re-evaluate distance + HTF alignment N candles later.
+        // ─── Post-crossover confirmation pipeline ───────────────────────
+        // Distance is no longer a hard gate. The confirmation window only
+        // verifies that (a) the SMA hasn't flipped back, and (b) the HTF
+        // trend is still aligned. Distance is computed at confirmation and
+        // contributed to the conviction score (0/5/10/15 by band) — see
+        // scoreDistanceContribution in agentDecisionEngine.ts.
         let execSignalType: 'BUY' | 'SELL' | 'HOLD' = signal?.type ?? 'HOLD';
+        let confirmedDistancePct: number | null = null;
+        let distanceContribution = 0;
 
         if (confirmCandles > 0) {
           // 1. Register a brand-new pending crossover.
@@ -441,12 +444,11 @@ export function useUnifiedTradingEngine({
                 ageCandles: 0,
               };
               statsRegistered++;
-              addStatus('info', `${asset} ${signal.type} crossover registered — awaiting ${confirmCandles}-candle distance confirmation`, asset);
+              addStatus('info', `${asset} ${signal.type} crossover registered — awaiting ${confirmCandles}-candle HTF re-check (distance now scored, not gated)`, asset);
               logDecision({
                 asset, action: 'blocked',
-                explanation: `${asset} ${signal.type} crossover registered as pending. Waiting ${confirmCandles} candles to confirm SMA distance ≥ ${distanceThreshold}% + HTF still aligned.`,
+                explanation: `${asset} ${signal.type} crossover registered as pending. Waiting ${confirmCandles} candles to re-confirm HTF alignment. SMA distance will be scored as a conviction factor, not used as a pass/fail gate.`,
                 signal: signal.type, regime: assetAnalytic?.marketRegime,
-                filterBlocked: 'sma_distance_filter',
               });
             }
             execSignalType = 'HOLD'; // never act on the cross bar itself
@@ -477,37 +479,35 @@ export function useUnifiedTradingEngine({
               logDecision({
                 asset, action: 'blocked', explanation: why,
                 signal: pending.direction === 'long' ? 'BUY' : 'SELL',
-                regime: assetAnalytic?.marketRegime, filterBlocked: 'sma_distance_filter',
+                regime: assetAnalytic?.marketRegime,
               });
             } else if (age >= confirmCandles) {
-              const distOK = dist !== null && dist >= distanceThreshold;
               const htfOK =
                 (pending.direction === 'long' && htfTrend === 'bullish') ||
                 (pending.direction === 'short' && htfTrend === 'bearish');
 
-              if (distOK && htfOK) {
+              if (htfOK) {
                 statsPassed++;
                 execSignalType = pending.direction === 'long' ? 'BUY' : 'SELL';
+                confirmedDistancePct = dist;
+                distanceContribution = scoreDistanceContribution(dist);
                 pendingDraft[asset] = null;
-                const msg = `${asset} ${pending.direction.toUpperCase()} confirmed after ${age} candles (distance ${dist?.toFixed(2)}% ≥ ${distanceThreshold}%, HTF ${htfTrend}) — executing`;
+                const msg = `${asset} ${pending.direction.toUpperCase()} confirmed after ${age} candles. HTF ${htfTrend}. SMA distance ${dist !== null ? dist.toFixed(3) + '%' : 'n/a'} → conviction +${distanceContribution}. Executing.`;
                 addStatus('info', msg, asset);
               } else if (age >= confirmCandles + 2) {
-                // Grace window exhausted without confirmation.
+                // HTF flipped during the grace window — drop the pending.
                 pendingDraft[asset] = null;
                 statsFailed++;
-                const reason = !distOK
-                  ? `distance only ${dist !== null ? dist.toFixed(2) : 'n/a'}% (< ${distanceThreshold}%)`
-                  : `HTF ${htfTrend} no longer aligned with ${pending.direction}`;
-                const why = `${asset} pending ${pending.direction.toUpperCase()} failed confirmation — ${reason}`;
+                const why = `${asset} pending ${pending.direction.toUpperCase()} dropped — HTF ${htfTrend} no longer aligned with ${pending.direction}`;
                 addStatus('blocked', why, asset);
                 logDecision({
                   asset, action: 'blocked', explanation: why,
                   signal: pending.direction === 'long' ? 'BUY' : 'SELL',
-                  regime: assetAnalytic?.marketRegime, filterBlocked: 'sma_distance_filter',
+                  regime: assetAnalytic?.marketRegime, filterBlocked: 'trend_filter',
                 });
                 execSignalType = 'HOLD';
               } else {
-                // Still inside grace window — wait one more cycle.
+                // HTF temporarily mis-aligned but still within grace window.
                 execSignalType = 'HOLD';
               }
             } else {
@@ -520,8 +520,7 @@ export function useUnifiedTradingEngine({
         if (execSignalType === 'HOLD') continue;
 
         // Check if filters block this signal (HTF, ATR, regime, loss-pause).
-        // The legacy at-cross distance check is bypassed when confirmCandles > 0;
-        // distance is now governed by the pending-confirmation block above.
+        // The distance filter is no longer a hard gate — it scores conviction.
         if (assetAnalytic?.filterBlocked && assetAnalytic.filterBlocked !== 'sma_distance_filter') {
           const prevSig = prevSignalsRef.current?.[asset];
           if (!prevSig || prevSig.type !== execSignalType) {
@@ -535,6 +534,16 @@ export function useUnifiedTradingEngine({
           }
           continue;
         }
+
+        // Attach the post-confirmation distance + contribution onto the entry
+        // context so the resulting trade carries them through to analytics.
+        const distSnapshot = confirmedDistancePct ?? assetAnalytic?.smaDistance ?? undefined;
+        const distContribSnapshot = distanceContribution || scoreDistanceContribution(distSnapshot ?? null);
+        const enrichedCtx = {
+          ...entryCtx,
+          smaDistance: distSnapshot,
+          convictionScore: (entryCtx.convictionScore ?? 0) + distContribSnapshot,
+        };
 
         // Synthesize the effective signal for the downstream open/flip branches.
         const fxSignal = { ...(signal ?? { type: 'HOLD', asset, timestamp: Date.now(), price, smaFast: 0, smaSlow: 0 }), type: execSignalType } as Signal;
