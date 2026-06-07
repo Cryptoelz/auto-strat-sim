@@ -788,6 +788,9 @@ export function useUnifiedTradingEngine({
     toggleAsset, triggerEmergencyStop, clearEmergencyStop, clearConnectionErrors,
     // Soak diagnostics
     diagnostics: diagnosticsRef.current,
+    // Distance-confirmation pipeline
+    pendingCrossovers,
+    signalConfirmStats,
   };
 }
 
