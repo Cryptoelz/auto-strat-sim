@@ -638,7 +638,13 @@ export function useUnifiedTradingEngine({
 
         if (fxSignal.type === 'BUY') {
           if (position?.direction === 'long') {
-            recordAttempt('skipped_same_direction', `Already long on ${asset} — confirmed BUY consumed as a no-op`);
+            const detail = `Already LONG on ${asset} @ $${position.entryPrice.toFixed(2)} — confirmed BUY acknowledged, no new entry (same direction).`;
+            addStatus('info', detail, asset);
+            logDecision({
+              asset, action: 'blocked', explanation: detail,
+              signal: fxSignal.type, regime: assetAnalytic?.marketRegime,
+            });
+            recordAttempt('skipped_same_direction', detail);
             continue;
           }
           if (position?.direction === 'short') {
@@ -669,7 +675,13 @@ export function useUnifiedTradingEngine({
           }
         } else if (fxSignal.type === 'SELL') {
           if (position?.direction === 'short') {
-            recordAttempt('skipped_same_direction', `Already short on ${asset} — confirmed SELL consumed as a no-op`);
+            const detail = `Already SHORT on ${asset} @ $${position.entryPrice.toFixed(2)} — confirmed SELL acknowledged, no new entry (same direction).`;
+            addStatus('info', detail, asset);
+            logDecision({
+              asset, action: 'blocked', explanation: detail,
+              signal: fxSignal.type, regime: assetAnalytic?.marketRegime,
+            });
+            recordAttempt('skipped_same_direction', detail);
             continue;
           }
           if (position?.direction === 'long') {
