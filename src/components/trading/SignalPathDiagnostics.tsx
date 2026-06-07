@@ -56,13 +56,13 @@ function emptyWaterfall(asset: Asset): AssetWaterfall {
   return {
     asset,
     stages: [
-      { key: 'raw',          label: 'Raw Signals',     count: 0, blocked: 0 },
-      { key: 'htf',          label: 'HTF Filter',      count: 0, blocked: 0 },
-      { key: 'distance',     label: 'Distance Filter', count: 0, blocked: 0 },
-      { key: 'confirmation', label: 'Confirmation',    count: 0, blocked: 0 },
-      { key: 'mpc',          label: 'MPC',             count: 0, blocked: 0 },
-      { key: 'governance',   label: 'Governance',      count: 0, blocked: 0 },
-      { key: 'executed',     label: 'Executed Trades', count: 0, blocked: 0 },
+      { key: 'raw',          label: 'Raw Signals',         count: 0, blocked: 0 },
+      { key: 'htf',          label: 'HTF Filter',          count: 0, blocked: 0 },
+      { key: 'distance',     label: 'Distance (scored)',   count: 0, blocked: 0 },
+      { key: 'confirmation', label: 'Confirmation',        count: 0, blocked: 0 },
+      { key: 'mpc',          label: 'MPC',                 count: 0, blocked: 0 },
+      { key: 'governance',   label: 'Governance',          count: 0, blocked: 0 },
+      { key: 'executed',     label: 'Executed Trades',     count: 0, blocked: 0 },
     ],
     topBlock: null,
   };
