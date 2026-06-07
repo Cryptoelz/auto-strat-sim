@@ -638,7 +638,13 @@ export function useUnifiedTradingEngine({
 
         if (fxSignal.type === 'BUY') {
           if (position?.direction === 'long') {
-            recordAttempt('skipped_same_direction', `Already long on ${asset} — confirmed BUY consumed as a no-op`);
+            const detail = `Already LONG on ${asset} @ $${position.entryPrice.toFixed(2)} — confirmed BUY acknowledged, no new entry (same direction).`;
+            addStatus('info', detail, asset);
+            logDecision({
+              asset, action: 'blocked', explanation: detail,
+              signal: fxSignal.type, regime: assetAnalytic?.marketRegime,
+            });
+            recordAttempt('skipped_same_direction', detail);
             continue;
           }
           if (position?.direction === 'short') {
@@ -669,7 +675,13 @@ export function useUnifiedTradingEngine({
           }
         } else if (fxSignal.type === 'SELL') {
           if (position?.direction === 'short') {
-            recordAttempt('skipped_same_direction', `Already short on ${asset} — confirmed SELL consumed as a no-op`);
+            const detail = `Already SHORT on ${asset} @ $${position.entryPrice.toFixed(2)} — confirmed SELL acknowledged, no new entry (same direction).`;
+            addStatus('info', detail, asset);
+            logDecision({
+              asset, action: 'blocked', explanation: detail,
+              signal: fxSignal.type, regime: assetAnalytic?.marketRegime,
+            });
+            recordAttempt('skipped_same_direction', detail);
             continue;
           }
           if (position?.direction === 'long') {
@@ -845,6 +857,7 @@ export function useUnifiedTradingEngine({
       archiveSession(state, sessionRef.current.startTime, sessionRef.current.maxDrawdown);
     }
 
+    // Wipe persisted state (positions, lastTradeTime, pauses) and reset in-memory state.
     const newState = resetState();
     setState(newState);
     peakEquityRef.current = newState.initialBalance;
@@ -852,6 +865,10 @@ export function useUnifiedTradingEngine({
       BTCUSDT: null, XRPUSDT: null, FETUSDT: null, XLMUSDT: null, ETHUSDT: null, SOLUSDT: null,
     });
     setSignalConfirmStats({ registered: 0, passed: 0, failed: 0, expired: 0 });
+    setExecutionAttempts([]);
+    // Clear last-signal memory so a previously-emitted BUY/SELL won't be
+    // suppressed as a duplicate against stale prev-signal refs.
+    prevSignalsRef.current = null;
     diagnosticsRef.current = {
       ...diagnosticsRef.current,
       cycleCount: 0, errorCount: 0, warningCount: 0,
@@ -865,9 +882,11 @@ export function useUnifiedTradingEngine({
     setConnectionStatus(prev => ({ ...prev, missedCandles: 0, error: null }));
     if (isPaperMode) {
       setStatusMessages([]);
+      // Drop any stale persisted session marker before writing a fresh one.
+      try { localStorage.removeItem(SESSION_STORAGE_KEY); } catch {}
       sessionRef.current = { startTime: Date.now(), maxDrawdown: 0 };
       saveSession(sessionRef.current);
-      addStatus('info', 'Session reset (previous session archived)');
+      addStatus('info', 'Session reset — positions, pending crossovers, cooldowns and same-direction memory cleared');
     }
     toast.info(isPaperMode ? 'Paper trading session reset (archived)' : 'Agent reset to initial state');
   }, [isPaperMode, addStatus, state]);

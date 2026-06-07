@@ -1,7 +1,7 @@
 import { TradingState, Trade } from '@/types/trading';
 import { getInitialState } from '@/config/trading';
 
-const STORAGE_KEY = 'crypto-trading-simulator';
+export const STORAGE_KEY = 'crypto-trading-simulator';
 
 function normalizeTrade(rawTrade: Partial<Trade>): Trade {
   return {

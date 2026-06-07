@@ -23,6 +23,7 @@ import { DistanceFilterAudit } from '@/components/trading/DistanceFilterAudit';
 import { DistanceThresholdSensitivity } from '@/components/trading/DistanceThresholdSensitivity';
 import { NoDistanceDiagnostic } from '@/components/trading/NoDistanceDiagnostic';
 import { ExecutionPathAudit } from '@/components/trading/ExecutionPathAudit';
+import { PositionStateDebug } from '@/components/trading/PositionStateDebug';
 import { StrategyDashboard } from '@/components/trading/StrategyDashboard';
 import { AgentDecisionDashboard } from '@/components/trading/AgentDecisionDashboard';
 import { AgentMemoryDashboard } from '@/components/trading/AgentMemoryDashboard';
@@ -262,6 +263,10 @@ export default function PaperTrading() {
 
         {/* Execution Path Audit — per-confirmed-signal gate breakdown + final waterfall */}
         <ExecutionPathAudit />
+
+        {/* Position State Debug — engine vs UI vs localStorage truth check */}
+        <PositionStateDebug />
+
 
 
         {/* Charts + Asset Monitoring */}
