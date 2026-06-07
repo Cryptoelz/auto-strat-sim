@@ -179,6 +179,39 @@ export function convictionRangeMetrics(sessions: ArchivedSession[]): ConvictionB
   });
 }
 
+// ─── Distance bands (post-promotion: distance is a conviction factor) ──
+
+export interface DistanceBin {
+  range: string;
+  contribution: number; // +0/+5/+10/+15
+  min: number;
+  max: number;
+  trades: number;
+  wins: number;
+  winRate: number;
+  pnl: number;
+  avgPnl: number;
+}
+
+const DISTANCE_BINS: Array<Omit<DistanceBin, 'trades' | 'wins' | 'winRate' | 'pnl' | 'avgPnl'>> = [
+  { range: '< 0.05%',    contribution: 0,  min: 0,     max: 0.05 },
+  { range: '0.05–0.15%', contribution: 5,  min: 0.05,  max: 0.15 },
+  { range: '0.15–0.25%', contribution: 10, min: 0.15,  max: 0.25 },
+  { range: '≥ 0.25%',    contribution: 15, min: 0.25,  max: Infinity },
+];
+
+export function distanceBandMetrics(sessions: ArchivedSession[]): DistanceBin[] {
+  const trades = flattenTrades(sessions).filter(t => t.entrySmaDistance != null);
+  return DISTANCE_BINS.map(b => {
+    const subset = trades.filter(t => {
+      const d = Math.abs(t.entrySmaDistance!);
+      return d >= b.min && d < b.max;
+    });
+    const s = summarize(subset);
+    return { ...b, trades: s.trades, wins: s.wins, winRate: s.winRate, pnl: s.pnl, avgPnl: s.avgPnl };
+  });
+}
+
 // ─── Best / worst / dangerous ───────────────────────────────────────
 
 /** Strongest regimes ranked by avgPnl (min sample required). */
