@@ -699,8 +699,8 @@ export function useUnifiedTradingEngine({
             recordAttempt('executed_open', `Opened SHORT @ $${price.toFixed(2)} (size ${sizeUnits.toFixed(6)} = $${sizeUsd.toFixed(2)})`);
           }
         }
-        }
       }
+
 
       // Commit pending + stats deltas (outside the per-asset loop so we set state once).
       setPendingCrossovers(pendingDraft);
