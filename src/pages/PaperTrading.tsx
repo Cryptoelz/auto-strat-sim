@@ -244,6 +244,9 @@ export default function PaperTrading() {
           </CardContent>
         </Card>
 
+        {/* Signal Path Diagnostics — waterfall + live widget */}
+        <SignalPathDiagnostics />
+
         {/* Charts + Asset Monitoring */}
         <div className="grid gap-4 md:grid-cols-2">
           {config.assets.filter((a: Asset) => enabledAssets[a]).map((asset: Asset) => (
