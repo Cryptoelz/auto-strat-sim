@@ -195,6 +195,14 @@ export function useUnifiedTradingEngine({
   });
   const [emergencyStop, setEmergencyStop] = useState(false);
 
+  // ── Distance-confirmation pipeline state ──
+  const [pendingCrossovers, setPendingCrossovers] = useState<Record<Asset, PendingCrossover | null>>(() => ({
+    BTCUSDT: null, XRPUSDT: null, FETUSDT: null, XLMUSDT: null, ETHUSDT: null, SOLUSDT: null,
+  }));
+  const [signalConfirmStats, setSignalConfirmStats] = useState<SignalConfirmStats>({
+    registered: 0, passed: 0, failed: 0, expired: 0,
+  });
+
   // ── Tracking refs ──
   const prevSignalsRef = useRef<Record<Asset, Signal | null> | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
