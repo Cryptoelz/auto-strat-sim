@@ -230,7 +230,9 @@ export function SignalPathDiagnostics() {
 
   // Live widget figures (from in-session decision log).
   const live = useMemo(() => {
-    const executed = decisionLog.filter(e => e.action === 'opened' || e.action === 'flipped').length;
+    const executed = decisionLog.filter(e =>
+      e.action === 'opened_long' || e.action === 'opened_short' || e.action === 'flipped'
+    ).length;
     const blocked = blockedSignals.length;
     const raw = executed + blocked;
     const byReason = new Map<string, number>();
