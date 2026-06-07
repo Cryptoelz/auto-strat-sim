@@ -74,6 +74,7 @@ interface TradingContextType {
   // Distance-confirmation pipeline
   pendingCrossovers: ReturnType<typeof useUnifiedTradingEngine>['pendingCrossovers'];
   signalConfirmStats: ReturnType<typeof useUnifiedTradingEngine>['signalConfirmStats'];
+  executionAttempts: ReturnType<typeof useUnifiedTradingEngine>['executionAttempts'];
   // Notifications
   permission: NotificationPermission;
   isSupported: boolean;
@@ -205,6 +206,7 @@ export function TradingProvider({ children }: { children: ReactNode }) {
     blockedSignals, decisionLog,
     pendingCrossovers: engine.pendingCrossovers,
     signalConfirmStats: engine.signalConfirmStats,
+    executionAttempts: engine.executionAttempts,
     permission, isSupported, requestPermission,
   }), [
     engine, strategyConfig, config,

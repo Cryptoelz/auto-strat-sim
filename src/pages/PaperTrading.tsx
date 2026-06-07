@@ -22,6 +22,7 @@ import { SignalPathDiagnostics } from '@/components/trading/SignalPathDiagnostic
 import { DistanceFilterAudit } from '@/components/trading/DistanceFilterAudit';
 import { DistanceThresholdSensitivity } from '@/components/trading/DistanceThresholdSensitivity';
 import { NoDistanceDiagnostic } from '@/components/trading/NoDistanceDiagnostic';
+import { ExecutionPathAudit } from '@/components/trading/ExecutionPathAudit';
 import { StrategyDashboard } from '@/components/trading/StrategyDashboard';
 import { AgentDecisionDashboard } from '@/components/trading/AgentDecisionDashboard';
 import { AgentMemoryDashboard } from '@/components/trading/AgentMemoryDashboard';
@@ -258,6 +259,10 @@ export default function PaperTrading() {
 
         {/* No-Distance Diagnostic — funnel comparison of current vs distance=0 */}
         <NoDistanceDiagnostic />
+
+        {/* Execution Path Audit — per-confirmed-signal gate breakdown + final waterfall */}
+        <ExecutionPathAudit />
+
 
         {/* Charts + Asset Monitoring */}
         <div className="grid gap-4 md:grid-cols-2">
