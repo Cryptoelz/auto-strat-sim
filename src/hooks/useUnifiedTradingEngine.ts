@@ -527,93 +527,178 @@ export function useUnifiedTradingEngine({
 
         if (execSignalType === 'HOLD') continue;
 
-        // Check if filters block this signal (HTF, ATR, regime, loss-pause).
-        // The distance filter is no longer a hard gate — it scores conviction.
-        if (assetAnalytic?.filterBlocked && assetAnalytic.filterBlocked !== 'sma_distance_filter') {
+        // ─── Execution-path audit instrumentation ──────────────────────
+        // From here on, every confirmed signal is recorded as an
+        // ExecutionAttempt with the result of every gate it touches so
+        // we can explain *exactly* why an approved signal did or did not
+        // become a paper trade.
+        const side: 'long' | 'short' = execSignalType === 'BUY' ? 'long' : 'short';
+        const distSnapshot = confirmedDistancePct ?? assetAnalytic?.smaDistance ?? undefined;
+        const distContribSnapshot = distanceContribution || scoreDistanceContribution(distSnapshot ?? null);
+
+        // Pre-compute every gate so the attempt record is complete even on early-exit branches.
+        // MPC — the engine does not currently consult an MPC kill-switch, so it is reported
+        // as pass-through here. (Surfaces as an obvious "no MPC gate active" in the audit.)
+        const mpc: GateResult = { pass: true, detail: 'MPC pass-through (no live kill-switch wired into engine)' };
+
+        // Governance — engine treats `state.isPaused` as the only hard gate.
+        const govPass = !newState.isPaused;
+        const governance: GateResult = {
+          pass: govPass,
+          detail: govPass
+            ? 'Not paused'
+            : `Paused: ${newState.pauseReason ?? 'risk pause active'}`,
+        };
+
+        // Allocation — engine has no per-strategy allocator; pass-through with detail.
+        const allocation: GateResult = { pass: true, detail: 'No allocator gate in engine — full sizing budget available' };
+
+        // Position sizing
+        const positionPercent = config.risk.positionSizePercent;
+        const sizeUsd = newState.balance * (positionPercent / 100);
+        const sizeUnits = sizeUsd / price;
+        const positionSizing = { sizeUnits, sizeUsd, positionPercent };
+
+        // Exposure — count currently open positions, cap at config.assets.length.
+        const openCount = Object.values(newState.positions).filter(p => p !== null).length;
+        const maxOpen = config.assets.length;
+        const maxPositions: GateResult = {
+          pass: openCount < maxOpen || !!position, // existing position for this asset doesn't add net exposure
+          detail: `${openCount}/${maxOpen} open${position ? ` (incl. current ${asset})` : ''}`,
+        };
+        const exposure: GateResult = {
+          pass: true,
+          detail: `Total exposure ${(openCount * positionPercent).toFixed(1)}% of equity`,
+        };
+
+        // Cooldown
+        const cd = isInCooldown(newState.lastTradeTime[asset], Date.now(), config.risk.cooldownCandles, candleIntervalMs);
+        const sinceMs = Date.now() - (newState.lastTradeTime[asset] || 0);
+        const cooldownMs = config.risk.cooldownCandles * candleIntervalMs;
+        const cooldown: GateResult = {
+          pass: !cd,
+          detail: cd
+            ? `In cooldown — ${Math.max(0, Math.round((cooldownMs - sinceMs) / 1000))}s remaining`
+            : 'Cooldown clear',
+        };
+
+        // Risk validation (balance / min-size)
+        const validation = canExecuteTrade(
+          position ? newState.balance + position.size * position.entryPrice : newState.balance,
+          price, config,
+        );
+        const risk: GateResult = {
+          pass: validation.valid,
+          detail: validation.valid ? 'Sufficient balance & size' : (validation.reason ?? 'Risk check failed'),
+        };
+
+        // Filter gate (HTF/ATR/regime/loss-pause — distance is NOT a gate anymore)
+        const filterBlock = assetAnalytic?.filterBlocked && assetAnalytic.filterBlocked !== 'sma_distance_filter'
+          ? assetAnalytic.filterBlocked : null;
+
+        const attemptBase = {
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          timestamp: Date.now(),
+          asset, side, price,
+          smaDistance: distSnapshot ?? null,
+          convictionScore: distContribSnapshot,
+          mpc, governance, allocation, exposure, cooldown, maxPositions, risk, positionSizing,
+        };
+
+        const recordAttempt = (outcome: ExecutionOutcome, outcomeDetail: string) => {
+          pushAttempt({ ...attemptBase, outcome, outcomeDetail });
+        };
+
+        // ─── Apply the gates in order ───────────────────────────────────
+        if (!governance.pass) {
+          recordAttempt('blocked_by_governance', governance.detail);
+          continue;
+        }
+        if (filterBlock) {
           const prevSig = prevSignalsRef.current?.[asset];
           if (!prevSig || prevSig.type !== execSignalType) {
-            const explanation = explainBlock(asset, execSignalType, assetAnalytic.filterBlocked);
+            const explanation = explainBlock(asset, execSignalType, filterBlock);
             addStatus('blocked', explanation, asset);
             logDecision({
               asset, action: 'blocked', explanation,
-              signal: execSignalType, regime: assetAnalytic.marketRegime,
-              filterBlocked: assetAnalytic.filterBlocked,
+              signal: execSignalType, regime: assetAnalytic?.marketRegime,
+              filterBlocked: filterBlock,
             });
           }
+          recordAttempt('blocked_by_filter', `Filter: ${filterBlock}`);
           continue;
         }
 
-        // Attach the post-confirmation distance + contribution onto the entry
-        // context so the resulting trade carries them through to analytics.
-        const distSnapshot = confirmedDistancePct ?? assetAnalytic?.smaDistance ?? undefined;
-        const distContribSnapshot = distanceContribution || scoreDistanceContribution(distSnapshot ?? null);
         const enrichedCtx: typeof entryCtx & { convictionScore?: number } = {
           ...entryCtx,
           smaDistance: distSnapshot,
           convictionScore: distContribSnapshot,
         };
-
-        // Synthesize the effective signal for the downstream open/flip branches.
         const fxSignal = { ...(signal ?? { type: 'HOLD', asset, timestamp: Date.now(), price, smaFast: 0, smaSlow: 0 }), type: execSignalType } as Signal;
 
-
-
         if (fxSignal.type === 'BUY') {
+          if (position?.direction === 'long') {
+            recordAttempt('skipped_same_direction', `Already long on ${asset} — confirmed BUY consumed as a no-op`);
+            continue;
+          }
           if (position?.direction === 'short') {
-            const validation = canExecuteTrade(newState.balance + position.size * position.entryPrice, price, config);
-            if (validation.valid) {
-              const oldDir = position.direction;
-              newState = flipPosition(newState, asset, price, 'long', 'flip_to_long', config, enrichedCtx);
-              const closeTrade = newState.trades[newState.trades.length - 2];
-              const pnlText = closeTrade?.pnl >= 0 ? `+$${closeTrade.pnl.toFixed(2)}` : `-$${Math.abs(closeTrade.pnl).toFixed(2)}`;
-              toast.success(`🔄 ${asset} FLIP: SHORT→LONG at $${price.toFixed(2)} (P&L: ${pnlText})`);
-              const msg = explainFlip(asset, oldDir, 'long', price, assetAnalytic?.marketRegime || 'sideways', distSnapshot ?? null, distContribSnapshot);
-              addStatus('trade', msg, asset);
-              newState = updateRiskTracking(newState, closeTrade, config, candleIntervalMs, addStatus);
-              logDecision({ asset, action: 'flipped', explanation: msg, signal: fxSignal.type, regime: assetAnalytic?.marketRegime });
-            }
-          } else if (!position) {
-            if (!isInCooldown(newState.lastTradeTime[asset], Date.now(), config.risk.cooldownCandles, candleIntervalMs)) {
-              const validation = canExecuteTrade(newState.balance, price, config);
-              if (validation.valid) {
-                newState = openLong(newState, asset, price, config, enrichedCtx);
-                const msg = explainOpen(asset, 'long', price, assetAnalytic?.marketRegime || 'sideways', fxSignal.type, distSnapshot ?? null, distContribSnapshot);
-                toast.success(`📈 ${asset} LONG opened at $${price.toFixed(2)}`);
-                addStatus('trade', msg, asset);
-                logDecision({ asset, action: 'opened_long', explanation: msg, signal: fxSignal.type, regime: assetAnalytic?.marketRegime });
-              }
-            } else if (isPaperMode) {
+            if (!risk.pass) { recordAttempt('insufficient_balance', risk.detail); continue; }
+            const oldDir = position.direction;
+            newState = flipPosition(newState, asset, price, 'long', 'flip_to_long', config, enrichedCtx);
+            const closeTrade = newState.trades[newState.trades.length - 2];
+            const pnlText = closeTrade?.pnl >= 0 ? `+$${closeTrade.pnl.toFixed(2)}` : `-$${Math.abs(closeTrade.pnl).toFixed(2)}`;
+            toast.success(`🔄 ${asset} FLIP: SHORT→LONG at $${price.toFixed(2)} (P&L: ${pnlText})`);
+            const msg = explainFlip(asset, oldDir, 'long', price, assetAnalytic?.marketRegime || 'sideways', distSnapshot ?? null, distContribSnapshot);
+            addStatus('trade', msg, asset);
+            newState = updateRiskTracking(newState, closeTrade, config, candleIntervalMs, addStatus);
+            logDecision({ asset, action: 'flipped', explanation: msg, signal: fxSignal.type, regime: assetAnalytic?.marketRegime });
+            recordAttempt('executed_flip', `Flipped SHORT→LONG @ $${price.toFixed(2)}`);
+          } else {
+            if (!cooldown.pass) {
               addStatus('blocked', `Waiting for cooldown on ${asset}`, asset);
+              recordAttempt('cooldown_active', cooldown.detail);
+              continue;
             }
+            if (!risk.pass) { recordAttempt('insufficient_balance', risk.detail); continue; }
+            newState = openLong(newState, asset, price, config, enrichedCtx);
+            const msg = explainOpen(asset, 'long', price, assetAnalytic?.marketRegime || 'sideways', fxSignal.type, distSnapshot ?? null, distContribSnapshot);
+            toast.success(`📈 ${asset} LONG opened at $${price.toFixed(2)}`);
+            addStatus('trade', msg, asset);
+            logDecision({ asset, action: 'opened_long', explanation: msg, signal: fxSignal.type, regime: assetAnalytic?.marketRegime });
+            recordAttempt('executed_open', `Opened LONG @ $${price.toFixed(2)} (size ${sizeUnits.toFixed(6)} = $${sizeUsd.toFixed(2)})`);
+          }
+        } else if (fxSignal.type === 'SELL') {
+          if (position?.direction === 'short') {
+            recordAttempt('skipped_same_direction', `Already short on ${asset} — confirmed SELL consumed as a no-op`);
+            continue;
+          }
+          if (position?.direction === 'long') {
+            if (!risk.pass) { recordAttempt('insufficient_balance', risk.detail); continue; }
+            const oldDir = position.direction;
+            newState = flipPosition(newState, asset, price, 'short', 'flip_to_short', config, enrichedCtx);
+            const closeTrade = newState.trades[newState.trades.length - 2];
+            const pnlText = closeTrade?.pnl >= 0 ? `+$${closeTrade.pnl.toFixed(2)}` : `-$${Math.abs(closeTrade.pnl).toFixed(2)}`;
+            toast.success(`🔄 ${asset} FLIP: LONG→SHORT at $${price.toFixed(2)} (P&L: ${pnlText})`);
+            const msg = explainFlip(asset, oldDir, 'short', price, assetAnalytic?.marketRegime || 'sideways', distSnapshot ?? null, distContribSnapshot);
+            addStatus('trade', msg, asset);
+            newState = updateRiskTracking(newState, closeTrade, config, candleIntervalMs, addStatus);
+            logDecision({ asset, action: 'flipped', explanation: msg, signal: fxSignal.type, regime: assetAnalytic?.marketRegime });
+            recordAttempt('executed_flip', `Flipped LONG→SHORT @ $${price.toFixed(2)}`);
+          } else {
+            if (!cooldown.pass) {
+              addStatus('blocked', `Waiting for cooldown on ${asset}`, asset);
+              recordAttempt('cooldown_active', cooldown.detail);
+              continue;
+            }
+            if (!risk.pass) { recordAttempt('insufficient_balance', risk.detail); continue; }
+            newState = openShort(newState, asset, price, config, enrichedCtx);
+            const msg = explainOpen(asset, 'short', price, assetAnalytic?.marketRegime || 'sideways', fxSignal.type, distSnapshot ?? null, distContribSnapshot);
+            toast.success(`📉 ${asset} SHORT opened at $${price.toFixed(2)}`);
+            addStatus('trade', msg, asset);
+            logDecision({ asset, action: 'opened_short', explanation: msg, signal: fxSignal.type, regime: assetAnalytic?.marketRegime });
+            recordAttempt('executed_open', `Opened SHORT @ $${price.toFixed(2)} (size ${sizeUnits.toFixed(6)} = $${sizeUsd.toFixed(2)})`);
           }
         }
-
-        if (fxSignal.type === 'SELL') {
-          if (position?.direction === 'long') {
-            const validation = canExecuteTrade(newState.balance + position.size * position.entryPrice, price, config);
-            if (validation.valid) {
-              const oldDir = position.direction;
-              newState = flipPosition(newState, asset, price, 'short', 'flip_to_short', config, enrichedCtx);
-              const closeTrade = newState.trades[newState.trades.length - 2];
-              const pnlText = closeTrade?.pnl >= 0 ? `+$${closeTrade.pnl.toFixed(2)}` : `-$${Math.abs(closeTrade.pnl).toFixed(2)}`;
-              toast.success(`🔄 ${asset} FLIP: LONG→SHORT at $${price.toFixed(2)} (P&L: ${pnlText})`);
-              const msg = explainFlip(asset, oldDir, 'short', price, assetAnalytic?.marketRegime || 'sideways', distSnapshot ?? null, distContribSnapshot);
-              addStatus('trade', msg, asset);
-              newState = updateRiskTracking(newState, closeTrade, config, candleIntervalMs, addStatus);
-              logDecision({ asset, action: 'flipped', explanation: msg, signal: fxSignal.type, regime: assetAnalytic?.marketRegime });
-            }
-          } else if (!position) {
-            if (!isInCooldown(newState.lastTradeTime[asset], Date.now(), config.risk.cooldownCandles, candleIntervalMs)) {
-              const validation = canExecuteTrade(newState.balance, price, config);
-              if (validation.valid) {
-                newState = openShort(newState, asset, price, config, enrichedCtx);
-                const msg = explainOpen(asset, 'short', price, assetAnalytic?.marketRegime || 'sideways', fxSignal.type, distSnapshot ?? null, distContribSnapshot);
-                toast.success(`📉 ${asset} SHORT opened at $${price.toFixed(2)}`);
-                addStatus('trade', msg, asset);
-                logDecision({ asset, action: 'opened_short', explanation: msg, signal: fxSignal.type, regime: assetAnalytic?.marketRegime });
-              }
-            }
-          }
         }
       }
 
