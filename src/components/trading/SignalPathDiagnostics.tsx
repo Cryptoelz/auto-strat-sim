@@ -282,7 +282,7 @@ export function SignalPathDiagnostics() {
           />
         </div>
 
-        {/* Distance-confirmation pipeline (post-crossover gate) */}
+        {/* Post-crossover confirmation pipeline (HTF re-check; distance is scored, not gated) */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           <LiveStat
             icon={Clock}
@@ -291,19 +291,19 @@ export function SignalPathDiagnostics() {
           />
           <LiveStat
             icon={CheckCircle2}
-            label="Dist. Confirmation Passed"
+            label="Confirmation Passed"
             value={signalConfirmStats.passed}
             tone="good"
           />
           <LiveStat
             icon={XCircle}
-            label="Dist. Confirmation Failed"
+            label="Dropped (HTF re-check)"
             value={signalConfirmStats.failed}
             tone="warn"
           />
           <LiveStat
             icon={Hourglass}
-            label="Expired Pending Signals"
+            label="Expired (SMA flip)"
             value={signalConfirmStats.expired}
             tone="warn"
           />
