@@ -746,6 +746,10 @@ export function useUnifiedTradingEngine({
     const newState = resetState();
     setState(newState);
     peakEquityRef.current = newState.initialBalance;
+    setPendingCrossovers({
+      BTCUSDT: null, XRPUSDT: null, FETUSDT: null, XLMUSDT: null, ETHUSDT: null, SOLUSDT: null,
+    });
+    setSignalConfirmStats({ registered: 0, passed: 0, failed: 0, expired: 0 });
     diagnosticsRef.current = {
       ...diagnosticsRef.current,
       cycleCount: 0, errorCount: 0, warningCount: 0,
