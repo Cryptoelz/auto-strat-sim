@@ -19,7 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import {
   Activity, RefreshCw, ArrowDown, Filter, ShieldCheck, AlertTriangle,
-  Search, Zap,
+  Search, Zap, Clock, CheckCircle2, XCircle, Hourglass,
 } from 'lucide-react';
 import { fetchCandles } from '@/lib/marketData';
 import { calculateSMASeries, detectCrossover, calculateATRPercent } from '@/lib/indicators';
@@ -163,7 +163,7 @@ function computeWaterfall(
 
 export function SignalPathDiagnostics() {
   const ctx = useTradingContext();
-  const { strategyConfig, state, governanceConfig, decisionLog, blockedSignals } = ctx;
+  const { strategyConfig, state, governanceConfig, decisionLog, blockedSignals, pendingCrossovers, signalConfirmStats } = ctx;
 
   const [ltfByAsset, setLtfByAsset] = useState<Record<Asset, Candle[]>>({} as any);
   const [htfByAsset, setHtfByAsset] = useState<Record<Asset, Candle[]>>({} as any);
@@ -278,6 +278,34 @@ export function SignalPathDiagnostics() {
             small
           />
         </div>
+
+        {/* Distance-confirmation pipeline (post-crossover gate) */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <LiveStat
+            icon={Clock}
+            label="Pending Crossovers"
+            value={Object.values(pendingCrossovers).filter(Boolean).length}
+          />
+          <LiveStat
+            icon={CheckCircle2}
+            label="Dist. Confirmation Passed"
+            value={signalConfirmStats.passed}
+            tone="good"
+          />
+          <LiveStat
+            icon={XCircle}
+            label="Dist. Confirmation Failed"
+            value={signalConfirmStats.failed}
+            tone="warn"
+          />
+          <LiveStat
+            icon={Hourglass}
+            label="Expired Pending Signals"
+            value={signalConfirmStats.expired}
+            tone="warn"
+          />
+        </div>
+
 
         {error && (
           <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
