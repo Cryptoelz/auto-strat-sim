@@ -260,6 +260,10 @@ export default function PaperTrading() {
         {/* No-Distance Diagnostic — funnel comparison of current vs distance=0 */}
         <NoDistanceDiagnostic />
 
+        {/* Execution Path Audit — per-confirmed-signal gate breakdown + final waterfall */}
+        <ExecutionPathAudit />
+
+
         {/* Charts + Asset Monitoring */}
         <div className="grid gap-4 md:grid-cols-2">
           {config.assets.filter((a: Asset) => enabledAssets[a]).map((asset: Asset) => (
