@@ -556,11 +556,11 @@ export function useUnifiedTradingEngine({
             const validation = canExecuteTrade(newState.balance + position.size * position.entryPrice, price, config);
             if (validation.valid) {
               const oldDir = position.direction;
-              newState = flipPosition(newState, asset, price, 'long', 'flip_to_long', config, entryCtx);
+              newState = flipPosition(newState, asset, price, 'long', 'flip_to_long', config, enrichedCtx);
               const closeTrade = newState.trades[newState.trades.length - 2];
               const pnlText = closeTrade?.pnl >= 0 ? `+$${closeTrade.pnl.toFixed(2)}` : `-$${Math.abs(closeTrade.pnl).toFixed(2)}`;
               toast.success(`🔄 ${asset} FLIP: SHORT→LONG at $${price.toFixed(2)} (P&L: ${pnlText})`);
-              const msg = explainFlip(asset, oldDir, 'long', price, assetAnalytic?.marketRegime || 'sideways');
+              const msg = explainFlip(asset, oldDir, 'long', price, assetAnalytic?.marketRegime || 'sideways', distSnapshot ?? null, distContribSnapshot);
               addStatus('trade', msg, asset);
               newState = updateRiskTracking(newState, closeTrade, config, candleIntervalMs, addStatus);
               logDecision({ asset, action: 'flipped', explanation: msg, signal: fxSignal.type, regime: assetAnalytic?.marketRegime });
@@ -569,8 +569,8 @@ export function useUnifiedTradingEngine({
             if (!isInCooldown(newState.lastTradeTime[asset], Date.now(), config.risk.cooldownCandles, candleIntervalMs)) {
               const validation = canExecuteTrade(newState.balance, price, config);
               if (validation.valid) {
-                newState = openLong(newState, asset, price, config, entryCtx);
-                const msg = explainOpen(asset, 'long', price, assetAnalytic?.marketRegime || 'sideways', fxSignal.type);
+                newState = openLong(newState, asset, price, config, enrichedCtx);
+                const msg = explainOpen(asset, 'long', price, assetAnalytic?.marketRegime || 'sideways', fxSignal.type, distSnapshot ?? null, distContribSnapshot);
                 toast.success(`📈 ${asset} LONG opened at $${price.toFixed(2)}`);
                 addStatus('trade', msg, asset);
                 logDecision({ asset, action: 'opened_long', explanation: msg, signal: fxSignal.type, regime: assetAnalytic?.marketRegime });
@@ -586,11 +586,11 @@ export function useUnifiedTradingEngine({
             const validation = canExecuteTrade(newState.balance + position.size * position.entryPrice, price, config);
             if (validation.valid) {
               const oldDir = position.direction;
-              newState = flipPosition(newState, asset, price, 'short', 'flip_to_short', config, entryCtx);
+              newState = flipPosition(newState, asset, price, 'short', 'flip_to_short', config, enrichedCtx);
               const closeTrade = newState.trades[newState.trades.length - 2];
               const pnlText = closeTrade?.pnl >= 0 ? `+$${closeTrade.pnl.toFixed(2)}` : `-$${Math.abs(closeTrade.pnl).toFixed(2)}`;
               toast.success(`🔄 ${asset} FLIP: LONG→SHORT at $${price.toFixed(2)} (P&L: ${pnlText})`);
-              const msg = explainFlip(asset, oldDir, 'short', price, assetAnalytic?.marketRegime || 'sideways');
+              const msg = explainFlip(asset, oldDir, 'short', price, assetAnalytic?.marketRegime || 'sideways', distSnapshot ?? null, distContribSnapshot);
               addStatus('trade', msg, asset);
               newState = updateRiskTracking(newState, closeTrade, config, candleIntervalMs, addStatus);
               logDecision({ asset, action: 'flipped', explanation: msg, signal: fxSignal.type, regime: assetAnalytic?.marketRegime });
@@ -599,8 +599,8 @@ export function useUnifiedTradingEngine({
             if (!isInCooldown(newState.lastTradeTime[asset], Date.now(), config.risk.cooldownCandles, candleIntervalMs)) {
               const validation = canExecuteTrade(newState.balance, price, config);
               if (validation.valid) {
-                newState = openShort(newState, asset, price, config, entryCtx);
-                const msg = explainOpen(asset, 'short', price, assetAnalytic?.marketRegime || 'sideways', fxSignal.type);
+                newState = openShort(newState, asset, price, config, enrichedCtx);
+                const msg = explainOpen(asset, 'short', price, assetAnalytic?.marketRegime || 'sideways', fxSignal.type, distSnapshot ?? null, distContribSnapshot);
                 toast.success(`📉 ${asset} SHORT opened at $${price.toFixed(2)}`);
                 addStatus('trade', msg, asset);
                 logDecision({ asset, action: 'opened_short', explanation: msg, signal: fxSignal.type, regime: assetAnalytic?.marketRegime });
