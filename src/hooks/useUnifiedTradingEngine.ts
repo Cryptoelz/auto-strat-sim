@@ -53,6 +53,23 @@ export interface SoakDiagnostics {
   lastCycleTimestamp: number;
 }
 
+/** Post-crossover distance-confirmation pending entry. */
+export interface PendingCrossover {
+  asset: Asset;
+  direction: 'long' | 'short';
+  originTs: number;
+  originPrice: number;
+  ageCandles: number;
+}
+
+/** Cumulative confirmation counters surfaced to the diagnostics widget. */
+export interface SignalConfirmStats {
+  registered: number;  // total pendings created
+  passed: number;      // distance + HTF confirmed → promoted to execution
+  failed: number;      // grace window exhausted without passing
+  expired: number;     // SMA flipped against direction before confirmation
+}
+
 export interface UnifiedEngineOptions {
   mode?: EngineMode;
   config?: TradingConfig;
@@ -90,6 +107,9 @@ export interface UnifiedEngineResult {
   clearConnectionErrors: () => void;
   // Soak-test diagnostics
   diagnostics: SoakDiagnostics;
+  // Distance-confirmation pipeline (post-crossover gate)
+  pendingCrossovers: Record<Asset, PendingCrossover | null>;
+  signalConfirmStats: SignalConfirmStats;
 }
 
 // ─── Constants ──────────────────────────────────────
@@ -174,6 +194,14 @@ export function useUnifiedTradingEngine({
     return init;
   });
   const [emergencyStop, setEmergencyStop] = useState(false);
+
+  // ── Distance-confirmation pipeline state ──
+  const [pendingCrossovers, setPendingCrossovers] = useState<Record<Asset, PendingCrossover | null>>(() => ({
+    BTCUSDT: null, XRPUSDT: null, FETUSDT: null, XLMUSDT: null, ETHUSDT: null, SOLUSDT: null,
+  }));
+  const [signalConfirmStats, setSignalConfirmStats] = useState<SignalConfirmStats>({
+    registered: 0, passed: 0, failed: 0, expired: 0,
+  });
 
   // ── Tracking refs ──
   const prevSignalsRef = useRef<Record<Asset, Signal | null> | null>(null);
@@ -367,6 +395,11 @@ export function useUnifiedTradingEngine({
         newState = { ...newState, dailyPnl: 0, dailyPnlDate: today };
       }
 
+      const pendingDraft: Record<Asset, PendingCrossover | null> = { ...pendingCrossovers };
+      let statsRegistered = 0, statsPassed = 0, statsFailed = 0, statsExpired = 0;
+      const confirmCandles = config.filters.distanceConfirmationCandles ?? 0;
+      const distanceThreshold = config.filters.minSmaDistancePercent ?? 0;
+
       for (const asset of config.assets) {
         // In paper mode, skip disabled assets
         if (isPaperMode && !enabledAssets[asset]) continue;
@@ -376,7 +409,7 @@ export function useUnifiedTradingEngine({
         const position = newState.positions[asset];
         const assetAnalytic = analytics[asset];
 
-        if (!signal || !price || signal.type === 'HOLD') continue;
+        if (!price) continue;
 
         // Build per-trade entry context snapshot
         const entryCtx = {
@@ -388,22 +421,127 @@ export function useUnifiedTradingEngine({
           governanceState: newState.isPaused ? 'paused' : (isPaperMode && emergencyStop ? 'halted' : 'active'),
         };
 
-        // Check if filters block this signal
-        if (assetAnalytic?.filterBlocked) {
+        // ─── Distance-confirmation pipeline ─────────────────────────────
+        // Re-purposes the SMA distance filter as a POST-crossover confirmation.
+        // On the cross bar, fast ≈ slow by definition, so the legacy at-cross
+        // check rejected every signal. We now register the cross as "pending"
+        // and re-evaluate distance + HTF alignment N candles later.
+        let execSignalType: 'BUY' | 'SELL' | 'HOLD' = signal?.type ?? 'HOLD';
+
+        if (confirmCandles > 0) {
+          // 1. Register a brand-new pending crossover.
+          if (signal && (signal.type === 'BUY' || signal.type === 'SELL')) {
+            const existing = pendingDraft[asset];
+            if (!existing || existing.originTs !== signal.timestamp) {
+              pendingDraft[asset] = {
+                asset,
+                direction: signal.type === 'BUY' ? 'long' : 'short',
+                originTs: signal.timestamp,
+                originPrice: signal.price,
+                ageCandles: 0,
+              };
+              statsRegistered++;
+              addStatus('info', `${asset} ${signal.type} crossover registered — awaiting ${confirmCandles}-candle distance confirmation`, asset);
+              logDecision({
+                asset, action: 'blocked',
+                explanation: `${asset} ${signal.type} crossover registered as pending. Waiting ${confirmCandles} candles to confirm SMA distance ≥ ${distanceThreshold}% + HTF still aligned.`,
+                signal: signal.type, regime: assetAnalytic?.marketRegime,
+                filterBlocked: 'sma_distance_filter',
+              });
+            }
+            execSignalType = 'HOLD'; // never act on the cross bar itself
+          }
+
+          // 2. Advance / evaluate any existing pending for this asset.
+          const pending = pendingDraft[asset];
+          if (pending) {
+            const assetCandles = candles[asset] ?? [];
+            const age = assetCandles.filter(c => c.timestamp > pending.originTs).length;
+            pendingDraft[asset] = { ...pending, ageCandles: age };
+
+            const fast = assetAnalytic?.smaFast ?? null;
+            const slow = assetAnalytic?.smaSlow ?? null;
+            const dist = assetAnalytic?.smaDistance ?? null;
+            const htfTrend = assetAnalytic?.htfTrend ?? 'neutral';
+
+            const directionStillValid = fast !== null && slow !== null && (
+              (pending.direction === 'long' && fast > slow) ||
+              (pending.direction === 'short' && fast < slow)
+            );
+
+            if (!directionStillValid) {
+              pendingDraft[asset] = null;
+              statsExpired++;
+              const why = `${asset} pending ${pending.direction.toUpperCase()} expired — SMA flipped back before confirmation`;
+              addStatus('blocked', why, asset);
+              logDecision({
+                asset, action: 'blocked', explanation: why,
+                signal: pending.direction === 'long' ? 'BUY' : 'SELL',
+                regime: assetAnalytic?.marketRegime, filterBlocked: 'sma_distance_filter',
+              });
+            } else if (age >= confirmCandles) {
+              const distOK = dist !== null && dist >= distanceThreshold;
+              const htfOK =
+                (pending.direction === 'long' && htfTrend === 'bullish') ||
+                (pending.direction === 'short' && htfTrend === 'bearish');
+
+              if (distOK && htfOK) {
+                statsPassed++;
+                execSignalType = pending.direction === 'long' ? 'BUY' : 'SELL';
+                pendingDraft[asset] = null;
+                const msg = `${asset} ${pending.direction.toUpperCase()} confirmed after ${age} candles (distance ${dist?.toFixed(2)}% ≥ ${distanceThreshold}%, HTF ${htfTrend}) — executing`;
+                addStatus('info', msg, asset);
+              } else if (age >= confirmCandles + 2) {
+                // Grace window exhausted without confirmation.
+                pendingDraft[asset] = null;
+                statsFailed++;
+                const reason = !distOK
+                  ? `distance only ${dist !== null ? dist.toFixed(2) : 'n/a'}% (< ${distanceThreshold}%)`
+                  : `HTF ${htfTrend} no longer aligned with ${pending.direction}`;
+                const why = `${asset} pending ${pending.direction.toUpperCase()} failed confirmation — ${reason}`;
+                addStatus('blocked', why, asset);
+                logDecision({
+                  asset, action: 'blocked', explanation: why,
+                  signal: pending.direction === 'long' ? 'BUY' : 'SELL',
+                  regime: assetAnalytic?.marketRegime, filterBlocked: 'sma_distance_filter',
+                });
+                execSignalType = 'HOLD';
+              } else {
+                // Still inside grace window — wait one more cycle.
+                execSignalType = 'HOLD';
+              }
+            } else {
+              // Still waiting for confirmation candles to elapse.
+              execSignalType = 'HOLD';
+            }
+          }
+        }
+
+        if (execSignalType === 'HOLD') continue;
+
+        // Check if filters block this signal (HTF, ATR, regime, loss-pause).
+        // The legacy at-cross distance check is bypassed when confirmCandles > 0;
+        // distance is now governed by the pending-confirmation block above.
+        if (assetAnalytic?.filterBlocked && assetAnalytic.filterBlocked !== 'sma_distance_filter') {
           const prevSig = prevSignalsRef.current?.[asset];
-          if (!prevSig || prevSig.type !== signal.type) {
-            const explanation = explainBlock(asset, signal.type, assetAnalytic.filterBlocked);
+          if (!prevSig || prevSig.type !== execSignalType) {
+            const explanation = explainBlock(asset, execSignalType, assetAnalytic.filterBlocked);
             addStatus('blocked', explanation, asset);
             logDecision({
               asset, action: 'blocked', explanation,
-              signal: signal.type, regime: assetAnalytic.marketRegime,
+              signal: execSignalType, regime: assetAnalytic.marketRegime,
               filterBlocked: assetAnalytic.filterBlocked,
             });
           }
           continue;
         }
 
-        if (signal.type === 'BUY') {
+        // Synthesize the effective signal for the downstream open/flip branches.
+        const fxSignal = { ...(signal ?? { type: 'HOLD', asset, timestamp: Date.now(), price, smaFast: 0, smaSlow: 0 }), type: execSignalType } as Signal;
+
+
+
+        if (fxSignal.type === 'BUY') {
           if (position?.direction === 'short') {
             const validation = canExecuteTrade(newState.balance + position.size * position.entryPrice, price, config);
             if (validation.valid) {
@@ -415,17 +553,17 @@ export function useUnifiedTradingEngine({
               const msg = explainFlip(asset, oldDir, 'long', price, assetAnalytic?.marketRegime || 'sideways');
               addStatus('trade', msg, asset);
               newState = updateRiskTracking(newState, closeTrade, config, candleIntervalMs, addStatus);
-              logDecision({ asset, action: 'flipped', explanation: msg, signal: signal.type, regime: assetAnalytic?.marketRegime });
+              logDecision({ asset, action: 'flipped', explanation: msg, signal: fxSignal.type, regime: assetAnalytic?.marketRegime });
             }
           } else if (!position) {
             if (!isInCooldown(newState.lastTradeTime[asset], Date.now(), config.risk.cooldownCandles, candleIntervalMs)) {
               const validation = canExecuteTrade(newState.balance, price, config);
               if (validation.valid) {
                 newState = openLong(newState, asset, price, config, entryCtx);
-                const msg = explainOpen(asset, 'long', price, assetAnalytic?.marketRegime || 'sideways', signal.type);
+                const msg = explainOpen(asset, 'long', price, assetAnalytic?.marketRegime || 'sideways', fxSignal.type);
                 toast.success(`📈 ${asset} LONG opened at $${price.toFixed(2)}`);
                 addStatus('trade', msg, asset);
-                logDecision({ asset, action: 'opened_long', explanation: msg, signal: signal.type, regime: assetAnalytic?.marketRegime });
+                logDecision({ asset, action: 'opened_long', explanation: msg, signal: fxSignal.type, regime: assetAnalytic?.marketRegime });
               }
             } else if (isPaperMode) {
               addStatus('blocked', `Waiting for cooldown on ${asset}`, asset);
@@ -433,7 +571,7 @@ export function useUnifiedTradingEngine({
           }
         }
 
-        if (signal.type === 'SELL') {
+        if (fxSignal.type === 'SELL') {
           if (position?.direction === 'long') {
             const validation = canExecuteTrade(newState.balance + position.size * position.entryPrice, price, config);
             if (validation.valid) {
@@ -445,27 +583,39 @@ export function useUnifiedTradingEngine({
               const msg = explainFlip(asset, oldDir, 'short', price, assetAnalytic?.marketRegime || 'sideways');
               addStatus('trade', msg, asset);
               newState = updateRiskTracking(newState, closeTrade, config, candleIntervalMs, addStatus);
-              logDecision({ asset, action: 'flipped', explanation: msg, signal: signal.type, regime: assetAnalytic?.marketRegime });
+              logDecision({ asset, action: 'flipped', explanation: msg, signal: fxSignal.type, regime: assetAnalytic?.marketRegime });
             }
           } else if (!position) {
             if (!isInCooldown(newState.lastTradeTime[asset], Date.now(), config.risk.cooldownCandles, candleIntervalMs)) {
               const validation = canExecuteTrade(newState.balance, price, config);
               if (validation.valid) {
                 newState = openShort(newState, asset, price, config, entryCtx);
-                const msg = explainOpen(asset, 'short', price, assetAnalytic?.marketRegime || 'sideways', signal.type);
+                const msg = explainOpen(asset, 'short', price, assetAnalytic?.marketRegime || 'sideways', fxSignal.type);
                 toast.success(`📉 ${asset} SHORT opened at $${price.toFixed(2)}`);
                 addStatus('trade', msg, asset);
-                logDecision({ asset, action: 'opened_short', explanation: msg, signal: signal.type, regime: assetAnalytic?.marketRegime });
+                logDecision({ asset, action: 'opened_short', explanation: msg, signal: fxSignal.type, regime: assetAnalytic?.marketRegime });
               }
             }
           }
         }
       }
 
+      // Commit pending + stats deltas (outside the per-asset loop so we set state once).
+      setPendingCrossovers(pendingDraft);
+      if (statsRegistered || statsPassed || statsFailed || statsExpired) {
+        setSignalConfirmStats(prev => ({
+          registered: prev.registered + statsRegistered,
+          passed: prev.passed + statsPassed,
+          failed: prev.failed + statsFailed,
+          expired: prev.expired + statsExpired,
+        }));
+      }
+
       if (newState !== prev) saveState(newState);
       return newState;
     });
-  }, [state.isRunning, emergencyStop, isPaperMode, signals, prices, config, analytics, enabledAssets, candleIntervalMs, addStatus]);
+  }, [state.isRunning, emergencyStop, isPaperMode, signals, prices, config, analytics, enabledAssets, candleIntervalMs, addStatus, pendingCrossovers, candles]);
+
 
   // ── Computed values ──
   const unrealizedPnl = useMemo(() => computeUnrealizedPnl(state.positions, prices), [state.positions, prices]);
@@ -596,6 +746,10 @@ export function useUnifiedTradingEngine({
     const newState = resetState();
     setState(newState);
     peakEquityRef.current = newState.initialBalance;
+    setPendingCrossovers({
+      BTCUSDT: null, XRPUSDT: null, FETUSDT: null, XLMUSDT: null, ETHUSDT: null, SOLUSDT: null,
+    });
+    setSignalConfirmStats({ registered: 0, passed: 0, failed: 0, expired: 0 });
     diagnosticsRef.current = {
       ...diagnosticsRef.current,
       cycleCount: 0, errorCount: 0, warningCount: 0,
@@ -634,6 +788,9 @@ export function useUnifiedTradingEngine({
     toggleAsset, triggerEmergencyStop, clearEmergencyStop, clearConnectionErrors,
     // Soak diagnostics
     diagnostics: diagnosticsRef.current,
+    // Distance-confirmation pipeline
+    pendingCrossovers,
+    signalConfirmStats,
   };
 }
 
