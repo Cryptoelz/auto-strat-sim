@@ -170,6 +170,11 @@ export interface FilterConfig {
   atrThreshold: number;
   slippagePercent: number;
   minSmaDistancePercent: number;
+  /** Post-crossover confirmation window (in candles). When > 0, the
+   *  distance check is deferred until this many candles after the crossover,
+   *  so the filter does not reject every crossover at the cross bar where
+   *  fast ≈ slow by definition. */
+  distanceConfirmationCandles?: number;
   maxDailyLossPercent: number;
   maxConsecutiveLosses: number;
   pauseCandlesAfterLossLimit: number;

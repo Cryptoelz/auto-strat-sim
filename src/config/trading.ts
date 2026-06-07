@@ -38,7 +38,8 @@ export const DEFAULT_CONFIG: TradingConfig = {
     atrPeriod: 14,
     atrThreshold: 0.5,
     slippagePercent: 0.075,
-    minSmaDistancePercent: 1.0,
+    minSmaDistancePercent: 0.25,         // post-confirmation threshold (was 1.0, blocked all crossovers at the cross bar)
+    distanceConfirmationCandles: 2,      // wait N candles after crossover, then re-check distance + HTF alignment
     maxDailyLossPercent: 5,
     maxConsecutiveLosses: 3,
     pauseCandlesAfterLossLimit: 10,

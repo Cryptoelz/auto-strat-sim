@@ -149,7 +149,11 @@ export function runFilters(
     }
   }
 
-  if (config.smaDistanceFilterEnabled) {
+  // SMA distance is evaluated POST-crossover by the live engine when
+  // `distanceConfirmationCandles > 0` (the cross bar always has fast ≈ slow,
+  // so an at-cross check would reject every signal). When the confirmation
+  // window is unset/zero, fall back to the legacy inline check.
+  if (config.smaDistanceFilterEnabled && !(config.distanceConfirmationCandles && config.distanceConfirmationCandles > 0)) {
     if (!checkSMADistanceFilter(candles, fastPeriod, slowPeriod, config.minSmaDistancePercent)) {
       return { allowed: false, reason: 'sma_distance_filter' };
     }
