@@ -20,6 +20,7 @@ import { SessionHistoryPanel } from '@/components/trading/SessionHistoryPanel';
 import { CleanSessionButton } from '@/components/trading/CleanSessionButton';
 import { SignalPathDiagnostics } from '@/components/trading/SignalPathDiagnostics';
 import { DistanceFilterAudit } from '@/components/trading/DistanceFilterAudit';
+import { DistanceThresholdSensitivity } from '@/components/trading/DistanceThresholdSensitivity';
 import { StrategyDashboard } from '@/components/trading/StrategyDashboard';
 import { AgentDecisionDashboard } from '@/components/trading/AgentDecisionDashboard';
 import { AgentMemoryDashboard } from '@/components/trading/AgentMemoryDashboard';
@@ -250,6 +251,9 @@ export default function PaperTrading() {
 
         {/* Distance Filter Audit — per-signal rejection breakdown */}
         <DistanceFilterAudit />
+
+        {/* Distance Threshold Sensitivity — sweeps 1.0/0.75/0.5/0.25/0.10% */}
+        <DistanceThresholdSensitivity />
 
         {/* Charts + Asset Monitoring */}
         <div className="grid gap-4 md:grid-cols-2">
