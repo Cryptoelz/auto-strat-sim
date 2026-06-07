@@ -540,10 +540,10 @@ export function useUnifiedTradingEngine({
         // context so the resulting trade carries them through to analytics.
         const distSnapshot = confirmedDistancePct ?? assetAnalytic?.smaDistance ?? undefined;
         const distContribSnapshot = distanceContribution || scoreDistanceContribution(distSnapshot ?? null);
-        const enrichedCtx = {
+        const enrichedCtx: typeof entryCtx & { convictionScore?: number } = {
           ...entryCtx,
           smaDistance: distSnapshot,
-          convictionScore: (entryCtx.convictionScore ?? 0) + distContribSnapshot,
+          convictionScore: distContribSnapshot,
         };
 
         // Synthesize the effective signal for the downstream open/flip branches.
