@@ -53,6 +53,23 @@ export interface SoakDiagnostics {
   lastCycleTimestamp: number;
 }
 
+/** Post-crossover distance-confirmation pending entry. */
+export interface PendingCrossover {
+  asset: Asset;
+  direction: 'long' | 'short';
+  originTs: number;
+  originPrice: number;
+  ageCandles: number;
+}
+
+/** Cumulative confirmation counters surfaced to the diagnostics widget. */
+export interface SignalConfirmStats {
+  registered: number;  // total pendings created
+  passed: number;      // distance + HTF confirmed → promoted to execution
+  failed: number;      // grace window exhausted without passing
+  expired: number;     // SMA flipped against direction before confirmation
+}
+
 export interface UnifiedEngineOptions {
   mode?: EngineMode;
   config?: TradingConfig;
@@ -90,6 +107,9 @@ export interface UnifiedEngineResult {
   clearConnectionErrors: () => void;
   // Soak-test diagnostics
   diagnostics: SoakDiagnostics;
+  // Distance-confirmation pipeline (post-crossover gate)
+  pendingCrossovers: Record<Asset, PendingCrossover | null>;
+  signalConfirmStats: SignalConfirmStats;
 }
 
 // ─── Constants ──────────────────────────────────────
