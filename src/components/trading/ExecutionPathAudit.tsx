@@ -88,10 +88,18 @@ export function ExecutionPathAudit() {
         <CardTitle className="text-sm flex items-center gap-2">
           <Activity className="h-4 w-4 text-primary" />
           Execution Path Audit
-          <Badge variant="outline" className="ml-2 text-[10px]">
+          <Badge variant="outline" className="ml-2 text-[9px] tracking-wide border-trading-profit/50 text-trading-profit">
+            LIVE ENGINE
+          </Badge>
+          <Badge variant="outline" className="text-[10px]">
             {executionAttempts.length} attempt{executionAttempts.length === 1 ? '' : 's'}
           </Badge>
         </CardTitle>
+        <p className="text-[10px] text-muted-foreground pt-1 leading-relaxed">
+          Counts only signals the <strong>running live engine</strong> has promoted past
+          confirmation since this session started. Not comparable to the historical 7-day
+          replay in Signal Path Diagnostics — that one is an offline what-if view.
+        </p>
       </CardHeader>
       <CardContent className="space-y-5">
         {/* Final waterfall */}
