@@ -97,6 +97,8 @@ export function LiveSignalMonitor() {
             </span>
           </div>
         )}
+
+        <ExpectedSignalFrequency />
         {!liveActivity.lastCandleProcessedTs && (
           <div className="rounded-md border border-muted bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
             Waiting for the first candle to arrive on the live feed…
