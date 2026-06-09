@@ -256,7 +256,6 @@ export function SignalPathDiagnostics() {
         <CardTitle className="text-sm flex items-center gap-2">
           <Search className="h-4 w-4 text-primary" />
           Signal Path Diagnostics
-          <Badge variant="outline" className="ml-2 text-[10px]">7d · BTC + XRP</Badge>
           <Button
             variant="ghost" size="sm"
             className="ml-auto h-7 text-xs gap-1"
@@ -266,49 +265,66 @@ export function SignalPathDiagnostics() {
             {loading ? 'Loading…' : 'Re-run'}
           </Button>
         </CardTitle>
+        <p className="text-[10px] text-muted-foreground pt-1 leading-relaxed">
+          This card combines <strong>three different data sources</strong>. Read the scope
+          badge on each section — counts are <em>not</em> comparable across scopes.
+        </p>
       </CardHeader>
       <CardContent className="space-y-5">
-        {/* Live diagnostics widget */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          <LiveStat icon={Activity} label="Raw Signals (live)" value={live.raw} />
-          <LiveStat icon={Filter} label="Blocked (live)" value={live.blocked} tone="warn" />
-          <LiveStat icon={Zap} label="Executed (live)" value={live.executed} tone="good" />
-          <LiveStat
-            icon={AlertTriangle}
-            label="Top Block Reason"
-            value={live.topReason ? `${prettyReason(live.topReason.reason)} (${live.topReason.count})` : '—'}
-            tone="warn"
-            small
+        {/* ── SECTION 1: Current Session (in-app decision log) ──────────── */}
+        <div className="space-y-2">
+          <SectionHeader
+            title="Current Session — decision log"
+            scope="session"
+            hint="Counts since this browser session started. Cleared on Reset."
           />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <LiveStat icon={Activity} label="Raw Signals (session)" value={live.raw} />
+            <LiveStat icon={Filter} label="Blocked (session)" value={live.blocked} tone="warn" />
+            <LiveStat icon={Zap} label="Executed (session)" value={live.executed} tone="good" />
+            <LiveStat
+              icon={AlertTriangle}
+              label="Top Block Reason"
+              value={live.topReason ? `${prettyReason(live.topReason.reason)} (${live.topReason.count})` : '—'}
+              tone="warn"
+              small
+            />
+          </div>
         </div>
 
-        {/* Post-crossover confirmation pipeline (HTF re-check; distance is scored, not gated) */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          <LiveStat
-            icon={Clock}
-            label="Pending Crossovers"
-            value={Object.values(pendingCrossovers).filter(Boolean).length}
+        {/* ── SECTION 2: Live Engine — post-crossover confirmation pipeline ── */}
+        <div className="space-y-2">
+          <SectionHeader
+            title="Live Engine — post-crossover confirmation pipeline"
+            scope="live"
+            hint="Increments only when the running engine processes a closed candle. Confirmation Passed → feeds Execution Path Audit."
           />
-          <LiveStat
-            icon={CheckCircle2}
-            label="Confirmation Passed"
-            value={signalConfirmStats.passed}
-            tone="good"
-          />
-          <LiveStat
-            icon={XCircle}
-            label="Dropped (HTF re-check)"
-            value={signalConfirmStats.failed}
-            tone="warn"
-          />
-          <LiveStat
-            icon={Hourglass}
-            label="Expired (SMA flip)"
-            value={signalConfirmStats.expired}
-            tone="warn"
-          />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <LiveStat
+              icon={Clock}
+              label="Pending Crossovers"
+              value={Object.values(pendingCrossovers).filter(Boolean).length}
+            />
+            <LiveStat
+              icon={CheckCircle2}
+              label="Confirmation Passed"
+              value={signalConfirmStats.passed}
+              tone="good"
+            />
+            <LiveStat
+              icon={XCircle}
+              label="Dropped (HTF re-check)"
+              value={signalConfirmStats.failed}
+              tone="warn"
+            />
+            <LiveStat
+              icon={Hourglass}
+              label="Expired (SMA flip)"
+              value={signalConfirmStats.expired}
+              tone="warn"
+            />
+          </div>
         </div>
-
 
         {error && (
           <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
@@ -316,22 +332,54 @@ export function SignalPathDiagnostics() {
           </div>
         )}
 
-        {/* Per-asset waterfalls */}
-        <div className="grid gap-4 md:grid-cols-2">
-          {waterfalls.map((wf) => (
-            <WaterfallView key={wf.asset} wf={wf} loading={loading} />
-          ))}
+        {/* ── SECTION 3: Historical Window — 7-day replay ───────────────── */}
+        <div className="space-y-2">
+          <SectionHeader
+            title="Historical Window — 7-day replay (BTC + XRP)"
+            scope="historical"
+            hint="Pure offline replay over the last 7 days of fetched candles. Shows what the strategy WOULD have done — NOT live-engine activity. 'Executed' counts trades in state.trades inside the window."
+          />
+          <div className="grid gap-4 md:grid-cols-2">
+            {waterfalls.map((wf) => (
+              <WaterfallView key={wf.asset} wf={wf} loading={loading} />
+            ))}
+          </div>
         </div>
 
-        <p className="text-[10px] text-muted-foreground">
+        <p className="text-[10px] text-muted-foreground leading-relaxed">
+          <strong>Why &ldquo;Confirmation&rdquo; can be &gt; 0 while Execution Attempts = 0:</strong>{' '}
+          The per-asset Confirmation row is from the <em>historical 7-day replay</em>;
+          Execution Path Audit only counts signals the <em>live engine</em> has actually
+          processed since the session started. They are different scopes by design.
           Distance is no longer a pass/fail gate — it contributes to conviction
-          (+0/+5/+10/+15 by band). MPC / Governance stages reflect the current
-          live gate state; when either is closed it suppresses every confirmed
-          signal in the window.
-          {lastRun && <> Last run {new Date(lastRun).toLocaleTimeString()}.</>}
+          (+0/+5/+10/+15 by band).
+          {lastRun && <> Last replay {new Date(lastRun).toLocaleTimeString()}.</>}
         </p>
       </CardContent>
     </Card>
+  );
+}
+
+function SectionHeader({
+  title, scope, hint,
+}: { title: string; scope: 'session' | 'live' | 'historical'; hint: string }) {
+  const scopeMeta = {
+    session:    { label: 'CURRENT SESSION', cls: 'border-primary/40 text-primary' },
+    live:       { label: 'LIVE ENGINE',     cls: 'border-trading-profit/50 text-trading-profit' },
+    historical: { label: 'HISTORICAL 7D',   cls: 'border-trading-warning/40 text-trading-warning' },
+  }[scope];
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-xs font-semibold">{title}</span>
+        <Badge variant="outline" className={cn('text-[9px] tracking-wide', scopeMeta.cls)}>
+          {scopeMeta.label}
+        </Badge>
+      </div>
+      <span className="text-[10px] text-muted-foreground max-w-[55%] text-right leading-snug">
+        {hint}
+      </span>
+    </div>
   );
 }
 
