@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { useTradingContext } from '@/contexts/TradingContext';
 import { Activity, Radio } from 'lucide-react';
 import { format, formatDistanceToNowStrict } from 'date-fns';
+import { ExpectedSignalFrequency } from './ExpectedSignalFrequency';
 
 function fmtTs(ts: number | null): string {
   if (!ts) return '—';
@@ -96,6 +97,8 @@ export function LiveSignalMonitor() {
             </span>
           </div>
         )}
+
+        <ExpectedSignalFrequency />
         {!liveActivity.lastCandleProcessedTs && (
           <div className="rounded-md border border-muted bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
             Waiting for the first candle to arrive on the live feed…
