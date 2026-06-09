@@ -1010,7 +1010,7 @@ export function seedExperiments(): void {
         smaFast: 8,
         smaSlow: 21,
         distanceConfirmationCandles: 1,
-        distanceMode: 'conviction_only',
+        distanceAsConvictionOnly: 1,
       },
     },
   };
