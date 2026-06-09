@@ -785,7 +785,7 @@ export function useUnifiedTradingEngine({
         }));
       }
 
-      }
+
 
       if (newState !== prev) saveState(newState);
       return newState;
