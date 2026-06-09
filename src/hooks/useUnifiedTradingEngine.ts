@@ -773,6 +773,18 @@ export function useUnifiedTradingEngine({
           failed: prev.failed + statsFailed,
           expired: prev.expired + statsExpired,
         }));
+        const now = Date.now();
+        setLiveActivity(prev => ({
+          ...prev,
+          crossoverCount: prev.crossoverCount + statsRegistered,
+          htfPassCount: prev.htfPassCount + statsPassed,
+          confirmationCount: prev.confirmationCount + statsPassed,
+          lastCrossoverTs: statsRegistered > 0 ? now : prev.lastCrossoverTs,
+          lastHtfPassTs: statsPassed > 0 ? now : prev.lastHtfPassTs,
+          lastConfirmationPassTs: statsPassed > 0 ? now : prev.lastConfirmationPassTs,
+        }));
+      }
+
       }
 
       if (newState !== prev) saveState(newState);
