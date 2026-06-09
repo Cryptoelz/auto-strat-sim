@@ -75,6 +75,8 @@ interface TradingContextType {
   pendingCrossovers: ReturnType<typeof useUnifiedTradingEngine>['pendingCrossovers'];
   signalConfirmStats: ReturnType<typeof useUnifiedTradingEngine>['signalConfirmStats'];
   executionAttempts: ReturnType<typeof useUnifiedTradingEngine>['executionAttempts'];
+  liveActivity: ReturnType<typeof useUnifiedTradingEngine>['liveActivity'];
+
   // Notifications
   permission: NotificationPermission;
   isSupported: boolean;
