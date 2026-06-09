@@ -423,7 +423,16 @@ export function useUnifiedTradingEngine({
       setIsLoading(false);
       diagnosticsRef.current.cycleCount++;
       diagnosticsRef.current.lastCycleTimestamp = Date.now();
+      // Track most recent candle the engine actually evaluated
+      let latestTs: number | null = null;
+      for (const a of config.assets) {
+        const arr = allCandles[a];
+        const last = arr && arr.length ? arr[arr.length - 1].timestamp : null;
+        if (last && (!latestTs || last > latestTs)) latestTs = last;
+      }
+      if (latestTs) setLiveActivity(prev => ({ ...prev, lastCandleProcessedTs: latestTs }));
       addStatus('info', 'Market data loaded successfully');
+
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Failed to fetch market data');
