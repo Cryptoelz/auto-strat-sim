@@ -231,6 +231,25 @@ export function useUnifiedTradingEngine({
     setExecutionAttempts(prev => [a, ...prev].slice(0, MAX_ATTEMPTS));
   }, []);
 
+  // ── Live engine activity tracker ──
+  const [liveActivity, setLiveActivity] = useState<LiveActivity>(() => ({
+    lastCandleProcessedTs: null,
+    lastCrossoverTs: null,
+    lastHtfPassTs: null,
+    lastConfirmationPassTs: null,
+    rawSignalCount: 0,
+    crossoverCount: 0,
+    htfPassCount: 0,
+    confirmationCount: 0,
+    pollIntervalMs: POLL_INTERVAL,
+    candleIntervalMs: TIMEFRAME_MS[config.timeframe] || CANDLE_INTERVAL_MS,
+    sessionStartTs: Date.now(),
+  }));
+  const bumpActivity = useCallback((patch: Partial<LiveActivity>) => {
+    setLiveActivity(prev => ({ ...prev, ...patch }));
+  }, []);
+
+
   // ── Tracking refs ──
   const prevSignalsRef = useRef<Record<Asset, Signal | null> | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
