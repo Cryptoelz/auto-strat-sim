@@ -75,6 +75,8 @@ interface TradingContextType {
   pendingCrossovers: ReturnType<typeof useUnifiedTradingEngine>['pendingCrossovers'];
   signalConfirmStats: ReturnType<typeof useUnifiedTradingEngine>['signalConfirmStats'];
   executionAttempts: ReturnType<typeof useUnifiedTradingEngine>['executionAttempts'];
+  liveActivity: ReturnType<typeof useUnifiedTradingEngine>['liveActivity'];
+
   // Notifications
   permission: NotificationPermission;
   isSupported: boolean;
@@ -207,6 +209,8 @@ export function TradingProvider({ children }: { children: ReactNode }) {
     pendingCrossovers: engine.pendingCrossovers,
     signalConfirmStats: engine.signalConfirmStats,
     executionAttempts: engine.executionAttempts,
+    liveActivity: engine.liveActivity,
+
     permission, isSupported, requestPermission,
   }), [
     engine, strategyConfig, config,

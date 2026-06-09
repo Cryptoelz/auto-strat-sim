@@ -71,6 +71,23 @@ export interface SignalConfirmStats {
   expired: number;     // SMA flipped against direction before confirmation
 }
 
+/** Live engine activity — proves the engine is actually evaluating
+ *  new candles in real time rather than only replaying history. */
+export interface LiveActivity {
+  lastCandleProcessedTs: number | null;
+  lastCrossoverTs: number | null;
+  lastHtfPassTs: number | null;
+  lastConfirmationPassTs: number | null;
+  rawSignalCount: number;
+  crossoverCount: number;
+  htfPassCount: number;
+  confirmationCount: number;
+  pollIntervalMs: number;
+  candleIntervalMs: number;
+  sessionStartTs: number;
+}
+
+
 export interface UnifiedEngineOptions {
   mode?: EngineMode;
   config?: TradingConfig;
@@ -113,7 +130,10 @@ export interface UnifiedEngineResult {
   signalConfirmStats: SignalConfirmStats;
   /** Rolling buffer (most-recent-first) of execution-path attempts. */
   executionAttempts: ExecutionAttempt[];
+  /** Live engine activity — proves the engine is detecting new candles. */
+  liveActivity: LiveActivity;
 }
+
 
 // ─── Constants ──────────────────────────────────────
 
@@ -210,6 +230,25 @@ export function useUnifiedTradingEngine({
   const pushAttempt = useCallback((a: ExecutionAttempt) => {
     setExecutionAttempts(prev => [a, ...prev].slice(0, MAX_ATTEMPTS));
   }, []);
+
+  // ── Live engine activity tracker ──
+  const [liveActivity, setLiveActivity] = useState<LiveActivity>(() => ({
+    lastCandleProcessedTs: null,
+    lastCrossoverTs: null,
+    lastHtfPassTs: null,
+    lastConfirmationPassTs: null,
+    rawSignalCount: 0,
+    crossoverCount: 0,
+    htfPassCount: 0,
+    confirmationCount: 0,
+    pollIntervalMs: POLL_INTERVAL,
+    candleIntervalMs: TIMEFRAME_MS[config.timeframe] || CANDLE_INTERVAL_MS,
+    sessionStartTs: Date.now(),
+  }));
+  const bumpActivity = useCallback((patch: Partial<LiveActivity>) => {
+    setLiveActivity(prev => ({ ...prev, ...patch }));
+  }, []);
+
 
   // ── Tracking refs ──
   const prevSignalsRef = useRef<Record<Asset, Signal | null> | null>(null);
@@ -320,16 +359,27 @@ export function useUnifiedTradingEngine({
           if (a.signal) newSignals[asset] = a.signal;
         }
 
-        // Play sound for new actionable signals
+        // Play sound + track raw signals for new actionable signals
+        let rawSignalsDelta = 0;
         for (const asset of config.assets) {
           const newSig = newSignals[asset];
           const prevSig = prevSignalsRef.current?.[asset];
           if (newSig && (newSig.type === 'BUY' || newSig.type === 'SELL')) {
-            if (!prevSig || prevSig.type !== newSig.type) {
-              playSignalSound(newSig.type);
+            const prevKey = prevSig ? `${prevSig.type}-${prevSig.timestamp}` : null;
+            const newKey = `${newSig.type}-${newSig.timestamp}`;
+            if (prevKey !== newKey) {
+              if (!prevSig || prevSig.type !== newSig.type) playSignalSound(newSig.type);
+              rawSignalsDelta++;
             }
           }
         }
+        if (rawSignalsDelta > 0) {
+          setLiveActivity(prev => ({
+            ...prev,
+            rawSignalCount: prev.rawSignalCount + rawSignalsDelta,
+          }));
+        }
+
 
         prevSignalsRef.current = newSignals;
         setAnalytics(newAnalytics);
@@ -373,7 +423,16 @@ export function useUnifiedTradingEngine({
       setIsLoading(false);
       diagnosticsRef.current.cycleCount++;
       diagnosticsRef.current.lastCycleTimestamp = Date.now();
+      // Track most recent candle the engine actually evaluated
+      let latestTs: number | null = null;
+      for (const a of config.assets) {
+        const arr = allCandles[a];
+        const last = arr && arr.length ? arr[arr.length - 1].timestamp : null;
+        if (last && (!latestTs || last > latestTs)) latestTs = last;
+      }
+      if (latestTs) setLiveActivity(prev => ({ ...prev, lastCandleProcessedTs: latestTs }));
       addStatus('info', 'Market data loaded successfully');
+
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Failed to fetch market data');
@@ -723,7 +782,19 @@ export function useUnifiedTradingEngine({
           failed: prev.failed + statsFailed,
           expired: prev.expired + statsExpired,
         }));
+        const now = Date.now();
+        setLiveActivity(prev => ({
+          ...prev,
+          crossoverCount: prev.crossoverCount + statsRegistered,
+          htfPassCount: prev.htfPassCount + statsPassed,
+          confirmationCount: prev.confirmationCount + statsPassed,
+          lastCrossoverTs: statsRegistered > 0 ? now : prev.lastCrossoverTs,
+          lastHtfPassTs: statsPassed > 0 ? now : prev.lastHtfPassTs,
+          lastConfirmationPassTs: statsPassed > 0 ? now : prev.lastConfirmationPassTs,
+        }));
       }
+
+
 
       if (newState !== prev) saveState(newState);
       return newState;
@@ -774,6 +845,8 @@ export function useUnifiedTradingEngine({
           return { ...prev, [asset]: updated };
         });
         addStatus('info', `Candle closed on ${asset} at $${candle.close.toFixed(2)}`, asset);
+        setLiveActivity(prev => ({ ...prev, lastCandleProcessedTs: candle.timestamp }));
+
       },
       (asset, price) => {
         setPrices(prev => ({ ...prev, [asset]: price }));
@@ -866,6 +939,20 @@ export function useUnifiedTradingEngine({
     });
     setSignalConfirmStats({ registered: 0, passed: 0, failed: 0, expired: 0 });
     setExecutionAttempts([]);
+    setLiveActivity({
+      lastCandleProcessedTs: null,
+      lastCrossoverTs: null,
+      lastHtfPassTs: null,
+      lastConfirmationPassTs: null,
+      rawSignalCount: 0,
+      crossoverCount: 0,
+      htfPassCount: 0,
+      confirmationCount: 0,
+      pollIntervalMs: POLL_INTERVAL,
+      candleIntervalMs: TIMEFRAME_MS[config.timeframe] || CANDLE_INTERVAL_MS,
+      sessionStartTs: Date.now(),
+    });
+
     // Clear last-signal memory so a previously-emitted BUY/SELL won't be
     // suppressed as a duplicate against stale prev-signal refs.
     prevSignalsRef.current = null;
@@ -913,6 +1000,8 @@ export function useUnifiedTradingEngine({
     pendingCrossovers,
     signalConfirmStats,
     executionAttempts,
+    liveActivity,
+
   };
 }
 
