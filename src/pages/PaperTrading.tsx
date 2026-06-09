@@ -24,6 +24,8 @@ import { DistanceThresholdSensitivity } from '@/components/trading/DistanceThres
 import { NoDistanceDiagnostic } from '@/components/trading/NoDistanceDiagnostic';
 import { ExecutionPathAudit } from '@/components/trading/ExecutionPathAudit';
 import { PositionStateDebug } from '@/components/trading/PositionStateDebug';
+import { LiveSignalMonitor } from '@/components/trading/LiveSignalMonitor';
+
 import { StrategyDashboard } from '@/components/trading/StrategyDashboard';
 import { AgentDecisionDashboard } from '@/components/trading/AgentDecisionDashboard';
 import { AgentMemoryDashboard } from '@/components/trading/AgentMemoryDashboard';
