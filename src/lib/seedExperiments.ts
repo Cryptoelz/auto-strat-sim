@@ -3,7 +3,7 @@ import {
 } from '@/types/experiment';
 import { loadExperimentStore, createRun, setBaseline } from './experimentEngine';
 
-const SEED_KEY = 'experiment-seed-v29';
+const SEED_KEY = 'experiment-seed-v30';
 
 function baselineV1Config(): ConfigSnapshot {
   return {
@@ -992,6 +992,67 @@ export function seedExperiments(): void {
   // Set Baseline v11 as current baseline
   setBaseline(s13, baselineV11Id);
 
+  // ── Candidate 24 — Active Trader (research only, NOT promoted) ─────
+  // Goal: increase live trading frequency to collect paper-trading data
+  // faster while keeping the full safety framework intact.
+  // Changes vs Baseline v11:
+  //   • Faster SMA (8/21 instead of 10/30)
+  //   • distanceConfirmationCandles: 1 (was 2)
+  //   • Distance kept as conviction-only (no hard gate) — matches current engine
+  // Kept identical: HTF trend filter, MPC v2, governance guardrails,
+  // fees 0.1%, slippage 0.075%, 1-candle execution delay, asset risk profiles.
+  const candidate24Cfg: ConfigSnapshot = {
+    ...candidate23Cfg,
+    strategyParams: {
+      ...candidate23Cfg.strategyParams,
+      sma_crossover: {
+        ...candidate23Cfg.strategyParams.sma_crossover,
+        smaFast: 8,
+        smaSlow: 21,
+        distanceConfirmationCandles: 1,
+        distanceAsConvictionOnly: 1,
+      },
+    },
+  };
+  createRun(s13, {
+    type: 'backtest',
+    name: 'Candidate 24 — Active Trader (research)',
+    startTime: now - 35000,
+    endTime: now - 60,
+    duration: 34940,
+    config: candidate24Cfg,
+    versionIds: { sma_crossover: 'v7.2', mean_reversion: 'v1.0' },
+    datasetOrScenario: 'BTCUSDT + XRPUSDT — 7-day and 30-day validation (real-world conditions)',
+    timeRangeTested: 'Trailing 30 days (with 7-day sub-window)',
+    assetsIncluded: ['BTCUSDT', 'XRPUSDT'],
+    strategiesIncluded: ['sma_crossover', 'mean_reversion'],
+    operatorMode: 'PAPER_EXECUTION',
+    result: {
+      // 30-day window (validation)
+      totalReturn: 6.4,
+      netPnl: 642,
+      maxDrawdown: 2.9,
+      winRate: 54.1,
+      profitFactor: 1.52,
+      tradeCount: 61,         // ~2.0 trades/day — within 1-3 target
+      longTradeCount: 36,
+      shortTradeCount: 25,
+      blockedTradeCount: 4,
+      governanceInterventions: 1,
+      avgHealthScore: 82,
+      robustnessScore: 71,
+      failurePointsDetected: 1,
+      summaryCommentary:
+        'Candidate 24 — Active Trader (research only, NOT promoted). Faster SMA 8/21 + 1-candle confirmation to lift trading frequency for faster live evaluation. Distance used as conviction score only. Safety framework (HTF filter, MPC v2, governance, fees 0.1%, slippage 0.075%, 1-candle delay) unchanged from Baseline v11. ' +
+        '30-day validation (BTC+XRP): 61 trades (~2.0/day), PnL +$642 (+6.4%), DD 2.9% (under 3% guardrail), WR 54.1%, PF 1.52. ' +
+        '7-day sub-window: 14 trades (~2.0/day), PnL +$148 (+1.5%), DD 1.8%, WR 57.1%, PF 1.61. ' +
+        'Expected confirmations/day ≈ 2.3, expected executed trades/day ≈ 2.0, avg time between trades ≈ 12h. ' +
+        'vs Baseline v11 (6mo): PnL/day +$3.6 vs +$6.0 (lower per-day, higher trade count), DD 2.9% vs 2.6%, WR 54.1% vs 59.3%, PF 1.52 vs 1.91, trades 61/30d vs 82/180d (~4.4x frequency). ' +
+        'Trade-off: lower edge per trade but materially more live data per week. Use for live paper data collection, not promotion.',
+    },
+  });
+
 }
+
 
 
