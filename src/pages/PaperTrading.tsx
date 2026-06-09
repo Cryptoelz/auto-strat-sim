@@ -269,6 +269,10 @@ export default function PaperTrading() {
         {/* Position State Debug — engine vs UI vs localStorage truth check */}
         <PositionStateDebug />
 
+        {/* Live Signal Monitor — proves engine is actively evaluating new candles */}
+        <LiveSignalMonitor />
+
+
 
 
         {/* Charts + Asset Monitoring */}
