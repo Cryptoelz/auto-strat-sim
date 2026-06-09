@@ -939,6 +939,20 @@ export function useUnifiedTradingEngine({
     });
     setSignalConfirmStats({ registered: 0, passed: 0, failed: 0, expired: 0 });
     setExecutionAttempts([]);
+    setLiveActivity({
+      lastCandleProcessedTs: null,
+      lastCrossoverTs: null,
+      lastHtfPassTs: null,
+      lastConfirmationPassTs: null,
+      rawSignalCount: 0,
+      crossoverCount: 0,
+      htfPassCount: 0,
+      confirmationCount: 0,
+      pollIntervalMs: POLL_INTERVAL,
+      candleIntervalMs: TIMEFRAME_MS[config.timeframe] || CANDLE_INTERVAL_MS,
+      sessionStartTs: Date.now(),
+    });
+
     // Clear last-signal memory so a previously-emitted BUY/SELL won't be
     // suppressed as a duplicate against stale prev-signal refs.
     prevSignalsRef.current = null;
