@@ -836,6 +836,8 @@ export function useUnifiedTradingEngine({
           return { ...prev, [asset]: updated };
         });
         addStatus('info', `Candle closed on ${asset} at $${candle.close.toFixed(2)}`, asset);
+        setLiveActivity(prev => ({ ...prev, lastCandleProcessedTs: candle.timestamp }));
+
       },
       (asset, price) => {
         setPrices(prev => ({ ...prev, [asset]: price }));
