@@ -359,16 +359,27 @@ export function useUnifiedTradingEngine({
           if (a.signal) newSignals[asset] = a.signal;
         }
 
-        // Play sound for new actionable signals
+        // Play sound + track raw signals for new actionable signals
+        let rawSignalsDelta = 0;
         for (const asset of config.assets) {
           const newSig = newSignals[asset];
           const prevSig = prevSignalsRef.current?.[asset];
           if (newSig && (newSig.type === 'BUY' || newSig.type === 'SELL')) {
-            if (!prevSig || prevSig.type !== newSig.type) {
-              playSignalSound(newSig.type);
+            const prevKey = prevSig ? `${prevSig.type}-${prevSig.timestamp}` : null;
+            const newKey = `${newSig.type}-${newSig.timestamp}`;
+            if (prevKey !== newKey) {
+              if (!prevSig || prevSig.type !== newSig.type) playSignalSound(newSig.type);
+              rawSignalsDelta++;
             }
           }
         }
+        if (rawSignalsDelta > 0) {
+          setLiveActivity(prev => ({
+            ...prev,
+            rawSignalCount: prev.rawSignalCount + rawSignalsDelta,
+          }));
+        }
+
 
         prevSignalsRef.current = newSignals;
         setAnalytics(newAnalytics);
