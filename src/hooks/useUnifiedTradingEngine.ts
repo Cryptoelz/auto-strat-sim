@@ -130,7 +130,10 @@ export interface UnifiedEngineResult {
   signalConfirmStats: SignalConfirmStats;
   /** Rolling buffer (most-recent-first) of execution-path attempts. */
   executionAttempts: ExecutionAttempt[];
+  /** Live engine activity — proves the engine is detecting new candles. */
+  liveActivity: LiveActivity;
 }
+
 
 // ─── Constants ──────────────────────────────────────
 
