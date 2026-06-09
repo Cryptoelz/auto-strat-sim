@@ -209,6 +209,8 @@ export function TradingProvider({ children }: { children: ReactNode }) {
     pendingCrossovers: engine.pendingCrossovers,
     signalConfirmStats: engine.signalConfirmStats,
     executionAttempts: engine.executionAttempts,
+    liveActivity: engine.liveActivity,
+
     permission, isSupported, requestPermission,
   }), [
     engine, strategyConfig, config,
