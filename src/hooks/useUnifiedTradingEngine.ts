@@ -1000,6 +1000,8 @@ export function useUnifiedTradingEngine({
     pendingCrossovers,
     signalConfirmStats,
     executionAttempts,
+    liveActivity,
+
   };
 }
 
