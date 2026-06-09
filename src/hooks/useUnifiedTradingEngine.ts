@@ -71,6 +71,23 @@ export interface SignalConfirmStats {
   expired: number;     // SMA flipped against direction before confirmation
 }
 
+/** Live engine activity — proves the engine is actually evaluating
+ *  new candles in real time rather than only replaying history. */
+export interface LiveActivity {
+  lastCandleProcessedTs: number | null;
+  lastCrossoverTs: number | null;
+  lastHtfPassTs: number | null;
+  lastConfirmationPassTs: number | null;
+  rawSignalCount: number;
+  crossoverCount: number;
+  htfPassCount: number;
+  confirmationCount: number;
+  pollIntervalMs: number;
+  candleIntervalMs: number;
+  sessionStartTs: number;
+}
+
+
 export interface UnifiedEngineOptions {
   mode?: EngineMode;
   config?: TradingConfig;
