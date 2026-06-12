@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Play, Pause, RotateCcw, Trophy, Activity } from 'lucide-react';
 import { StrategyId, STRATEGY_CONFIGS, StrategyState, useDualPaperTrading } from '@/hooks/useDualPaperTrading';
+import { PaperChampionDashboard } from '@/components/trading/PaperChampionDashboard';
 
 const fmtUsd = (n: number) => `${n >= 0 ? '+' : '−'}$${Math.abs(n).toFixed(2)}`;
 const fmtUsdAbs = (n: number) => `$${n.toFixed(2)}`;
