@@ -7,6 +7,7 @@ import { Candidate25Validation } from '@/components/trading/Candidate25Validatio
 import { TrendRiderValidation } from '@/components/trading/TrendRiderValidation';
 import { StrategyRouterValidation } from '@/components/trading/StrategyRouterValidation';
 import { MeanReversionValidation } from '@/components/trading/MeanReversionValidation';
+import { Router2Validation } from '@/components/trading/Router2Validation';
 
 export default function Experiments() {
   return (
@@ -15,6 +16,7 @@ export default function Experiments() {
         <h1 className="text-lg font-bold sm:text-xl">Experiments</h1>
         <p className="text-xs text-muted-foreground">Track runs, compare configurations, and manage the experiment lifecycle.</p>
       </div>
+      <Router2Validation />
       <MeanReversionValidation />
       <StrategyRouterValidation />
       <TrendRiderValidation />
