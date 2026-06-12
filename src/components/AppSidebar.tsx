@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, LineChart, FlaskConical, Layers, PieChart,
   Shield, UserCog, Bell, Beaker, ClipboardCheck, Activity,
-  Radio, Microscope, ArrowUpCircle, BarChart3, Gauge, FileText, Sparkles, Scale, SlidersHorizontal, GitCompare, Trophy, Gavel, Snowflake,
+  Radio, Microscope, ArrowUpCircle, BarChart3, Gauge, FileText, Sparkles, Scale, SlidersHorizontal, GitCompare, Trophy, Gavel, Snowflake, Briefcase,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
@@ -37,6 +37,7 @@ const NAV_SECTIONS = [
     items: [
       { title: 'Strategies', url: '/strategies', icon: Layers },
       { title: 'Portfolio', url: '/portfolio', icon: PieChart },
+      { title: 'Portfolio Manager', url: '/portfolio-manager', icon: Briefcase },
       { title: 'Research', url: '/research', icon: Microscope },
       { title: 'Session Analytics', url: '/session-analytics', icon: BarChart3 },
       { title: 'Analytics Hub', url: '/analytics-hub', icon: Gauge },
