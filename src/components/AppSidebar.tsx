@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, LineChart, FlaskConical, Layers, PieChart,
   Shield, UserCog, Bell, Beaker, ClipboardCheck, Activity,
-  Radio, Microscope, ArrowUpCircle, BarChart3, Gauge, FileText, Sparkles, Scale, SlidersHorizontal,
+  Radio, Microscope, ArrowUpCircle, BarChart3, Gauge, FileText, Sparkles, Scale, SlidersHorizontal, GitCompare,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
@@ -27,6 +27,7 @@ const NAV_SECTIONS = [
       { title: 'Overview', url: '/', icon: LayoutDashboard },
       { title: 'Live Trading', url: '/trading', icon: LineChart },
       { title: 'Paper Trade', url: '/paper-trading', icon: Radio },
+      { title: 'Dual Paper', url: '/dual-paper', icon: GitCompare },
       { title: 'Backtest', url: '/backtest', icon: FlaskConical },
     ],
   },

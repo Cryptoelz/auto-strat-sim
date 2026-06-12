@@ -9,6 +9,7 @@ import Overview from "./pages/Overview";
 import Trading from "./pages/Trading";
 import Backtest from "./pages/Backtest";
 import PaperTrading from "./pages/PaperTrading";
+import DualPaperTrading from "./pages/DualPaperTrading";
 import Strategies from "./pages/Strategies";
 import Portfolio from "./pages/Portfolio";
 import Governance from "./pages/Governance";
@@ -42,6 +43,7 @@ const App = () => (
               <Route path="/trading" element={<Trading />} />
               <Route path="/backtest" element={<Backtest />} />
               <Route path="/paper-trading" element={<PaperTrading />} />
+              <Route path="/dual-paper" element={<DualPaperTrading />} />
               <Route path="/strategies" element={<Strategies />} />
               <Route path="/portfolio" element={<Portfolio />} />
               <Route path="/governance" element={<Governance />} />
