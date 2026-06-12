@@ -198,41 +198,7 @@ export default function DualPaperTrading() {
 
       <ComparisonCard base={baseMetrics} cand={candMetrics} />
 
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Trophy className="h-4 w-4" /> Paper Champion
-              </CardTitle>
-              <CardDescription className="text-xs mt-1">
-                Auto-awarded after ≥20 trades per strategy and ≥30 days live. PF 40% · Net PnL 40% · DD 20%.
-              </CardDescription>
-            </div>
-            {champion.eligible && champion.winner && (
-              <Badge className="bg-trading-profit/15 text-trading-profit border-trading-profit/30">
-                {STRATEGY_CONFIGS[champion.winner].label}
-              </Badge>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-3 text-xs">
-          {!champion.eligible ? (
-            <div className="text-muted-foreground">{champion.reason}</div>
-          ) : (
-            <>
-              <div className="grid grid-cols-2 gap-3">
-                <Stat label="Baseline v11 Score" value={champion.baseScore.toFixed(3)} />
-                <Stat label="Candidate 25 Score" value={champion.candScore.toFixed(3)} />
-              </div>
-              <div className="text-muted-foreground">{champion.reason}</div>
-            </>
-          )}
-          <div className="text-[11px] text-muted-foreground border-t border-border/40 pt-2">
-            Live for {daysElapsed.toFixed(1)} days · {baseMetrics.trades} baseline trades · {candMetrics.trades} candidate trades
-          </div>
-        </CardContent>
-      </Card>
+      <PaperChampionDashboard state={state} />
 
       <Tabs defaultValue="recent">
         <TabsList>
