@@ -17,6 +17,7 @@ import PortfolioManager from "./pages/PortfolioManager";
 import InvestmentCommittee from "./pages/InvestmentCommittee";
 import ResearchJournal from "./pages/ResearchJournal";
 import ExecutiveDashboard from "./pages/ExecutiveDashboard";
+import MonthlyResearchReport from "./pages/MonthlyResearchReport";
 import Strategies from "./pages/Strategies";
 import Portfolio from "./pages/Portfolio";
 import Governance from "./pages/Governance";
@@ -58,6 +59,7 @@ const App = () => (
               <Route path="/committee" element={<InvestmentCommittee />} />
               <Route path="/journal" element={<ResearchJournal />} />
               <Route path="/executive" element={<ExecutiveDashboard />} />
+              <Route path="/monthly-report" element={<MonthlyResearchReport />} />
               <Route path="/strategies" element={<Strategies />} />
               <Route path="/portfolio" element={<Portfolio />} />
               <Route path="/governance" element={<Governance />} />
