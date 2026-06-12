@@ -12,6 +12,7 @@ import PaperTrading from "./pages/PaperTrading";
 import DualPaperTrading from "./pages/DualPaperTrading";
 import ChampionshipArena from "./pages/ChampionshipArena";
 import PromotionReviewBoard from "./pages/PromotionReviewBoard";
+import ResearchFreezeMode from "./pages/ResearchFreezeMode";
 import Strategies from "./pages/Strategies";
 import Portfolio from "./pages/Portfolio";
 import Governance from "./pages/Governance";
@@ -48,6 +49,7 @@ const App = () => (
               <Route path="/dual-paper" element={<DualPaperTrading />} />
               <Route path="/championship" element={<ChampionshipArena />} />
               <Route path="/promotion-board" element={<PromotionReviewBoard />} />
+              <Route path="/freeze" element={<ResearchFreezeMode />} />
               <Route path="/strategies" element={<Strategies />} />
               <Route path="/portfolio" element={<Portfolio />} />
               <Route path="/governance" element={<Governance />} />
