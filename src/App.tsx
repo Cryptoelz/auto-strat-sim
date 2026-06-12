@@ -14,6 +14,7 @@ import ChampionshipArena from "./pages/ChampionshipArena";
 import PromotionReviewBoard from "./pages/PromotionReviewBoard";
 import ResearchFreezeMode from "./pages/ResearchFreezeMode";
 import PortfolioManager from "./pages/PortfolioManager";
+import InvestmentCommittee from "./pages/InvestmentCommittee";
 import Strategies from "./pages/Strategies";
 import Portfolio from "./pages/Portfolio";
 import Governance from "./pages/Governance";
@@ -52,6 +53,7 @@ const App = () => (
               <Route path="/promotion-board" element={<PromotionReviewBoard />} />
               <Route path="/freeze" element={<ResearchFreezeMode />} />
               <Route path="/portfolio-manager" element={<PortfolioManager />} />
+              <Route path="/committee" element={<InvestmentCommittee />} />
               <Route path="/strategies" element={<Strategies />} />
               <Route path="/portfolio" element={<Portfolio />} />
               <Route path="/governance" element={<Governance />} />
