@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, LineChart, FlaskConical, Layers, PieChart,
   Shield, UserCog, Bell, Beaker, ClipboardCheck, Activity,
-  Radio, Microscope, ArrowUpCircle, BarChart3, Gauge, FileText, Sparkles, Scale, SlidersHorizontal, GitCompare, Trophy,
+  Radio, Microscope, ArrowUpCircle, BarChart3, Gauge, FileText, Sparkles, Scale, SlidersHorizontal, GitCompare, Trophy, Gavel,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
@@ -58,6 +58,7 @@ const NAV_SECTIONS = [
     label: 'Review',
     items: [
       { title: 'Experiments', url: '/experiments', icon: Beaker },
+      { title: 'Promotion Board', url: '/promotion-board', icon: Gavel },
       { title: 'Promotion', url: '/promotion', icon: ArrowUpCircle },
       { title: 'Readiness', url: '/readiness', icon: ClipboardCheck },
       { title: 'System Health', url: '/system-health', icon: Activity },
