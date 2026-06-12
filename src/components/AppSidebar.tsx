@@ -27,6 +27,7 @@ const NAV_SECTIONS = [
       { title: 'Overview', url: '/', icon: LayoutDashboard },
       { title: 'Live Trading', url: '/trading', icon: LineChart },
       { title: 'Paper Trade', url: '/paper-trading', icon: Radio },
+      { title: 'Dual Paper', url: '/dual-paper', icon: GitCompare },
       { title: 'Backtest', url: '/backtest', icon: FlaskConical },
     ],
   },
