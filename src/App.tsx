@@ -11,6 +11,7 @@ import Backtest from "./pages/Backtest";
 import PaperTrading from "./pages/PaperTrading";
 import DualPaperTrading from "./pages/DualPaperTrading";
 import ChampionshipArena from "./pages/ChampionshipArena";
+import PromotionReviewBoard from "./pages/PromotionReviewBoard";
 import Strategies from "./pages/Strategies";
 import Portfolio from "./pages/Portfolio";
 import Governance from "./pages/Governance";
@@ -46,6 +47,7 @@ const App = () => (
               <Route path="/paper-trading" element={<PaperTrading />} />
               <Route path="/dual-paper" element={<DualPaperTrading />} />
               <Route path="/championship" element={<ChampionshipArena />} />
+              <Route path="/promotion-board" element={<PromotionReviewBoard />} />
               <Route path="/strategies" element={<Strategies />} />
               <Route path="/portfolio" element={<Portfolio />} />
               <Route path="/governance" element={<Governance />} />
