@@ -194,7 +194,7 @@ export default function MomentumScalper() {
       </div>
 
       {/* Tabs: Validation / Comparison / Notes */}
-      <Tabs defaultValue="validation">
+      <Tabs defaultValue="capture">
         <TabsList>
           <TabsTrigger value="validation">Validation</TabsTrigger>
           <TabsTrigger value="comparison">Comparison</TabsTrigger>
