@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, LineChart, FlaskConical, Layers, PieChart,
   Shield, UserCog, Bell, Beaker, ClipboardCheck, Activity,
-  Radio, Microscope, ArrowUpCircle, BarChart3, Gauge, FileText, Sparkles, Scale, SlidersHorizontal, GitCompare, Trophy, Gavel, Snowflake, Briefcase, Users, BookOpen, Crown, CalendarDays,
+  Radio, Microscope, ArrowUpCircle, BarChart3, Gauge, FileText, Sparkles, Scale, SlidersHorizontal, GitCompare, Trophy, Gavel, Snowflake, Briefcase, Users, BookOpen, Crown, CalendarDays, Target,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
@@ -46,6 +46,7 @@ const NAV_SECTIONS = [
       { title: 'Analytics Hub', url: '/analytics-hub', icon: Gauge },
       { title: 'Weekly Review', url: '/weekly-review', icon: FileText },
       { title: 'Monthly Report', url: '/monthly-report', icon: CalendarDays },
+      { title: 'Move Capture Audit', url: '/move-capture', icon: Target },
       { title: 'Command Center', url: '/command-center', icon: Sparkles },
       { title: 'Baseline Validation', url: '/baseline-validation', icon: Scale },
     ],
