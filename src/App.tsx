@@ -20,6 +20,7 @@ import ExecutiveDashboard from "./pages/ExecutiveDashboard";
 import MonthlyResearchReport from "./pages/MonthlyResearchReport";
 import MarketMoveCapture from "./pages/MarketMoveCapture";
 import MomentumScalper from "./pages/MomentumScalper";
+import TradeFrequencyAudit from "./pages/TradeFrequencyAudit";
 import Strategies from "./pages/Strategies";
 import Portfolio from "./pages/Portfolio";
 import Governance from "./pages/Governance";
@@ -64,6 +65,7 @@ const App = () => (
               <Route path="/monthly-report" element={<MonthlyResearchReport />} />
               <Route path="/move-capture" element={<MarketMoveCapture />} />
               <Route path="/momentum-scalper" element={<MomentumScalper />} />
+              <Route path="/trade-frequency" element={<TradeFrequencyAudit />} />
               <Route path="/strategies" element={<Strategies />} />
               <Route path="/portfolio" element={<Portfolio />} />
               <Route path="/governance" element={<Governance />} />

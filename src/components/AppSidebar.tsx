@@ -48,6 +48,7 @@ const NAV_SECTIONS = [
       { title: 'Monthly Report', url: '/monthly-report', icon: CalendarDays },
       { title: 'Move Capture Audit', url: '/move-capture', icon: Target },
       { title: 'Momentum Scalper', url: '/momentum-scalper', icon: Zap },
+      { title: 'Trade Frequency Audit', url: '/trade-frequency', icon: Activity },
       { title: 'Command Center', url: '/command-center', icon: Sparkles },
       { title: 'Baseline Validation', url: '/baseline-validation', icon: Scale },
     ],
