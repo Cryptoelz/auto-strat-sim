@@ -226,6 +226,84 @@ export default function ExecutiveDashboard() {
         </Card>
       </div>
 
+      {/* Experiment Watchlist */}
+      <Card>
+        <CardHeader className="pb-3 flex flex-row items-center justify-between">
+          <CardTitle className="text-base flex items-center gap-2">
+            <FlaskConical className="h-4 w-4 text-sky-500" /> Experiment Watchlist
+          </CardTitle>
+          <Badge variant="outline" className="text-[10px] border-sky-500/40 text-sky-500">Live Experiment</Badge>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border">
+                  <th className="text-left pb-2 pr-4">Strategy</th>
+                  <th className="text-right pb-2 px-3">Days</th>
+                  <th className="text-right pb-2 px-3">Trades</th>
+                  <th className="text-right pb-2 px-3">PnL</th>
+                  <th className="text-right pb-2 px-3">PF</th>
+                  <th className="text-right pb-2 px-3">Max DD</th>
+                  <th className="text-right pb-2 pl-3">Rank</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-border/50">
+                  <td className="py-2.5 pr-4 font-medium">Router v2 (Control)</td>
+                  <td className="py-2.5 px-3 text-right tabular-nums">28</td>
+                  <td className="py-2.5 px-3 text-right tabular-nums">39</td>
+                  <td className="py-2.5 px-3 text-right tabular-nums text-emerald-500">+$773</td>
+                  <td className="py-2.5 px-3 text-right tabular-nums">1.71</td>
+                  <td className="py-2.5 px-3 text-right tabular-nums">3.1%</td>
+                  <td className="py-2.5 pl-3 text-right tabular-nums font-semibold">1</td>
+                </tr>
+                <tr>
+                  <td className="py-2.5 pr-4 font-medium">Router v2.1 (Fork)</td>
+                  <td className="py-2.5 px-3 text-right tabular-nums">12</td>
+                  <td className="py-2.5 px-3 text-right tabular-nums">18</td>
+                  <td className="py-2.5 px-3 text-right tabular-nums text-emerald-500">+$905</td>
+                  <td className="py-2.5 px-3 text-right tabular-nums">1.62</td>
+                  <td className="py-2.5 px-3 text-right tabular-nums">3.4%</td>
+                  <td className="py-2.5 pl-3 text-right tabular-nums font-semibold">7</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+            {/* PnL Difference — green when v2.1 > v2 */}
+            <div className="rounded-md border border-emerald-500/20 bg-emerald-500/5 p-3">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">PnL Difference</p>
+              <p className="text-lg font-semibold text-emerald-500">+$132</p>
+              <p className="text-[11px] text-emerald-500/80">v2.1 ahead</p>
+            </div>
+            {/* PF Difference — red when v2.1 < v2 */}
+            <div className="rounded-md border border-red-500/20 bg-red-500/5 p-3">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">PF Difference</p>
+              <p className="text-lg font-semibold text-red-500">-0.09</p>
+              <p className="text-[11px] text-red-500/80">v2 ahead</p>
+            </div>
+            {/* DD Difference — red when v2.1 > v2 */}
+            <div className="rounded-md border border-red-500/20 bg-red-500/5 p-3">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">DD Difference</p>
+              <p className="text-lg font-semibold text-red-500">+0.3%</p>
+              <p className="text-[11px] text-red-500/80">v2.1 riskier</p>
+            </div>
+            {/* Rank Difference — red when v2.1 rank > v2 rank */}
+            <div className="rounded-md border border-red-500/20 bg-red-500/5 p-3">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Rank Difference</p>
+              <p className="text-lg font-semibold text-red-500">-6</p>
+              <p className="text-[11px] text-red-500/80">v2 ahead</p>
+            </div>
+          </div>
+
+          <p className="mt-3 text-[11px] text-muted-foreground">
+            Green = challenger outperforming · Red = control outperforming · v2.1 is +17% PnL but trades off PF and DD.
+          </p>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Journal Highlights */}
         <Card>
