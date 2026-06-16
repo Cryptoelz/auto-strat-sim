@@ -21,6 +21,7 @@ import MonthlyResearchReport from "./pages/MonthlyResearchReport";
 import MarketMoveCapture from "./pages/MarketMoveCapture";
 import MomentumScalper from "./pages/MomentumScalper";
 import TradeFrequencyAudit from "./pages/TradeFrequencyAudit";
+import RouterV21 from "./pages/RouterV21";
 import Strategies from "./pages/Strategies";
 import Portfolio from "./pages/Portfolio";
 import Governance from "./pages/Governance";
