@@ -67,6 +67,7 @@ const App = () => (
               <Route path="/move-capture" element={<MarketMoveCapture />} />
               <Route path="/momentum-scalper" element={<MomentumScalper />} />
               <Route path="/trade-frequency" element={<TradeFrequencyAudit />} />
+              <Route path="/router-v21" element={<RouterV21 />} />
               <Route path="/strategies" element={<Strategies />} />
               <Route path="/portfolio" element={<Portfolio />} />
               <Route path="/governance" element={<Governance />} />
