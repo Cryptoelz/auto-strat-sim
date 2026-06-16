@@ -44,6 +44,7 @@ const RAW: Omit<Competitor, 'equity'>[] = [
   { id: 'mr1',   name: 'Mean Reversion v1', flavor: 'sideways', netPnl: 438,  pf: 1.75, drawdown: 2.1, winRate: 64.7, trades: 22, streak: 4,  daysLive: DAYS_LIVE },
   { id: 'rtr1',  name: 'Router v1',         flavor: 'router',   netPnl: 1008, pf: 1.98, drawdown: 2.4, winRate: 56.2, trades: 34, streak: 3,  daysLive: DAYS_LIVE },
   { id: 'rtr2',  name: 'Router v2',         flavor: 'router',   netPnl: 1112, pf: 2.10, drawdown: 2.3, winRate: 58.7, trades: 37, streak: 5,  daysLive: DAYS_LIVE },
+  { id: 'rtr21', name: 'Router v2.1',       flavor: 'router',   netPnl: 905,  pf: 1.62, drawdown: 3.4, winRate: 53.5, trades: 57, streak: 2,  daysLive: 1 },
 ];
 
 const START_EQUITY = 10000;

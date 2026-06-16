@@ -25,6 +25,7 @@ const REPORT = {
     { rank: 4, name: 'Router v1', pnl: 712, pf: 1.71, dd: 2.6, status: 'Approved' },
     { rank: 5, name: 'Mean Reversion v1', pnl: 561, pf: 1.62, dd: 2.8, status: 'Approved' },
     { rank: 6, name: 'Candidate 25', pnl: 489, pf: 1.58, dd: 2.9, status: 'Candidate' },
+    { rank: 7, name: 'Router v2.1', pnl: 905, pf: 1.62, dd: 3.4, status: 'Research' },
   ],
   promotionBoard: [
     { date: 'Jun 10', strategy: 'Baseline v11', from: 'Approved', to: 'Champion', reason: 'Met Gold Standard: 62d / 58 trades / PF 1.92 / DD 2.1%' },
@@ -68,6 +69,7 @@ const REPORT = {
     'May 21 — Candidate 24 fully removed from allocation following retirement decision.',
   ],
   journalHighlights: [
+    'Jun 16 — Router v2.1 forked from Router v2 (Trade Frequency Audit, −10% thresholds).',
     'Jun 10 — Baseline v11 promoted to Champion (first strategy to achieve this status).',
     'Jun 07 — Router v2 overtook Router v1 in 14-day rolling Championship Arena scoring.',
     'May 30 — MPC v2 Confidence Recovery activated; v1 archived.',

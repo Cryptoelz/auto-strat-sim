@@ -92,6 +92,17 @@ const STRATS: Strategy[] = [
     ],
     status: 'Research',
   },
+  {
+    id: 'rtr21', name: 'Router v2.1',
+    days: 1, trades: 2, netPnl: 32, pf: 1.62, drawdown: 0.4, winRate: 53.5, stability: 0,
+    regimes: [
+      { name: 'Trend',    pct: 35, pf: 2.05 },
+      { name: 'Moderate', pct: 38, pf: 1.78 },
+      { name: 'Sideways', pct: 22, pf: 1.85 },
+      { name: 'Uncertain', pct: 5, pf: 1.30 },
+    ],
+    status: 'Research',
+  },
 ];
 
 const MIN_GATE = { days: 30, trades: 20, pf: 1.5, dd: 3.0 };
