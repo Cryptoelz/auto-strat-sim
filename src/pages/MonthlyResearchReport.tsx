@@ -69,6 +69,7 @@ const REPORT = {
     'May 21 — Candidate 24 fully removed from allocation following retirement decision.',
   ],
   journalHighlights: [
+    'Jun 16 — Router v2.1 forked from Router v2 (Trade Frequency Audit, −10% thresholds).',
     'Jun 10 — Baseline v11 promoted to Champion (first strategy to achieve this status).',
     'Jun 07 — Router v2 overtook Router v1 in 14-day rolling Championship Arena scoring.',
     'May 30 — MPC v2 Confidence Recovery activated; v1 archived.',
