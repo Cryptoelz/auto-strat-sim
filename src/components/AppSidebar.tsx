@@ -49,6 +49,7 @@ const NAV_SECTIONS = [
       { title: 'Move Capture Audit', url: '/move-capture', icon: Target },
       { title: 'Momentum Scalper', url: '/momentum-scalper', icon: Zap },
       { title: 'Trade Frequency Audit', url: '/trade-frequency', icon: Activity },
+      { title: 'Router v2.1 (fork)', url: '/router-v21', icon: GitFork },
       { title: 'Command Center', url: '/command-center', icon: Sparkles },
       { title: 'Baseline Validation', url: '/baseline-validation', icon: Scale },
     ],
