@@ -37,14 +37,15 @@ const LEADERBOARD = [
   { rank: 4, name: 'Baseline v11', pnl: '+$842', pf: '1.71', dd: '1.4%' },
   { rank: 5, name: 'Router v1', pnl: '+$705', pf: '1.58', dd: '2.9%' },
   { rank: 6, name: 'Mean Reversion v1', pnl: '+$612', pf: '1.64', dd: '2.2%' },
+  { rank: 7, name: 'Router v2.1 (Research)', pnl: '+$905', pf: '1.62', dd: '3.4%' },
 ];
 
 const JOURNAL = [
+  { date: 'Jun 16', text: 'Router v2.1 forked from Router v2 following Trade Frequency Audit (−10% threshold).', tone: 'text-primary' },
   { date: 'Jun 12', text: 'Committee increased Trend Rider allocation 15% → 20%.', tone: 'text-emerald-500' },
   { date: 'Jun 10', text: 'Router v2 overtook Router v1 in Championship Arena.', tone: 'text-primary' },
   { date: 'Jun 08', text: 'Baseline v11 promoted to Champion.', tone: 'text-yellow-500' },
   { date: 'Jun 05', text: 'Mean Reversion v1 approved after meeting gate.', tone: 'text-emerald-500' },
-  { date: 'Jun 02', text: 'Candidate 24 retired due to drawdown breach.', tone: 'text-muted-foreground' },
 ];
 
 export default function ExecutiveDashboard() {
