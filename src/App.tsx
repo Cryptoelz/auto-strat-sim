@@ -23,6 +23,7 @@ import MomentumScalper from "./pages/MomentumScalper";
 import MomentumScalperV2 from "./pages/MomentumScalperV2";
 import VolatilityCompressionBreakout from "./pages/VolatilityCompressionBreakout";
 import SpecialistAllocationLab from "./pages/SpecialistAllocationLab";
+import ForwardValidation from "./pages/ForwardValidation";
 import TradeFrequencyAudit from "./pages/TradeFrequencyAudit";
 import RouterV21 from "./pages/RouterV21";
 import Strategies from "./pages/Strategies";
