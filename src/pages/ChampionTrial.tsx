@@ -307,12 +307,13 @@ export default function ChampionTrial() {
       </Card>
 
       <Tabs defaultValue="h2h" className="w-full">
-        <TabsList className="grid grid-cols-6 w-full">
+        <TabsList className="grid grid-cols-7 w-full">
           <TabsTrigger value="h2h">Head-to-Head</TabsTrigger>
           <TabsTrigger value="daily">Daily Battle Log</TabsTrigger>
           <TabsTrigger value="weekly">Weekly Report</TabsTrigger>
           <TabsTrigger value="stability">Stability</TabsTrigger>
           <TabsTrigger value="stress">Stress Monitor</TabsTrigger>
+          <TabsTrigger value="defense">Defense</TabsTrigger>
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
         </TabsList>
 
