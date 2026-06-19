@@ -105,13 +105,18 @@ export default function MomentumScalperV2() {
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="compare">
+      <Tabs defaultValue="audit">
         <TabsList>
+          <TabsTrigger value="audit">Activation Audit</TabsTrigger>
           <TabsTrigger value="compare">v1 vs v2</TabsTrigger>
           <TabsTrigger value="activation">Activation Rules</TabsTrigger>
           <TabsTrigger value="regimes">Regime Contribution</TabsTrigger>
           <TabsTrigger value="notes">Notes</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="audit">
+          <ActivationAudit />
+        </TabsContent>
 
         <TabsContent value="compare">
           <Card>
