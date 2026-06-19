@@ -31,6 +31,7 @@ import SpecialistDiscoveryLabV2 from "./pages/SpecialistDiscoveryLabV2";
 import LowVolCoilerV1 from "./pages/LowVolCoilerV1";
 import LowVolCoilerV2 from "./pages/LowVolCoilerV2";
 import SpecialistApprovalBoard from "./pages/SpecialistApprovalBoard";
+import PortfolioArchitectureReview from "./pages/PortfolioArchitectureReview";
 import TradeFrequencyAudit from "./pages/TradeFrequencyAudit";
 import RouterV21 from "./pages/RouterV21";
 import Strategies from "./pages/Strategies";
