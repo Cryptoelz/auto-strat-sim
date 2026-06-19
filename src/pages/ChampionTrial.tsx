@@ -6,7 +6,56 @@ import { Progress } from '@/components/ui/progress';
 import {
   Activity, AlertTriangle, CheckCircle2, Crown, Lock, Shield, Sparkles,
   TrendingDown, TrendingUp, Trophy, Swords, Flag, Calendar, Gauge,
+  ShieldAlert, HeartPulse, Repeat, ArrowUp, ArrowDown,
 } from 'lucide-react';
+
+// ─── Stress Monitor Data ───────────────────────────────────────────────
+type StressRow = {
+  metric: string;
+  champ7: string; chal7: string;
+  champ14: string; chal14: string;
+  champ30: string; chal30: string;
+};
+const STRESS_ROWS: StressRow[] = [
+  { metric: 'Net PnL',       champ7: '+$842',  chal7: '+$1,012', champ14: '+$1,684', chal14: '+$1,948', champ30: '+$3,884', chal30: '+$4,212' },
+  { metric: 'Profit Factor', champ7: '1.88',   chal7: '2.04',    champ14: '1.91',    chal14: '2.02',    champ30: '1.94',    chal30: '2.06' },
+  { metric: 'Drawdown',      champ7: '1.4%',   chal7: '1.9%',    champ14: '1.7%',    chal14: '2.0%',    champ30: '1.8%',    chal30: '2.1%' },
+  { metric: 'Win Rate',      champ7: '57%',    chal7: '61%',     champ14: '58%',     chal14: '60%',     champ30: '58%',     chal30: '60%' },
+  { metric: 'Capture %',     champ7: '74%',    chal7: '79%',     champ14: '75%',     chal14: '78%',     champ30: '76%',     chal30: '78%' },
+];
+// Leader counts: challenger leads 7d (4/5), 14d (4/5), 30d (4/5) → consistent
+const LEAD_WINDOWS = [
+  { window: '7d',  leader: 'challenger' as const, wins: 4, total: 5, delta: '+$170' },
+  { window: '14d', leader: 'challenger' as const, wins: 4, total: 5, delta: '+$264' },
+  { window: '30d', leader: 'challenger' as const, wins: 4, total: 5, delta: '+$328' },
+];
+const consistentLeader = LEAD_WINDOWS.every(w => w.leader === LEAD_WINDOWS[0].leader);
+const avgWinRatio = LEAD_WINDOWS.reduce((s, w) => s + w.wins / w.total, 0) / LEAD_WINDOWS.length;
+const LEAD_STABILITY_SCORE = Math.round(consistentLeader ? 60 + (avgWinRatio - 0.5) * 80 : avgWinRatio * 50);
+
+const PERSISTENCE = {
+  consecutiveDaysLeading: 5,
+  leadChanges: 6,
+  largestLeadGained: '+9.2%',
+  largestLeadLost: '-3.4%',
+  currentLeader: 'Confidence Weighted Allocation',
+};
+
+type WarnLevel = 'green' | 'amber' | 'red';
+type Warning = { rule: string; reading: string; threshold: string; level: WarnLevel };
+const WARNINGS: Warning[] = [
+  { rule: 'Leader loses >50% of its lead within 7 days', reading: '-12% lead erosion', threshold: '>50%', level: 'green' },
+  { rule: 'Profit Factor drops >15%',                   reading: '-1.0% PF (2.06→2.04)', threshold: '>15%', level: 'green' },
+  { rule: 'Drawdown rises >25%',                        reading: '+5% DD drift',         threshold: '>25%', level: 'green' },
+  { rule: 'Capture drops >10%',                         reading: '-1.3% capture',        threshold: '>10%', level: 'green' },
+];
+const worstLevel: WarnLevel = WARNINGS.some(w => w.level === 'red')
+  ? 'red' : WARNINGS.some(w => w.level === 'amber') ? 'amber' : 'green';
+
+const CONFIDENCE_30D: 'Low' | 'Moderate' | 'High' =
+  LEAD_STABILITY_SCORE >= 75 && worstLevel === 'green' ? 'High'
+  : LEAD_STABILITY_SCORE >= 50 && worstLevel !== 'red' ? 'Moderate'
+  : 'Low';
 
 // ─── Trial Configuration ───────────────────────────────────────────────
 const TRIAL = {
@@ -254,11 +303,12 @@ export default function ChampionTrial() {
       </Card>
 
       <Tabs defaultValue="h2h" className="w-full">
-        <TabsList className="grid grid-cols-5 w-full">
+        <TabsList className="grid grid-cols-6 w-full">
           <TabsTrigger value="h2h">Head-to-Head</TabsTrigger>
           <TabsTrigger value="daily">Daily Battle Log</TabsTrigger>
           <TabsTrigger value="weekly">Weekly Report</TabsTrigger>
           <TabsTrigger value="stability">Stability</TabsTrigger>
+          <TabsTrigger value="stress">Stress Monitor</TabsTrigger>
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
         </TabsList>
 
@@ -381,6 +431,217 @@ export default function ChampionTrial() {
               </Table>
               <p className="text-xs text-muted-foreground mt-3">
                 Challenger shows higher allocation turnover (19%/day vs 12%/day) — flagged for monitoring but not deteriorating.
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="stress" className="space-y-4 pt-4">
+          {/* Edge Status Banner */}
+          <Card className={
+            worstLevel === 'red' ? 'border-trading-loss/40 bg-trading-loss/5'
+            : worstLevel === 'amber' ? 'border-trading-warning/40 bg-trading-warning/5'
+            : 'border-trading-profit/40 bg-trading-profit/5'
+          }>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <ShieldAlert className={
+                    worstLevel === 'red' ? 'h-6 w-6 text-trading-loss'
+                    : worstLevel === 'amber' ? 'h-6 w-6 text-trading-warning'
+                    : 'h-6 w-6 text-trading-profit'
+                  } />
+                  <div>
+                    <CardTitle className="text-lg">
+                      {worstLevel === 'red' ? 'RED · Possible Overfit'
+                       : worstLevel === 'amber' ? 'AMBER · Under Review'
+                       : 'GREEN · Stable Edge'}
+                    </CardTitle>
+                    <CardDescription>
+                      Forward Validation Stress Monitor · observation-only
+                    </CardDescription>
+                  </div>
+                </div>
+                <Badge variant="outline" className="text-xs">
+                  Current Leader: {PERSISTENCE.currentLeader}
+                </Badge>
+              </div>
+            </CardHeader>
+          </Card>
+
+          {/* Rolling Windows Table */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><Activity className="h-4 w-4" />Rolling Performance Windows</CardTitle>
+              <CardDescription>7d / 14d / 30d side-by-side — Dynamic Allocation v1 vs Confidence Weighted</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead rowSpan={2}>Metric</TableHead>
+                    <TableHead className="text-center border-l" colSpan={2}>7-Day</TableHead>
+                    <TableHead className="text-center border-l" colSpan={2}>14-Day</TableHead>
+                    <TableHead className="text-center border-l" colSpan={2}>30-Day</TableHead>
+                  </TableRow>
+                  <TableRow>
+                    <TableHead className="text-right border-l text-xs">Dyn v1</TableHead>
+                    <TableHead className="text-right text-xs">Conf Wt</TableHead>
+                    <TableHead className="text-right border-l text-xs">Dyn v1</TableHead>
+                    <TableHead className="text-right text-xs">Conf Wt</TableHead>
+                    <TableHead className="text-right border-l text-xs">Dyn v1</TableHead>
+                    <TableHead className="text-right text-xs">Conf Wt</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {STRESS_ROWS.map((r) => (
+                    <TableRow key={r.metric}>
+                      <TableCell className="font-medium">{r.metric}</TableCell>
+                      <TableCell className="text-right border-l text-muted-foreground">{r.champ7}</TableCell>
+                      <TableCell className="text-right text-primary font-semibold">{r.chal7}</TableCell>
+                      <TableCell className="text-right border-l text-muted-foreground">{r.champ14}</TableCell>
+                      <TableCell className="text-right text-primary font-semibold">{r.chal14}</TableCell>
+                      <TableCell className="text-right border-l text-muted-foreground">{r.champ30}</TableCell>
+                      <TableCell className="text-right text-primary font-semibold">{r.chal30}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          {/* Lead Stability Score + Persistence */}
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Gauge className="h-4 w-4" />Lead Stability Score</CardTitle>
+                <CardDescription>100 = consistent across all windows · 0 = unstable</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-end justify-between">
+                  <div className="text-5xl font-bold text-primary">{LEAD_STABILITY_SCORE}</div>
+                  <Badge className={
+                    LEAD_STABILITY_SCORE >= 75 ? 'bg-trading-profit/15 text-trading-profit border-trading-profit/30'
+                    : LEAD_STABILITY_SCORE >= 50 ? 'bg-trading-warning/15 text-trading-warning border-trading-warning/30'
+                    : 'bg-trading-loss/15 text-trading-loss border-trading-loss/30'
+                  }>
+                    {LEAD_STABILITY_SCORE >= 75 ? 'Consistent' : LEAD_STABILITY_SCORE >= 50 ? 'Mixed' : 'Unstable'}
+                  </Badge>
+                </div>
+                <Progress value={LEAD_STABILITY_SCORE} className="h-2" />
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Window</TableHead>
+                      <TableHead>Leader</TableHead>
+                      <TableHead className="text-right">Metrics Won</TableHead>
+                      <TableHead className="text-right">PnL Δ</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {LEAD_WINDOWS.map((w) => (
+                      <TableRow key={w.window}>
+                        <TableCell className="font-medium">{w.window}</TableCell>
+                        <TableCell>{leaderBadge(w.leader)}</TableCell>
+                        <TableCell className="text-right">{w.wins}/{w.total}</TableCell>
+                        <TableCell className="text-right text-trading-profit">{w.delta}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Repeat className="h-4 w-4" />Leadership Persistence Tracker</CardTitle>
+                <CardDescription>How sticky is the current lead?</CardDescription>
+              </CardHeader>
+              <CardContent className="grid grid-cols-2 gap-3">
+                <div className="rounded-lg border bg-muted/30 p-3">
+                  <p className="text-xs text-muted-foreground">Consecutive Days Leading</p>
+                  <p className="text-2xl font-bold mt-1">{PERSISTENCE.consecutiveDaysLeading}</p>
+                </div>
+                <div className="rounded-lg border bg-muted/30 p-3">
+                  <p className="text-xs text-muted-foreground">Lead Changes (trial)</p>
+                  <p className="text-2xl font-bold mt-1">{PERSISTENCE.leadChanges}</p>
+                </div>
+                <div className="rounded-lg border bg-muted/30 p-3">
+                  <p className="text-xs text-muted-foreground flex items-center gap-1"><ArrowUp className="h-3 w-3 text-trading-profit" />Largest Lead Gained</p>
+                  <p className="text-2xl font-bold mt-1 text-trading-profit">{PERSISTENCE.largestLeadGained}</p>
+                </div>
+                <div className="rounded-lg border bg-muted/30 p-3">
+                  <p className="text-xs text-muted-foreground flex items-center gap-1"><ArrowDown className="h-3 w-3 text-trading-loss" />Largest Lead Lost</p>
+                  <p className="text-2xl font-bold mt-1 text-trading-loss">{PERSISTENCE.largestLeadLost}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Mean Reversion Warning Panel */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><AlertTriangle className="h-4 w-4" />Mean Reversion Warning</CardTitle>
+              <CardDescription>Detects when current leader's edge may be reverting to the mean</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Trigger Rule</TableHead>
+                    <TableHead className="text-right">Threshold</TableHead>
+                    <TableHead className="text-right">Current Reading</TableHead>
+                    <TableHead className="text-right">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {WARNINGS.map((w) => (
+                    <TableRow key={w.rule}>
+                      <TableCell className="font-medium">{w.rule}</TableCell>
+                      <TableCell className="text-right text-muted-foreground">{w.threshold}</TableCell>
+                      <TableCell className="text-right">{w.reading}</TableCell>
+                      <TableCell className="text-right">
+                        <Badge className={
+                          w.level === 'red' ? 'bg-trading-loss/15 text-trading-loss border-trading-loss/30'
+                          : w.level === 'amber' ? 'bg-trading-warning/15 text-trading-warning border-trading-warning/30'
+                          : 'bg-trading-profit/15 text-trading-profit border-trading-profit/30'
+                        }>
+                          {w.level.toUpperCase()}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          {/* 30-Day Confidence Card */}
+          <Card className="border-primary/30">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><HeartPulse className="h-4 w-4" />30-Day Leadership Confidence</CardTitle>
+              <CardDescription>
+                How confident are we that today's leader remains the leader after another 30 days?
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between rounded-lg border bg-muted/30 p-4">
+                <div>
+                  <p className="text-xs text-muted-foreground">Today's Leader</p>
+                  <p className="text-base font-semibold">{PERSISTENCE.currentLeader}</p>
+                </div>
+                <Badge className={
+                  CONFIDENCE_30D === 'High' ? 'bg-trading-profit/15 text-trading-profit border-trading-profit/30 text-sm px-3 py-1'
+                  : CONFIDENCE_30D === 'Moderate' ? 'bg-trading-warning/15 text-trading-warning border-trading-warning/30 text-sm px-3 py-1'
+                  : 'bg-trading-loss/15 text-trading-loss border-trading-loss/30 text-sm px-3 py-1'
+                }>
+                  {CONFIDENCE_30D} Confidence
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Derived from Lead Stability Score ({LEAD_STABILITY_SCORE}/100), worst warning level ({worstLevel.toUpperCase()}),
+                and {PERSISTENCE.consecutiveDaysLeading} consecutive days of leadership. Observation-only — no allocation or
+                strategy changes will be triggered automatically.
               </p>
             </CardContent>
           </Card>
