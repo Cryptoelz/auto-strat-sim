@@ -29,6 +29,7 @@ import ChampionTrial from "./pages/ChampionTrial";
 import SpecialistChampionship from "./pages/SpecialistChampionship";
 import SpecialistDiscoveryLabV2 from "./pages/SpecialistDiscoveryLabV2";
 import LowVolCoilerV1 from "./pages/LowVolCoilerV1";
+import LowVolCoilerV2 from "./pages/LowVolCoilerV2";
 import TradeFrequencyAudit from "./pages/TradeFrequencyAudit";
 import RouterV21 from "./pages/RouterV21";
 import Strategies from "./pages/Strategies";
@@ -84,6 +85,7 @@ const App = () => (
               <Route path="/specialist-championship" element={<SpecialistChampionship />} />
               <Route path="/specialist-discovery-v2" element={<SpecialistDiscoveryLabV2 />} />
               <Route path="/low-vol-coiler-v1" element={<LowVolCoilerV1 />} />
+              <Route path="/low-vol-coiler-v2" element={<LowVolCoilerV2 />} />
               <Route path="/trade-frequency" element={<TradeFrequencyAudit />} />
               <Route path="/router-v21" element={<RouterV21 />} />
               <Route path="/strategies" element={<Strategies />} />
