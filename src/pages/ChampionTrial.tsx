@@ -6,8 +6,12 @@ import { Progress } from '@/components/ui/progress';
 import {
   Activity, AlertTriangle, CheckCircle2, Crown, Lock, Shield, Sparkles,
   TrendingDown, TrendingUp, Trophy, Swords, Flag, Calendar, Gauge,
-  ShieldAlert, HeartPulse, Repeat, ArrowUp, ArrowDown,
+  ShieldAlert, HeartPulse, Repeat, ArrowUp, ArrowDown, ShieldCheck, PieChart as PieIcon,
 } from 'lucide-react';
+import {
+  ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid,
+  Tooltip as RTooltip, Legend, ReferenceLine,
+} from 'recharts';
 
 // ─── Stress Monitor Data ───────────────────────────────────────────────
 type StressRow = {
