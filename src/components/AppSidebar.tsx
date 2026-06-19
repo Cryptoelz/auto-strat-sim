@@ -51,6 +51,7 @@ const NAV_SECTIONS = [
       { title: 'Momentum Scalper v2', url: '/momentum-scalper-v2', icon: Zap },
       { title: 'VCB v1 (Compression)', url: '/vcb-v1', icon: Compass },
       { title: 'Allocation Lab v1', url: '/allocation-lab', icon: Layers },
+      { title: 'Forward Validation', url: '/forward-validation', icon: Eye },
       { title: 'Trade Frequency Audit', url: '/trade-frequency', icon: Activity },
       { title: 'Router v2.1 (fork)', url: '/router-v21', icon: GitFork },
       { title: 'Command Center', url: '/command-center', icon: Sparkles },
