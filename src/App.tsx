@@ -87,6 +87,7 @@ const App = () => (
               <Route path="/specialist-discovery-v2" element={<SpecialistDiscoveryLabV2 />} />
               <Route path="/low-vol-coiler-v1" element={<LowVolCoilerV1 />} />
               <Route path="/low-vol-coiler-v2" element={<LowVolCoilerV2 />} />
+              <Route path="/specialist-approval-board" element={<SpecialistApprovalBoard />} />
               <Route path="/trade-frequency" element={<TradeFrequencyAudit />} />
               <Route path="/router-v21" element={<RouterV21 />} />
               <Route path="/strategies" element={<Strategies />} />
