@@ -652,6 +652,10 @@ export default function ChampionTrial() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="defense" className="space-y-4 pt-4">
+          <ChampionDefenseDashboard />
+        </TabsContent>
+
         <TabsContent value="timeline" className="space-y-4 pt-4">
           <Card>
             <CardHeader>
