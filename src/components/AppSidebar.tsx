@@ -53,6 +53,7 @@ const NAV_SECTIONS = [
       { title: 'Allocation Lab v1', url: '/allocation-lab', icon: Layers },
       { title: 'Allocation Lab v2', url: '/allocation-lab-v2', icon: Sparkles },
       { title: 'Forward Validation', url: '/forward-validation', icon: Eye },
+      { title: 'Champion Trial', url: '/champion-trial', icon: Trophy },
       { title: 'Trade Frequency Audit', url: '/trade-frequency', icon: Activity },
       { title: 'Router v2.1 (fork)', url: '/router-v21', icon: GitFork },
       { title: 'Command Center', url: '/command-center', icon: Sparkles },
