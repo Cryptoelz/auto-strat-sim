@@ -23,6 +23,7 @@ import MomentumScalper from "./pages/MomentumScalper";
 import MomentumScalperV2 from "./pages/MomentumScalperV2";
 import VolatilityCompressionBreakout from "./pages/VolatilityCompressionBreakout";
 import SpecialistAllocationLab from "./pages/SpecialistAllocationLab";
+import ForwardValidation from "./pages/ForwardValidation";
 import TradeFrequencyAudit from "./pages/TradeFrequencyAudit";
 import RouterV21 from "./pages/RouterV21";
 import Strategies from "./pages/Strategies";
@@ -72,6 +73,7 @@ const App = () => (
               <Route path="/momentum-scalper-v2" element={<MomentumScalperV2 />} />
               <Route path="/vcb-v1" element={<VolatilityCompressionBreakout />} />
               <Route path="/allocation-lab" element={<SpecialistAllocationLab />} />
+              <Route path="/forward-validation" element={<ForwardValidation />} />
               <Route path="/trade-frequency" element={<TradeFrequencyAudit />} />
               <Route path="/router-v21" element={<RouterV21 />} />
               <Route path="/strategies" element={<Strategies />} />
