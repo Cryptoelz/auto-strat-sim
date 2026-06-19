@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Zap, Shield, Lock, FlaskConical, Wind, CheckCircle2, XCircle, GitFork } from 'lucide-react';
+import { Zap, Shield, Lock, FlaskConical, Wind, CheckCircle2, XCircle, GitFork, Target, ShieldCheck } from 'lucide-react';
 
 // ─── Activation rules (v2 only) ──────────────────────────────────────
 const ACTIVATION = {
