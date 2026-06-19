@@ -73,6 +73,7 @@ const App = () => (
               <Route path="/momentum-scalper-v2" element={<MomentumScalperV2 />} />
               <Route path="/vcb-v1" element={<VolatilityCompressionBreakout />} />
               <Route path="/allocation-lab" element={<SpecialistAllocationLab />} />
+              <Route path="/forward-validation" element={<ForwardValidation />} />
               <Route path="/trade-frequency" element={<TradeFrequencyAudit />} />
               <Route path="/router-v21" element={<RouterV21 />} />
               <Route path="/strategies" element={<Strategies />} />
