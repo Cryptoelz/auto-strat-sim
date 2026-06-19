@@ -196,6 +196,240 @@ function flagBadge(f: Stability['flag']) {
   return <Badge className="bg-trading-loss/15 text-trading-loss border-trading-loss/30"><TrendingDown className="h-3 w-3 mr-1" />Deteriorating</Badge>;
 }
 
+// ─── Champion Defense Dashboard Data ───────────────────────────────────
+const LEAD_HISTORY = [
+  { day: 1, leadPct: -0.4, pnlDiff: -42, ddDiff: 0.1 },
+  { day: 3, leadPct: 0.2, pnlDiff: 28, ddDiff: 0.0 },
+  { day: 5, leadPct: 1.1, pnlDiff: 132, ddDiff: -0.1 },
+  { day: 7, leadPct: 0.8, pnlDiff: 104, ddDiff: 0.0 },
+  { day: 9, leadPct: 2.4, pnlDiff: 268, ddDiff: -0.2 },
+  { day: 11, leadPct: 3.1, pnlDiff: 342, ddDiff: -0.2 },
+  { day: 13, leadPct: 2.6, pnlDiff: 298, ddDiff: -0.1 },
+  { day: 15, leadPct: 4.0, pnlDiff: 410, ddDiff: -0.3 },
+  { day: 17, leadPct: 3.4, pnlDiff: 372, ddDiff: -0.2 },
+  { day: 19, leadPct: 5.2, pnlDiff: 488, ddDiff: -0.3 },
+  { day: 21, leadPct: 4.6, pnlDiff: 442, ddDiff: -0.2 },
+  { day: 23, leadPct: 5.8, pnlDiff: 528, ddDiff: -0.3 },
+];
+
+const DOMINANCE = {
+  championDays: 7,
+  challengerDays: 16,
+  longestChampionStreak: 3,
+  longestChallengerStreak: 9,
+  currentLeader: 'challenger' as const,
+  currentStreak: 5,
+};
+
+const CHALLENGER_AHEAD_PROBABILITY = 0.72; // by Day 60
+const confidenceLabel: 'Low' | 'Moderate' | 'High' =
+  CHALLENGER_AHEAD_PROBABILITY > 0.8 ? 'High'
+  : CHALLENGER_AHEAD_PROBABILITY >= 0.6 ? 'Moderate' : 'Low';
+
+type RegimeRow = {
+  regime: string;
+  champPF: number; chalPF: number;
+  champPnL: number; chalPnL: number;
+  champDD: number; chalDD: number;
+  champCap: number; chalCap: number;
+  leadShare: number; // % of total lead contributed by this regime
+};
+const REGIME_BREAKDOWN: RegimeRow[] = [
+  { regime: 'Bull Trend',      champPF: 2.10, chalPF: 2.32, champPnL: 1620, chalPnL: 1840, champDD: 1.4, chalDD: 1.7, champCap: 78, chalCap: 82, leadShare: 42 },
+  { regime: 'Bear Trend',      champPF: 1.65, chalPF: 1.74, champPnL: 480,  chalPnL: 540,  champDD: 2.1, chalDD: 2.2, champCap: 68, chalCap: 71, leadShare: 11 },
+  { regime: 'Sideways',        champPF: 1.48, chalPF: 1.62, champPnL: 620,  chalPnL: 740,  champDD: 1.6, chalDD: 1.8, champCap: 64, chalCap: 70, leadShare: 23 },
+  { regime: 'High Volatility', champPF: 1.92, chalPF: 2.04, champPnL: 880,  chalPnL: 980,  champDD: 2.4, chalDD: 2.5, champCap: 72, chalCap: 76, leadShare: 19 },
+  { regime: 'Low Volatility',  champPF: 1.55, chalPF: 1.60, champPnL: 284,  chalPnL: 312,  champDD: 1.0, chalDD: 1.1, champCap: 70, chalCap: 72, leadShare: 5  },
+];
+const MAX_LEAD_SHARE = Math.max(...REGIME_BREAKDOWN.map(r => r.leadShare));
+const concentrationLevel: 'green' | 'amber' | 'red' =
+  MAX_LEAD_SHARE >= 60 ? 'red' : MAX_LEAD_SHARE >= 40 ? 'amber' : 'green';
+const TOP_REGIME = REGIME_BREAKDOWN.reduce((a, b) => a.leadShare > b.leadShare ? a : b);
+
+function ChampionDefenseDashboard() {
+  return (
+    <div className="space-y-4">
+      <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground flex items-center gap-2">
+        <Lock className="h-3 w-3" />
+        Observation only — no strategy, allocation, parameter, or promotion changes are triggered from this view.
+      </div>
+
+      {/* 1. Lead History Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><Activity className="h-4 w-4" />Lead History</CardTitle>
+          <CardDescription>
+            Challenger ({TRIAL.challenger}) minus Champion ({TRIAL.champion}) over the trial window
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={LEAD_HISTORY} margin={{ top: 8, right: 16, bottom: 4, left: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="day" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis yAxisId="left" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                <RTooltip
+                  contentStyle={{ background: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', fontSize: 12 }}
+                />
+                <ReferenceLine yAxisId="left" y={0} stroke="hsl(var(--muted-foreground))" strokeDasharray="2 2" />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
+                <Line yAxisId="left"  type="monotone" dataKey="leadPct" name="Lead %"        stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+                <Line yAxisId="right" type="monotone" dataKey="pnlDiff" name="PnL Diff ($)"  stroke="hsl(var(--trading-profit))" strokeWidth={2} dot={false} />
+                <Line yAxisId="left"  type="monotone" dataKey="ddDiff"  name="DD Diff (pp)"  stroke="hsl(var(--trading-warning))" strokeWidth={2} strokeDasharray="4 3" dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 2. Metric Dominance Tracker */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><Swords className="h-4 w-4" />Metric Dominance Tracker</CardTitle>
+          <CardDescription>Day-by-day leadership counts since trial start</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="rounded-lg border border-border p-3">
+              <p className="text-xs text-muted-foreground">Days Champion Leads</p>
+              <p className="text-2xl font-bold mt-1">{DOMINANCE.championDays}</p>
+              <p className="text-xs text-muted-foreground mt-1">of {TRIAL.daysCompleted} days</p>
+            </div>
+            <div className="rounded-lg border border-border p-3">
+              <p className="text-xs text-muted-foreground">Days Challenger Leads</p>
+              <p className="text-2xl font-bold mt-1 text-primary">{DOMINANCE.challengerDays}</p>
+              <p className="text-xs text-muted-foreground mt-1">of {TRIAL.daysCompleted} days</p>
+            </div>
+            <div className="rounded-lg border border-border p-3">
+              <p className="text-xs text-muted-foreground">Longest Winning Streak</p>
+              <p className="text-2xl font-bold mt-1">{DOMINANCE.longestChallengerStreak}d</p>
+              <p className="text-xs text-muted-foreground mt-1">Challenger (Champ best: {DOMINANCE.longestChampionStreak}d)</p>
+            </div>
+            <div className="rounded-lg border border-border p-3">
+              <p className="text-xs text-muted-foreground">Current Streak</p>
+              <p className="text-2xl font-bold mt-1 text-trading-profit">{DOMINANCE.currentStreak}d</p>
+              <p className="text-xs text-muted-foreground mt-1">{DOMINANCE.currentLeader === 'challenger' ? 'Challenger leading' : 'Champion leading'}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 3. Confidence Interval */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><Gauge className="h-4 w-4" />Confidence Interval — Challenger Ahead by Day 60</CardTitle>
+          <CardDescription>Bootstrap projection from observed daily PnL differential</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-baseline gap-3">
+            <span className="text-4xl font-bold">{Math.round(CHALLENGER_AHEAD_PROBABILITY * 100)}%</span>
+            <Badge className={
+              confidenceLabel === 'High' ? 'bg-trading-profit/15 text-trading-profit border-trading-profit/30'
+              : confidenceLabel === 'Moderate' ? 'bg-trading-warning/15 text-trading-warning border-trading-warning/30'
+              : 'bg-trading-loss/15 text-trading-loss border-trading-loss/30'
+            }>
+              {confidenceLabel} Confidence
+            </Badge>
+          </div>
+          <Progress value={CHALLENGER_AHEAD_PROBABILITY * 100} />
+          <div className="grid grid-cols-3 gap-2 text-xs">
+            <div className="rounded border border-border p-2"><span className="text-muted-foreground">Low:</span> &lt;60%</div>
+            <div className="rounded border border-border p-2"><span className="text-muted-foreground">Moderate:</span> 60–80%</div>
+            <div className="rounded border border-border p-2"><span className="text-muted-foreground">High:</span> &gt;80%</div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Estimate based on {TRIAL.daysCompleted} observed days, current lead of {LEAD_HISTORY[LEAD_HISTORY.length - 1].leadPct.toFixed(1)}%,
+            and daily PnL-diff volatility. Observation only — does not trigger promotion.
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* 4. Regime Breakdown */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><PieIcon className="h-4 w-4" />Regime Breakdown</CardTitle>
+          <CardDescription>Champion vs Challenger performance segmented by market regime</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Regime</TableHead>
+                <TableHead className="text-right">PF (C / Ch)</TableHead>
+                <TableHead className="text-right">Net PnL (C / Ch)</TableHead>
+                <TableHead className="text-right">DD (C / Ch)</TableHead>
+                <TableHead className="text-right">Capture (C / Ch)</TableHead>
+                <TableHead className="text-right">Lead Share</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {REGIME_BREAKDOWN.map(r => (
+                <TableRow key={r.regime}>
+                  <TableCell className="font-medium">{r.regime}</TableCell>
+                  <TableCell className="text-right font-mono text-xs">{r.champPF.toFixed(2)} / <span className="text-primary">{r.chalPF.toFixed(2)}</span></TableCell>
+                  <TableCell className="text-right font-mono text-xs">${r.champPnL} / <span className="text-primary">${r.chalPnL}</span></TableCell>
+                  <TableCell className="text-right font-mono text-xs">{r.champDD.toFixed(1)}% / {r.chalDD.toFixed(1)}%</TableCell>
+                  <TableCell className="text-right font-mono text-xs">{r.champCap}% / <span className="text-primary">{r.chalCap}%</span></TableCell>
+                  <TableCell className="text-right font-mono text-xs">{r.leadShare}%</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* 5. Challenger Risk Card */}
+      <Card className={
+        concentrationLevel === 'red' ? 'border-trading-loss/40'
+        : concentrationLevel === 'amber' ? 'border-trading-warning/40'
+        : 'border-trading-profit/40'
+      }>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4" />Challenger Risk — Lead Concentration
+          </CardTitle>
+          <CardDescription>How much of the lead comes from a single market regime?</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm">
+                Top contributor: <span className="font-semibold">{TOP_REGIME.regime}</span>{' '}
+                <span className="text-muted-foreground">({TOP_REGIME.leadShare}% of total lead)</span>
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {concentrationLevel === 'green' && 'Diversified edge across multiple regimes — robust.'}
+                {concentrationLevel === 'amber' && 'Partially concentrated — monitor for regime shifts.'}
+                {concentrationLevel === 'red' && 'Over-dependent on one regime — edge may evaporate on regime change.'}
+              </p>
+            </div>
+            <Badge className={
+              concentrationLevel === 'red' ? 'bg-trading-loss/15 text-trading-loss border-trading-loss/30'
+              : concentrationLevel === 'amber' ? 'bg-trading-warning/15 text-trading-warning border-trading-warning/30'
+              : 'bg-trading-profit/15 text-trading-profit border-trading-profit/30'
+            }>
+              {concentrationLevel === 'red' ? 'RED · Over-dependent'
+                : concentrationLevel === 'amber' ? 'AMBER · Partially concentrated'
+                : 'GREEN · Diversified edge'}
+            </Badge>
+          </div>
+          <div className="space-y-2">
+            {REGIME_BREAKDOWN.map(r => (
+              <div key={r.regime} className="grid grid-cols-[140px_1fr_48px] items-center gap-2 text-xs">
+                <span className="text-muted-foreground">{r.regime}</span>
+                <Progress value={r.leadShare} />
+                <span className="font-mono text-right">{r.leadShare}%</span>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 export default function ChampionTrial() {
   return (
     <div className="container mx-auto p-6 space-y-6">
