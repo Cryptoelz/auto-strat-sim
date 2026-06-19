@@ -26,6 +26,7 @@ import SpecialistAllocationLab from "./pages/SpecialistAllocationLab";
 import SpecialistAllocationLabV2 from "./pages/SpecialistAllocationLabV2";
 import ForwardValidation from "./pages/ForwardValidation";
 import ChampionTrial from "./pages/ChampionTrial";
+import SpecialistChampionship from "./pages/SpecialistChampionship";
 import TradeFrequencyAudit from "./pages/TradeFrequencyAudit";
 import RouterV21 from "./pages/RouterV21";
 import Strategies from "./pages/Strategies";
@@ -78,6 +79,7 @@ const App = () => (
               <Route path="/allocation-lab-v2" element={<SpecialistAllocationLabV2 />} />
               <Route path="/forward-validation" element={<ForwardValidation />} />
               <Route path="/champion-trial" element={<ChampionTrial />} />
+              <Route path="/specialist-championship" element={<Specialistchampionship_placeholder />} />
               <Route path="/trade-frequency" element={<TradeFrequencyAudit />} />
               <Route path="/router-v21" element={<RouterV21 />} />
               <Route path="/strategies" element={<Strategies />} />
