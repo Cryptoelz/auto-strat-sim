@@ -283,12 +283,156 @@ export default function MomentumScalper() {
       {/* Tabs */}
       <Tabs defaultValue="validation">
         <TabsList className="flex-wrap h-auto">
+          <TabsTrigger value="robustness">Robustness audit</TabsTrigger>
           <TabsTrigger value="validation">Validation pack</TabsTrigger>
           <TabsTrigger value="stress">Stress tests</TabsTrigger>
           <TabsTrigger value="comparison">Comparison</TabsTrigger>
           <TabsTrigger value="capture">Move capture</TabsTrigger>
           <TabsTrigger value="notes">Notes & verdict</TabsTrigger>
         </TabsList>
+
+        {/* ─── Robustness Audit (90-day decay by regime) ───────── */}
+        <TabsContent value="robustness" className="space-y-3">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <Activity className="h-4 w-4 text-amber-400" /> 90-day decay — breakdown by regime
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Regime</TableHead>
+                    <TableHead className="text-right">Days</TableHead>
+                    <TableHead className="text-right">Trades</TableHead>
+                    <TableHead className="text-right">Net PnL</TableHead>
+                    <TableHead className="text-right">PF</TableHead>
+                    <TableHead className="text-right">Win %</TableHead>
+                    <TableHead className="text-right">DD</TableHead>
+                    <TableHead className="text-right">PnL share</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {[
+                    { name: 'Bull trend',    days: 22, trades: 71, pnl:  1842, pf: 1.78, win: 57, dd: 1.9, share:  41 },
+                    { name: 'Bear trend',    days: 14, trades: 48, pnl:   612, pf: 1.46, win: 50, dd: 2.4, share:  14 },
+                    { name: 'Sideways/chop', days: 28, trades: 92, pnl:  -884, pf: 0.78, win: 40, dd: 4.6, share: -20 },
+                    { name: 'High volatility', days: 16, trades: 58, pnl: 2014, pf: 1.91, win: 56, dd: 2.7, share:  45 },
+                    { name: 'Low volatility',  days: 10, trades: 24, pnl:  -168, pf: 0.88, win: 42, dd: 1.6, share:  -4 },
+                  ].map((r) => {
+                    const pos = r.pnl >= 0;
+                    return (
+                      <TableRow key={r.name}>
+                        <TableCell className="text-xs font-medium">{r.name}</TableCell>
+                        <TableCell className="text-right text-xs">{r.days}</TableCell>
+                        <TableCell className="text-right text-xs">{r.trades}</TableCell>
+                        <TableCell className={`text-right text-xs ${pos ? 'text-emerald-400' : 'text-rose-400'}`}>
+                          ${r.pnl}
+                        </TableCell>
+                        <TableCell className={`text-right text-xs ${r.pf < 1.0 ? 'text-rose-400' : r.pf < 1.4 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                          {r.pf.toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-right text-xs">{r.win}%</TableCell>
+                        <TableCell className="text-right text-xs">{r.dd}%</TableCell>
+                        <TableCell className={`text-right text-xs font-medium ${pos ? 'text-emerald-400' : 'text-rose-400'}`}>
+                          {pos ? '+' : ''}{r.share}%
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="rounded-md border border-emerald-500/30 bg-emerald-500/5 p-3 text-xs space-y-1">
+                  <div className="text-[10px] uppercase text-muted-foreground">Most profit</div>
+                  <div className="font-semibold text-emerald-400">High volatility · +$2,014 (45% of PnL)</div>
+                  <div className="text-muted-foreground">Bull trend close behind at +$1,842 (41%). Together: 86% of all gains from 38 of 90 days.</div>
+                </div>
+                <div className="rounded-md border border-rose-500/30 bg-rose-500/5 p-3 text-xs space-y-1">
+                  <div className="text-[10px] uppercase text-muted-foreground">Most loss</div>
+                  <div className="font-semibold text-rose-400">Sideways / chop · –$884 (PF 0.78)</div>
+                  <div className="text-muted-foreground">28 days (31% of window) generate the largest drawdown (4.6%) and erase a fifth of net PnL.</div>
+                </div>
+              </div>
+
+              <div className="rounded-md border border-border bg-muted/30 p-3 text-xs space-y-2">
+                <div className="font-medium text-foreground">Regime-dependence test</div>
+                <div className="grid gap-2 md:grid-cols-3">
+                  <div>
+                    <div className="text-[10px] uppercase text-muted-foreground">90d unfiltered</div>
+                    <div className="text-sm font-semibold text-amber-400">PF 1.21</div>
+                    <div className="text-[11px] text-muted-foreground">Below 1.4 promotion floor</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] uppercase text-muted-foreground">Skip chop only</div>
+                    <div className="text-sm font-semibold text-emerald-400">PF 1.46</div>
+                    <div className="text-[11px] text-muted-foreground">+$884 recovered, –31% trades</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] uppercase text-muted-foreground">Skip chop + low vol</div>
+                    <div className="text-sm font-semibold text-emerald-400">PF 1.58</div>
+                    <div className="text-[11px] text-muted-foreground">+$1,052 recovered, –39% trades</div>
+                  </div>
+                </div>
+                <p className="text-muted-foreground pt-1">
+                  <span className="text-foreground font-medium">Verdict:</span> edge is clearly regime-dependent.
+                  A simple chop / low-vol filter lifts 90-day PF from 1.21 → 1.58, above the 1.4 threshold.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <Target className="h-4 w-4 text-sky-400" /> Recommendation
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-xs">
+              <div className="grid gap-2 md:grid-cols-4">
+                {[
+                  { label: 'Keep as standalone', state: 'reject', why: 'Unfiltered PF 1.21 fails minimum bar.' },
+                  { label: 'Convert to specialist', state: 'recommend', why: 'Fire only in high-vol + trending regimes.' },
+                  { label: 'Integrate into Router', state: 'reject', why: 'Conflicts with Router v2 HTF-trend design.' },
+                  { label: 'Archive', state: 'reject', why: 'Genuine edge exists in 2 of 5 regimes — not waste.' },
+                ].map((o) => (
+                  <div
+                    key={o.label}
+                    className={`rounded-md border p-2 ${
+                      o.state === 'recommend'
+                        ? 'border-emerald-500/40 bg-emerald-500/10'
+                        : 'border-border bg-muted/20 opacity-70'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-1">
+                      <div className="font-medium text-xs">{o.label}</div>
+                      <Badge
+                        variant="outline"
+                        className={`text-[9px] ${
+                          o.state === 'recommend'
+                            ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-400'
+                            : 'border-muted-foreground/30 text-muted-foreground'
+                        }`}
+                      >
+                        {o.state === 'recommend' ? 'RECOMMEND' : 'reject'}
+                      </Badge>
+                    </div>
+                    <div className="text-[11px] text-muted-foreground pt-1">{o.why}</div>
+                  </div>
+                ))}
+              </div>
+              <p className="rounded-md border border-emerald-500/30 bg-emerald-500/5 p-2 text-emerald-300 text-[11px]">
+                <strong>Action:</strong> reclassify Momentum Scalper v1 as a <strong>specialist strategy</strong>
+                gated by a regime filter (skip chop + low-vol). Re-run 90d validation with the filter, then a
+                30d forward paper run that must include at least one chop episode before any promotion review.
+                Status remains <strong>Research Only</strong>, promotion still disabled.
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
 
         {/* ─── Validation Pack ──────────────────────────────────── */}
         <TabsContent value="validation" className="space-y-3">
