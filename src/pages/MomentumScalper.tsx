@@ -281,7 +281,7 @@ export default function MomentumScalper() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="validation">
+      <Tabs defaultValue="robustness">
         <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="robustness">Robustness audit</TabsTrigger>
           <TabsTrigger value="validation">Validation pack</TabsTrigger>
