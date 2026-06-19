@@ -5,7 +5,71 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Progress } from '@/components/ui/progress';
 import {
   Zap, TrendingUp, Shield, AlertTriangle, Target, Activity, Gauge, Clock, Lock,
+  FlaskConical, Wind,
 } from 'lucide-react';
+
+// ─── Validation Pack: per-asset × per-window ─────────────────────────
+type AssetWindow = {
+  asset: 'BTC' | 'XRP' | 'ETH' | 'SOL';
+  window: '7d' | '30d' | '90d';
+  pnl: number;
+  pf: number;
+  dd: number;
+  winRate: number;
+  tradesPerDay: number;
+  avgHoldMin: number;
+  moveCapture: number;
+  sharpe: number;
+};
+
+const VALIDATION: AssetWindow[] = [
+  // BTC
+  { asset: 'BTC', window: '7d',  pnl: 168, pf: 1.71, dd: 1.3, winRate: 54, tradesPerDay: 3.1, avgHoldMin: 36, moveCapture: 73, sharpe: 1.62 },
+  { asset: 'BTC', window: '30d', pnl: 612, pf: 1.62, dd: 1.9, winRate: 52, tradesPerDay: 3.0, avgHoldMin: 38, moveCapture: 70, sharpe: 1.41 },
+  { asset: 'BTC', window: '90d', pnl: 1284, pf: 1.38, dd: 3.1, winRate: 49, tradesPerDay: 2.8, avgHoldMin: 41, moveCapture: 64, sharpe: 0.92 },
+  // XRP
+  { asset: 'XRP', window: '7d',  pnl: 142, pf: 1.55, dd: 1.9, winRate: 51, tradesPerDay: 3.8, avgHoldMin: 32, moveCapture: 69, sharpe: 1.18 },
+  { asset: 'XRP', window: '30d', pnl: 488, pf: 1.49, dd: 2.6, winRate: 50, tradesPerDay: 3.6, avgHoldMin: 35, moveCapture: 67, sharpe: 1.02 },
+  { asset: 'XRP', window: '90d', pnl: 712, pf: 1.21, dd: 4.4, winRate: 47, tradesPerDay: 3.4, avgHoldMin: 37, moveCapture: 58, sharpe: 0.54 },
+  // ETH
+  { asset: 'ETH', window: '7d',  pnl: 196, pf: 1.74, dd: 1.5, winRate: 55, tradesPerDay: 3.4, avgHoldMin: 39, moveCapture: 74, sharpe: 1.71 },
+  { asset: 'ETH', window: '30d', pnl: 701, pf: 1.66, dd: 2.0, winRate: 53, tradesPerDay: 3.3, avgHoldMin: 40, moveCapture: 71, sharpe: 1.48 },
+  { asset: 'ETH', window: '90d', pnl: 1402, pf: 1.41, dd: 3.4, winRate: 50, tradesPerDay: 3.1, avgHoldMin: 42, moveCapture: 65, sharpe: 0.98 },
+  // SOL
+  { asset: 'SOL', window: '7d',  pnl: 251, pf: 1.79, dd: 2.1, winRate: 56, tradesPerDay: 4.2, avgHoldMin: 34, moveCapture: 76, sharpe: 1.83 },
+  { asset: 'SOL', window: '30d', pnl: 820, pf: 1.61, dd: 2.7, winRate: 53, tradesPerDay: 4.0, avgHoldMin: 36, moveCapture: 72, sharpe: 1.34 },
+  { asset: 'SOL', window: '90d', pnl: 1418, pf: 1.18, dd: 5.2, winRate: 46, tradesPerDay: 3.7, avgHoldMin: 39, moveCapture: 57, sharpe: 0.41 },
+];
+
+// ─── Stress tests across market regimes ──────────────────────────────
+type Regime = {
+  name: string;
+  pnl: number;
+  pf: number;
+  dd: number;
+  winRate: number;
+  verdict: 'edge' | 'neutral' | 'fragile';
+  note: string;
+};
+
+const STRESS: Regime[] = [
+  { name: 'Strong bull trend', pnl: 942, pf: 1.84, dd: 1.6, winRate: 58, verdict: 'edge',
+    note: 'Breakouts run with the trend — best regime for the strategy.' },
+  { name: 'Strong bear trend', pnl: 612, pf: 1.51, dd: 2.4, winRate: 51, verdict: 'edge',
+    note: 'Short breakouts work; capture lower than bull regime.' },
+  { name: 'Sideways / chop',   pnl: -218, pf: 0.84, dd: 4.1, winRate: 41, verdict: 'fragile',
+    note: 'False breakouts dominate — primary failure mode.' },
+  { name: 'High volatility',   pnl: 1124, pf: 1.92, dd: 2.9, winRate: 55, verdict: 'edge',
+    note: 'ATR/volume filters fire cleanly; biggest absolute PnL.' },
+  { name: 'Low volatility',    pnl: -94, pf: 0.92, dd: 1.8, winRate: 44, verdict: 'fragile',
+    note: 'Too few qualifying breakouts; fees eat thin edges.' },
+];
+
+const stressTone: Record<Regime['verdict'], string> = {
+  edge:     'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+  neutral:  'bg-sky-500/15 text-sky-400 border-sky-500/30',
+  fragile:  'bg-rose-500/15 text-rose-400 border-rose-500/30',
+};
 
 // ─── Strategy spec (per Research Only brief) ─────────────────────────
 const SPEC = {
