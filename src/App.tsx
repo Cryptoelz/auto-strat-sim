@@ -33,6 +33,7 @@ import LowVolCoilerV2 from "./pages/LowVolCoilerV2";
 import SpecialistApprovalBoard from "./pages/SpecialistApprovalBoard";
 import PortfolioArchitectureReview from "./pages/PortfolioArchitectureReview";
 import ExecutiveProgramStatus from "./pages/ExecutiveProgramStatus";
+import ObservationCenter from "./pages/ObservationCenter";
 import TradeFrequencyAudit from "./pages/TradeFrequencyAudit";
 import RouterV21 from "./pages/RouterV21";
 import Strategies from "./pages/Strategies";
@@ -92,6 +93,7 @@ const App = () => (
               <Route path="/specialist-approval-board" element={<SpecialistApprovalBoard />} />
               <Route path="/portfolio-architecture-review" element={<PortfolioArchitectureReview />} />
               <Route path="/executive-program-status" element={<ExecutiveProgramStatus />} />
+              <Route path="/observation-center" element={<ObservationCenter />} />
               <Route path="/trade-frequency" element={<TradeFrequencyAudit />} />
               <Route path="/router-v21" element={<RouterV21 />} />
               <Route path="/strategies" element={<Strategies />} />
