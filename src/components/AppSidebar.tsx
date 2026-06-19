@@ -60,6 +60,7 @@ const NAV_SECTIONS = [
       { title: 'Low-Vol Coiler v2', url: '/low-vol-coiler-v2', icon: FlaskConical },
       { title: 'Specialist Approval Board', url: '/specialist-approval-board', icon: Gavel },
       { title: 'Portfolio Architecture', url: '/portfolio-architecture-review', icon: Building2 },
+      { title: 'Executive Program Status', url: '/executive-program-status', icon: ClipboardCheck },
       { title: 'Trade Frequency Audit', url: '/trade-frequency', icon: Activity },
       { title: 'Router v2.1 (fork)', url: '/router-v21', icon: GitFork },
       { title: 'Command Center', url: '/command-center', icon: Sparkles },
