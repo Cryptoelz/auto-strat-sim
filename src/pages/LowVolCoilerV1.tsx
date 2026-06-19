@@ -137,9 +137,10 @@ export default function LowVolCoilerV1() {
         </AlertDescription>
       </Alert>
 
-      <Tabs defaultValue="spec" className="space-y-4">
-        <TabsList className="grid grid-cols-4 lg:grid-cols-8 w-full">
+      <Tabs defaultValue="run" className="space-y-4">
+        <TabsList className="grid grid-cols-3 lg:grid-cols-9 w-full">
           <TabsTrigger value="spec">Spec</TabsTrigger>
+          <TabsTrigger value="run">Validation Run</TabsTrigger>
           <TabsTrigger value="validation">Validation</TabsTrigger>
           <TabsTrigger value="robustness">Robustness</TabsTrigger>
           <TabsTrigger value="capture">Capture</TabsTrigger>
@@ -148,6 +149,13 @@ export default function LowVolCoilerV1() {
           <TabsTrigger value="promotion">Promotion</TabsTrigger>
           <TabsTrigger value="championship">Championship</TabsTrigger>
         </TabsList>
+
+        {/* Validation Run — multi-asset multi-window */}
+        <TabsContent value="run" className="space-y-4">
+          <ValidationRun />
+        </TabsContent>
+
+
 
         {/* 1. Strategy Spec */}
         <TabsContent value="spec" className="space-y-4">
