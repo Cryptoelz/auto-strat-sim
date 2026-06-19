@@ -55,6 +55,7 @@ const NAV_SECTIONS = [
       { title: 'Forward Validation', url: '/forward-validation', icon: Eye },
       { title: 'Champion Trial', url: '/champion-trial', icon: Trophy },
       { title: 'Specialist Championship', url: '/specialist-championship', icon: Crown },
+      { title: 'Specialist Discovery v2', url: '/specialist-discovery-v2', icon: Compass },
       { title: 'Trade Frequency Audit', url: '/trade-frequency', icon: Activity },
       { title: 'Router v2.1 (fork)', url: '/router-v21', icon: GitFork },
       { title: 'Command Center', url: '/command-center', icon: Sparkles },
