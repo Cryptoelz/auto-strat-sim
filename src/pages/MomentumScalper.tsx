@@ -509,6 +509,22 @@ export default function MomentumScalper() {
                 ({SPEC.risk.positionSize}%) plus a tight {SPEC.risk.stopLoss}% stop keeps max DD inside the
                 3% session guardrail across the 30-day window.
               </p>
+              <div className="rounded-md border border-border bg-muted/30 p-3 space-y-1.5">
+                <div className="text-foreground font-medium text-xs flex items-center gap-2">
+                  <FlaskConical className="h-3.5 w-3.5 text-amber-400" /> Validation pack verdict
+                </div>
+                <p>
+                  Edge is <span className="text-amber-400 font-medium">partially genuine but regime-dependent</span>.
+                  Strong PF (1.5–1.8) in trending and high-vol regimes across all four assets, but PF collapses
+                  below 1.0 in chop and low-vol — and 90d Sharpe-like score drops under 1.0 on every asset
+                  (SOL 0.41). Recent 30d results are flattered by a high-vol / trending environment.
+                </p>
+                <p>
+                  <span className="text-foreground">Required before any promotion review:</span> regime filter
+                  (skip chop / low-vol), 90d out-of-sample re-run, and a 30-day forward paper run that includes
+                  at least one chop episode.
+                </p>
+              </div>
               <p className="rounded-md border border-amber-500/30 bg-amber-500/5 p-2 text-amber-300">
                 <strong>Status:</strong> Research only. Promotion disabled. Not connected to Portfolio Manager.
                 Running this strategy does not interfere with Router v2 testing.
