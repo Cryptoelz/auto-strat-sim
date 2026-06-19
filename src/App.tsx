@@ -79,7 +79,7 @@ const App = () => (
               <Route path="/allocation-lab-v2" element={<SpecialistAllocationLabV2 />} />
               <Route path="/forward-validation" element={<ForwardValidation />} />
               <Route path="/champion-trial" element={<ChampionTrial />} />
-              <Route path="/specialist-championship" element={<Specialistchampionship_placeholder />} />
+              <Route path="/specialist-championship" element={<SpecialistChampionship />} />
               <Route path="/trade-frequency" element={<TradeFrequencyAudit />} />
               <Route path="/router-v21" element={<RouterV21 />} />
               <Route path="/strategies" element={<Strategies />} />
