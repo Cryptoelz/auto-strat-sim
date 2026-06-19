@@ -281,12 +281,139 @@ export default function MomentumScalper() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="comparison">
-        <TabsList>
+      <Tabs defaultValue="validation">
+        <TabsList className="flex-wrap h-auto">
+          <TabsTrigger value="validation">Validation pack</TabsTrigger>
+          <TabsTrigger value="stress">Stress tests</TabsTrigger>
           <TabsTrigger value="comparison">Comparison</TabsTrigger>
           <TabsTrigger value="capture">Move capture</TabsTrigger>
-          <TabsTrigger value="notes">Notes</TabsTrigger>
+          <TabsTrigger value="notes">Notes & verdict</TabsTrigger>
         </TabsList>
+
+        {/* ─── Validation Pack ──────────────────────────────────── */}
+        <TabsContent value="validation" className="space-y-3">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <FlaskConical className="h-4 w-4 text-amber-400" />
+                Validation pack — BTC / XRP / ETH / SOL × 7d / 30d / 90d
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Asset</TableHead>
+                    <TableHead>Window</TableHead>
+                    <TableHead className="text-right">Net PnL</TableHead>
+                    <TableHead className="text-right">PF</TableHead>
+                    <TableHead className="text-right">DD</TableHead>
+                    <TableHead className="text-right">Win %</TableHead>
+                    <TableHead className="text-right">Trades/day</TableHead>
+                    <TableHead className="text-right">Avg hold</TableHead>
+                    <TableHead className="text-right">Capture</TableHead>
+                    <TableHead className="text-right">Sharpe~</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {VALIDATION.map((r) => {
+                    const decay = r.window === '90d';
+                    return (
+                      <TableRow key={`${r.asset}-${r.window}`}>
+                        <TableCell className="text-xs font-medium">{r.asset}</TableCell>
+                        <TableCell className="text-xs">
+                          <Badge variant="outline" className="text-[10px]">{r.window}</Badge>
+                        </TableCell>
+                        <TableCell className={`text-right text-xs ${r.pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                          ${r.pnl}
+                        </TableCell>
+                        <TableCell className={`text-right text-xs ${r.pf < 1.2 ? 'text-rose-400' : r.pf < 1.5 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                          {r.pf.toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-right text-xs">{r.dd}%</TableCell>
+                        <TableCell className="text-right text-xs">{r.winRate}%</TableCell>
+                        <TableCell className="text-right text-xs">{r.tradesPerDay.toFixed(1)}</TableCell>
+                        <TableCell className="text-right text-xs">{r.avgHoldMin}m</TableCell>
+                        <TableCell className="text-right text-xs">{r.moveCapture}%</TableCell>
+                        <TableCell className={`text-right text-xs font-medium ${decay && r.sharpe < 1 ? 'text-amber-400' : ''}`}>
+                          {r.sharpe.toFixed(2)}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+              <p className="text-[11px] text-muted-foreground pt-3">
+                <span className="text-amber-400 font-medium">Decay signal:</span> Profit Factor and Sharpe-like
+                score both compress materially from 7d → 90d on every asset (XRP and SOL most). 30d results may
+                be flattering recent conditions rather than reflecting durable edge.
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ─── Stress tests ─────────────────────────────────────── */}
+        <TabsContent value="stress" className="space-y-3">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <Wind className="h-4 w-4 text-sky-400" /> Regime stress tests
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Regime</TableHead>
+                    <TableHead className="text-right">Net PnL</TableHead>
+                    <TableHead className="text-right">PF</TableHead>
+                    <TableHead className="text-right">DD</TableHead>
+                    <TableHead className="text-right">Win %</TableHead>
+                    <TableHead className="text-right">Verdict</TableHead>
+                    <TableHead>Note</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {STRESS.map((r) => (
+                    <TableRow key={r.name}>
+                      <TableCell className="text-xs font-medium">{r.name}</TableCell>
+                      <TableCell className={`text-right text-xs ${r.pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        ${r.pnl}
+                      </TableCell>
+                      <TableCell className="text-right text-xs">{r.pf.toFixed(2)}</TableCell>
+                      <TableCell className="text-right text-xs">{r.dd}%</TableCell>
+                      <TableCell className="text-right text-xs">{r.winRate}%</TableCell>
+                      <TableCell className="text-right">
+                        <Badge variant="outline" className={`text-[10px] ${stressTone[r.verdict]}`}>
+                          {r.verdict}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-[11px] text-muted-foreground">{r.note}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <div className="grid gap-2 md:grid-cols-3 pt-3">
+                <div className="rounded-md border border-emerald-500/30 bg-emerald-500/5 p-2 text-xs">
+                  <div className="text-[10px] uppercase text-muted-foreground">Edge regimes</div>
+                  <div className="font-semibold text-emerald-400">3 / 5</div>
+                  <div className="text-[10px] text-muted-foreground">Bull · Bear · High vol</div>
+                </div>
+                <div className="rounded-md border border-rose-500/30 bg-rose-500/5 p-2 text-xs">
+                  <div className="text-[10px] uppercase text-muted-foreground">Fragile regimes</div>
+                  <div className="font-semibold text-rose-400">2 / 5</div>
+                  <div className="text-[10px] text-muted-foreground">Chop · Low vol</div>
+                </div>
+                <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-2 text-xs">
+                  <div className="text-[10px] uppercase text-muted-foreground">Regime dependence</div>
+                  <div className="font-semibold text-amber-400">High</div>
+                  <div className="text-[10px] text-muted-foreground">Needs regime filter before promotion</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
 
         <TabsContent value="comparison" className="space-y-3">
           <Card>
