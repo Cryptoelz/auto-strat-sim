@@ -6,7 +6,56 @@ import { Progress } from '@/components/ui/progress';
 import {
   Activity, AlertTriangle, CheckCircle2, Crown, Lock, Shield, Sparkles,
   TrendingDown, TrendingUp, Trophy, Swords, Flag, Calendar, Gauge,
+  ShieldAlert, HeartPulse, Repeat, ArrowUp, ArrowDown,
 } from 'lucide-react';
+
+// ─── Stress Monitor Data ───────────────────────────────────────────────
+type StressRow = {
+  metric: string;
+  champ7: string; chal7: string;
+  champ14: string; chal14: string;
+  champ30: string; chal30: string;
+};
+const STRESS_ROWS: StressRow[] = [
+  { metric: 'Net PnL',       champ7: '+$842',  chal7: '+$1,012', champ14: '+$1,684', chal14: '+$1,948', champ30: '+$3,884', chal30: '+$4,212' },
+  { metric: 'Profit Factor', champ7: '1.88',   chal7: '2.04',    champ14: '1.91',    chal14: '2.02',    champ30: '1.94',    chal30: '2.06' },
+  { metric: 'Drawdown',      champ7: '1.4%',   chal7: '1.9%',    champ14: '1.7%',    chal14: '2.0%',    champ30: '1.8%',    chal30: '2.1%' },
+  { metric: 'Win Rate',      champ7: '57%',    chal7: '61%',     champ14: '58%',     chal14: '60%',     champ30: '58%',     chal30: '60%' },
+  { metric: 'Capture %',     champ7: '74%',    chal7: '79%',     champ14: '75%',     chal14: '78%',     champ30: '76%',     chal30: '78%' },
+];
+// Leader counts: challenger leads 7d (4/5), 14d (4/5), 30d (4/5) → consistent
+const LEAD_WINDOWS = [
+  { window: '7d',  leader: 'challenger' as const, wins: 4, total: 5, delta: '+$170' },
+  { window: '14d', leader: 'challenger' as const, wins: 4, total: 5, delta: '+$264' },
+  { window: '30d', leader: 'challenger' as const, wins: 4, total: 5, delta: '+$328' },
+];
+const consistentLeader = LEAD_WINDOWS.every(w => w.leader === LEAD_WINDOWS[0].leader);
+const avgWinRatio = LEAD_WINDOWS.reduce((s, w) => s + w.wins / w.total, 0) / LEAD_WINDOWS.length;
+const LEAD_STABILITY_SCORE = Math.round(consistentLeader ? 60 + (avgWinRatio - 0.5) * 80 : avgWinRatio * 50);
+
+const PERSISTENCE = {
+  consecutiveDaysLeading: 5,
+  leadChanges: 6,
+  largestLeadGained: '+9.2%',
+  largestLeadLost: '-3.4%',
+  currentLeader: 'Confidence Weighted Allocation',
+};
+
+type WarnLevel = 'green' | 'amber' | 'red';
+type Warning = { rule: string; reading: string; threshold: string; level: WarnLevel };
+const WARNINGS: Warning[] = [
+  { rule: 'Leader loses >50% of its lead within 7 days', reading: '-12% lead erosion', threshold: '>50%', level: 'green' },
+  { rule: 'Profit Factor drops >15%',                   reading: '-1.0% PF (2.06→2.04)', threshold: '>15%', level: 'green' },
+  { rule: 'Drawdown rises >25%',                        reading: '+5% DD drift',         threshold: '>25%', level: 'green' },
+  { rule: 'Capture drops >10%',                         reading: '-1.3% capture',        threshold: '>10%', level: 'green' },
+];
+const worstLevel: WarnLevel = WARNINGS.some(w => w.level === 'red')
+  ? 'red' : WARNINGS.some(w => w.level === 'amber') ? 'amber' : 'green';
+
+const CONFIDENCE_30D: 'Low' | 'Moderate' | 'High' =
+  LEAD_STABILITY_SCORE >= 75 && worstLevel === 'green' ? 'High'
+  : LEAD_STABILITY_SCORE >= 50 && worstLevel !== 'red' ? 'Moderate'
+  : 'Low';
 
 // ─── Trial Configuration ───────────────────────────────────────────────
 const TRIAL = {
