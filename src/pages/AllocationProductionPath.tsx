@@ -92,7 +92,44 @@ const CHECKLIST = [
   { item: '60-day trial completion', done: false },
 ];
 
+// ── Promotion forecast (observation only) ─────────────────────────────
+const FORECAST = {
+  probability: 58,
+  earliestDate: '06 Sep 2026',
+  inputs: [
+    { label: 'Promotion gates passed',   detail: '6 / 9',      score: 67 },
+    { label: 'Time completed',           detail: '23 / 60 d',  score: 38 },
+    { label: 'Minimum trade progress',   detail: '31 / 50',    score: 62 },
+    { label: 'Stability score',          detail: '82 / 100',   score: 82 },
+    { label: 'Champion trial lead',      detail: '+5.8%',      score: 74 },
+    { label: 'Health warnings',          detail: '2 warnings', score: 60 },
+    { label: 'Concentration warnings',   detail: '1 breach',   score: 25 },
+  ],
+};
+
+const band =
+  FORECAST.probability <= 25 ? 'Unlikely'
+  : FORECAST.probability <= 50 ? 'Possible'
+  : FORECAST.probability <= 75 ? 'Likely'
+  : 'Very Likely';
+
+const HELPING = [
+  'PF above target (2.04 vs > 1.90)',
+  'Drawdown within limit (2.6% vs < 3.0%)',
+  'Champion lead maintained (+5.8%, 5 consecutive days)',
+  'No guardrail breaches recorded',
+];
+
+const BLOCKING = [
+  'Bull concentration exceeds threshold (42% vs 40% ceiling)',
+  'Time gates incomplete (37 trial days remaining)',
+  'Minimum trades remaining (19 of 50 outstanding)',
+];
+
+const PROGRAMME_PROGRESS = 28;
+
 const statusBadge = (s: Stage['status']) =>
+
   s === 'Complete' ? <Badge className="bg-primary/15 text-primary border-primary/30">Complete</Badge>
   : s === 'Active' ? <Badge className="bg-accent/15 text-accent-foreground border-accent/40">Active</Badge>
   : <Badge variant="outline" className="text-muted-foreground"><Lock className="h-3 w-3 mr-1" />Locked</Badge>;
