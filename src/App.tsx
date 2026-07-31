@@ -37,6 +37,7 @@ import ObservationCenter from "./pages/ObservationCenter";
 import AllocationProductionPath from "./pages/AllocationProductionPath";
 import TradeFrequencyAudit from "./pages/TradeFrequencyAudit";
 import RouterV21 from "./pages/RouterV21";
+import PortfolioAIDirector from "./pages/PortfolioAIDirector";
 import Strategies from "./pages/Strategies";
 import Portfolio from "./pages/Portfolio";
 import Governance from "./pages/Governance";
@@ -98,6 +99,7 @@ const App = () => (
               <Route path="/allocation-production-path" element={<AllocationProductionPath />} />
               <Route path="/trade-frequency" element={<TradeFrequencyAudit />} />
               <Route path="/router-v21" element={<RouterV21 />} />
+              <Route path="/portfolio-ai-director" element={<PortfolioAIDirector />} />
               <Route path="/strategies" element={<Strategies />} />
               <Route path="/portfolio" element={<Portfolio />} />
               <Route path="/governance" element={<Governance />} />
