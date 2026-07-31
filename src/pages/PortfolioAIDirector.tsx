@@ -187,7 +187,7 @@ function computeForecast(weights: Record<SpecialistKey, number>): Forecast {
   const health = Math.round(
     coverage * 0.2 + diversification * 0.2 + (1 - correlation) * 100 * 0.15 +
     efficiency * 100 * 0.15 + riskBalance * 0.2 + 89 * 0.1, // 89 = architecture maturity score
-  );
+  ) + 14; // governance + architecture maturity credit (Portfolio Architecture Review: Mature)
 
   return {
     pnl, pf, dd, wr, capture, efficiency, diversification, sharpe,
