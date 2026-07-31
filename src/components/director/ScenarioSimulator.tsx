@@ -120,7 +120,7 @@ interface ScenarioForecast extends Forecast {
   confidenceLabel: string;
 }
 
-function scenarioForecast(sc: Scenario | null, weights: Record<SpecialistKey, number>): ScenarioForecast {
+function scenarioForecast(sc: Scenario | null, weights: Record<SpecialistKey, number>, refPnl?: number): ScenarioForecast {
   const base = computeForecast(weights);
   if (!sc) {
     const c = confidenceOf(base);
@@ -132,7 +132,8 @@ function scenarioForecast(sc: Scenario | null, weights: Record<SpecialistKey, nu
 
   const adjusted: Forecast = {
     ...base,
-    pnl: base.pnl * perfMult,
+    // blended against the current book so a scenario cannot look richer purely from sleeve mix
+    pnl: (refPnl === undefined ? base.pnl : (base.pnl + refPnl) / 2) * perfMult,
     pf: Math.max(0.4, 1 + (base.pf - 1) * perfMult),
     dd: base.dd * sc.ddStress,
     wr: Math.max(30, Math.min(78, base.wr * (0.82 + perfMult * 0.18))),
@@ -167,8 +168,8 @@ export default function ScenarioSimulator({ currentWeights }: { currentWeights: 
 
   const current = useMemo(() => scenarioForecast(null, currentWeights), [currentWeights]);
   const simulated = useMemo(
-    () => scenarioForecast(scenario, scenario ? scenario.weights : currentWeights),
-    [scenario, currentWeights],
+    () => scenarioForecast(scenario, scenario ? scenario.weights : currentWeights, current.pnl),
+    [scenario, currentWeights, current.pnl],
   );
 
   const rows = [
