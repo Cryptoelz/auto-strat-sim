@@ -243,6 +243,23 @@ export default function PortfolioAIDirector() {
         </div>
       </div>
 
+      {/* SECTION 0 — AI EXECUTIVE BRIEF */}
+      <ExecutiveBrief
+        regime="High Volatility"
+        regimeConfidence={78}
+        health={forecast.health}
+        champion="Dynamic Allocation v1"
+        largestRisk="Bull Trend concentration (42%)"
+        opportunity="Low Volatility specialist staged"
+        action="Continue Observation"
+        actionNote="No production changes recommended. Promotion remains locked behind trial time and trade minimums."
+      />
+
+      {/* SECTION 0b — OVERNIGHT INTELLIGENCE */}
+      <OvernightIntelligence />
+
+
+
       {/* SECTION 1 — EXECUTIVE SUMMARY */}
       <Card className="animate-fade-in overflow-hidden border-trading-gold/30 bg-gradient-to-br from-card via-card to-primary/5">
         <div className="h-1 w-full bg-gradient-to-r from-trading-gold via-primary to-trading-gold/20" />
