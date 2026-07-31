@@ -23,6 +23,9 @@ import ResearchDependencyMap from '@/components/director/ResearchDependencyMap';
 import ExecutiveBrief from '@/components/director/ExecutiveBrief';
 import { OvernightIntelligence } from '@/components/director/OvernightIntelligence';
 import IntelligenceLayer from '@/components/director/IntelligenceLayer';
+import { ExecutiveBoardroom, ExecutiveBriefing, type BoardroomMetrics } from '@/components/director/ExecutiveBoardroom';
+import BoardroomIntelligence from '@/components/director/BoardroomIntelligence';
+
 import {
   SPECIALISTS, REGIMES, SpecialistKey, Specialist, Forecast, computeForecast, overlapOf, fmtUsd,
 } from '@/lib/directorModel';
@@ -218,6 +221,24 @@ export default function PortfolioAIDirector() {
     setPortfolios((p) => [...p, { id, name: `Portfolio ${id} — Custom`, weights: { ...weights } }]);
   };
 
+  const boardroom: BoardroomMetrics = {
+    regime: 'High Volatility',
+    regimeConfidence: 78,
+    health: forecast.health,
+    champion: 'Confidence Weighted Allocation',
+    championDays: 24,
+    architecture: 'Mature',
+    architectureScore: 89,
+    confidence: 71,
+    governance: 'Compliant',
+    pf: forecast.pf,
+    dd: forecast.dd,
+    capture: forecast.capture,
+    diversification: forecast.diversification,
+    promotionProbability: 58,
+  };
+
+
   return (
     <div className="container mx-auto space-y-6 p-4 sm:p-6">
       {/* Header */}
@@ -260,6 +281,14 @@ export default function PortfolioAIDirector() {
 
       {/* SECTION 0b — OVERNIGHT INTELLIGENCE */}
       <OvernightIntelligence />
+
+      {/* v3.5 SECTION 1 — THE EXECUTIVE BOARDROOM */}
+      <ExecutiveBoardroom m={boardroom} />
+
+      {/* v3.5 SECTION 2 — EXECUTIVE BRIEFING */}
+      <ExecutiveBriefing m={boardroom} />
+
+
 
 
 
@@ -793,6 +822,10 @@ export default function PortfolioAIDirector() {
 
       {/* SECTION 16 — EXECUTIVE INTELLIGENCE LAYER */}
       <IntelligenceLayer />
+
+      {/* v3.5 SECTIONS 3-10 — BOARDROOM INTELLIGENCE */}
+      <BoardroomIntelligence m={boardroom} />
+
 
       {/* SECTION 11 — EXECUTIVE DECISION */}
       <Card className="animate-fade-in overflow-hidden border-trading-gold/40 bg-gradient-to-br from-card via-card to-trading-gold/5">
