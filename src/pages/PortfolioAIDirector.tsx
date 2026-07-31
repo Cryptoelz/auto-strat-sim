@@ -759,6 +759,18 @@ export default function PortfolioAIDirector() {
         </CardContent>
       </Card>
 
+      {/* SECTION 12 — SCENARIO SIMULATOR */}
+      <ScenarioSimulator currentWeights={weights} />
+
+      {/* SECTION 13 — AI DEBATE */}
+      <AiDebate weights={weights} />
+
+      {/* SECTION 14 — PORTFOLIO EVOLUTION */}
+      <PortfolioEvolution />
+
+      {/* SECTION 15 — RESEARCH DEPENDENCY MAP */}
+      <ResearchDependencyMap />
+
       {/* SECTION 11 — EXECUTIVE DECISION */}
       <Card className="animate-fade-in overflow-hidden border-trading-gold/40 bg-gradient-to-br from-card via-card to-trading-gold/5">
         <div className="h-1 w-full bg-gradient-to-r from-trading-gold via-primary to-trading-gold/20" />
