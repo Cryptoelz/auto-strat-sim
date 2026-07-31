@@ -823,6 +823,10 @@ export default function PortfolioAIDirector() {
       {/* SECTION 16 — EXECUTIVE INTELLIGENCE LAYER */}
       <IntelligenceLayer />
 
+      {/* v3.5 SECTIONS 3-10 — BOARDROOM INTELLIGENCE */}
+      <BoardroomIntelligence m={boardroom} />
+
+
       {/* SECTION 11 — EXECUTIVE DECISION */}
       <Card className="animate-fade-in overflow-hidden border-trading-gold/40 bg-gradient-to-br from-card via-card to-trading-gold/5">
         <div className="h-1 w-full bg-gradient-to-r from-trading-gold via-primary to-trading-gold/20" />
