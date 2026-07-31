@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
   Rocket, Lock, Shield, CheckCircle2, XCircle, AlertTriangle, Activity,
-  Layers, Gauge, Timer, Ban, ArrowRight, Crown,
+  Layers, Gauge, Timer, Ban, ArrowRight, Crown, Sparkles, CalendarClock, ArrowDown,
 } from 'lucide-react';
 
 // ── Stage ladder: research → paper capital ────────────────────────────
@@ -197,34 +197,130 @@ export default function AllocationProductionPath() {
 
         {/* Gates */}
         <TabsContent value="gates" className="space-y-4">
+          <div className="grid gap-4 lg:grid-cols-3">
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Gauge className="h-5 w-5" /> Stage 2 → Stage 3 Gates</CardTitle>
+                <CardDescription>All gates must read pass simultaneously on the final trial day.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Gate</TableHead>
+                      <TableHead>Requirement</TableHead>
+                      <TableHead>Current</TableHead>
+                      <TableHead className="text-right">Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {GATES.map(g => (
+                      <TableRow key={g.gate}>
+                        <TableCell className="font-medium">{g.gate}</TableCell>
+                        <TableCell className="text-muted-foreground">{g.requirement}</TableCell>
+                        <TableCell className="font-mono">{g.current}</TableCell>
+                        <TableCell className="flex justify-end">{gateIcon(g.pass)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+
+            {/* Promotion Forecast */}
+            <Card className="border-primary/30">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-primary" /> Promotion Forecast</CardTitle>
+                <CardDescription>Observation only — no promotion is triggered by this panel.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                <div>
+                  <div className="flex items-end justify-between">
+                    <div className="text-4xl font-bold">{FORECAST.probability}%</div>
+                    <Badge variant="outline" className="border-primary/40 text-primary">{band}</Badge>
+                  </div>
+                  <Progress value={FORECAST.probability} className="mt-3" />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Current probability of clearing Stage 2 → Stage 3 on schedule.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Inputs</p>
+                  {FORECAST.inputs.map(i => (
+                    <div key={i.label} className="space-y-1">
+                      <div className="flex items-center justify-between text-xs">
+                        <span>{i.label}</span>
+                        <span className="font-mono text-muted-foreground">{i.detail}</span>
+                      </div>
+                      <Progress value={i.score} className="h-1.5" />
+                    </div>
+                  ))}
+                </div>
+
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2">What's helping promotion</p>
+                  <ul className="space-y-1.5">
+                    {HELPING.map(h => (
+                      <li key={h} className="flex items-start gap-2 text-sm">
+                        <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />{h}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2">What's blocking promotion</p>
+                  <ul className="space-y-1.5">
+                    {BLOCKING.map(b => (
+                      <li key={b} className="flex items-start gap-2 text-sm">
+                        <XCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />{b}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="rounded-lg border p-3">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-3 flex items-center gap-1">
+                    <CalendarClock className="h-3.5 w-3.5" /> Estimated Earliest Promotion
+                  </p>
+                  <div className="space-y-1 text-sm">
+                    <div className="font-medium">S2 · Forward Trial</div>
+                    <ArrowDown className="h-4 w-4 text-muted-foreground" />
+                    <div className="font-medium">S3 · Shadow Allocation</div>
+                    <ArrowDown className="h-4 w-4 text-muted-foreground" />
+                    <div className="font-mono text-primary">{FORECAST.earliestDate} <span className="text-muted-foreground text-xs">(+37 days)</span></div>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-3">
+                    Assumes concentration finding resolves and no gate regresses. Governance approval still required.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Stage progress bar */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Gauge className="h-5 w-5" /> Stage 2 → Stage 3 Gates</CardTitle>
-              <CardDescription>All gates must read pass simultaneously on the final trial day.</CardDescription>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Programme Progress · Stage 2 of 5</CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Gate</TableHead>
-                    <TableHead>Requirement</TableHead>
-                    <TableHead>Current</TableHead>
-                    <TableHead className="text-right">Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {GATES.map(g => (
-                    <TableRow key={g.gate}>
-                      <TableCell className="font-medium">{g.gate}</TableCell>
-                      <TableCell className="text-muted-foreground">{g.requirement}</TableCell>
-                      <TableCell className="font-mono">{g.current}</TableCell>
-                      <TableCell className="flex justify-end">{gateIcon(g.pass)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <Progress value={PROGRAMME_PROGRESS} />
+              <div className="grid grid-cols-5 gap-2 mt-3">
+                {STAGES.map(s => (
+                  <div key={s.id} className="text-center">
+                    <div className={
+                      s.status === 'Complete' ? 'text-xs font-medium text-primary'
+                      : s.status === 'Active' ? 'text-xs font-medium text-foreground'
+                      : 'text-xs text-muted-foreground'
+                    }>S{s.id}</div>
+                    <div className="text-[10px] text-muted-foreground leading-tight mt-0.5">{s.name.split('· ')[1]}</div>
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
+
           <Card className="border-destructive/40">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base"><AlertTriangle className="h-4 w-4 text-destructive" /> Blocking Finding</CardTitle>
@@ -236,6 +332,7 @@ export default function AllocationProductionPath() {
             </CardContent>
           </Card>
         </TabsContent>
+
 
         {/* Ramp */}
         <TabsContent value="ramp" className="space-y-4">
