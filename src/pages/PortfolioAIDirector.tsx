@@ -20,6 +20,9 @@ import ScenarioSimulator from '@/components/director/ScenarioSimulator';
 import AiDebate from '@/components/director/AiDebate';
 import PortfolioEvolution from '@/components/director/PortfolioEvolution';
 import ResearchDependencyMap from '@/components/director/ResearchDependencyMap';
+import ExecutiveBrief from '@/components/director/ExecutiveBrief';
+import { OvernightIntelligence } from '@/components/director/OvernightIntelligence';
+import IntelligenceLayer from '@/components/director/IntelligenceLayer';
 import {
   SPECIALISTS, REGIMES, SpecialistKey, Specialist, Forecast, computeForecast, overlapOf, fmtUsd,
 } from '@/lib/directorModel';
@@ -242,6 +245,23 @@ export default function PortfolioAIDirector() {
           <Badge variant="outline" className="text-[10px]">SIMULATION</Badge>
         </div>
       </div>
+
+      {/* SECTION 0 — AI EXECUTIVE BRIEF */}
+      <ExecutiveBrief
+        regime="High Volatility"
+        regimeConfidence={78}
+        health={forecast.health}
+        champion="Dynamic Allocation v1"
+        largestRisk="Bull Trend concentration (42%)"
+        opportunity="Low Volatility specialist staged"
+        action="Continue Observation"
+        actionNote="No production changes recommended. Promotion remains locked behind trial time and trade minimums."
+      />
+
+      {/* SECTION 0b — OVERNIGHT INTELLIGENCE */}
+      <OvernightIntelligence />
+
+
 
       {/* SECTION 1 — EXECUTIVE SUMMARY */}
       <Card className="animate-fade-in overflow-hidden border-trading-gold/30 bg-gradient-to-br from-card via-card to-primary/5">
@@ -770,6 +790,9 @@ export default function PortfolioAIDirector() {
 
       {/* SECTION 15 — RESEARCH DEPENDENCY MAP */}
       <ResearchDependencyMap />
+
+      {/* SECTION 16 — EXECUTIVE INTELLIGENCE LAYER */}
+      <IntelligenceLayer />
 
       {/* SECTION 11 — EXECUTIVE DECISION */}
       <Card className="animate-fade-in overflow-hidden border-trading-gold/40 bg-gradient-to-br from-card via-card to-trading-gold/5">
