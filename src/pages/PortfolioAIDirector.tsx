@@ -23,6 +23,9 @@ import ResearchDependencyMap from '@/components/director/ResearchDependencyMap';
 import ExecutiveBrief from '@/components/director/ExecutiveBrief';
 import { OvernightIntelligence } from '@/components/director/OvernightIntelligence';
 import IntelligenceLayer from '@/components/director/IntelligenceLayer';
+import { ExecutiveBoardroom, ExecutiveBriefing, type BoardroomMetrics } from '@/components/director/ExecutiveBoardroom';
+import BoardroomIntelligence from '@/components/director/BoardroomIntelligence';
+
 import {
   SPECIALISTS, REGIMES, SpecialistKey, Specialist, Forecast, computeForecast, overlapOf, fmtUsd,
 } from '@/lib/directorModel';
