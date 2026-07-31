@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, LineChart, FlaskConical, Layers, PieChart,
   Shield, UserCog, Bell, Beaker, ClipboardCheck, Activity,
-  Radio, Microscope, ArrowUpCircle, BarChart3, Gauge, FileText, Sparkles, Scale, SlidersHorizontal, GitCompare, Trophy, Gavel, Snowflake, Briefcase, Users, BookOpen, Crown, CalendarDays, Target, Zap, GitFork, Compass, Eye, Building2,
+  Radio, Microscope, ArrowUpCircle, BarChart3, Gauge, FileText, Sparkles, Scale, SlidersHorizontal, GitCompare, Trophy, Gavel, Snowflake, Briefcase, Users, BookOpen, Crown, CalendarDays, Target, Zap, GitFork, Compass, Eye, Building2, Rocket,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
@@ -62,6 +62,7 @@ const NAV_SECTIONS = [
       { title: 'Portfolio Architecture', url: '/portfolio-architecture-review', icon: Building2 },
       { title: 'Executive Program Status', url: '/executive-program-status', icon: ClipboardCheck },
       { title: 'Observation Center', url: '/observation-center', icon: Eye },
+      { title: 'Allocation Production Path', url: '/allocation-production-path', icon: Rocket },
       { title: 'Trade Frequency Audit', url: '/trade-frequency', icon: Activity },
       { title: 'Router v2.1 (fork)', url: '/router-v21', icon: GitFork },
       { title: 'Command Center', url: '/command-center', icon: Sparkles },
