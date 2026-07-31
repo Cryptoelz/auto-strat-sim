@@ -73,6 +73,7 @@ export default {
           sol: "hsl(var(--trading-sol))",
           "sma-fast": "hsl(var(--trading-sma-fast))",
           "sma-slow": "hsl(var(--trading-sma-slow))",
+          gold: "hsl(var(--trading-gold))",
         },
       },
       borderRadius: {
