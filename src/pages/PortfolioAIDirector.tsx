@@ -243,13 +243,21 @@ function buildHistory(days: number) {
   for (let i = days - 1; i >= 0; i--) {
     const t = (days - i) / days;
     const d = new Date(Date.now() - i * 86400000);
+    const raw = {
+      TR: 32 + 10 * t + Math.sin(i / 5) * 3,
+      MS: 28 - 4 * t + Math.cos(i / 7) * 3,
+      VCB: 18 + 3 * t + Math.sin(i / 4) * 2,
+      MR: 22 - 8 * t + Math.cos(i / 6) * 2,
+      LVC: Math.max(0, 8 - 8 * t + Math.sin(i / 9) * 2),
+    };
+    const sum = Object.values(raw).reduce((a, b) => a + b, 0);
     out.push({
       date: d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
-      TR: Math.round(32 + 10 * t + Math.sin(i / 5) * 3),
-      MS: Math.round(28 - 4 * t + Math.cos(i / 7) * 3),
-      VCB: Math.round(18 + 3 * t + Math.sin(i / 4) * 2),
-      MR: Math.round(22 - 8 * t + Math.cos(i / 6) * 2),
-      LVC: Math.round(Math.max(0, 8 - 8 * t + Math.sin(i / 9) * 2)),
+      TR: Math.round((raw.TR / sum) * 100),
+      MS: Math.round((raw.MS / sum) * 100),
+      VCB: Math.round((raw.VCB / sum) * 100),
+      MR: Math.round((raw.MR / sum) * 100),
+      LVC: Math.round((raw.LVC / sum) * 100),
     });
   }
   return out;
