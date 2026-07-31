@@ -221,6 +221,24 @@ export default function PortfolioAIDirector() {
     setPortfolios((p) => [...p, { id, name: `Portfolio ${id} — Custom`, weights: { ...weights } }]);
   };
 
+  const boardroom: BoardroomMetrics = {
+    regime: 'High Volatility',
+    regimeConfidence: 78,
+    health: forecast.health,
+    champion: 'Confidence Weighted Allocation',
+    championDays: 24,
+    architecture: 'Mature',
+    architectureScore: 89,
+    confidence: 71,
+    governance: 'Compliant',
+    pf: forecast.pf,
+    dd: forecast.dd,
+    capture: forecast.capture,
+    diversification: forecast.diversification,
+    promotionProbability: 58,
+  };
+
+
   return (
     <div className="container mx-auto space-y-6 p-4 sm:p-6">
       {/* Header */}
