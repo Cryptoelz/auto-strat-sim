@@ -261,6 +261,14 @@ export default function PortfolioAIDirector() {
       {/* SECTION 0b — OVERNIGHT INTELLIGENCE */}
       <OvernightIntelligence />
 
+      {/* v3.5 SECTION 1 — THE EXECUTIVE BOARDROOM */}
+      <ExecutiveBoardroom m={boardroom} />
+
+      {/* v3.5 SECTION 2 — EXECUTIVE BRIEFING */}
+      <ExecutiveBriefing m={boardroom} />
+
+
+
 
 
       {/* SECTION 1 — EXECUTIVE SUMMARY */}
