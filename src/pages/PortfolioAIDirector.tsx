@@ -313,7 +313,7 @@ export default function PortfolioAIDirector() {
       { category: 'Regime Risk', value: Math.round(100 - forecast.coverage), note: `Coverage ${forecast.coverage}/100 across five regimes` },
       { category: 'Concentration', value: Math.round(Math.max(0, (conc - 25) * 2)), note: `Largest sleeve ${conc.toFixed(0)}% of book` },
       { category: 'Correlation', value: Math.round(forecast.correlation * 130), note: `Weighted pairwise overlap ${(forecast.correlation * 100).toFixed(0)}%` },
-      { category: 'Drawdown', value: Math.round((forecast.dd / 5) * 100), note: `Expected max DD ${forecast.dd.toFixed(1)}%` },
+      { category: 'Drawdown', value: Math.round(Math.max(0, ((forecast.dd - 1.6) / 2.6) * 100)), note: `Expected max DD ${forecast.dd.toFixed(1)}%` },
       { category: 'Volatility', value: Math.round(Math.max(0, 90 - forecast.sharpe * 45)), note: `Sharpe-like score ${forecast.sharpe.toFixed(2)}` },
       { category: 'Capital Efficiency', value: Math.round((1 - forecast.efficiency) * 130), note: `Efficiency ${(forecast.efficiency * 100).toFixed(0)}%` },
       { category: 'Promotion Risk', value: 46, note: 'Time gates incomplete — day 23 of 60, 31 of 50 trades' },
