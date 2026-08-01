@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  FEED, ALERTS, RECOMMENDATIONS, METRICS, INVESTIGATION_PROMPTS,
+  FEED, ALERTS, RECOMMENDATIONS, METRICS, KNOWLEDGE, INVESTIGATION_PROMPTS,
   buildDailyBrief, investigate, memoryTimeline, sortedFeed,
   type Severity, type Investigation, type FeedItem, type Recommendation,
 } from '@/lib/cio';
