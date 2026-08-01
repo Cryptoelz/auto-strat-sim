@@ -1,4 +1,5 @@
 import {
+  Landmark,
   LayoutDashboard, LineChart, FlaskConical, Layers, PieChart,
   Shield, UserCog, Bell, Beaker, ClipboardCheck, Activity,
   Radio, Microscope, ArrowUpCircle, BarChart3, Gauge, FileText, Sparkles, Scale, SlidersHorizontal, GitCompare, Trophy, Gavel, Snowflake, Briefcase, Users, BookOpen, Crown, CalendarDays, Target, Zap, GitFork, Compass, Eye, Building2, Rocket, Brain, BrainCircuit,
@@ -27,6 +28,7 @@ const NAV_SECTIONS = [
       { title: 'Overview', url: '/', icon: LayoutDashboard },
       { title: 'Mission Control', url: '/mission-control', icon: Rocket },
       { title: 'AI Research Assistant', url: '/research-assistant', icon: BrainCircuit },
+      { title: 'AI Chief Investment Officer', url: '/cio', icon: Landmark },
       { title: 'Portfolio AI Director', url: '/portfolio-ai-director', icon: Brain },
       { title: 'Executive', url: '/executive', icon: Crown },
       { title: 'Live Trading', url: '/trading', icon: LineChart },
