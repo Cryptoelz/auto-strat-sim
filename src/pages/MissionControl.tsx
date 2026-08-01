@@ -277,7 +277,7 @@ export default function MissionControl() {
       {/* Section 1 — Today's Mission */}
       <Card>
         <CardHeader className="pb-3">
-          <SectionTitle icon={Target0} title="Today's Mission" subtitle="Five highest-priority actions, ranked by expected impact." />
+          <SectionTitle icon={Rocket} title="Today's Mission" subtitle="Five highest-priority actions, ranked by expected impact." />
         </CardHeader>
         <CardContent className="space-y-3">
           {MISSIONS.map((m) => (
