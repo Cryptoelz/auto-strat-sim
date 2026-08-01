@@ -432,10 +432,17 @@ export default function ChiefInvestmentOfficer() {
                     {e.outcome && <p className="text-xs"><span className="text-muted-foreground">Outcome: </span>{e.outcome}</p>}
                     <div className="flex flex-wrap gap-1.5">
                       {e.relatedIds.map(id => {
-                        const n = METRICS.length && require ? null : null;
-                        return n;
+                        const n = KNOWLEDGE.find(k => k.id === id);
+                        return n ? (
+                          <Link key={id} to={n.route}>
+                            <Badge variant="outline" className="gap-1 text-[10px] hover:bg-accent">
+                              {n.title} <ArrowUpRight className="h-3 w-3" />
+                            </Badge>
+                          </Link>
+                        ) : null;
                       })}
                     </div>
+
                   </CardContent>
                 </Card>
               </div>
