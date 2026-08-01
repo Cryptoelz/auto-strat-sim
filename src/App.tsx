@@ -39,6 +39,7 @@ import TradeFrequencyAudit from "./pages/TradeFrequencyAudit";
 import RouterV21 from "./pages/RouterV21";
 import PortfolioAIDirector from "./pages/PortfolioAIDirector";
 import MissionControl from "./pages/MissionControl";
+import ResearchAssistant from "./pages/ResearchAssistant";
 import Strategies from "./pages/Strategies";
 import Portfolio from "./pages/Portfolio";
 import Governance from "./pages/Governance";
@@ -102,6 +103,7 @@ const App = () => (
               <Route path="/router-v21" element={<RouterV21 />} />
               <Route path="/portfolio-ai-director" element={<PortfolioAIDirector />} />
               <Route path="/mission-control" element={<MissionControl />} />
+              <Route path="/research-assistant" element={<ResearchAssistant />} />
               <Route path="/strategies" element={<Strategies />} />
               <Route path="/portfolio" element={<Portfolio />} />
               <Route path="/governance" element={<Governance />} />
