@@ -25,6 +25,7 @@ const NAV_SECTIONS = [
     label: 'Core',
     items: [
       { title: 'Overview', url: '/', icon: LayoutDashboard },
+      { title: 'Mission Control', url: '/mission-control', icon: Rocket },
       { title: 'Portfolio AI Director', url: '/portfolio-ai-director', icon: Brain },
       { title: 'Executive', url: '/executive', icon: Crown },
       { title: 'Live Trading', url: '/trading', icon: LineChart },
