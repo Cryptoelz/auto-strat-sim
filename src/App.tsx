@@ -41,6 +41,7 @@ import PortfolioAIDirector from "./pages/PortfolioAIDirector";
 import MissionControl from "./pages/MissionControl";
 import ResearchAssistant from "./pages/ResearchAssistant";
 import ChiefInvestmentOfficer from "./pages/ChiefInvestmentOfficer";
+import AutonomousResearch from "./pages/AutonomousResearch";
 import Strategies from "./pages/Strategies";
 import Portfolio from "./pages/Portfolio";
 import Governance from "./pages/Governance";
@@ -106,6 +107,7 @@ const App = () => (
               <Route path="/mission-control" element={<MissionControl />} />
               <Route path="/research-assistant" element={<ResearchAssistant />} />
               <Route path="/cio" element={<ChiefInvestmentOfficer />} />
+              <Route path="/autonomous-research" element={<AutonomousResearch />} />
               <Route path="/strategies" element={<Strategies />} />
               <Route path="/portfolio" element={<Portfolio />} />
               <Route path="/governance" element={<Governance />} />
