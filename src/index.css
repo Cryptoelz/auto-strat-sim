@@ -150,3 +150,47 @@
 .animate-pulse-glow-red {
   animation: pulse-glow-red 2s ease-in-out infinite;
 }
+
+/* Institutional Knowledge Graph™ — node & relationship tokens */
+@layer base {
+  :root, .dark {
+    --kg-question: 199 89% 58%;
+    --kg-hypothesis: 262 83% 68%;
+    --kg-experiment: 190 85% 50%;
+    --kg-validation: 152 65% 48%;
+    --kg-discovery: 43 96% 56%;
+    --kg-breakthrough: 32 96% 56%;
+    --kg-paper: 210 20% 72%;
+    --kg-thread: 174 62% 47%;
+    --kg-specialist: 217 91% 62%;
+    --kg-department: 43 74% 49%;
+    --kg-governance: 0 72% 58%;
+    --kg-promotion: 142 71% 45%;
+    --kg-recommendation: 43 90% 60%;
+    --kg-report: 226 60% 68%;
+    --kg-lesson: 280 65% 65%;
+    --kg-risk: 12 88% 60%;
+    --kg-architecture: 205 40% 65%;
+    --kg-portfolio: 168 70% 50%;
+    --kg-allocation: 250 70% 66%;
+    --kg-memory: 45 60% 60%;
+    --kg-rejected: 0 60% 50%;
+
+    --kg-rel-support: 152 65% 48%;
+    --kg-rel-contradict: 0 72% 58%;
+    --kg-rel-derive: 217 91% 62%;
+    --kg-rel-validate: 174 62% 47%;
+    --kg-rel-feed: 199 89% 58%;
+    --kg-rel-depend: 262 70% 68%;
+    --kg-rel-inspire: 43 90% 60%;
+    --kg-rel-create: 210 15% 60%;
+    --kg-rel-supersede: 32 80% 58%;
+    --kg-rel-promote: 142 71% 45%;
+    --kg-rel-block: 0 72% 58%;
+    --kg-rel-archive: 45 60% 60%;
+    --kg-rel-use: 190 70% 55%;
+  }
+}
+
+@keyframes kg-dash { to { stroke-dashoffset: -24; } }
+.kg-edge-animated { stroke-dasharray: 6 6; animation: kg-dash 1.4s linear infinite; }
