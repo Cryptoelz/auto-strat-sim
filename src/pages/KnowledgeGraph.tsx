@@ -20,7 +20,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   Network, Search, Lock, FileDown, ArrowRight, ArrowLeft, Sparkles, Flame, XCircle,
-  GitBranch, Clock, Activity, Link2, ExternalLink, Brain,
+  GitBranch, Clock, Activity, Link2, ExternalLink, Brain, Compass,
 } from 'lucide-react';
 
 const GOLD = 'text-trading-gold';
