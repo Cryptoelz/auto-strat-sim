@@ -2,7 +2,7 @@ import {
   Landmark,
   LayoutDashboard, LineChart, FlaskConical, Layers, PieChart,
   Shield, UserCog, Bell, Beaker, ClipboardCheck, Activity,
-  Radio, Microscope, ArrowUpCircle, BarChart3, Gauge, FileText, Sparkles, Scale, SlidersHorizontal, GitCompare, Trophy, Gavel, Snowflake, Briefcase, Users, BookOpen, Crown, CalendarDays, Target, Zap, GitFork, Compass, Eye, Building2, Rocket, Brain, BrainCircuit, Bot,
+  Radio, Microscope, ArrowUpCircle, BarChart3, Gauge, FileText, Sparkles, Scale, SlidersHorizontal, GitCompare, Trophy, Gavel, Snowflake, Briefcase, Users, BookOpen, Crown, CalendarDays, Target, Zap, GitFork, Compass, Eye, Building2, Rocket, Brain, BrainCircuit, Bot, Atom,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
@@ -30,6 +30,7 @@ const NAV_SECTIONS = [
       { title: 'AI Research Assistant', url: '/research-assistant', icon: BrainCircuit },
       { title: 'AI Chief Investment Officer', url: '/cio', icon: Landmark },
       { title: 'Autonomous Research Engine', url: '/autonomous-research', icon: Bot },
+      { title: 'AI Quant Scientist', url: '/quant-scientist', icon: Atom },
       { title: 'Portfolio AI Director', url: '/portfolio-ai-director', icon: Brain },
       { title: 'Executive', url: '/executive', icon: Crown },
       { title: 'Live Trading', url: '/trading', icon: LineChart },
