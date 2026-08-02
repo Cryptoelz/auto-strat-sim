@@ -46,6 +46,7 @@ import QuantScientist from "./pages/QuantScientist";
 import IntelligenceNetwork from "./pages/IntelligenceNetwork";
 import ResearchBrain from "./pages/ResearchBrain";
 import Atlas from "./pages/Atlas";
+import KnowledgeGraph from "./pages/KnowledgeGraph";
 import Strategies from "./pages/Strategies";
 import Portfolio from "./pages/Portfolio";
 import Governance from "./pages/Governance";
