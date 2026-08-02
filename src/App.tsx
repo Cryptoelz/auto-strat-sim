@@ -46,6 +46,7 @@ import QuantScientist from "./pages/QuantScientist";
 import IntelligenceNetwork from "./pages/IntelligenceNetwork";
 import ResearchBrain from "./pages/ResearchBrain";
 import Atlas from "./pages/Atlas";
+import KnowledgeGraph from "./pages/KnowledgeGraph";
 import Strategies from "./pages/Strategies";
 import Portfolio from "./pages/Portfolio";
 import Governance from "./pages/Governance";
@@ -77,6 +78,8 @@ const App = () => (
             <Route element={<AppLayout />}>
               <Route path="/" element={<Overview />} />
               <Route path="/atlas" element={<Atlas />} />
+              <Route path="/knowledge-graph" element={<KnowledgeGraph />} />
+
               <Route path="/intelligence-network" element={<IntelligenceNetwork />} />
               <Route path="/research-brain" element={<ResearchBrain />} />
               <Route path="/trading" element={<Trading />} />
