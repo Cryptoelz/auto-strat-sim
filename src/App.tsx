@@ -80,6 +80,9 @@ const App = () => (
               <Route path="/" element={<Overview />} />
               <Route path="/atlas" element={<Atlas />} />
               <Route path="/knowledge-graph" element={<KnowledgeGraph />} />
+              <Route path="/explorer" element={<IntelligenceExplorer />} />
+              <Route path="/explorer/:objectId" element={<IntelligenceExplorer />} />
+
 
               <Route path="/intelligence-network" element={<IntelligenceNetwork />} />
               <Route path="/research-brain" element={<ResearchBrain />} />
