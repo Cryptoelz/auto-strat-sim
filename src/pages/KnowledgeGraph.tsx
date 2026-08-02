@@ -443,6 +443,9 @@ export default function KnowledgeGraph() {
                 </div>
 
                 <div className="flex flex-wrap gap-2">
+                  <Button asChild size="sm" className="bg-trading-gold text-background hover:bg-trading-gold/90">
+                    <Link to={`/explorer/${node.id}`}><Compass className="mr-1.5 h-3.5 w-3.5" />Open in Intelligence Explorer™</Link>
+                  </Button>
                   <Button size="sm" variant="outline" className="border-trading-gold/30" onClick={() => setExplainId(node.id)}>
                     <Brain className="mr-1.5 h-3.5 w-3.5" />Explain This
                   </Button>
@@ -452,6 +455,7 @@ export default function KnowledgeGraph() {
                     </Button>
                   )}
                 </div>
+
 
                 <Separator />
 
