@@ -43,6 +43,7 @@ import ResearchAssistant from "./pages/ResearchAssistant";
 import ChiefInvestmentOfficer from "./pages/ChiefInvestmentOfficer";
 import AutonomousResearch from "./pages/AutonomousResearch";
 import QuantScientist from "./pages/QuantScientist";
+import IntelligenceNetwork from "./pages/IntelligenceNetwork";
 import Strategies from "./pages/Strategies";
 import Portfolio from "./pages/Portfolio";
 import Governance from "./pages/Governance";
@@ -73,6 +74,7 @@ const App = () => (
           <Routes>
             <Route element={<AppLayout />}>
               <Route path="/" element={<Overview />} />
+              <Route path="/intelligence-network" element={<IntelligenceNetwork />} />
               <Route path="/trading" element={<Trading />} />
               <Route path="/backtest" element={<Backtest />} />
               <Route path="/paper-trading" element={<PaperTrading />} />
