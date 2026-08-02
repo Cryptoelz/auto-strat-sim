@@ -76,6 +76,7 @@ const App = () => (
           <Routes>
             <Route element={<AppLayout />}>
               <Route path="/" element={<Overview />} />
+              <Route path="/atlas" element={<Atlas />} />
               <Route path="/intelligence-network" element={<IntelligenceNetwork />} />
               <Route path="/research-brain" element={<ResearchBrain />} />
               <Route path="/trading" element={<Trading />} />
