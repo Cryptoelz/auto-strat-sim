@@ -26,6 +26,7 @@ const NAV_SECTIONS = [
     label: 'Core',
     items: [
       { title: 'Overview', url: '/', icon: LayoutDashboard },
+      { title: 'AI Research Brain', url: '/research-brain', icon: BrainCircuit },
       { title: 'Intelligence Network', url: '/intelligence-network', icon: Network },
       { title: 'Mission Control', url: '/mission-control', icon: Rocket },
       { title: 'AI Research Assistant', url: '/research-assistant', icon: BrainCircuit },

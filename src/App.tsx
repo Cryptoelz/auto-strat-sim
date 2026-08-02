@@ -76,7 +76,9 @@ const App = () => (
             <Route element={<AppLayout />}>
               <Route path="/" element={<Overview />} />
               <Route path="/intelligence-network" element={<IntelligenceNetwork />} />
+              <Route path="/research-brain" element={<ResearchBrain />} />
               <Route path="/trading" element={<Trading />} />
+
               <Route path="/backtest" element={<Backtest />} />
               <Route path="/paper-trading" element={<PaperTrading />} />
               <Route path="/dual-paper" element={<DualPaperTrading />} />
