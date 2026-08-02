@@ -44,6 +44,7 @@ import ChiefInvestmentOfficer from "./pages/ChiefInvestmentOfficer";
 import AutonomousResearch from "./pages/AutonomousResearch";
 import QuantScientist from "./pages/QuantScientist";
 import IntelligenceNetwork from "./pages/IntelligenceNetwork";
+import ResearchBrain from "./pages/ResearchBrain";
 import Strategies from "./pages/Strategies";
 import Portfolio from "./pages/Portfolio";
 import Governance from "./pages/Governance";
