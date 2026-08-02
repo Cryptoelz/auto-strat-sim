@@ -20,7 +20,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   Network, Search, Lock, FileDown, ArrowRight, ArrowLeft, Sparkles, Flame, XCircle,
-  GitBranch, Clock, Activity, Link2, ExternalLink, Brain,
+  GitBranch, Clock, Activity, Link2, ExternalLink, Brain, Compass,
 } from 'lucide-react';
 
 const GOLD = 'text-trading-gold';
@@ -443,6 +443,9 @@ export default function KnowledgeGraph() {
                 </div>
 
                 <div className="flex flex-wrap gap-2">
+                  <Button asChild size="sm" className="bg-trading-gold text-background hover:bg-trading-gold/90">
+                    <Link to={`/explorer/${node.id}`}><Compass className="mr-1.5 h-3.5 w-3.5" />Open in Intelligence Explorer™</Link>
+                  </Button>
                   <Button size="sm" variant="outline" className="border-trading-gold/30" onClick={() => setExplainId(node.id)}>
                     <Brain className="mr-1.5 h-3.5 w-3.5" />Explain This
                   </Button>
@@ -452,6 +455,7 @@ export default function KnowledgeGraph() {
                     </Button>
                   )}
                 </div>
+
 
                 <Separator />
 
