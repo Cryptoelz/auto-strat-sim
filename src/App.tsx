@@ -45,6 +45,7 @@ import AutonomousResearch from "./pages/AutonomousResearch";
 import QuantScientist from "./pages/QuantScientist";
 import IntelligenceNetwork from "./pages/IntelligenceNetwork";
 import ResearchBrain from "./pages/ResearchBrain";
+import Atlas from "./pages/Atlas";
 import Strategies from "./pages/Strategies";
 import Portfolio from "./pages/Portfolio";
 import Governance from "./pages/Governance";
@@ -75,6 +76,7 @@ const App = () => (
           <Routes>
             <Route element={<AppLayout />}>
               <Route path="/" element={<Overview />} />
+              <Route path="/atlas" element={<Atlas />} />
               <Route path="/intelligence-network" element={<IntelligenceNetwork />} />
               <Route path="/research-brain" element={<ResearchBrain />} />
               <Route path="/trading" element={<Trading />} />
