@@ -2,7 +2,7 @@ import {
   Landmark,
   LayoutDashboard, LineChart, FlaskConical, Layers, PieChart,
   Shield, UserCog, Bell, Beaker, ClipboardCheck, Activity,
-  Radio, Microscope, ArrowUpCircle, BarChart3, Gauge, FileText, Sparkles, Scale, SlidersHorizontal, GitCompare, Trophy, Gavel, Snowflake, Briefcase, Users, BookOpen, Crown, CalendarDays, Target, Zap, GitFork, Compass, Eye, Building2, Rocket, Brain, BrainCircuit, Bot, Atom, Network, Globe2, Share2,
+  Radio, Microscope, ArrowUpCircle, BarChart3, Gauge, FileText, Sparkles, Scale, SlidersHorizontal, GitCompare, Trophy, Gavel, Snowflake, Briefcase, Users, BookOpen, Crown, CalendarDays, Target, Zap, GitFork, Compass, Eye, Building2, Rocket, Brain, BrainCircuit, Bot, Atom, Network, Globe2, Share2, Gem, GraduationCap, Lightbulb, BadgeCheck, ScrollText, Radar, History as HistoryIcon, Wand2,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
@@ -48,6 +48,21 @@ const NAV_SECTIONS = [
       { title: 'Briefing Room™', url: '/briefing-room', icon: FileText },
       { title: 'Research Genome™', url: '/institution/genome', icon: Atom },
       { title: 'Health Monitor™', url: '/institution/health', icon: Gauge },
+    ],
+  },
+  {
+    label: 'Intelligence Engine',
+    items: [
+      { title: 'Institution IQ™', url: '/institution/iq', icon: Gem },
+      { title: 'Self Review™', url: '/self-review', icon: BadgeCheck },
+      { title: 'Learning Engine™', url: '/institution/learning', icon: GraduationCap },
+      { title: 'Recommendations™', url: '/institution/recommendations', icon: Lightbulb },
+      { title: 'Research Quality Index™', url: '/institution/quality', icon: Gauge },
+      { title: 'Explainability™', url: '/institution/explain', icon: ScrollText },
+      { title: 'Benchmark™', url: '/institution/benchmark', icon: Scale },
+      { title: 'Executive Simulator™', url: '/executive-simulator', icon: Wand2 },
+      { title: 'Risk Radar™', url: '/institution/risk-radar', icon: Radar },
+      { title: 'Evolution Timeline™', url: '/institution/evolution-timeline', icon: HistoryIcon },
     ],
   },
   {
