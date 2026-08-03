@@ -298,10 +298,11 @@ export function askOracle(question: string, contextIds: string[] = []): OracleAn
     .sort((a, b) => a.day - b.day);
 
   // Section 7 — department contributions
-  const deptWeights = DEPARTMENTS.map((d) => {
-    const owned = scope.filter((n) => n.department.toLowerCase().includes(d.name.toLowerCase().replace('ai ', '')) || n.owner.toLowerCase().includes(d.name.toLowerCase().replace('ai ', '')));
+  const deptWeights = DEPARTMENTS.map((name) => {
+    const needle = name.toLowerCase().replace('ai ', '');
+    const owned = scope.filter((n) => n.department.toLowerCase().includes(needle) || n.owner.toLowerCase().includes(needle));
     const raw = owned.length * 10 + owned.reduce((s, n) => s + n.evidenceScore, 0) / 10;
-    return { key: d.key, name: d.name, raw, count: owned.length };
+    return { key: name, name, raw, count: owned.length };
   });
   const totalRaw = deptWeights.reduce((s, d) => s + d.raw, 0) || 1;
   const departments: DeptContribution[] = deptWeights
