@@ -7,7 +7,7 @@ import {
   CheckCircle2, XCircle, Activity, Target, Sparkles, Crown,
 } from 'lucide-react';
 import AllocationValidationPanel from '@/components/allocation/AllocationValidationPanel';
-import ExecutiveVerdictPanel from '@/components/allocation/ExecutiveVerdictPanel';
+import CertificationCentre from '@/components/allocation/CertificationCentre';
 
 
 // ─── Specialist contribution (last 90 days, isolated sandbox) ────────
@@ -391,8 +391,8 @@ export default function SpecialistAllocationLab() {
             </CardContent>
           </Card>
 
-          {/* Executive Verdict */}
-          <ExecutiveVerdictPanel />
+          {/* Institutional Certification Centre */}
+          <CertificationCentre />
         </TabsContent>
 
         {/* Validation */}
