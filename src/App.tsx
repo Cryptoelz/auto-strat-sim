@@ -96,7 +96,15 @@ import ExecutiveSimulator from "./pages/ExecutiveSimulator";
 import InstitutionRiskRadar from "./pages/InstitutionRiskRadar";
 import InstitutionIQ from "./pages/InstitutionIQ";
 import InstitutionEvolutionTimeline from "./pages/InstitutionEvolutionTimeline";
+import ExecutiveHome from "./pages/ExecutiveHome";
+import PerformanceCentre from "./pages/PerformanceCentre";
+import EnterpriseSettings from "./pages/EnterpriseSettings";
+import DocumentationCentre from "./pages/DocumentationCentre";
+import MetricsApi from "./pages/MetricsApi";
+import PresentationMode from "./pages/PresentationMode";
+import LaunchChecklist from "./pages/LaunchChecklist";
 import NotFound from "./pages/NotFound";
+
 
 const queryClient = new QueryClient();
 
