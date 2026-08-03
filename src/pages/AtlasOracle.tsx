@@ -17,9 +17,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
+import { oracleThinking } from '@/lib/institutional';
 import {
   Sparkles, Send, Lock, FileDown, ExternalLink, Network, Gauge, Clock, Building2,
   Recycle, HelpCircle, MessageSquare, ShieldCheck, ArrowRight, BookOpen, Search,
+  Lightbulb, AlertTriangle, Zap,
 } from 'lucide-react';
 
 const GOLD = 'text-trading-gold';
