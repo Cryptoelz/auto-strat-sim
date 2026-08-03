@@ -67,13 +67,15 @@ export function CommandPalette({ open, onOpenChange }: Props) {
   };
 
   return (
-    <CommandDialog open={open} onOpenChange={onOpenChange}>
-      <CommandInput
-        value={query}
-        onValueChange={setQuery}
-        placeholder="Search the entire institution..."
-      />
-      <CommandList className="max-h-[62vh]">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl overflow-hidden border-trading-gold/25 bg-card/95 p-0 shadow-2xl backdrop-blur">
+        <Command shouldFilter={false} className="bg-transparent">
+          <CommandInput
+            value={query}
+            onValueChange={setQuery}
+            placeholder="Search the entire institution..."
+          />
+          <CommandList className="max-h-[62vh]">
         <CommandEmpty>No institutional object matches that query.</CommandEmpty>
 
         {!query && pins.length > 0 && (
