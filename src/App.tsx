@@ -103,6 +103,16 @@ import DocumentationCentre from "./pages/DocumentationCentre";
 import MetricsApi from "./pages/MetricsApi";
 import PresentationMode from "./pages/PresentationMode";
 import LaunchChecklist from "./pages/LaunchChecklist";
+import ExtensionManager from "./pages/ExtensionManager";
+import AppMarketplace from "./pages/AppMarketplace";
+import PluginSdk from "./pages/PluginSdk";
+import ThemeEngine from "./pages/ThemeEngine";
+import InstitutionTemplates from "./pages/InstitutionTemplates";
+import WorkflowDesigner from "./pages/WorkflowDesigner";
+import InstitutionPackagePage from "./pages/InstitutionPackagePage";
+import DeveloperCentre from "./pages/DeveloperCentre";
+import InstitutionCertification from "./pages/InstitutionCertification";
+import FutureRoadmap from "./pages/FutureRoadmap";
 import NotFound from "./pages/NotFound";
 
 
@@ -130,6 +140,16 @@ const App = () => (
               <Route path="/metrics-api" element={<MetricsApi />} />
               <Route path="/presentation" element={<PresentationMode />} />
               <Route path="/launch" element={<LaunchChecklist />} />
+              <Route path="/extensions" element={<ExtensionManager />} />
+              <Route path="/marketplace" element={<AppMarketplace />} />
+              <Route path="/plugin-sdk" element={<PluginSdk />} />
+              <Route path="/themes" element={<ThemeEngine />} />
+              <Route path="/templates" element={<InstitutionTemplates />} />
+              <Route path="/workflows" element={<WorkflowDesigner />} />
+              <Route path="/package" element={<InstitutionPackagePage />} />
+              <Route path="/developer" element={<DeveloperCentre />} />
+              <Route path="/certification" element={<InstitutionCertification />} />
+              <Route path="/roadmap" element={<FutureRoadmap />} />
               <Route path="/boardroom" element={<ExecutiveBoardroom />} />
               <Route path="/digital-twin" element={<DigitalTwin />} />
 
