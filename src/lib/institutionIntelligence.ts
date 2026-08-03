@@ -20,6 +20,11 @@ const avg = (xs: number[]) => (xs.length ? xs.reduce((s, x) => s + x, 0) / xs.le
 const pct = (n: number, d: number) => (d ? clamp((n / d) * 100) : 0);
 
 const NODES = KNOWLEDGE_NODES;
+
+/** Simplified per-department load view. */
+function deptLoad(): { name: string; objects: number }[] {
+  return allDepartmentStats().map((s) => ({ name: s.profile.name, objects: s.owned.length }));
+}
 const validated = NODES.filter((n) => n.status === 'validated');
 const rejected = NODES.filter((n) => n.status === 'rejected');
 const blocked = NODES.filter((n) => n.status === 'blocked');
@@ -318,7 +323,7 @@ export function institutionRecommendations(): InstitutionRecommendation[] {
     measure: 'Blocked-object count and mean wait', to: '/institution/queue',
   });
 
-  const stats = allDepartmentStats();
+  const stats = deptLoad();
   const quiet = stats.filter((s) => s.objects <= 2);
   if (quiet.length) recs.push({
     id: 'REC-007', title: 'Improve specialist collaboration across quiet departments', priority: 'medium', area: 'Cooperation',
@@ -752,11 +757,11 @@ export interface InstitutionRisk {
 const levelOf = (s: number): RiskLevel => (s >= 70 ? 'critical' : s >= 52 ? 'elevated' : s >= 34 ? 'moderate' : 'low');
 
 export function institutionRisks(): InstitutionRisk[] {
-  const stats = allDepartmentStats();
+  const stats = deptLoad();
   const cycle = departmentCycle(80);
   const risks: InstitutionRisk[] = [];
 
-  const queued = cycle.filter((c) => c.status !== 'complete').length;
+  const queued = cycle.filter((c) => c.status !== 'completed').length;
   risks.push({
     id: 'RSK-BOTTLENECK', title: 'Research bottlenecks', category: 'Throughput', score: clamp(pct(queued, cycle.length) * 0.8 + pct(blocked.length, 5) * 0.2),
     level: levelOf(clamp(pct(queued, cycle.length) * 0.8 + pct(blocked.length, 5) * 0.2)),
@@ -793,12 +798,12 @@ export function institutionRisks(): InstitutionRisk[] {
   });
 
   const decisions = institutionDecisions();
-  const pendingDecisions = decisions.filter((d) => d.outcome !== 'approved').length;
+  const pendingDecisions = decisions.filter((d) => d.outcome !== 'Approved for further research').length;
   const govScore = clamp(pct(pendingDecisions, Math.max(1, decisions.length)) * 1.1);
   risks.push({
     id: 'RSK-GOVDELAY', title: 'Governance delays', category: 'Governance', score: govScore, level: levelOf(govScore),
     explanation: `${pendingDecisions} of ${decisions.length} recorded decisions are not yet approved. Governance delay is a deliberate safety property, but sustained delay indicates review capacity rather than caution.`,
-    signals: decisions.slice(0, 3).map((d) => `${d.title} · ${d.outcome}`),
+    signals: decisions.slice(0, 3).map((d) => `${d.decision} · ${d.outcome}`),
     mitigation: 'Schedule a fixed weekly review block and pre-package evidence so reviews are decision-ready. Human approval remains mandatory.',
     owner: 'Decisions™', to: '/institution/decisions',
   });
@@ -840,7 +845,7 @@ export interface IQComponent { key: string; label: string; score: number; weight
 export function institutionIQ(): { total: number; grade: string; band: string; components: IQComponent[]; narrative: string; previous: number; trend: Trend } {
   const dims = dimensionScores(NODES);
   const q = qualityIndex();
-  const stats = allDepartmentStats();
+  const stats = deptLoad();
   const balance = clamp(100 - (Math.max(...stats.map((s) => s.objects)) - Math.min(...stats.map((s) => s.objects))) * 6);
   const explain = clamp(pct(NODES.filter((n) => n.supportingEvidence.length && n.summary).length, NODES.length) * 0.6 + pct(KNOWLEDGE_EDGES.filter((e) => e.note).length, KNOWLEDGE_EDGES.length) * 0.4);
   const memory = clamp(pct(institutionLessons().length, NODES.length * 1.4) * 0.7 + 30);
@@ -987,7 +992,7 @@ export function globalIntelligence(): { metrics: GlobalMetric[]; summary: string
   const learn = learningStats();
   const risk = riskLevelSummary();
   const bench = institutionBenchmark(30);
-  const stats = allDepartmentStats();
+  const stats = deptLoad();
   const balance = iq.components.find((c) => c.key === 'balance')!.score;
   const t = (n: number): GlobalMetric['tone'] => (n >= 78 ? 'good' : n >= 62 ? 'watch' : 'weak');
 
