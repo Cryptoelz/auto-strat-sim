@@ -99,7 +99,9 @@ export const MODULES: ModuleDef[] = [
   { name: 'Paper Trading', route: '/paper-trading', group: 'Research' },
   { name: 'Championship Arena', route: '/championship', group: 'Research' },
   { name: 'Portfolio AI Director™', route: '/portfolio-ai-director', group: 'Research' },
+  { name: 'Specialist Allocation Lab v1 (Fully Validated)', route: '/allocation-lab', group: 'Research' },
   { name: 'Allocation Lab v2', route: '/allocation-lab-v2', group: 'Research' },
+
   { name: 'Champion Trial', route: '/champion-trial', group: 'Research' },
   { name: 'Forward Validation', route: '/forward-validation', group: 'Research' },
   { name: 'Specialist Championship', route: '/specialist-championship', group: 'Research' },
