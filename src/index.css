@@ -251,3 +251,108 @@ html.atlas-compact main .p-5 { padding: 1rem; }
 html.atlas-presentation { font-size: calc(var(--atlas-font-scale) + 12%); }
 html.atlas-presentation .atlas-dev-only { display: none !important; }
 html.atlas-presentation main h1 { letter-spacing: -0.02em; }
+
+/* ══════════════════════════════════════════════════════════
+   ATLAS OS™ v6.0 — Theme Engine™
+   Eight institutional themes. Semantic tokens only; every module
+   inherits the theme without any module-level change.
+   ══════════════════════════════════════════════════════════ */
+
+html[data-atlas-theme='executive-light'],
+html[data-atlas-theme='archive'] {
+  --background: 40 30% 97%;
+  --foreground: 222 40% 12%;
+  --card: 40 24% 99%;
+  --card-foreground: 222 40% 12%;
+  --popover: 40 24% 99%;
+  --popover-foreground: 222 40% 12%;
+  --muted: 40 18% 92%;
+  --muted-foreground: 222 14% 38%;
+  --accent: 40 18% 92%;
+  --accent-foreground: 222 40% 12%;
+  --border: 40 14% 82%;
+  --input: 40 14% 82%;
+  --secondary: 40 18% 93%;
+  --secondary-foreground: 222 40% 12%;
+  --sidebar-background: 40 22% 94%;
+  --sidebar-foreground: 222 34% 16%;
+  --sidebar-accent: 40 18% 88%;
+  --sidebar-border: 40 14% 82%;
+  --trading-gold: 38 70% 42%;
+}
+html[data-atlas-theme='archive'] {
+  --background: 45 25% 95%;
+  --card: 45 22% 98%;
+  --muted: 45 14% 90%;
+  --border: 45 12% 80%;
+  --trading-gold: 25 35% 40%;
+}
+
+html[data-atlas-theme='research-lab'] {
+  --background: 215 40% 8%;
+  --card: 215 34% 12%;
+  --popover: 215 34% 12%;
+  --muted: 215 28% 18%;
+  --border: 215 26% 22%;
+  --sidebar-background: 215 38% 10%;
+  --sidebar-border: 215 26% 22%;
+  --trading-gold: 190 85% 52%;
+}
+
+html[data-atlas-theme='museum'] {
+  --background: 28 22% 9%;
+  --card: 28 18% 13%;
+  --popover: 28 18% 13%;
+  --muted: 28 14% 19%;
+  --border: 28 14% 24%;
+  --sidebar-background: 28 20% 11%;
+  --sidebar-border: 28 14% 24%;
+  --trading-gold: 32 60% 62%;
+}
+
+html[data-atlas-theme='presentation'] {
+  --background: 230 45% 7%;
+  --card: 230 38% 12%;
+  --popover: 230 38% 12%;
+  --muted: 230 30% 18%;
+  --border: 230 28% 24%;
+  --sidebar-background: 230 42% 9%;
+  --sidebar-border: 230 28% 24%;
+  --trading-gold: 265 85% 70%;
+}
+
+html[data-atlas-theme='classic'] {
+  --background: 220 30% 7%;
+  --card: 220 26% 12%;
+  --popover: 220 26% 12%;
+  --muted: 220 20% 18%;
+  --border: 220 20% 23%;
+  --sidebar-background: 220 28% 9%;
+  --sidebar-border: 220 20% 23%;
+  --trading-gold: 158 64% 45%;
+}
+
+html[data-atlas-theme='high-contrast'] {
+  --background: 0 0% 4%;
+  --foreground: 0 0% 100%;
+  --card: 0 0% 10%;
+  --card-foreground: 0 0% 100%;
+  --popover: 0 0% 10%;
+  --muted: 0 0% 18%;
+  --muted-foreground: 0 0% 88%;
+  --border: 0 0% 46%;
+  --input: 0 0% 46%;
+  --sidebar-background: 0 0% 6%;
+  --sidebar-foreground: 0 0% 100%;
+  --sidebar-border: 0 0% 46%;
+  --trading-gold: 50 100% 62%;
+}
+
+/* An explicit theme choice takes precedence over the accent preset. */
+html[data-atlas-theme='research-lab'],
+html[data-atlas-theme='museum'],
+html[data-atlas-theme='presentation'],
+html[data-atlas-theme='classic'],
+html[data-atlas-theme='high-contrast'],
+html[data-atlas-theme='executive-light'],
+html[data-atlas-theme='archive'] { --primary: var(--trading-gold); }

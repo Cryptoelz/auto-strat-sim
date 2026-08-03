@@ -390,6 +390,10 @@ export interface AtlasSettings {
   simulationHorizon: 30 | 60 | 90;
   showGovernanceBadges: boolean;
   presentationMode: boolean;
+  /** ATLAS OS v6.0 — Theme Engine™ */
+  theme: 'executive-dark' | 'executive-light' | 'research-lab' | 'museum' | 'presentation' | 'archive' | 'classic' | 'high-contrast';
+  /** ATLAS OS v6.0 — Institution Templates™ */
+  template: 'investment' | 'scientific' | 'engineering' | 'healthcare' | 'government' | 'university' | 'innovation';
 }
 
 export const DEFAULT_SETTINGS: AtlasSettings = {
@@ -409,6 +413,8 @@ export const DEFAULT_SETTINGS: AtlasSettings = {
   simulationHorizon: 60,
   showGovernanceBadges: true,
   presentationMode: false,
+  theme: 'executive-dark',
+  template: 'investment',
 };
 
 const SETTINGS_KEY = 'atlas.settings';

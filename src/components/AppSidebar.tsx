@@ -2,7 +2,7 @@ import {
   Landmark,
   LayoutDashboard, LineChart, FlaskConical, Layers, PieChart,
   Shield, UserCog, Bell, Beaker, ClipboardCheck, Activity,
-  Radio, Microscope, ArrowUpCircle, BarChart3, Gauge, FileText, Sparkles, Scale, SlidersHorizontal, GitCompare, Trophy, Gavel, Snowflake, Briefcase, Users, BookOpen, Crown, CalendarDays, Target, Zap, GitFork, Compass, Eye, Building2, Rocket, Brain, BrainCircuit, Bot, Atom, Network, Globe2, Share2, Gem, GraduationCap, Lightbulb, BadgeCheck, ScrollText, Radar, History as HistoryIcon, Wand2,
+  Radio, Microscope, ArrowUpCircle, BarChart3, Gauge, FileText, Sparkles, Scale, SlidersHorizontal, GitCompare, Trophy, Gavel, Snowflake, Briefcase, Users, BookOpen, Crown, CalendarDays, Target, Zap, GitFork, Compass, Eye, Building2, Rocket, Brain, BrainCircuit, Bot, Atom, Network, Globe2, Share2, Gem, GraduationCap, Lightbulb, BadgeCheck, ScrollText, Radar, History as HistoryIcon, Wand2, Puzzle, Store, Code2, Palette, Workflow, Package, Terminal, Award, Map,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
@@ -22,6 +22,21 @@ import {
 } from '@/components/ui/sidebar';
 
 const NAV_SECTIONS = [
+  {
+    label: 'Platform',
+    items: [
+      { title: 'Extension Manager™', url: '/extensions', icon: Puzzle },
+      { title: 'App Marketplace™', url: '/marketplace', icon: Store },
+      { title: 'Plugin SDK™', url: '/plugin-sdk', icon: Code2 },
+      { title: 'Theme Engine™', url: '/themes', icon: Palette },
+      { title: 'Institution Templates™', url: '/templates', icon: Layers },
+      { title: 'Workflow Designer™', url: '/workflows', icon: Workflow },
+      { title: 'Institution Package™', url: '/package', icon: Package },
+      { title: 'Developer Centre™', url: '/developer', icon: Terminal },
+      { title: 'Certification™', url: '/certification', icon: Award },
+      { title: 'Future Roadmap™', url: '/roadmap', icon: Map },
+    ],
+  },
   {
     label: 'Enterprise',
     items: [
