@@ -139,13 +139,15 @@ export default function SpecialistAllocationLab() {
       </Card>
 
       <Tabs defaultValue="contrib" className="space-y-4">
-        <TabsList>
+        <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="contrib">Contribution</TabsTrigger>
           <TabsTrigger value="dominance">Regime Dominance</TabsTrigger>
           <TabsTrigger value="matrix">Activation Matrix</TabsTrigger>
           <TabsTrigger value="combos">Portfolio Combos</TabsTrigger>
           <TabsTrigger value="review">Recommendation</TabsTrigger>
+          <TabsTrigger value="validation">Validation</TabsTrigger>
         </TabsList>
+
 
         {/* Contribution */}
         <TabsContent value="contrib" className="space-y-3">
