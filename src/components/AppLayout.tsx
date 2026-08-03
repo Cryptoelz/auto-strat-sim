@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { TradingProvider } from '@/contexts/TradingContext';
 import { CommandPalette, useCommandPalette } from '@/components/CommandPalette';
 import { InstitutionalToolbar } from '@/components/InstitutionalToolbar';
+import { InstitutionAIGuide } from '@/components/InstitutionAIGuide';
 import { Search } from 'lucide-react';
 
 export function AppLayout() {
@@ -48,6 +49,7 @@ export function AppLayout() {
           </div>
         </div>
         <CommandPalette open={open} onOpenChange={setOpen} />
+        <InstitutionAIGuide />
       </SidebarProvider>
     </TradingProvider>
   );
