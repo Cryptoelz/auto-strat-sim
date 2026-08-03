@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import {
   Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator,
 } from '@/components/ui/command';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { Badge } from '@/components/ui/badge';
 import {
   searchInstitution, PALETTE_GROUP_ORDER, recentObjects, pinnedObjects, recentSearches,
@@ -69,6 +70,7 @@ export function CommandPalette({ open, onOpenChange }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl overflow-hidden border-trading-gold/25 bg-card/95 p-0 shadow-2xl backdrop-blur">
+        <VisuallyHidden><DialogTitle>Institutional Command Palette</DialogTitle></VisuallyHidden>
         <Command shouldFilter={false} className="bg-transparent">
           <CommandInput
             value={query}
