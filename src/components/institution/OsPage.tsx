@@ -14,6 +14,7 @@ export function OsPage({
   title: string; subtitle: string; department?: string; children: ReactNode; actions?: ReactNode;
 }) {
   const score = institutionScore();
+  const ctx = pageContext();
   return (
     <div className="min-h-full bg-gradient-to-b from-background via-background to-card/40">
       <div className="mx-auto max-w-[1500px] space-y-8 p-5 sm:p-8">
