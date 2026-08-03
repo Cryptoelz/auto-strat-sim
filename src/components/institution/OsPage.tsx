@@ -4,9 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Compass, Share2, Sparkles, CalendarDays } from 'lucide-react';
 import { OS_BADGES, OS_VERSION, institutionScore } from '@/lib/institutionOS';
-import { KNOWLEDGE_NODES, KNOWLEDGE_EDGES } from '@/lib/knowledgeGraph';
+import { LIFE_VERSION, LIFE_LINKS, pageContext } from '@/lib/institutionLife';
 
-const evidenceLinks = KNOWLEDGE_NODES.reduce((s, n) => s + n.supportingEvidence.length + n.counterEvidence.length, 0);
 
 /** Shared institutional page frame: executive header, department badge, counters and global actions. */
 export function OsPage({
