@@ -67,6 +67,16 @@ import WeeklyReview from "./pages/WeeklyReview";
 import CommandCenter from "./pages/CommandCenter";
 import BaselineValidation from "./pages/BaselineValidation";
 import ParticipationController from "./pages/ParticipationController";
+import Institution from "./pages/Institution";
+import InstitutionDepartments from "./pages/InstitutionDepartments";
+import InstitutionDepartment from "./pages/InstitutionDepartment";
+import InstitutionCollaboration from "./pages/InstitutionCollaboration";
+import InstitutionCalendar from "./pages/InstitutionCalendar";
+import InstitutionQueue from "./pages/InstitutionQueue";
+import InstitutionAnalytics from "./pages/InstitutionAnalytics";
+import InstitutionScore from "./pages/InstitutionScore";
+import InstitutionHistory from "./pages/InstitutionHistory";
+import InstitutionMuseum from "./pages/InstitutionMuseum";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
