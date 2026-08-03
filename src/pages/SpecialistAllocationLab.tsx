@@ -6,6 +6,9 @@ import {
   Layers, FlaskConical, Lock, Shield, Trophy, AlertTriangle,
   CheckCircle2, XCircle, Activity, Target, Sparkles, Crown,
 } from 'lucide-react';
+import AllocationValidationPanel from '@/components/allocation/AllocationValidationPanel';
+import ExecutiveVerdictPanel from '@/components/allocation/ExecutiveVerdictPanel';
+
 
 // ─── Specialist contribution (last 90 days, isolated sandbox) ────────
 type ContribRow = {
@@ -139,13 +142,15 @@ export default function SpecialistAllocationLab() {
       </Card>
 
       <Tabs defaultValue="contrib" className="space-y-4">
-        <TabsList>
+        <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="contrib">Contribution</TabsTrigger>
           <TabsTrigger value="dominance">Regime Dominance</TabsTrigger>
           <TabsTrigger value="matrix">Activation Matrix</TabsTrigger>
           <TabsTrigger value="combos">Portfolio Combos</TabsTrigger>
           <TabsTrigger value="review">Recommendation</TabsTrigger>
+          <TabsTrigger value="validation">Validation</TabsTrigger>
         </TabsList>
+
 
         {/* Contribution */}
         <TabsContent value="contrib" className="space-y-3">
@@ -385,8 +390,17 @@ export default function SpecialistAllocationLab() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Executive Verdict */}
+          <ExecutiveVerdictPanel />
+        </TabsContent>
+
+        {/* Validation */}
+        <TabsContent value="validation" className="space-y-3">
+          <AllocationValidationPanel />
         </TabsContent>
       </Tabs>
+
     </div>
   );
 }
