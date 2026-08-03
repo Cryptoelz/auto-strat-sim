@@ -701,7 +701,7 @@ export function metricsPayload() {
         .map((t) => [t, KNOWLEDGE_NODES.filter((n) => n.type === t).length])
         .filter(([, n]) => (n as number) > 0)),
     },
-    departments: stats.map((s) => ({ name: s.name, objects: s.objects, validated: s.validated, health: s.health })),
+    departments: stats.map((s) => ({ name: s.profile.name, objects: s.owned.length, validated: s.validated.length, health: s.health })),
     queue: workQueue().length,
     governance: { guarantees: GOVERNANCE_GUARANTEES.length, humanApprovalRequired: true, automaticAllocation: false },
   };
