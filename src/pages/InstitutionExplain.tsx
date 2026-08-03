@@ -12,7 +12,7 @@ export default function InstitutionExplain() {
   const navigate = useNavigate();
   const objects = useMemo(() => explainableObjects(), []);
   const activeId = objectId ?? objects[0]?.id;
-  const page = useMemo(() => (activeId ? explanationPage(activeId) : null), [activeId]);
+  const page = useMemo(() => (activeId ? explanationPage(activeId) : null) ?? explanationPage(objects[0].id), [activeId, objects]);
   const [q, setQ] = useState('');
   const filtered = objects.filter((n) => !q || `${n.id} ${n.title} ${n.department}`.toLowerCase().includes(q.toLowerCase()));
 
