@@ -476,17 +476,19 @@ export function documentation(): DocSection[] {
     {
       key: 'departments', title: 'Departments', blurb: `${DEPARTMENT_PROFILES.length} AI departments, their mandate and current load.`,
       blocks: DEPARTMENT_PROFILES.map((p) => {
-        const s = stats.find((x) => x.name === p.name);
+        const s = stats.find((x) => x.profile.name === p.name);
         return {
           heading: p.name,
-          body: p.mandate ?? p.summary ?? '',
+          body: p.purpose,
           bullets: s ? [
-            `Objects owned: ${s.objects}`,
-            `Validated output: ${s.validated}`,
-            `Department health: ${s.health}`,
-          ] : undefined,
+            `Objects owned: ${s.owned.length}`,
+            `Validated output: ${s.validated.length}`,
+            `Department health: ${s.health} (${s.rating})`,
+            ...p.responsibilities.slice(0, 3).map((r) => `Responsibility — ${r}`),
+          ] : p.responsibilities.map((r) => `Responsibility — ${r}`),
         };
       }),
+
     },
     {
       key: 'graph', title: 'Knowledge Graph', blurb: 'Object types, relationship types and evidence rules.',
