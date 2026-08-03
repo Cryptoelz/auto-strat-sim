@@ -37,6 +37,9 @@ export function useApplyAtlasSettings(settings: AtlasSettings) {
     root.classList.toggle('atlas-compact', settings.density === 'compact');
     root.classList.toggle('atlas-presentation', settings.presentationMode);
     root.dataset.atlasAccent = settings.accent;
+    root.dataset.atlasTheme = settings.theme;
+    root.classList.toggle('dark', settings.theme !== 'executive-light' && settings.theme !== 'archive');
+    root.classList.toggle('light', settings.theme === 'executive-light' || settings.theme === 'archive');
     root.style.setProperty('--atlas-font-scale', `${settings.fontScale}%`);
   }, [settings]);
 }
