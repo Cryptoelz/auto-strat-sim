@@ -49,6 +49,8 @@ import Atlas from "./pages/Atlas";
 import KnowledgeGraph from "./pages/KnowledgeGraph";
 import IntelligenceExplorer from "./pages/IntelligenceExplorer";
 import AtlasOracle from "./pages/AtlasOracle";
+import ExecutiveBoardroom from "./pages/ExecutiveBoardroom";
+import DigitalTwin from "./pages/DigitalTwin";
 import Strategies from "./pages/Strategies";
 import Portfolio from "./pages/Portfolio";
 import Governance from "./pages/Governance";
