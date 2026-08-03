@@ -48,6 +48,7 @@ import ResearchBrain from "./pages/ResearchBrain";
 import Atlas from "./pages/Atlas";
 import KnowledgeGraph from "./pages/KnowledgeGraph";
 import IntelligenceExplorer from "./pages/IntelligenceExplorer";
+import AtlasOracle from "./pages/AtlasOracle";
 import Strategies from "./pages/Strategies";
 import Portfolio from "./pages/Portfolio";
 import Governance from "./pages/Governance";
@@ -82,6 +83,8 @@ const App = () => (
               <Route path="/knowledge-graph" element={<KnowledgeGraph />} />
               <Route path="/explorer" element={<IntelligenceExplorer />} />
               <Route path="/explorer/:objectId" element={<IntelligenceExplorer />} />
+              <Route path="/oracle" element={<AtlasOracle />} />
+
 
 
               <Route path="/intelligence-network" element={<IntelligenceNetwork />} />
