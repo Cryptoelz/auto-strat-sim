@@ -86,6 +86,8 @@ const App = () => (
               <Route path="/explorer" element={<IntelligenceExplorer />} />
               <Route path="/explorer/:objectId" element={<IntelligenceExplorer />} />
               <Route path="/oracle" element={<AtlasOracle />} />
+              <Route path="/boardroom" element={<ExecutiveBoardroom />} />
+              <Route path="/digital-twin" element={<DigitalTwin />} />
 
 
 
