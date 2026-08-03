@@ -117,6 +117,15 @@ const App = () => (
               <Route path="/institution/score" element={<InstitutionScore />} />
               <Route path="/institution/history" element={<InstitutionHistory />} />
               <Route path="/institution/museum" element={<InstitutionMuseum />} />
+              <Route path="/observatory" element={<InstitutionObservatory />} />
+              <Route path="/institution/cycle" element={<InstitutionCycle />} />
+              <Route path="/institution/conversations" element={<InstitutionConversationsLive />} />
+              <Route path="/institution/decisions" element={<InstitutionDecisions />} />
+              <Route path="/institution/evolution" element={<InstitutionEvolution />} />
+              <Route path="/institution/forecast" element={<InstitutionForecast />} />
+              <Route path="/briefing-room" element={<BriefingRoom />} />
+              <Route path="/institution/genome" element={<InstitutionGenome />} />
+              <Route path="/institution/health" element={<InstitutionHealth />} />
 
 
 
