@@ -36,6 +36,8 @@ export default function Institution() {
       department="Institution Dashboard™"
       actions={<Clock />}
     >
+      <InstitutionPulse />
+
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {metrics.map((m) => (
           <Link key={m.key} to={m.to ?? '/institution'} className="group">
