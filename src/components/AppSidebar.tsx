@@ -48,6 +48,7 @@ const NAV_SECTIONS = [
       { title: 'Enterprise Settings', url: '/settings', icon: SlidersHorizontal },
       { title: 'Launch Checklist', url: '/launch', icon: Rocket },
       { title: 'Test & Validation Centre™', url: '/validation-centre', icon: TestTube2 },
+      { title: 'Acceptance Programme™', url: '/acceptance', icon: BadgeCheck },
     ],
   },
   {
