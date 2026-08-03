@@ -98,6 +98,16 @@ const App = () => (
               <Route path="/oracle" element={<AtlasOracle />} />
               <Route path="/boardroom" element={<ExecutiveBoardroom />} />
               <Route path="/digital-twin" element={<DigitalTwin />} />
+              <Route path="/institution" element={<Institution />} />
+              <Route path="/institution/departments" element={<InstitutionDepartments />} />
+              <Route path="/institution/departments/:dept" element={<InstitutionDepartment />} />
+              <Route path="/institution/collaboration" element={<InstitutionCollaboration />} />
+              <Route path="/calendar" element={<InstitutionCalendar />} />
+              <Route path="/institution/queue" element={<InstitutionQueue />} />
+              <Route path="/institution/analytics" element={<InstitutionAnalytics />} />
+              <Route path="/institution/score" element={<InstitutionScore />} />
+              <Route path="/institution/history" element={<InstitutionHistory />} />
+              <Route path="/institution/museum" element={<InstitutionMuseum />} />
 
 
 

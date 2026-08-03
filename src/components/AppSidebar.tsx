@@ -23,6 +23,20 @@ import {
 
 const NAV_SECTIONS = [
   {
+    label: 'Institution',
+    items: [
+      { title: 'Institution Dashboard™', url: '/institution', icon: Landmark },
+      { title: 'Departments', url: '/institution/departments', icon: Building2 },
+      { title: 'Collaboration™', url: '/institution/collaboration', icon: Network },
+      { title: 'Calendar™', url: '/calendar', icon: CalendarDays },
+      { title: 'Work Queue™', url: '/institution/queue', icon: ClipboardCheck },
+      { title: 'Analytics™', url: '/institution/analytics', icon: BarChart3 },
+      { title: 'Institution Score™', url: '/institution/score', icon: Gauge },
+      { title: 'History™', url: '/institution/history', icon: BookOpen },
+      { title: 'Museum™', url: '/institution/museum', icon: Landmark },
+    ],
+  },
+  {
     label: 'Core',
     items: [
       { title: 'Overview', url: '/', icon: LayoutDashboard },
