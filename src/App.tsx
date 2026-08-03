@@ -86,6 +86,16 @@ import InstitutionForecast from "./pages/InstitutionForecast";
 import BriefingRoom from "./pages/BriefingRoom";
 import InstitutionGenome from "./pages/InstitutionGenome";
 import InstitutionHealth from "./pages/InstitutionHealth";
+import SelfReview from "./pages/SelfReview";
+import InstitutionLearning from "./pages/InstitutionLearning";
+import InstitutionRecommendations from "./pages/InstitutionRecommendations";
+import InstitutionQuality from "./pages/InstitutionQuality";
+import InstitutionExplain from "./pages/InstitutionExplain";
+import InstitutionBenchmark from "./pages/InstitutionBenchmark";
+import ExecutiveSimulator from "./pages/ExecutiveSimulator";
+import InstitutionRiskRadar from "./pages/InstitutionRiskRadar";
+import InstitutionIQ from "./pages/InstitutionIQ";
+import InstitutionEvolutionTimeline from "./pages/InstitutionEvolutionTimeline";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -126,6 +136,17 @@ const App = () => (
               <Route path="/briefing-room" element={<BriefingRoom />} />
               <Route path="/institution/genome" element={<InstitutionGenome />} />
               <Route path="/institution/health" element={<InstitutionHealth />} />
+              <Route path="/self-review" element={<SelfReview />} />
+              <Route path="/institution/learning" element={<InstitutionLearning />} />
+              <Route path="/institution/recommendations" element={<InstitutionRecommendations />} />
+              <Route path="/institution/quality" element={<InstitutionQuality />} />
+              <Route path="/institution/explain" element={<InstitutionExplain />} />
+              <Route path="/institution/explain/:objectId" element={<InstitutionExplain />} />
+              <Route path="/institution/benchmark" element={<InstitutionBenchmark />} />
+              <Route path="/executive-simulator" element={<ExecutiveSimulator />} />
+              <Route path="/institution/risk-radar" element={<InstitutionRiskRadar />} />
+              <Route path="/institution/iq" element={<InstitutionIQ />} />
+              <Route path="/institution/evolution-timeline" element={<InstitutionEvolutionTimeline />} />
 
 
 

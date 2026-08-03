@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Compass, Share2, Sparkles, CalendarDays } from 'lucide-react';
 import { OS_BADGES, OS_VERSION, institutionScore } from '@/lib/institutionOS';
 import { LIFE_VERSION, LIFE_LINKS, pageContext } from '@/lib/institutionLife';
+import { IQ_LINKS, IQ_VERSION, globalIntelligence } from '@/lib/institutionIntelligence';
 
 
 /** Shared institutional page frame: executive header, department badge, counters and global actions. */
@@ -15,6 +16,7 @@ export function OsPage({
 }) {
   const score = institutionScore();
   const ctx = pageContext();
+  const gi = globalIntelligence();
   return (
     <div className="min-h-full bg-gradient-to-b from-background via-background to-card/40">
       <div className="mx-auto max-w-[1500px] space-y-8 p-5 sm:p-8">
@@ -48,11 +50,27 @@ export function OsPage({
             <span><span className="text-foreground">{ctx.velocity}</span> active cycles</span>
             <span>Knowledge score <span className="text-trading-gold">{score.components[3].score}</span></span>
             <span>Institution score <span className="text-trading-gold">{score.total}</span> ({score.grade})</span>
-            <span className="text-muted-foreground/70">{OS_VERSION} · {LIFE_VERSION}</span>
+            <span className="text-muted-foreground/70">{OS_VERSION} · {LIFE_VERSION} · {IQ_VERSION}</span>
+          </div>
+
+          <div className="rounded-lg border border-trading-gold/20 bg-trading-gold/[0.04] p-3">
+            <div className="grid grid-cols-3 gap-x-4 gap-y-2 sm:grid-cols-5 lg:grid-cols-9">
+              {gi.metrics.map((m) => (
+                <div key={m.key}>
+                  <p className={`font-mono text-sm leading-none ${m.tone === 'good' ? 'text-trading-gold' : m.tone === 'watch' ? 'text-amber-400' : 'text-rose-400'}`} title={m.hint}>
+                    {m.value}
+                  </p>
+                  <p className="mt-1 text-[9px] uppercase tracking-wider text-muted-foreground">{m.label}</p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-2 border-t border-trading-gold/15 pt-2 text-[11px] leading-relaxed text-muted-foreground">
+              <span className="uppercase tracking-[0.2em] text-trading-gold/80">Executive summary · </span>{gi.summary}
+            </p>
           </div>
 
           <div className="flex flex-wrap gap-1">
-            {LIFE_LINKS.map((l) => (
+            {[...LIFE_LINKS, ...IQ_LINKS].map((l) => (
               <Link key={l.to} to={l.to}
                 className="rounded-full border border-trading-gold/25 bg-trading-gold/5 px-2 py-0.5 text-[9.5px] uppercase tracking-wider text-trading-gold/90 transition-colors hover:bg-trading-gold/15">
                 {l.label}
