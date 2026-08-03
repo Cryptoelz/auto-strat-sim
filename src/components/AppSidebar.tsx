@@ -23,6 +23,19 @@ import {
 
 const NAV_SECTIONS = [
   {
+    label: 'Enterprise',
+    items: [
+      { title: 'Executive Home', url: '/home', icon: Crown },
+      { title: 'Presentation Mode', url: '/presentation', icon: Sparkles },
+      { title: 'Documentation Centre', url: '/docs', icon: BookOpen },
+      { title: 'Performance Centre', url: '/performance', icon: Gauge },
+      { title: 'Metrics API', url: '/metrics-api', icon: Share2 },
+      { title: 'Enterprise Settings', url: '/settings', icon: SlidersHorizontal },
+      { title: 'Launch Checklist', url: '/launch', icon: Rocket },
+    ],
+  },
+  {
+
     label: 'Institution',
     items: [
       { title: 'Institution Dashboard™', url: '/institution', icon: Landmark },

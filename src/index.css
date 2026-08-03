@@ -194,3 +194,60 @@
 
 @keyframes kg-dash { to { stroke-dashoffset: -24; } }
 .kg-edge-animated { stroke-dasharray: 6 6; animation: kg-dash 1.4s linear infinite; }
+
+/* ══════════════════════════════════════════════════════════
+   ATLAS OS™ v5.0 — Enterprise layer
+   Accent theming, density, accessibility and presentation mode.
+   ══════════════════════════════════════════════════════════ */
+
+:root { --atlas-font-scale: 100%; }
+
+html { font-size: var(--atlas-font-scale); }
+
+/* Themeable institutional accent — every module reads --trading-gold. */
+html[data-atlas-accent='sapphire'] { --trading-gold: 215 85% 58%; }
+html[data-atlas-accent='emerald']  { --trading-gold: 158 64% 45%; }
+html[data-atlas-accent='slate']    { --trading-gold: 215 16% 62%; }
+
+/* Focus is never lost against dark institutional surfaces. */
+:where(a, button, [role='button'], [role='radio'], input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid hsl(var(--trading-gold));
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+/* Reduced motion — user setting and system preference. */
+html.atlas-reduced-motion *,
+html.atlas-reduced-motion *::before,
+html.atlas-reduced-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* High contrast for projection and low-light boardrooms. */
+html.atlas-high-contrast {
+  --muted-foreground: 215 25% 82%;
+  --border: 215 20% 46%;
+}
+html.atlas-high-contrast .text-muted-foreground { color: hsl(var(--foreground) / 0.88); }
+
+html.atlas-underline-links main a { text-decoration: underline; text-underline-offset: 2px; }
+
+/* Compact density tightens the shared page rhythm. */
+html.atlas-compact main .space-y-8 > * + * { margin-top: 1.25rem; }
+html.atlas-compact main .p-8 { padding: 1.25rem; }
+html.atlas-compact main .p-5 { padding: 1rem; }
+
+/* Presentation mode — larger typography, simplified chrome. */
+html.atlas-presentation { font-size: calc(var(--atlas-font-scale) + 12%); }
+html.atlas-presentation .atlas-dev-only { display: none !important; }
+html.atlas-presentation main h1 { letter-spacing: -0.02em; }

@@ -96,7 +96,15 @@ import ExecutiveSimulator from "./pages/ExecutiveSimulator";
 import InstitutionRiskRadar from "./pages/InstitutionRiskRadar";
 import InstitutionIQ from "./pages/InstitutionIQ";
 import InstitutionEvolutionTimeline from "./pages/InstitutionEvolutionTimeline";
+import ExecutiveHome from "./pages/ExecutiveHome";
+import PerformanceCentre from "./pages/PerformanceCentre";
+import EnterpriseSettings from "./pages/EnterpriseSettings";
+import DocumentationCentre from "./pages/DocumentationCentre";
+import MetricsApi from "./pages/MetricsApi";
+import PresentationMode from "./pages/PresentationMode";
+import LaunchChecklist from "./pages/LaunchChecklist";
 import NotFound from "./pages/NotFound";
+
 
 const queryClient = new QueryClient();
 
@@ -115,8 +123,16 @@ const App = () => (
               <Route path="/explorer" element={<IntelligenceExplorer />} />
               <Route path="/explorer/:objectId" element={<IntelligenceExplorer />} />
               <Route path="/oracle" element={<AtlasOracle />} />
+              <Route path="/home" element={<ExecutiveHome />} />
+              <Route path="/performance" element={<PerformanceCentre />} />
+              <Route path="/settings" element={<EnterpriseSettings />} />
+              <Route path="/docs" element={<DocumentationCentre />} />
+              <Route path="/metrics-api" element={<MetricsApi />} />
+              <Route path="/presentation" element={<PresentationMode />} />
+              <Route path="/launch" element={<LaunchChecklist />} />
               <Route path="/boardroom" element={<ExecutiveBoardroom />} />
               <Route path="/digital-twin" element={<DigitalTwin />} />
+
               <Route path="/institution" element={<Institution />} />
               <Route path="/institution/departments" element={<InstitutionDepartments />} />
               <Route path="/institution/departments/:dept" element={<InstitutionDepartment />} />
