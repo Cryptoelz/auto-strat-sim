@@ -113,6 +113,7 @@ import InstitutionPackagePage from "./pages/InstitutionPackagePage";
 import DeveloperCentre from "./pages/DeveloperCentre";
 import InstitutionCertification from "./pages/InstitutionCertification";
 import FutureRoadmap from "./pages/FutureRoadmap";
+import TestValidationCentre from "./pages/TestValidationCentre";
 import NotFound from "./pages/NotFound";
 
 
@@ -150,6 +151,7 @@ const App = () => (
               <Route path="/developer" element={<DeveloperCentre />} />
               <Route path="/certification" element={<InstitutionCertification />} />
               <Route path="/roadmap" element={<FutureRoadmap />} />
+              <Route path="/validation-centre" element={<TestValidationCentre />} />
               <Route path="/boardroom" element={<ExecutiveBoardroom />} />
               <Route path="/digital-twin" element={<DigitalTwin />} />
 
