@@ -49,6 +49,7 @@ export function AppLayout() {
           </div>
         </div>
         <CommandPalette open={open} onOpenChange={setOpen} />
+        <InstitutionAIGuide />
       </SidebarProvider>
     </TradingProvider>
   );
