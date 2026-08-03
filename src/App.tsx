@@ -77,6 +77,15 @@ import InstitutionAnalytics from "./pages/InstitutionAnalytics";
 import InstitutionScore from "./pages/InstitutionScore";
 import InstitutionHistory from "./pages/InstitutionHistory";
 import InstitutionMuseum from "./pages/InstitutionMuseum";
+import InstitutionObservatory from "./pages/InstitutionObservatory";
+import InstitutionCycle from "./pages/InstitutionCycle";
+import InstitutionConversationsLive from "./pages/InstitutionConversations";
+import InstitutionDecisions from "./pages/InstitutionDecisions";
+import InstitutionEvolution from "./pages/InstitutionEvolution";
+import InstitutionForecast from "./pages/InstitutionForecast";
+import BriefingRoom from "./pages/BriefingRoom";
+import InstitutionGenome from "./pages/InstitutionGenome";
+import InstitutionHealth from "./pages/InstitutionHealth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -108,6 +117,15 @@ const App = () => (
               <Route path="/institution/score" element={<InstitutionScore />} />
               <Route path="/institution/history" element={<InstitutionHistory />} />
               <Route path="/institution/museum" element={<InstitutionMuseum />} />
+              <Route path="/observatory" element={<InstitutionObservatory />} />
+              <Route path="/institution/cycle" element={<InstitutionCycle />} />
+              <Route path="/institution/conversations" element={<InstitutionConversationsLive />} />
+              <Route path="/institution/decisions" element={<InstitutionDecisions />} />
+              <Route path="/institution/evolution" element={<InstitutionEvolution />} />
+              <Route path="/institution/forecast" element={<InstitutionForecast />} />
+              <Route path="/briefing-room" element={<BriefingRoom />} />
+              <Route path="/institution/genome" element={<InstitutionGenome />} />
+              <Route path="/institution/health" element={<InstitutionHealth />} />
 
 
 

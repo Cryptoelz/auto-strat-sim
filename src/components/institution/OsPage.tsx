@@ -4,9 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Compass, Share2, Sparkles, CalendarDays } from 'lucide-react';
 import { OS_BADGES, OS_VERSION, institutionScore } from '@/lib/institutionOS';
-import { KNOWLEDGE_NODES, KNOWLEDGE_EDGES } from '@/lib/knowledgeGraph';
+import { LIFE_VERSION, LIFE_LINKS, pageContext } from '@/lib/institutionLife';
 
-const evidenceLinks = KNOWLEDGE_NODES.reduce((s, n) => s + n.supportingEvidence.length + n.counterEvidence.length, 0);
 
 /** Shared institutional page frame: executive header, department badge, counters and global actions. */
 export function OsPage({
@@ -15,6 +14,7 @@ export function OsPage({
   title: string; subtitle: string; department?: string; children: ReactNode; actions?: ReactNode;
 }) {
   const score = institutionScore();
+  const ctx = pageContext();
   return (
     <div className="min-h-full bg-gradient-to-b from-background via-background to-card/40">
       <div className="mx-auto max-w-[1500px] space-y-8 p-5 sm:p-8">
@@ -39,13 +39,27 @@ export function OsPage({
           </div>
 
           <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-[11px] text-muted-foreground">
-            <span><span className="text-foreground">{KNOWLEDGE_NODES.length}</span> objects</span>
-            <span><span className="text-foreground">{KNOWLEDGE_EDGES.length}</span> relationships</span>
-            <span><span className="text-foreground">{evidenceLinks}</span> evidence links</span>
+            <span className="flex items-center gap-1.5 text-foreground">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-trading-gold" />{ctx.status}
+            </span>
+            <span><span className="text-foreground">{ctx.objects}</span> objects</span>
+            <span><span className="text-foreground">{ctx.relationships}</span> relationships</span>
+            <span><span className="text-foreground">{ctx.evidence}</span> evidence links</span>
+            <span><span className="text-foreground">{ctx.velocity}</span> active cycles</span>
             <span>Knowledge score <span className="text-trading-gold">{score.components[3].score}</span></span>
             <span>Institution score <span className="text-trading-gold">{score.total}</span> ({score.grade})</span>
-            <span className="text-muted-foreground/70">{OS_VERSION}</span>
+            <span className="text-muted-foreground/70">{OS_VERSION} · {LIFE_VERSION}</span>
           </div>
+
+          <div className="flex flex-wrap gap-1">
+            {LIFE_LINKS.map((l) => (
+              <Link key={l.to} to={l.to}
+                className="rounded-full border border-trading-gold/25 bg-trading-gold/5 px-2 py-0.5 text-[9.5px] uppercase tracking-wider text-trading-gold/90 transition-colors hover:bg-trading-gold/15">
+                {l.label}
+              </Link>
+            ))}
+          </div>
+
 
           <div className="flex flex-wrap gap-1">
             {OS_BADGES.map((b) => (

@@ -37,6 +37,20 @@ const NAV_SECTIONS = [
     ],
   },
   {
+    label: 'Living Institution',
+    items: [
+      { title: 'Observatory™', url: '/observatory', icon: Eye },
+      { title: 'Department Cycle™', url: '/institution/cycle', icon: Activity },
+      { title: 'Conversations™', url: '/institution/conversations', icon: Users },
+      { title: 'Decisions™', url: '/institution/decisions', icon: Gavel },
+      { title: 'Knowledge Evolution™', url: '/institution/evolution', icon: GitFork },
+      { title: 'Forecast™', url: '/institution/forecast', icon: Target },
+      { title: 'Briefing Room™', url: '/briefing-room', icon: FileText },
+      { title: 'Research Genome™', url: '/institution/genome', icon: Atom },
+      { title: 'Health Monitor™', url: '/institution/health', icon: Gauge },
+    ],
+  },
+  {
     label: 'Core',
     items: [
       { title: 'Overview', url: '/', icon: LayoutDashboard },
