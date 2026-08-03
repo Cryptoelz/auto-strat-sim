@@ -18,7 +18,8 @@ export type Department =
   | 'Governance Office'
   | 'Mission Control'
   | 'ATLAS Oracle'
-  | 'Enterprise Platform';
+  | 'Enterprise Platform'
+  | 'Institution OS';
 
 export type CertCheck = {
   id: string;
