@@ -387,8 +387,17 @@ export default function SpecialistAllocationLab() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Executive Verdict */}
+          <ExecutiveVerdictPanel />
+        </TabsContent>
+
+        {/* Validation */}
+        <TabsContent value="validation" className="space-y-3">
+          <AllocationValidationPanel />
         </TabsContent>
       </Tabs>
+
     </div>
   );
 }
