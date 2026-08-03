@@ -30,6 +30,8 @@ const NAV_SECTIONS = [
       { title: 'Institutional Knowledge Graph™', url: '/knowledge-graph', icon: Share2 },
       { title: 'ATLAS Intelligence Explorer™', url: '/explorer', icon: Compass },
       { title: 'ATLAS Oracle™', url: '/oracle', icon: Sparkles },
+      { title: 'Executive Boardroom™', url: '/boardroom', icon: Landmark },
+      { title: 'Institutional Digital Twin™', url: '/digital-twin', icon: Network },
       { title: 'AI Research Brain', url: '/research-brain', icon: BrainCircuit },
       { title: 'Intelligence Network', url: '/intelligence-network', icon: Network },
       { title: 'Mission Control', url: '/mission-control', icon: Rocket },
