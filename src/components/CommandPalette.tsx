@@ -153,7 +153,9 @@ export function CommandPalette({ open, onOpenChange }: Props) {
             ))}
           </CommandGroup>
         ))}
-      </CommandList>
-    </CommandDialog>
+          </CommandList>
+        </Command>
+      </DialogContent>
+    </Dialog>
   );
 }
