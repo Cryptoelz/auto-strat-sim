@@ -52,7 +52,7 @@ function stamp(): string {
 function discoveryInsight(scope: KnowledgeNode[]): ThinkingInsight | null {
   const ids = new Set(scope.map((n) => n.id));
   const candidates = KNOWLEDGE_EDGES
-    .filter((e) => (ids.has(e.from) || ids.has(e.to)) && ['supports', 'feeds', 'influences', 'depends'].includes(e.type))
+    .filter((e) => (ids.has(e.from) || ids.has(e.to)) && ['supports', 'feeds', 'used-by', 'depends-on'].includes(e.type))
     .filter((e) => NODE_BY_ID[e.from] && NODE_BY_ID[e.to])
     .map((e) => {
       const a = NODE_BY_ID[e.from], b = NODE_BY_ID[e.to];
