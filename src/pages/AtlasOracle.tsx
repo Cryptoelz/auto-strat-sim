@@ -98,6 +98,7 @@ export default function AtlasOracle() {
 
   const current = turns[turns.length - 1]?.answer;
   const contextIds = useMemo(() => turns[turns.length - 1]?.answer.focusIds ?? [], [turns]);
+  const thinking = useMemo(() => (current && current.found ? oracleThinking(current) : []), [current]);
 
   useEffect(() => { inputRef.current?.focus(); }, []);
   useEffect(() => {
