@@ -76,7 +76,7 @@ export default function InstitutionCollaboration() {
                   {active.edges.map(({ edge, role, fromNode, toNode }, i) => (
                     <Link key={i} to={`/explorer/${fromNode.id}`} className="block rounded-md border border-border/40 bg-muted/10 p-2.5 hover:border-trading-gold/40">
                       <p className="text-[11px] text-foreground">{fromNode.id} {RELATIONSHIP_META[edge.type].label.toLowerCase()} {toNode.id}</p>
-                      <p className="mt-0.5 text-[10px] text-muted-foreground">{edge.explanation}</p>
+                      <p className="mt-0.5 text-[10px] text-muted-foreground">{edge.note}</p>
                       <p className="mt-1 text-[9.5px]"><span className={ROLE_COLOR[role]}>{role}</span> · {edge.confidence}% confidence</p>
                     </Link>
                   ))}
