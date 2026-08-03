@@ -6,6 +6,9 @@ import {
   Layers, FlaskConical, Lock, Shield, Trophy, AlertTriangle,
   CheckCircle2, XCircle, Activity, Target, Sparkles, Crown,
 } from 'lucide-react';
+import AllocationValidationPanel from '@/components/allocation/AllocationValidationPanel';
+import ExecutiveVerdictPanel from '@/components/allocation/ExecutiveVerdictPanel';
+
 
 // ─── Specialist contribution (last 90 days, isolated sandbox) ────────
 type ContribRow = {
