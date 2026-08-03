@@ -77,6 +77,15 @@ import InstitutionAnalytics from "./pages/InstitutionAnalytics";
 import InstitutionScore from "./pages/InstitutionScore";
 import InstitutionHistory from "./pages/InstitutionHistory";
 import InstitutionMuseum from "./pages/InstitutionMuseum";
+import InstitutionObservatory from "./pages/InstitutionObservatory";
+import InstitutionCycle from "./pages/InstitutionCycle";
+import InstitutionConversationsLive from "./pages/InstitutionConversations";
+import InstitutionDecisions from "./pages/InstitutionDecisions";
+import InstitutionEvolution from "./pages/InstitutionEvolution";
+import InstitutionForecast from "./pages/InstitutionForecast";
+import BriefingRoom from "./pages/BriefingRoom";
+import InstitutionGenome from "./pages/InstitutionGenome";
+import InstitutionHealth from "./pages/InstitutionHealth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
