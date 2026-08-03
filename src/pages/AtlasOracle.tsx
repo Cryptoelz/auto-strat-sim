@@ -440,6 +440,62 @@ export default function AtlasOracle() {
                 </Glass>
               </section>
 
+              {/* 13 Oracle Thinking */}
+              <section className="space-y-3">
+                <SectionHeader n={13} icon={Sparkles} title="Oracle Thinking™" subtitle="Autonomous intelligence surfaced while answering — derived only from recorded institutional knowledge." />
+                <p className="text-sm font-medium text-trading-gold">While answering your question I found...</p>
+                <div className="grid gap-3 lg:grid-cols-3">
+                  {thinking.map((t) => {
+                    const Icon = t.kind === 'discovery' ? Lightbulb : t.kind === 'risk' ? AlertTriangle : Zap;
+                    const tone = t.kind === 'risk'
+                      ? 'border-destructive/30 hover:border-destructive/50'
+                      : t.kind === 'opportunity'
+                        ? 'border-primary/30 hover:border-primary/50'
+                        : 'border-trading-gold/30 hover:border-trading-gold/50';
+                    return (
+                      <Card key={t.kind} className={`bg-card/40 shadow-lg backdrop-blur transition-all hover:-translate-y-0.5 ${tone}`}>
+                        <CardContent className="space-y-3 p-5">
+                          <div className="flex items-center gap-2">
+                            <Icon className={`h-4 w-4 ${t.kind === 'risk' ? 'text-destructive' : t.kind === 'opportunity' ? 'text-primary' : 'text-trading-gold'}`} />
+                            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{t.eyebrow}</p>
+                          </div>
+                          <p className="text-sm font-semibold leading-snug">{t.headline}</p>
+                          <p className="text-[11px] leading-relaxed text-muted-foreground">{t.body}</p>
+                          <Meter value={t.confidence} label="Confidence" />
+                          {t.metricLabel && (
+                            <div className="rounded-md border border-border/40 bg-muted/15 px-2.5 py-1.5">
+                              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{t.metricLabel}</p>
+                              <p className="text-xs font-medium">{t.metricValue}</p>
+                            </div>
+                          )}
+                          <div className="space-y-1">
+                            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Supporting Objects · {t.evidenceCount} evidence items</p>
+                            {t.supportingObjects.map((id) => <ObjectChip key={id} id={id} onOpen={openObject} />)}
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Counter Evidence</p>
+                            {(t.counterEvidence.length ? t.counterEvidence : ['No contradictory evidence recorded against this insight.']).map((c, i) => (
+                              <p key={i} className="rounded-md border border-border/40 bg-muted/15 px-2.5 py-1.5 text-[10px] text-muted-foreground">{c}</p>
+                            ))}
+                          </div>
+                          <p className="text-[10px] text-muted-foreground">Institutional timestamp: {t.timestamp}</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {t.actions.map((a) => (
+                              <Button key={a.label} size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => navigate(a.to)}>
+                                {a.label}
+                              </Button>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                  {!thinking.length && (
+                    <p className="text-xs text-muted-foreground">No additional institutional intelligence surfaced for this evidence set.</p>
+                  )}
+                </div>
+              </section>
+
               {/* 11 Related questions */}
               <section className="space-y-3">
                 <SectionHeader n={11} icon={MessageSquare} title="Related Questions" subtitle="Intelligent follow-ups derived from open threads and disagreement." />
