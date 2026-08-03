@@ -83,7 +83,7 @@ export default function CertificationCentre() {
 
   const verdictRows: { label: string; value: string; detail?: string; tone?: string }[] = [
     { label: 'Overall Verdict', value: `${tone.dot} ${V.overallVerdict}`, detail: V.verdictBasis, tone: tone.text },
-    { label: 'Evidence Score', value: `${V.evidenceScore}/100`, detail: 'Weighted across all 48 certification checks.' },
+    { label: 'Evidence Score', value: `${V.evidenceScore}/100`, detail: `Weighted across all ${CERT_SUMMARY.total} certification checks.` },
     { label: 'Confidence', value: `${V.confidence}% · ${V.confidenceLabel}`, detail: 'Weakest-link propagation from evidence nodes.' },
     { label: 'Risk Rating', value: V.riskRating, detail: V.riskBasis, tone: 'text-trading-warning' },
     { label: 'Research Quality', value: V.researchQuality, detail: 'Determinism, reproducibility and disclosure all verified.' },

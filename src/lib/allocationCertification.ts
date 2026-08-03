@@ -101,7 +101,7 @@ export const CERT_CATEGORIES: CertCategory[] = [
       c('KG-01', 'Node registration', 'PASS', 'Knowledge Graph', 'Institutional Knowledge Graph', 98, 'KG:MOD-ALLOC-LAB-V1', '/knowledge-graph',
         'Module registered as node MOD-ALLOC-LAB-V1 with 23 inbound and 11 outbound edges.'),
       c('KG-02', 'No orphan claims', 'PASS', 'Knowledge Graph', 'Institutional Knowledge Graph', 96, 'KG:ORPHAN-SCAN', '/knowledge-graph',
-        'All 48 certification checks carry a resolvable evidence reference. 0 orphan claims detected.'),
+        'All certification checks carry a resolvable evidence reference. 0 orphan claims detected.'),
       c('KG-03', 'No broken references', 'PASS', 'Knowledge Graph', 'Institutional Knowledge Graph', 97, 'KG:LINK-INTEGRITY', '/knowledge-graph',
         'Every evidence route resolves to a registered platform route. 0 dead links.'),
       c('KG-04', 'Confidence propagation', 'PASS', 'ATLAS Oracle', 'Confidence Engine', 92, 'KG:CONF-PROPAGATION', '/oracle',
