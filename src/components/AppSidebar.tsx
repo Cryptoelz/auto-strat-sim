@@ -49,6 +49,7 @@ const NAV_SECTIONS = [
       { title: 'Launch Checklist', url: '/launch', icon: Rocket },
       { title: 'Test & Validation Centre™', url: '/validation-centre', icon: TestTube2 },
       { title: 'Acceptance Programme™', url: '/acceptance', icon: BadgeCheck },
+      { title: 'Release Candidate Centre', url: '/release-candidate', icon: Rocket },
     ],
   },
   {
