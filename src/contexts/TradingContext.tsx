@@ -103,7 +103,9 @@ export function TradingProvider({ children }: { children: ReactNode }) {
 
   const [strategyConfig, setStrategyConfig] = useState<StrategyConfig>({
     timeframe: DEFAULT_CONFIG.timeframe as '5m' | '15m' | '1h' | '4h',
-    enabledAssets: DEFAULT_CONFIG.assets as Asset[],
+    // All supported assets run through the full pipeline (market data → strategy →
+    // AI confidence → risk → execution → portfolio → analytics).
+    enabledAssets: ALL_ASSETS,
     fastSMA: DEFAULT_CONFIG.indicators.fastSMA,
     slowSMA: DEFAULT_CONFIG.indicators.slowSMA,
     positionSizePercent: DEFAULT_CONFIG.risk.positionSizePercent,
