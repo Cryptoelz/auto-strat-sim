@@ -11,6 +11,7 @@ import { PortfolioAllocation } from '@/components/trading/PortfolioAllocation';
 import { AssetBreakdown } from '@/components/trading/AssetBreakdown';
 import { TradeJournal } from '@/components/trading/TradeJournal';
 import { AgentStatusCard } from '@/components/trading/AgentStatusCard';
+import { AssetPipelineAudit } from '@/components/trading/AssetPipelineAudit';
 import { BalanceCard, PriceCard } from '@/components/trading/DashboardCards';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
