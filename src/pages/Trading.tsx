@@ -76,7 +76,10 @@ export default function Trading() {
         />
       </div>
 
+      <AssetPipelineAudit />
+
       <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
+
         {strategyConfig.enabledAssets.map((asset) => (
           <div key={asset} className="space-y-3 sm:space-y-4">
             <PriceChart
