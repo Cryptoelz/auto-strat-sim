@@ -3,7 +3,7 @@ import { useUnifiedTradingEngine, StatusMessage, ConnectionStatus } from '@/hook
 import { useNotifications } from '@/hooks/useNotifications';
 import { usePnlAlerts } from '@/hooks/usePnlAlerts';
 import { useSessionAlerts } from '@/hooks/useSessionAlerts';
-import { DEFAULT_CONFIG } from '@/config/trading';
+import { DEFAULT_CONFIG, ALL_ASSETS } from '@/config/trading';
 import { StrategyConfig } from '@/components/StrategySettings';
 import { Asset } from '@/types/trading';
 import { PortfolioConfig, DEFAULT_PORTFOLIO_CONFIG } from '@/types/portfolio';
