@@ -38,6 +38,24 @@ const NAV_SECTIONS = [
     ],
   },
   {
+    label: 'ATLAS AI Maintenance™',
+    items: [
+      { title: 'Executive Dashboard', url: '/maintenance', icon: HeartPulse },
+      { title: 'Institution Health', url: '/maintenance/health', icon: Gauge },
+      { title: 'Module Health Monitor', url: '/maintenance/modules', icon: Activity },
+      { title: 'Workflow Integrity', url: '/maintenance/workflows', icon: Workflow },
+      { title: 'Governance Auditor', url: '/maintenance/governance', icon: Shield },
+      { title: 'Database Integrity', url: '/maintenance/database', icon: Database },
+      { title: 'Knowledge Validator', url: '/maintenance/knowledge', icon: BookOpen },
+      { title: 'Performance Centre', url: '/maintenance/performance', icon: Zap },
+      { title: 'Auto Repair Engine', url: '/maintenance/repairs', icon: Wrench },
+      { title: 'Predictive Maintenance', url: '/maintenance/predictive', icon: Radar },
+      { title: 'Maintenance Reports', url: '/maintenance/reports', icon: FileText },
+      { title: 'Maintenance Settings', url: '/maintenance/settings', icon: SlidersHorizontal },
+    ],
+  },
+  {
+
     label: 'Enterprise',
     items: [
       { title: 'Executive Home', url: '/home', icon: Crown },
