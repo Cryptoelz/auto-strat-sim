@@ -156,6 +156,20 @@ const App = () => (
               <Route path="/validation-centre" element={<TestValidationCentre />} />
               <Route path="/acceptance" element={<AcceptanceProgramme />} />
               <Route path="/release-candidate" element={<ReleaseCandidateCentre />} />
+
+              <Route path="/maintenance" element={<MaintenanceExecutive />} />
+              <Route path="/maintenance/health" element={<MaintenanceInstitutionHealth />} />
+              <Route path="/maintenance/modules" element={<MaintenanceModules />} />
+              <Route path="/maintenance/workflows" element={<MaintenanceWorkflows />} />
+              <Route path="/maintenance/governance" element={<MaintenanceGovernanceAuditor />} />
+              <Route path="/maintenance/database" element={<MaintenanceDatabase />} />
+              <Route path="/maintenance/knowledge" element={<MaintenanceKnowledge />} />
+              <Route path="/maintenance/performance" element={<MaintenancePerformanceCentre />} />
+              <Route path="/maintenance/repairs" element={<MaintenanceAutoRepair />} />
+              <Route path="/maintenance/predictive" element={<MaintenancePredictive />} />
+              <Route path="/maintenance/reports" element={<MaintenanceReportsPage />} />
+              <Route path="/maintenance/settings" element={<MaintenanceSettingsPage />} />
+
               <Route path="/boardroom" element={<ExecutiveBoardroom />} />
               <Route path="/digital-twin" element={<DigitalTwin />} />
 
