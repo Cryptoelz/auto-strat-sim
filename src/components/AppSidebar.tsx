@@ -2,7 +2,7 @@ import {
   Landmark,
   LayoutDashboard, LineChart, FlaskConical, Layers, PieChart,
   Shield, UserCog, Bell, Beaker, ClipboardCheck, Activity,
-  Radio, Microscope, ArrowUpCircle, BarChart3, Gauge, FileText, Sparkles, Scale, SlidersHorizontal, GitCompare, Trophy, Gavel, Snowflake, Briefcase, Users, BookOpen, Crown, CalendarDays, Target, Zap, GitFork, Compass, Eye, Building2, Rocket, Brain, BrainCircuit, Bot, Atom, Network, Globe2, Share2, Gem, GraduationCap, Lightbulb, BadgeCheck, ScrollText, Radar, History as HistoryIcon, Wand2, Puzzle, Store, Code2, Palette, Workflow, Package, Terminal, Award, Map, TestTube2,
+  Radio, Microscope, ArrowUpCircle, BarChart3, Gauge, FileText, Sparkles, Scale, SlidersHorizontal, GitCompare, Trophy, Gavel, Snowflake, Briefcase, Users, BookOpen, Crown, CalendarDays, Target, Zap, GitFork, Compass, Eye, Building2, Rocket, Brain, BrainCircuit, Bot, Atom, Network, Globe2, Share2, Gem, GraduationCap, Lightbulb, BadgeCheck, ScrollText, Radar, History as HistoryIcon, Wand2, Puzzle, Store, Code2, Palette, Workflow, Package, Terminal, Award, Map, TestTube2, HeartPulse, Database, Wrench,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
@@ -38,6 +38,24 @@ const NAV_SECTIONS = [
     ],
   },
   {
+    label: 'ATLAS AI Maintenance™',
+    items: [
+      { title: 'Executive Dashboard', url: '/maintenance', icon: HeartPulse },
+      { title: 'Institution Health', url: '/maintenance/health', icon: Gauge },
+      { title: 'Module Health Monitor', url: '/maintenance/modules', icon: Activity },
+      { title: 'Workflow Integrity', url: '/maintenance/workflows', icon: Workflow },
+      { title: 'Governance Auditor', url: '/maintenance/governance', icon: Shield },
+      { title: 'Database Integrity', url: '/maintenance/database', icon: Database },
+      { title: 'Knowledge Validator', url: '/maintenance/knowledge', icon: BookOpen },
+      { title: 'Performance Centre', url: '/maintenance/performance', icon: Zap },
+      { title: 'Auto Repair Engine', url: '/maintenance/repairs', icon: Wrench },
+      { title: 'Predictive Maintenance', url: '/maintenance/predictive', icon: Radar },
+      { title: 'Maintenance Reports', url: '/maintenance/reports', icon: FileText },
+      { title: 'Maintenance Settings', url: '/maintenance/settings', icon: SlidersHorizontal },
+    ],
+  },
+  {
+
     label: 'Enterprise',
     items: [
       { title: 'Executive Home', url: '/home', icon: Crown },

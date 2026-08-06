@@ -5,6 +5,18 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AppLayout } from "@/components/AppLayout";
+import MaintenanceExecutive from "./pages/maintenance/MaintenanceExecutive";
+import MaintenanceInstitutionHealth from "./pages/maintenance/MaintenanceInstitutionHealth";
+import MaintenanceModules from "./pages/maintenance/MaintenanceModules";
+import MaintenanceWorkflows from "./pages/maintenance/MaintenanceWorkflows";
+import MaintenanceGovernanceAuditor from "./pages/maintenance/MaintenanceGovernance";
+import MaintenanceDatabase from "./pages/maintenance/MaintenanceDatabase";
+import MaintenanceKnowledge from "./pages/maintenance/MaintenanceKnowledge";
+import MaintenancePerformanceCentre from "./pages/maintenance/MaintenancePerformance";
+import MaintenanceAutoRepair from "./pages/maintenance/MaintenanceAutoRepair";
+import MaintenancePredictive from "./pages/maintenance/MaintenancePredictive";
+import MaintenanceReportsPage from "./pages/maintenance/MaintenanceReports";
+import MaintenanceSettingsPage from "./pages/maintenance/MaintenanceSettings";
 import Overview from "./pages/Overview";
 import Trading from "./pages/Trading";
 import Backtest from "./pages/Backtest";
@@ -156,6 +168,20 @@ const App = () => (
               <Route path="/validation-centre" element={<TestValidationCentre />} />
               <Route path="/acceptance" element={<AcceptanceProgramme />} />
               <Route path="/release-candidate" element={<ReleaseCandidateCentre />} />
+
+              <Route path="/maintenance" element={<MaintenanceExecutive />} />
+              <Route path="/maintenance/health" element={<MaintenanceInstitutionHealth />} />
+              <Route path="/maintenance/modules" element={<MaintenanceModules />} />
+              <Route path="/maintenance/workflows" element={<MaintenanceWorkflows />} />
+              <Route path="/maintenance/governance" element={<MaintenanceGovernanceAuditor />} />
+              <Route path="/maintenance/database" element={<MaintenanceDatabase />} />
+              <Route path="/maintenance/knowledge" element={<MaintenanceKnowledge />} />
+              <Route path="/maintenance/performance" element={<MaintenancePerformanceCentre />} />
+              <Route path="/maintenance/repairs" element={<MaintenanceAutoRepair />} />
+              <Route path="/maintenance/predictive" element={<MaintenancePredictive />} />
+              <Route path="/maintenance/reports" element={<MaintenanceReportsPage />} />
+              <Route path="/maintenance/settings" element={<MaintenanceSettingsPage />} />
+
               <Route path="/boardroom" element={<ExecutiveBoardroom />} />
               <Route path="/digital-twin" element={<DigitalTwin />} />
 
