@@ -218,8 +218,11 @@ export function CommandPalette({ open, onOpenChange }: Props) {
             </div>
           )}
 
-          <CommandList className="max-h-[58vh]">
-            <CommandEmpty>No institutional object matches that query or filter set.</CommandEmpty>
+          <CommandList className="max-h-[62vh] p-1.5 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:text-[9.5px] [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-[0.16em] [&_[cmdk-item]]:rounded-md [&_[cmdk-item]]:py-2">
+            <CommandEmpty className="px-4 py-8 text-center text-xs text-muted-foreground">
+              No institutional object matches that query or filter set.
+            </CommandEmpty>
+
 
             {!query && !filtersActive(filters) && (
               <CommandGroup heading="Try a natural-language search">
