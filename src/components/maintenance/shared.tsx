@@ -79,7 +79,7 @@ export function StatCard({ label, value, hint, tone = 'default' }: { label: stri
 
 export function MaintenancePage({ title, subtitle, children, actions }: { title: string; subtitle: string; children: ReactNode; actions?: ReactNode }) {
   return (
-    <div className="container mx-auto space-y-6 p-4 sm:p-6">
+    <div className="container mx-auto space-y-6 p-4 pb-20 sm:p-6 sm:pb-20">
       <header className="exec-summary flex flex-wrap items-start justify-between gap-x-4 gap-y-3 border-b border-trading-gold/25">
         <div className="min-w-0">
           <p className="text-[10px] uppercase tracking-[0.2em] text-trading-gold">ATLAS AI Maintenance™</p>
