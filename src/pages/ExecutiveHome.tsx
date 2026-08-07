@@ -1,45 +1,51 @@
 import { Link } from 'react-router-dom';
 import { OsPage } from '@/components/institution/OsPage';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { executiveHome, type HomeItem } from '@/lib/enterprise';
 import {
-  ArrowRight, Sparkles, AlertTriangle, BookOpen, CalendarClock, Pin, Zap, Activity,
+  ExecCard, ExecCardHeader, ExecMetric, ExecMetricGrid, ExecStatusPill,
+  ExecGovernanceFooter, toExecStatus, STATUS_TEXT,
+} from '@/components/executive/ExecUi';
+import {
+  ArrowRight, Sparkles, AlertTriangle, BookOpen, CalendarClock, Pin, Zap, Activity, ChevronRight,
 } from 'lucide-react';
 
-const toneClass = (t?: HomeItem['tone']) =>
-  t === 'good' ? 'text-trading-gold' : t === 'watch' ? 'text-amber-400' : t === 'weak' ? 'text-rose-400' : 'text-muted-foreground';
-
-function Panel({ title, icon: Icon, hint, children }: { title: string; icon: typeof Zap; hint?: string; children: React.ReactNode }) {
+function Panel({
+  title, icon: Icon, hint, children, className,
+}: { title: string; icon: typeof Zap; hint?: string; children: React.ReactNode; className?: string }) {
   return (
-    <section className="rounded-lg border border-border/50 bg-card/40 p-4">
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <h2 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground">
-          <Icon className="h-3.5 w-3.5 text-trading-gold" aria-hidden="true" /> {title}
-        </h2>
-        {hint && <span className="text-[10px] text-muted-foreground">{hint}</span>}
-      </div>
-      {children}
-    </section>
+    <ExecCard as="section" className={`flex h-full flex-col ${className ?? ''}`}>
+      <ExecCardHeader title={title} icon={Icon} hint={hint} />
+      <div className="flex-1">{children}</div>
+    </ExecCard>
   );
 }
 
-function ItemList({ items }: { items: HomeItem[] }) {
-  if (!items.length) return <p className="text-xs text-muted-foreground">Nothing recorded for this window.</p>;
+function ItemList({ items, label }: { items: HomeItem[]; label: string }) {
+  if (!items.length) {
+    return (
+      <p className="rounded-md border border-dashed border-border/50 p-4 text-center text-xs text-muted-foreground">
+        Nothing recorded for this window.
+      </p>
+    );
+  }
   return (
-    <ul className="space-y-2">
+    <ul className="space-y-2" aria-label={label}>
       {items.map((it, i) => (
         <li key={`${it.id ?? it.title}-${i}`}>
           <Link
             to={it.to}
-            className="group block rounded-md border border-border/40 bg-background/30 p-2.5 transition-colors hover:border-trading-gold/40 hover:bg-trading-gold/5"
+            className="exec-card exec-card-interactive group block !p-3"
           >
             <div className="flex items-start justify-between gap-3">
-              <p className="text-xs font-medium text-foreground group-hover:text-trading-gold">{it.title}</p>
+              <p className="text-xs font-medium leading-snug text-foreground group-hover:text-trading-gold">{it.title}</p>
               {it.id && <span className="shrink-0 font-mono text-[9.5px] text-muted-foreground">{it.id}</span>}
             </div>
             <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">{it.detail}</p>
-            <p className={`mt-1 text-[9.5px] uppercase tracking-wider ${toneClass(it.tone)}`}>{it.meta}</p>
+            <p className={`mt-1.5 flex items-center gap-1 text-[9.5px] uppercase tracking-[0.14em] ${STATUS_TEXT[toExecStatus(it.tone)]}`}>
+              {it.meta}
+              <ChevronRight className="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-100" aria-hidden="true" />
+            </p>
           </Link>
         </li>
       ))}
@@ -53,97 +59,119 @@ export default function ExecutiveHome() {
   return (
     <OsPage
       title="Executive Home"
-      subtitle="One page for the executive: today's brief, institution health, what needs attention, what was discovered and what to read next. Everything is observation only and links back to the evidence."
+      subtitle="The control centre of the institution. Today's brief, live institutional health, what needs your attention, what was discovered overnight and what to read next — every figure links back to its evidence."
       department="Executive Layer"
-      actions={<Button asChild size="sm" variant="outline" className="h-7 gap-1.5 text-[11px]"><Link to="/presentation"><Sparkles className="h-3.5 w-3.5" /> Presentation Mode</Link></Button>}
+      breadcrumbs={[{ label: 'ATLAS OS', to: '/atlas' }, { label: 'Executive Layer' }, { label: 'Executive Home' }]}
+      actions={
+        <Button asChild size="sm" variant="outline" className="h-7 gap-1.5 text-[11px]">
+          <Link to="/presentation"><Sparkles className="h-3.5 w-3.5" aria-hidden="true" /> Boardroom Mode</Link>
+        </Button>
+      }
     >
-      <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        {home.headline.map((h) => (
-          <div key={h.label} className="rounded-lg border border-trading-gold/20 bg-trading-gold/[0.04] p-3">
-            <p className="font-mono text-lg leading-none text-trading-gold">{h.value}</p>
-            <p className="mt-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">{h.label}</p>
-            <p className="mt-1 text-[10px] text-muted-foreground/80">{h.hint}</p>
-          </div>
-        ))}
-      </div>
+      {/* Headline metrics — readable across a meeting room. */}
+      <section aria-label="Headline institutional metrics" className="exec-rise">
+        <ExecMetricGrid cols={6}>
+          {home.headline.map((h) => (
+            <ExecMetric key={h.label} label={h.label} value={h.value} hint={h.hint} />
+          ))}
+        </ExecMetricGrid>
+      </section>
 
       <Panel title="Today's Brief" icon={Zap} hint={home.greetingDate}>
-        <p className="text-sm leading-relaxed text-foreground">{home.brief.summary}</p>
-        <div className="mt-3 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-md border border-border/40 bg-background/30 p-2.5">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Recommended action</p>
-            <p className="mt-1 text-xs text-foreground">{home.brief.action}</p>
-          </div>
-          <div className="rounded-md border border-border/40 bg-background/30 p-2.5">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Expected gain (simulated)</p>
-            <p className="mt-1 text-xs text-foreground">{home.brief.gain}</p>
-          </div>
-          <div className="rounded-md border border-border/40 bg-background/30 p-2.5">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Brief confidence</p>
-            <p className="mt-1 font-mono text-lg leading-none text-trading-gold">{home.brief.confidence}%</p>
-            <p className="mt-1 text-[10px] text-muted-foreground">{home.brief.departments.join(' · ')}</p>
-          </div>
+        <p className="max-w-4xl text-sm leading-relaxed text-foreground">{home.brief.summary}</p>
+        <div className="mt-4 grid auto-rows-fr gap-3 sm:grid-cols-3">
+          <ExecCard className="!p-3">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Recommended action</p>
+            <p className="mt-1.5 text-xs leading-relaxed text-foreground">{home.brief.action}</p>
+          </ExecCard>
+          <ExecCard className="!p-3">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Expected gain (simulated)</p>
+            <p className="mt-1.5 text-xs leading-relaxed text-foreground">{home.brief.gain}</p>
+          </ExecCard>
+          <ExecCard className="!p-3">
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Brief confidence</p>
+              <ExecStatusPill status={home.brief.confidence >= 75 ? 'healthy' : home.brief.confidence >= 55 ? 'watch' : 'warning'} />
+            </div>
+            <p className="mt-1.5 font-mono text-2xl font-semibold leading-none tabular-nums text-trading-gold">
+              {home.brief.confidence}%
+            </p>
+            <p className="mt-1.5 text-[10px] leading-snug text-muted-foreground">{home.brief.departments.join(' · ')}</p>
+          </ExecCard>
         </div>
       </Panel>
 
       <Panel title="Institution Health" icon={Activity} hint="Derived from the knowledge graph">
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {home.health.map((h) => (
-            <div key={h.key} className="rounded-md border border-border/40 bg-background/30 p-2.5">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-xs font-medium text-foreground">{h.label}</p>
-                <span className={`font-mono text-sm ${h.light === 'green' ? 'text-trading-gold' : h.light === 'amber' ? 'text-amber-400' : 'text-rose-400'}`}>{h.score}</span>
-              </div>
-              <div className="mt-2 h-1 overflow-hidden rounded-full bg-muted/30" role="presentation">
-                <div className={`h-full rounded-full ${h.light === 'green' ? 'bg-trading-gold' : h.light === 'amber' ? 'bg-amber-400' : 'bg-rose-400'}`} style={{ width: `${h.score}%` }} />
-              </div>
-              <p className="mt-1.5 line-clamp-2 text-[10.5px] leading-relaxed text-muted-foreground">{h.note}</p>
-            </div>
-          ))}
+        <div className="grid auto-rows-fr gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {home.health.map((h) => {
+            const status = h.light === 'green' ? 'healthy' : h.light === 'amber' ? 'watch' : 'critical';
+            return (
+              <ExecCard key={h.key} className="!p-3">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-xs font-medium text-foreground">{h.label}</p>
+                  <ExecStatusPill status={status} />
+                </div>
+                <div className="mt-2.5 flex items-center gap-2">
+                  <div
+                    className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted/30"
+                    role="progressbar"
+                    aria-valuenow={h.score}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label={`${h.label} score`}
+                  >
+                    <div
+                      className={`h-full rounded-full transition-[width] duration-700 ease-out ${
+                        status === 'healthy' ? 'bg-exec-healthy' : status === 'watch' ? 'bg-exec-watch' : 'bg-exec-critical'
+                      }`}
+                      style={{ width: `${h.score}%` }}
+                    />
+                  </div>
+                  <span className={`font-mono text-sm tabular-nums ${STATUS_TEXT[status]}`}>{h.score}</span>
+                </div>
+                <p className="mt-2 line-clamp-2 text-[10.5px] leading-relaxed text-muted-foreground">{h.note}</p>
+              </ExecCard>
+            );
+          })}
         </div>
       </Panel>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Panel title="Priority Research" icon={ArrowRight} hint="Highest connectivity, still unresolved">
-          <ItemList items={home.priority} />
+      <div className="grid auto-rows-fr gap-4 lg:grid-cols-2">
+        <Panel title="Priority Research" icon={ArrowRight} hint="Highest connectivity, unresolved">
+          <ItemList items={home.priority} label="Priority research" />
         </Panel>
         <Panel title="Recent Discoveries" icon={Sparkles} hint="Most recently recorded">
-          <ItemList items={home.discoveries} />
+          <ItemList items={home.discoveries} label="Recent discoveries" />
         </Panel>
         <Panel title="Top Risks" icon={AlertTriangle} hint="Institutional and procedural only">
-          <ItemList items={home.risks} />
+          <ItemList items={home.risks} label="Top risks" />
         </Panel>
-        <Panel title="Recommended Reading" icon={BookOpen} hint="Best-evidenced institutional writing">
-          <ItemList items={home.reading} />
+        <Panel title="Recommended Reading" icon={BookOpen} hint="Best-evidenced writing">
+          <ItemList items={home.reading} label="Recommended reading" />
         </Panel>
-        <Panel title="Upcoming Reviews" icon={CalendarClock} hint="Governance, promotion and executive gates">
-          <ItemList items={home.reviews} />
+        <Panel title="Upcoming Reviews" icon={CalendarClock} hint="Governance and promotion gates">
+          <ItemList items={home.reviews} label="Upcoming reviews" />
         </Panel>
         <Panel title="Pinned Reports" icon={Pin} hint="Your pinned and recent objects">
-          <ItemList items={home.pinned} />
+          <ItemList items={home.pinned} label="Pinned reports" />
         </Panel>
       </div>
 
-      <Panel title="Quick Actions" icon={Zap}>
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+      <Panel title="Quick Actions" icon={Zap} hint="Jump straight into the institution">
+        <div className="grid auto-rows-fr gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {home.quickActions.map((a) => (
-            <Link
-              key={a.to}
-              to={a.to}
-              className="rounded-md border border-border/40 bg-background/30 p-3 transition-colors hover:border-trading-gold/40 hover:bg-trading-gold/5"
-            >
-              <p className="text-xs font-medium text-foreground">{a.label}</p>
-              <p className="mt-1 text-[10.5px] text-muted-foreground">{a.hint}</p>
+            <Link key={a.to} to={a.to} className="exec-card exec-card-interactive group !p-3">
+              <p className="flex items-center justify-between gap-2 text-xs font-medium text-foreground group-hover:text-trading-gold">
+                {a.label}
+                <ChevronRight className="h-3.5 w-3.5 shrink-0 opacity-40 transition-opacity group-hover:opacity-100" aria-hidden="true" />
+              </p>
+              <p className="mt-1 text-[10.5px] leading-relaxed text-muted-foreground">{a.hint}</p>
             </Link>
           ))}
         </div>
       </Panel>
 
-      <footer className="flex flex-wrap gap-1 border-t border-border/40 pt-4">
-        {['Observation Only', 'Research Only', 'Simulation Only', 'Read Only', 'Human Approval Required'].map((b) => (
-          <Badge key={b} variant="outline" className="border-border/50 text-[9.5px] uppercase tracking-wider text-muted-foreground">{b}</Badge>
-        ))}
-      </footer>
+      <ExecGovernanceFooter />
     </OsPage>
   );
 }
