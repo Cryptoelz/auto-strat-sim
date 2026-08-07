@@ -75,6 +75,16 @@ export default {
           "sma-slow": "hsl(var(--trading-sma-slow))",
           gold: "hsl(var(--trading-gold))",
         },
+        exec: {
+          healthy: "hsl(var(--exec-healthy))",
+          watch: "hsl(var(--exec-watch))",
+          warning: "hsl(var(--exec-warning))",
+          critical: "hsl(var(--exec-critical))",
+          completed: "hsl(var(--exec-completed))",
+          current: "hsl(var(--exec-current))",
+          planned: "hsl(var(--exec-planned))",
+          vision: "hsl(var(--exec-vision))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

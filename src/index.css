@@ -356,3 +356,70 @@ html[data-atlas-theme='classic'],
 html[data-atlas-theme='high-contrast'],
 html[data-atlas-theme='executive-light'],
 html[data-atlas-theme='archive'] { --primary: var(--trading-gold); }
+
+/* ══════════════════════════════════════════════════════════
+   ATLAS OS™ Founder's Edition — Executive layer polish.
+   Canonical status vocabulary, unified card shell, executive
+   micro-interactions. Presentation tokens only.
+   ══════════════════════════════════════════════════════════ */
+
+:root {
+  --exec-healthy: 152 60% 45%;
+  --exec-watch: 40 92% 56%;
+  --exec-warning: 27 92% 56%;
+  --exec-critical: 352 72% 58%;
+  --exec-completed: 152 45% 52%;
+  --exec-current: 43 74% 49%;
+  --exec-planned: 210 60% 62%;
+  --exec-vision: 265 60% 68%;
+
+  --exec-card-radius: 0.75rem;
+  --exec-card-pad: 1rem;
+  --exec-shadow: 0 1px 2px hsl(0 0% 0% / 0.18), 0 8px 24px -18px hsl(0 0% 0% / 0.55);
+  --exec-shadow-hover: 0 1px 2px hsl(0 0% 0% / 0.2), 0 16px 34px -20px hsl(var(--trading-gold) / 0.35);
+}
+
+/* One card shell for the entire executive layer. */
+.exec-card {
+  border-radius: var(--exec-card-radius);
+  border: 1px solid hsl(var(--border) / 0.5);
+  background: hsl(var(--card) / 0.45);
+  padding: var(--exec-card-pad);
+  box-shadow: var(--exec-shadow);
+  transition: border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+.exec-card-interactive:hover {
+  border-color: hsl(var(--trading-gold) / 0.4);
+  background: hsl(var(--trading-gold) / 0.05);
+  box-shadow: var(--exec-shadow-hover);
+  transform: translateY(-1px);
+}
+.exec-card-interactive:focus-within {
+  border-color: hsl(var(--trading-gold) / 0.55);
+}
+.exec-metric { min-height: 7.25rem; }
+
+/* Canonical status pills. */
+.exec-status-healthy   { color: hsl(var(--exec-healthy));   border-color: hsl(var(--exec-healthy) / 0.35);   background: hsl(var(--exec-healthy) / 0.1); }
+.exec-status-watch     { color: hsl(var(--exec-watch));     border-color: hsl(var(--exec-watch) / 0.35);     background: hsl(var(--exec-watch) / 0.1); }
+.exec-status-warning   { color: hsl(var(--exec-warning));   border-color: hsl(var(--exec-warning) / 0.35);   background: hsl(var(--exec-warning) / 0.1); }
+.exec-status-critical  { color: hsl(var(--exec-critical));  border-color: hsl(var(--exec-critical) / 0.35);  background: hsl(var(--exec-critical) / 0.1); }
+.exec-status-completed { color: hsl(var(--exec-completed)); border-color: hsl(var(--exec-completed) / 0.35); background: hsl(var(--exec-completed) / 0.1); }
+.exec-status-current   { color: hsl(var(--exec-current));   border-color: hsl(var(--exec-current) / 0.4);    background: hsl(var(--exec-current) / 0.1); }
+.exec-status-planned   { color: hsl(var(--exec-planned));   border-color: hsl(var(--exec-planned) / 0.35);   background: hsl(var(--exec-planned) / 0.1); }
+.exec-status-vision    { color: hsl(var(--exec-vision));    border-color: hsl(var(--exec-vision) / 0.35);    background: hsl(var(--exec-vision) / 0.1); }
+
+/* Executive micro-interactions. */
+@keyframes exec-rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.exec-rise { animation: exec-rise 320ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.exec-link { transition: color 160ms ease; }
+
+/* Projection contrast + larger executive typography in presentation mode. */
+html.atlas-presentation .exec-metric { min-height: 8.5rem; }
+html.atlas-presentation .exec-card { background: hsl(var(--card) / 0.7); border-color: hsl(var(--border) / 0.75); }
+html.atlas-presentation .text-muted-foreground { color: hsl(var(--foreground) / 0.8); }
+html.atlas-presentation .exec-metric p:first-child { font-size: 0.72rem; }
+
+html.atlas-compact .exec-card { --exec-card-pad: 0.75rem; }
+html.atlas-compact .exec-metric { min-height: 6rem; }
+html.atlas-high-contrast .exec-card { border-color: hsl(var(--border)); }
