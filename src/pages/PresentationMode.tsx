@@ -64,25 +64,25 @@ export default function PresentationMode() {
           ))}
         </nav>
 
-        <article className="rounded-xl border border-trading-gold/25 bg-card/50 p-8">
+        <article key={i} className="exec-rise rounded-xl border border-trading-gold/25 bg-card/50 p-6 shadow-[var(--exec-shadow)] sm:p-10">
           <p className="text-[11px] uppercase tracking-[0.24em] text-trading-gold">Chapter {i + 1} of {story.length}</p>
-          <h2 className="mt-3 text-4xl font-semibold leading-tight tracking-tight text-foreground">{chapter.title}</h2>
-          <p className="mt-5 max-w-3xl text-lg leading-relaxed text-muted-foreground">{chapter.narrative}</p>
+          <h2 className="mt-3 text-3xl font-semibold leading-[1.15] tracking-tight text-foreground sm:text-4xl lg:text-5xl">{chapter.title}</h2>
+          <p className="mt-6 max-w-3xl text-lg leading-relaxed text-muted-foreground sm:text-xl">{chapter.narrative}</p>
 
-          <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_260px]">
-            <ul className="space-y-3">
+          <div className="mt-9 grid gap-6 lg:grid-cols-[1fr_280px]">
+            <ul className="space-y-4">
               {chapter.talkingPoints.map((t) => (
-                <li key={t} className="flex gap-3 text-base leading-relaxed text-foreground">
-                  <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-trading-gold" aria-hidden="true" />
+                <li key={t} className="flex gap-3.5 text-base leading-relaxed text-foreground sm:text-lg">
+                  <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-trading-gold sm:mt-3" aria-hidden="true" />
                   <span>{t}</span>
                 </li>
               ))}
             </ul>
-            <div className="rounded-lg border border-trading-gold/25 bg-trading-gold/[0.05] p-5 text-center">
-              <p className="font-mono text-4xl leading-none text-trading-gold">{chapter.stat.value}</p>
-              <p className="mt-2 text-[11px] uppercase tracking-wider text-muted-foreground">{chapter.stat.label}</p>
-              <Button asChild size="sm" variant="outline" className="mt-4 h-8 w-full gap-1.5 text-[11px]">
-                <Link to={chapter.to}><ExternalLink className="h-3.5 w-3.5" /> Open the module</Link>
+            <div className="self-start rounded-xl border border-trading-gold/25 bg-trading-gold/[0.05] p-6 text-center">
+              <p className="font-mono text-4xl font-semibold leading-none tabular-nums text-trading-gold sm:text-5xl">{chapter.stat.value}</p>
+              <p className="mt-3 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">{chapter.stat.label}</p>
+              <Button asChild size="sm" variant="outline" className="mt-5 h-9 w-full gap-1.5 text-[11px]">
+                <Link to={chapter.to}><ExternalLink className="h-3.5 w-3.5" aria-hidden="true" /> Open the module</Link>
               </Button>
             </div>
           </div>
@@ -90,19 +90,16 @@ export default function PresentationMode() {
 
         <div className="flex items-center justify-between gap-3">
           <Button variant="outline" className="gap-1.5" onClick={() => setI((v) => Math.max(0, v - 1))} disabled={i === 0}>
-            <ChevronLeft className="h-4 w-4" /> Previous
+            <ChevronLeft className="h-4 w-4" aria-hidden="true" /> Previous
           </Button>
-          <p className="text-[11px] text-muted-foreground">Use the arrow keys to move between chapters</p>
+          <p className="hidden text-[11px] text-muted-foreground sm:block">Use the arrow keys to move between chapters</p>
           <Button variant="outline" className="gap-1.5" onClick={() => setI((v) => Math.min(story.length - 1, v + 1))} disabled={i === story.length - 1}>
-            Next <ChevronRight className="h-4 w-4" />
+            Next <ChevronRight className="h-4 w-4" aria-hidden="true" />
           </Button>
         </div>
 
-        <footer className="flex flex-wrap gap-1 border-t border-border/40 pt-5">
-          {['Observation Only', 'Research Only', 'Simulation Only', 'Read Only', 'Human Approval Required', 'No Live Trading'].map((b) => (
-            <Badge key={b} variant="outline" className="border-border/50 text-[9.5px] uppercase tracking-wider text-muted-foreground">{b}</Badge>
-          ))}
-        </footer>
+        <ExecGovernanceFooter badges={['Observation Only', 'Research Only', 'Simulation Only', 'Read Only', 'Human Approval Required', 'No Live Trading']} />
+
       </div>
     </div>
   );
