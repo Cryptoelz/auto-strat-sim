@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Compass, Share2, Sparkles, CalendarDays } from 'lucide-react';
+import { ExecBreadcrumbs } from '@/components/executive/ExecUi';
+
 import { OS_BADGES, OS_VERSION, institutionScore } from '@/lib/institutionOS';
 import { LIFE_VERSION, LIFE_LINKS, pageContext } from '@/lib/institutionLife';
 import { IQ_LINKS, IQ_VERSION, globalIntelligence } from '@/lib/institutionIntelligence';
