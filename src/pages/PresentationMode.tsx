@@ -4,7 +4,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { presentationStory } from '@/lib/enterprise';
 import { useAtlasSettings } from '@/hooks/useAtlasSettings';
+import { ExecGovernanceFooter } from '@/components/executive/ExecUi';
 import { ChevronLeft, ChevronRight, Maximize2, ExternalLink, Presentation } from 'lucide-react';
+
 
 export default function PresentationMode() {
   const story = presentationStory();
