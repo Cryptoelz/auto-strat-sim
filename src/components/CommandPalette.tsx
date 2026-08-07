@@ -242,10 +242,10 @@ export function CommandPalette({ open, onOpenChange }: Props) {
                     <Star className={`mr-2 h-3.5 w-3.5 ${s.pinned ? 'text-trading-gold' : 'text-muted-foreground'}`} />
                     <span className="text-xs">{s.name}</span>
                     <span className="ml-auto flex items-center gap-1">
-                      <button aria-label="Pin saved search" onClick={(e) => { e.stopPropagation(); toggleSavedPin(s.name); setTick((t) => t + 1); }} className="rounded p-0.5 text-muted-foreground hover:text-trading-gold">
+                      <button aria-label="Pin saved search" onClick={(e) => { e.stopPropagation(); toggleSavedPin(s.name); setTick((t) => t + 1); }} className="rounded p-1 text-muted-foreground transition-colors hover:text-trading-gold focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
                         <Pin className="h-3 w-3" />
                       </button>
-                      <button aria-label="Delete saved search" onClick={(e) => { e.stopPropagation(); removeSavedSearch(s.name); setTick((t) => t + 1); }} className="rounded p-0.5 text-muted-foreground hover:text-rose-400">
+                      <button aria-label="Delete saved search" onClick={(e) => { e.stopPropagation(); removeSavedSearch(s.name); setTick((t) => t + 1); }} className="rounded p-1 text-muted-foreground transition-colors hover:text-exec-critical focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
                         <X className="h-3 w-3" />
                       </button>
                     </span>
@@ -320,7 +320,7 @@ export function CommandPalette({ open, onOpenChange }: Props) {
                       <button
                         aria-label="Pin object"
                         onClick={(e) => { e.stopPropagation(); togglePinnedObject(r.id); setTick((t) => t + 1); }}
-                        className="rounded p-0.5 text-muted-foreground hover:text-primary"
+                        className="rounded p-1 text-muted-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       >
                         <Pin className="h-3 w-3" />
                       </button>
