@@ -58,7 +58,7 @@ export function MaintenanceAssistant() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask about health, modules, repairs, warnings, performance…"
-            className="exec-input h-10 px-3.5 text-xs placeholder:text-[12px] placeholder:text-muted-foreground/70"
+            className="exec-input h-10 px-3.5 text-xs placeholder:text-[12px] placeholder:text-muted-foreground/70 focus-visible:ring-0 focus-visible:ring-offset-0"
           />
           <Button type="submit" size="icon" aria-label="Send message" className="h-10 w-10 shrink-0">
             <Send className="h-4 w-4" aria-hidden="true" />
