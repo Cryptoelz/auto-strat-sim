@@ -274,7 +274,9 @@ export default function ExecutiveDashboard() {
             </table>
           </div>
 
+          <div className="mt-4" />
           <ExecMetricGrid cols={4}>
+
             <ExecMetric label="PnL Difference" value="+$132" hint="v2.1 ahead" status="healthy" trend="up" />
             <ExecMetric label="PF Difference" value="-0.09" hint="v2 ahead" status="critical" trend="down" />
             <ExecMetric label="DD Difference" value="+0.3%" hint="v2.1 riskier" status="critical" trend="down" />
