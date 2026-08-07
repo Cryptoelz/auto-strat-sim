@@ -3,23 +3,27 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import {
+  ExecCard, ExecMetric, ExecMetricGrid, ExecStatusPill, ExecBreadcrumbs, ExecGovernanceFooter,
+} from '@/components/executive/ExecUi';
+import {
   Crown, CheckCircle2, FlaskConical, Archive, TrendingUp, TrendingDown,
   Shield, Trophy, BookOpen, Users, Gavel, Snowflake, Clock, Sparkles,
 } from 'lucide-react';
 
 const STATUS = [
-  { label: 'Champion', count: 1, icon: Crown, tone: 'text-yellow-500', bg: 'bg-yellow-500/10', border: 'border-yellow-500/30' },
-  { label: 'Approved', count: 4, icon: CheckCircle2, tone: 'text-emerald-500', bg: 'bg-emerald-500/10', border: 'border-emerald-500/30' },
-  { label: 'Research', count: 7, icon: FlaskConical, tone: 'text-sky-500', bg: 'bg-sky-500/10', border: 'border-sky-500/30' },
-  { label: 'Retired', count: 9, icon: Archive, tone: 'text-muted-foreground', bg: 'bg-muted/40', border: 'border-border' },
+  { label: 'Champion', count: 1, icon: Crown, tone: 'text-trading-gold', bg: 'bg-trading-gold/[0.06]', border: 'border-trading-gold/30' },
+  { label: 'Approved', count: 4, icon: CheckCircle2, tone: 'text-exec-healthy', bg: 'bg-exec-healthy/[0.06]', border: 'border-exec-healthy/30' },
+  { label: 'Research', count: 7, icon: FlaskConical, tone: 'text-exec-current', bg: 'bg-exec-current/[0.06]', border: 'border-exec-current/30' },
+  { label: 'Retired', count: 9, icon: Archive, tone: 'text-muted-foreground', bg: 'bg-muted/20', border: 'border-border/60' },
 ];
 
 const LEADERS = [
-  { label: 'Highest PnL', value: '+$1,247', strategy: 'Trend Rider v1', icon: TrendingUp, tone: 'text-emerald-500' },
+  { label: 'Highest PnL', value: '+$1,247', strategy: 'Trend Rider v1', icon: TrendingUp, tone: 'text-exec-healthy' },
   { label: 'Highest PF', value: '2.14', strategy: 'Candidate 25', icon: Sparkles, tone: 'text-primary' },
-  { label: 'Lowest DD', value: '1.4%', strategy: 'Baseline v11', icon: Shield, tone: 'text-sky-500' },
-  { label: 'Champion Candidate', value: 'Router v2', strategy: 'PF 1.92 / DD 2.1%', icon: Crown, tone: 'text-yellow-500' },
+  { label: 'Lowest DD', value: '1.4%', strategy: 'Baseline v11', icon: Shield, tone: 'text-exec-current' },
+  { label: 'Champion Candidate', value: 'Router v2', strategy: 'PF 1.92 / DD 2.1%', icon: Crown, tone: 'text-trading-gold' },
 ];
+
 
 const ALLOCATION = [
   { name: 'Baseline v11', pct: 30, tone: 'bg-primary' },
