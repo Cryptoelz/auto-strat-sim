@@ -103,7 +103,7 @@ export default function ExecutiveDashboard() {
               <Trophy className="h-4 w-4 text-trading-gold" /> Current Leaders
             </CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <CardContent className="grid auto-rows-fr grid-cols-2 content-start gap-3 md:grid-cols-4">
             {LEADERS.map((l) => (
               <div key={l.label} className="exec-card flex h-full flex-col justify-center !p-3">
                 <div className="flex items-center gap-2 mb-1">
