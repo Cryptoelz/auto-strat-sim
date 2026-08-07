@@ -10,27 +10,30 @@ import { IQ_LINKS, IQ_VERSION, globalIntelligence } from '@/lib/institutionIntel
 
 /** Shared institutional page frame: executive header, department badge, counters and global actions. */
 export function OsPage({
-  title, subtitle, department, children, actions,
+  title, subtitle, department, children, actions, breadcrumbs,
 }: {
   title: string; subtitle: string; department?: string; children: ReactNode; actions?: ReactNode;
+  breadcrumbs?: { label: string; to?: string }[];
 }) {
   const score = institutionScore();
   const ctx = pageContext();
   const gi = globalIntelligence();
   return (
     <div className="min-h-full bg-gradient-to-b from-background via-background to-card/40">
-      <div className="mx-auto max-w-[1500px] space-y-8 p-5 sm:p-8">
+      <div className="mx-auto max-w-[1500px] space-y-6 p-4 sm:space-y-8 sm:p-8">
         <header className="space-y-4 border-b border-trading-gold/20 pb-6">
+          {breadcrumbs && <ExecBreadcrumbs trail={breadcrumbs} />}
           <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="space-y-1.5">
+            <div className="min-w-0 space-y-2">
               {department && (
                 <Badge variant="outline" className="border-trading-gold/40 bg-trading-gold/10 text-[10px] uppercase tracking-[0.22em] text-trading-gold">
                   {department}
                 </Badge>
               )}
               <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">{title}</h1>
-              <p className="max-w-3xl text-sm text-muted-foreground">{subtitle}</p>
+              <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">{subtitle}</p>
             </div>
+
             <div className="flex flex-wrap items-center gap-1.5">
               {actions}
               <Button asChild size="sm" variant="outline" className="h-7 gap-1.5 text-[11px]"><Link to="/explorer"><Compass className="h-3.5 w-3.5" /> Explorer</Link></Button>
