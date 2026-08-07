@@ -14,12 +14,13 @@ export const STATUS_STYLES: Record<HealthStatus, { text: string; bg: string; bor
 export function StatusPill({ status, label }: { status: HealthStatus; label?: string }) {
   const s = STATUS_STYLES[status];
   return (
-    <Badge variant="outline" className={cn('text-[10px] font-medium', s.text, s.bg, s.border)}>
-      <span className={cn('mr-1.5 inline-block h-1.5 w-1.5 rounded-full', status === 'running' && 'animate-pulse')} style={{ background: s.stroke }} />
+    <Badge variant="outline" className={cn('exec-badge-crisp inline-flex items-center text-[10px] leading-none', s.text, s.bg, s.border)}>
+      <span className={cn('mr-1.5 inline-block h-1.5 w-1.5 shrink-0 rounded-full', status === 'running' && 'animate-pulse')} style={{ background: s.stroke }} />
       {label ?? STATUS_LABEL[status]}
     </Badge>
   );
 }
+
 
 export function HealthGauge({ value, status, size = 200, label = 'Institution Health' }: { value: number; status: HealthStatus; size?: number; label?: string }) {
   const stroke = 12;
