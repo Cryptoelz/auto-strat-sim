@@ -274,32 +274,13 @@ export default function ExecutiveDashboard() {
             </table>
           </div>
 
-          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
-            {/* PnL Difference — green when v2.1 > v2 */}
-            <div className="rounded-md border border-exec-healthy/20 bg-exec-healthy/5 p-3">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">PnL Difference</p>
-              <p className="text-lg font-semibold text-exec-healthy">+$132</p>
-              <p className="text-[11px] text-exec-healthy/80">v2.1 ahead</p>
-            </div>
-            {/* PF Difference — red when v2.1 < v2 */}
-            <div className="rounded-md border border-exec-critical/20 bg-exec-critical/5 p-3">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">PF Difference</p>
-              <p className="text-lg font-semibold text-exec-critical">-0.09</p>
-              <p className="text-[11px] text-exec-critical/80">v2 ahead</p>
-            </div>
-            {/* DD Difference — red when v2.1 > v2 */}
-            <div className="rounded-md border border-exec-critical/20 bg-exec-critical/5 p-3">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">DD Difference</p>
-              <p className="text-lg font-semibold text-exec-critical">+0.3%</p>
-              <p className="text-[11px] text-exec-critical/80">v2.1 riskier</p>
-            </div>
-            {/* Rank Difference — red when v2.1 rank > v2 rank */}
-            <div className="rounded-md border border-exec-critical/20 bg-exec-critical/5 p-3">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Rank Difference</p>
-              <p className="text-lg font-semibold text-exec-critical">-6</p>
-              <p className="text-[11px] text-exec-critical/80">v2 ahead</p>
-            </div>
-          </div>
+          <ExecMetricGrid cols={4}>
+            <ExecMetric label="PnL Difference" value="+$132" hint="v2.1 ahead" status="healthy" trend="up" />
+            <ExecMetric label="PF Difference" value="-0.09" hint="v2 ahead" status="critical" trend="down" />
+            <ExecMetric label="DD Difference" value="+0.3%" hint="v2.1 riskier" status="critical" trend="down" />
+            <ExecMetric label="Rank Difference" value="-6" hint="v2 ahead" status="critical" trend="down" />
+          </ExecMetricGrid>
+
 
           <p className="mt-3 text-[11px] text-muted-foreground">
             Green = challenger outperforming · Red = control outperforming · v2.1 is +17% PnL but trades off PF and DD.
