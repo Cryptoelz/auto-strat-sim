@@ -14,12 +14,13 @@ export const STATUS_STYLES: Record<HealthStatus, { text: string; bg: string; bor
 export function StatusPill({ status, label }: { status: HealthStatus; label?: string }) {
   const s = STATUS_STYLES[status];
   return (
-    <Badge variant="outline" className={cn('text-[10px] font-medium', s.text, s.bg, s.border)}>
-      <span className={cn('mr-1.5 inline-block h-1.5 w-1.5 rounded-full', status === 'running' && 'animate-pulse')} style={{ background: s.stroke }} />
+    <Badge variant="outline" className={cn('exec-badge-crisp inline-flex items-center text-[10px] leading-none', s.text, s.bg, s.border)}>
+      <span className={cn('mr-1.5 inline-block h-1.5 w-1.5 shrink-0 rounded-full', status === 'running' && 'animate-pulse')} style={{ background: s.stroke }} />
       {label ?? STATUS_LABEL[status]}
     </Badge>
   );
 }
+
 
 export function HealthGauge({ value, status, size = 200, label = 'Institution Health' }: { value: number; status: HealthStatus; size?: number; label?: string }) {
   const stroke = 12;
@@ -78,19 +79,19 @@ export function StatCard({ label, value, hint, tone = 'default' }: { label: stri
 
 export function MaintenancePage({ title, subtitle, children, actions }: { title: string; subtitle: string; children: ReactNode; actions?: ReactNode }) {
   return (
-    <div className="container mx-auto space-y-6 p-4 sm:p-6">
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-trading-gold/25 pb-4">
-        <div>
+    <div className="container mx-auto space-y-6 p-4 pb-20 sm:p-6 sm:pb-20">
+      <header className="exec-summary flex flex-wrap items-start justify-between gap-x-4 gap-y-3 border-b border-trading-gold/25">
+        <div className="min-w-0">
           <p className="text-[10px] uppercase tracking-[0.2em] text-trading-gold">ATLAS AI Maintenance™</p>
-          <h1 className="text-lg font-bold sm:text-xl">{title}</h1>
-          <p className="mt-1 max-w-3xl text-xs text-muted-foreground">{subtitle}</p>
+          <h1 className="mt-1.5 text-lg font-bold leading-tight tracking-tight sm:text-xl">{title}</h1>
+          <p className="exec-summary-text mt-2 max-w-3xl text-xs text-muted-foreground">{subtitle}</p>
         </div>
-        <div className="flex items-center gap-2">{actions}</div>
-      </div>
+        <div className="flex shrink-0 items-center gap-2 pt-1">{actions}</div>
+      </header>
       {children}
-      <div className="rounded-lg border border-trading-gold/25 bg-trading-gold/5 p-3">
-        <p className="text-[10px] uppercase tracking-wider text-trading-gold">Governance</p>
-        <p className="mt-1 text-[11px] text-muted-foreground">
+      <div className="exec-governance rounded-lg border border-trading-gold/25 bg-trading-gold/5">
+        <p className="text-[10px] uppercase tracking-[0.16em] text-trading-gold">Governance</p>
+        <p className="mt-2 max-w-4xl text-[11px] leading-relaxed text-muted-foreground">
           Observation / Diagnostics / Simulation / Read Only. ATLAS AI Maintenance™ never executes trades, never modifies
           strategies, research results, portfolio allocations or promotions. Repairs are limited to safe platform hygiene.
         </p>
@@ -98,3 +99,4 @@ export function MaintenancePage({ title, subtitle, children, actions }: { title:
     </div>
   );
 }
+
