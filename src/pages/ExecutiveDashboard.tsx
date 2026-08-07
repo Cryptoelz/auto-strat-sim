@@ -56,48 +56,47 @@ export default function ExecutiveDashboard() {
   const systemScore = 87;
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Executive Dashboard</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            One-page overview of the entire research ecosystem.
-          </p>
-        </div>
-        <Card className="min-w-[220px]">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs uppercase tracking-wider text-muted-foreground">System Score</span>
-              <Badge variant="outline" className="border-emerald-500/40 text-emerald-500">Healthy</Badge>
+    <div className="mx-auto max-w-[1500px] space-y-6 p-4 sm:p-6">
+      <header className="space-y-3 border-b border-border/50 pb-5">
+        <ExecBreadcrumbs trail={[{ label: 'ATLAS OS', to: '/atlas' }, { label: 'Executive Layer' }, { label: 'Executive Dashboard' }]} />
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Executive Dashboard</h1>
+            <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+              One page covering the entire research ecosystem: status, leaders, portfolio, governance and live experiments.
+            </p>
+          </div>
+          <ExecCard className="min-w-[220px] !p-4">
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">System Score</span>
+              <ExecStatusPill status="healthy" />
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold text-emerald-500">{systemScore}</span>
+              <span className="font-mono text-4xl font-semibold tabular-nums leading-none text-exec-healthy">{systemScore}</span>
               <span className="text-sm text-muted-foreground">/ 100</span>
             </div>
-            <Progress value={systemScore} className="mt-2 h-1.5" />
-          </CardContent>
-        </Card>
-      </div>
+            <Progress value={systemScore} className="mt-3 h-1.5" aria-label="System score" />
+          </ExecCard>
+        </div>
+      </header>
 
       {/* Research Status */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <section aria-label="Research status" className="grid auto-rows-fr grid-cols-2 gap-3 md:grid-cols-4">
         {STATUS.map((s) => (
-          <Card key={s.label} className={`${s.border} ${s.bg}`}>
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className={`flex h-10 w-10 items-center justify-center rounded-md bg-background/50 ${s.tone}`}>
-                <s.icon className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-wider text-muted-foreground">{s.label}</p>
-                <p className="text-2xl font-bold">{s.count}</p>
-              </div>
-            </CardContent>
-          </Card>
+          <div key={s.label} className={`exec-card exec-card-interactive flex items-center gap-3 ${s.border} ${s.bg}`}>
+            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-background/50 ${s.tone}`}>
+              <s.icon className="h-5 w-5" aria-hidden="true" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">{s.label}</p>
+              <p className="font-mono text-2xl font-semibold leading-tight tabular-nums">{s.count}</p>
+            </div>
+          </div>
         ))}
-      </div>
+      </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Current Leaders */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+
         <Card className="lg:col-span-2">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
