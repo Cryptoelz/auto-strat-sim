@@ -105,7 +105,7 @@ export default function ExecutiveDashboard() {
           </CardHeader>
           <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {LEADERS.map((l) => (
-              <div key={l.label} className="rounded-md border border-border bg-card/40 p-3">
+              <div key={l.label} className="exec-card flex h-full flex-col justify-center !p-3">
                 <div className="flex items-center gap-2 mb-1">
                   <l.icon className={`h-3.5 w-3.5 ${l.tone}`} />
                   <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{l.label}</span>
