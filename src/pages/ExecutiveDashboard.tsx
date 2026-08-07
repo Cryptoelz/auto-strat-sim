@@ -27,10 +27,10 @@ const LEADERS = [
 
 const ALLOCATION = [
   { name: 'Baseline v11', pct: 30, tone: 'bg-primary' },
-  { name: 'Candidate 25', pct: 20, tone: 'bg-emerald-500' },
-  { name: 'Trend Rider v1', pct: 20, tone: 'bg-sky-500' },
-  { name: 'Mean Reversion v1', pct: 15, tone: 'bg-violet-500' },
-  { name: 'Router v1', pct: 10, tone: 'bg-amber-500' },
+  { name: 'Candidate 25', pct: 20, tone: 'bg-exec-healthy' },
+  { name: 'Trend Rider v1', pct: 20, tone: 'bg-exec-current' },
+  { name: 'Mean Reversion v1', pct: 15, tone: 'bg-primary' },
+  { name: 'Router v1', pct: 10, tone: 'bg-exec-watch' },
   { name: 'Cash Reserve', pct: 5, tone: 'bg-muted' },
 ];
 
@@ -46,10 +46,10 @@ const LEADERBOARD = [
 
 const JOURNAL = [
   { date: 'Jun 16', text: 'Router v2.1 forked from Router v2 following Trade Frequency Audit (−10% threshold).', tone: 'text-primary' },
-  { date: 'Jun 12', text: 'Committee increased Trend Rider allocation 15% → 20%.', tone: 'text-emerald-500' },
+  { date: 'Jun 12', text: 'Committee increased Trend Rider allocation 15% → 20%.', tone: 'text-exec-healthy' },
   { date: 'Jun 10', text: 'Router v2 overtook Router v1 in Championship Arena.', tone: 'text-primary' },
-  { date: 'Jun 08', text: 'Baseline v11 promoted to Champion.', tone: 'text-yellow-500' },
-  { date: 'Jun 05', text: 'Mean Reversion v1 approved after meeting gate.', tone: 'text-emerald-500' },
+  { date: 'Jun 08', text: 'Baseline v11 promoted to Champion.', tone: 'text-trading-gold' },
+  { date: 'Jun 05', text: 'Mean Reversion v1 approved after meeting gate.', tone: 'text-exec-healthy' },
 ];
 
 export default function ExecutiveDashboard() {
@@ -100,7 +100,7 @@ export default function ExecutiveDashboard() {
         <Card className="lg:col-span-2">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <Trophy className="h-4 w-4 text-yellow-500" /> Current Leaders
+              <Trophy className="h-4 w-4 text-trading-gold" /> Current Leaders
             </CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -128,7 +128,7 @@ export default function ExecutiveDashboard() {
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div>
                 <p className="text-[10px] uppercase text-muted-foreground">Portfolio PnL</p>
-                <p className="text-emerald-500 font-semibold">+$1,032</p>
+                <p className="text-exec-healthy font-semibold">+$1,032</p>
               </div>
               <div>
                 <p className="text-[10px] uppercase text-muted-foreground">Portfolio DD</p>
@@ -172,7 +172,7 @@ export default function ExecutiveDashboard() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <Gavel className="h-4 w-4 text-violet-500" /> Governance
+              <Gavel className="h-4 w-4 text-primary" /> Governance
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2.5">
@@ -180,13 +180,13 @@ export default function ExecutiveDashboard() {
               <span className="flex items-center gap-2 text-muted-foreground">
                 <Clock className="h-3.5 w-3.5" /> Awaiting promotion
               </span>
-              <Badge variant="outline" className="border-amber-500/40 text-amber-500">2</Badge>
+              <Badge variant="outline" className="border-exec-watch/40 text-exec-watch">2</Badge>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="flex items-center gap-2 text-muted-foreground">
                 <Gavel className="h-3.5 w-3.5" /> Under review
               </span>
-              <Badge variant="outline" className="border-sky-500/40 text-sky-500">3</Badge>
+              <Badge variant="outline" className="border-exec-current/40 text-exec-current">3</Badge>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="flex items-center gap-2 text-muted-foreground">
@@ -205,7 +205,7 @@ export default function ExecutiveDashboard() {
         <Card className="lg:col-span-2">
           <CardHeader className="pb-3 flex flex-row items-center justify-between">
             <CardTitle className="text-base flex items-center gap-2">
-              <Trophy className="h-4 w-4 text-yellow-500" /> Championship Leaderboard
+              <Trophy className="h-4 w-4 text-trading-gold" /> Championship Leaderboard
             </CardTitle>
             <Badge variant="outline" className="text-[10px]">Next review in 4d</Badge>
           </CardHeader>
@@ -219,7 +219,7 @@ export default function ExecutiveDashboard() {
                     </Badge>
                   </div>
                   <div className="col-span-5 font-medium">{r.name}</div>
-                  <div className="col-span-2 text-right text-emerald-500 tabular-nums">{r.pnl}</div>
+                  <div className="col-span-2 text-right text-exec-healthy tabular-nums">{r.pnl}</div>
                   <div className="col-span-2 text-right tabular-nums text-muted-foreground">PF {r.pf}</div>
                   <div className="col-span-2 text-right tabular-nums text-muted-foreground">DD {r.dd}</div>
                 </div>
@@ -233,9 +233,9 @@ export default function ExecutiveDashboard() {
       <Card>
         <CardHeader className="pb-3 flex flex-row items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
-            <FlaskConical className="h-4 w-4 text-sky-500" /> Experiment Watchlist
+            <FlaskConical className="h-4 w-4 text-exec-current" /> Experiment Watchlist
           </CardTitle>
-          <Badge variant="outline" className="text-[10px] border-sky-500/40 text-sky-500">Live Experiment</Badge>
+          <Badge variant="outline" className="text-[10px] border-exec-current/40 text-exec-current">Live Experiment</Badge>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -256,7 +256,7 @@ export default function ExecutiveDashboard() {
                   <td className="py-2.5 pr-4 font-medium">Router v2 (Control)</td>
                   <td className="py-2.5 px-3 text-right tabular-nums">28</td>
                   <td className="py-2.5 px-3 text-right tabular-nums">39</td>
-                  <td className="py-2.5 px-3 text-right tabular-nums text-emerald-500">+$773</td>
+                  <td className="py-2.5 px-3 text-right tabular-nums text-exec-healthy">+$773</td>
                   <td className="py-2.5 px-3 text-right tabular-nums">1.71</td>
                   <td className="py-2.5 px-3 text-right tabular-nums">3.1%</td>
                   <td className="py-2.5 pl-3 text-right tabular-nums font-semibold">1</td>
@@ -265,7 +265,7 @@ export default function ExecutiveDashboard() {
                   <td className="py-2.5 pr-4 font-medium">Router v2.1 (Fork)</td>
                   <td className="py-2.5 px-3 text-right tabular-nums">12</td>
                   <td className="py-2.5 px-3 text-right tabular-nums">18</td>
-                  <td className="py-2.5 px-3 text-right tabular-nums text-emerald-500">+$905</td>
+                  <td className="py-2.5 px-3 text-right tabular-nums text-exec-healthy">+$905</td>
                   <td className="py-2.5 px-3 text-right tabular-nums">1.62</td>
                   <td className="py-2.5 px-3 text-right tabular-nums">3.4%</td>
                   <td className="py-2.5 pl-3 text-right tabular-nums font-semibold">7</td>
@@ -276,28 +276,28 @@ export default function ExecutiveDashboard() {
 
           <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
             {/* PnL Difference — green when v2.1 > v2 */}
-            <div className="rounded-md border border-emerald-500/20 bg-emerald-500/5 p-3">
+            <div className="rounded-md border border-exec-healthy/20 bg-exec-healthy/5 p-3">
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground">PnL Difference</p>
-              <p className="text-lg font-semibold text-emerald-500">+$132</p>
-              <p className="text-[11px] text-emerald-500/80">v2.1 ahead</p>
+              <p className="text-lg font-semibold text-exec-healthy">+$132</p>
+              <p className="text-[11px] text-exec-healthy/80">v2.1 ahead</p>
             </div>
             {/* PF Difference — red when v2.1 < v2 */}
-            <div className="rounded-md border border-red-500/20 bg-red-500/5 p-3">
+            <div className="rounded-md border border-exec-critical/20 bg-exec-critical/5 p-3">
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground">PF Difference</p>
-              <p className="text-lg font-semibold text-red-500">-0.09</p>
-              <p className="text-[11px] text-red-500/80">v2 ahead</p>
+              <p className="text-lg font-semibold text-exec-critical">-0.09</p>
+              <p className="text-[11px] text-exec-critical/80">v2 ahead</p>
             </div>
             {/* DD Difference — red when v2.1 > v2 */}
-            <div className="rounded-md border border-red-500/20 bg-red-500/5 p-3">
+            <div className="rounded-md border border-exec-critical/20 bg-exec-critical/5 p-3">
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground">DD Difference</p>
-              <p className="text-lg font-semibold text-red-500">+0.3%</p>
-              <p className="text-[11px] text-red-500/80">v2.1 riskier</p>
+              <p className="text-lg font-semibold text-exec-critical">+0.3%</p>
+              <p className="text-[11px] text-exec-critical/80">v2.1 riskier</p>
             </div>
             {/* Rank Difference — red when v2.1 rank > v2 rank */}
-            <div className="rounded-md border border-red-500/20 bg-red-500/5 p-3">
+            <div className="rounded-md border border-exec-critical/20 bg-exec-critical/5 p-3">
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Rank Difference</p>
-              <p className="text-lg font-semibold text-red-500">-6</p>
-              <p className="text-[11px] text-red-500/80">v2 ahead</p>
+              <p className="text-lg font-semibold text-exec-critical">-6</p>
+              <p className="text-[11px] text-exec-critical/80">v2 ahead</p>
             </div>
           </div>
 
@@ -331,26 +331,26 @@ export default function ExecutiveDashboard() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <Users className="h-4 w-4 text-emerald-500" /> Committee Summary
+              <Users className="h-4 w-4 text-exec-healthy" /> Committee Summary
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
-            <div className="rounded-md border border-emerald-500/20 bg-emerald-500/5 p-3">
-              <p className="text-[10px] uppercase tracking-wider text-emerald-500 mb-1">Latest Decision · Jun 12</p>
+            <div className="rounded-md border border-exec-healthy/20 bg-exec-healthy/5 p-3">
+              <p className="text-[10px] uppercase tracking-wider text-exec-healthy mb-1">Latest Decision · Jun 12</p>
               <p className="leading-relaxed">
-                Trend Rider raised <span className="text-emerald-500 font-medium">+5%</span> after 5 consecutive sessions
-                of ADX &gt; 25. Mean Reversion reduced <span className="text-red-500 font-medium">−5%</span> on declining
+                Trend Rider raised <span className="text-exec-healthy font-medium">+5%</span> after 5 consecutive sessions
+                of ADX &gt; 25. Mean Reversion reduced <span className="text-exec-critical font-medium">−5%</span> on declining
                 sideways opportunity score. Cash reserve held at 5%.
               </p>
             </div>
             <div className="grid grid-cols-3 gap-2">
               <div className="rounded-md border border-border p-2 text-center">
                 <p className="text-[10px] uppercase text-muted-foreground">Raised</p>
-                <p className="text-emerald-500 font-semibold">2</p>
+                <p className="text-exec-healthy font-semibold">2</p>
               </div>
               <div className="rounded-md border border-border p-2 text-center">
                 <p className="text-[10px] uppercase text-muted-foreground">Reduced</p>
-                <p className="text-red-500 font-semibold">1</p>
+                <p className="text-exec-critical font-semibold">1</p>
               </div>
               <div className="rounded-md border border-border p-2 text-center">
                 <p className="text-[10px] uppercase text-muted-foreground">Held</p>
