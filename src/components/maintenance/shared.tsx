@@ -14,8 +14,8 @@ export const STATUS_STYLES: Record<HealthStatus, { text: string; bg: string; bor
 export function StatusPill({ status, label }: { status: HealthStatus; label?: string }) {
   const s = STATUS_STYLES[status];
   return (
-    <Badge variant="outline" className={cn('exec-badge-crisp inline-flex items-center text-[10px] leading-none', s.text, s.bg, s.border)}>
-      <span className={cn('mr-1.5 inline-block h-1.5 w-1.5 shrink-0 rounded-full', status === 'running' && 'animate-pulse')} style={{ background: s.stroke }} />
+    <Badge variant="outline" className={cn('exec-badge', s.text, s.bg, s.border)}>
+      <span aria-hidden="true" className={cn('inline-block h-1.5 w-1.5 shrink-0 rounded-full', status === 'running' && 'animate-pulse')} style={{ background: s.stroke }} />
       {label ?? STATUS_LABEL[status]}
     </Badge>
   );
@@ -54,7 +54,7 @@ export function ScoreBar({ label, value, suffix = '' }: { label: string; value: 
         <span className="text-[11px] text-muted-foreground">{label}</span>
         <span className={cn('text-xs font-semibold tabular-nums', s.text)}>{value}{suffix}</span>
       </div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-muted/50">
+      <div className="h-2 overflow-hidden rounded-full bg-muted/50">
         <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, value)}%`, background: s.stroke }} />
       </div>
     </div>
@@ -69,10 +69,10 @@ export function StatCard({ label, value, hint, tone = 'default' }: { label: stri
     bad: 'text-trading-loss',
   } as const;
   return (
-    <div className="rounded-lg border border-border/60 bg-card/40 p-3">
+    <div className="exec-card flex h-full flex-col justify-between">
       <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className={cn('mt-1 text-xl font-bold tabular-nums', tones[tone])}>{value}</p>
-      {hint && <p className="mt-0.5 text-[10px] text-muted-foreground">{hint}</p>}
+      <p className={cn('mt-2 text-[1.4rem] font-bold leading-none tabular-nums', tones[tone])}>{value}</p>
+      {hint && <p className="mt-2 text-[10.5px] leading-relaxed text-muted-foreground">{hint}</p>}
     </div>
   );
 }
@@ -80,11 +80,11 @@ export function StatCard({ label, value, hint, tone = 'default' }: { label: stri
 export function MaintenancePage({ title, subtitle, children, actions }: { title: string; subtitle: string; children: ReactNode; actions?: ReactNode }) {
   return (
     <div className="container mx-auto space-y-6 p-4 pb-20 sm:p-6 sm:pb-20">
-      <header className="exec-summary flex flex-wrap items-start justify-between gap-x-4 gap-y-3 border-b border-trading-gold/25">
+      <header className="exec-head flex-row flex-wrap items-start justify-between gap-x-4 gap-y-3 border-b border-trading-gold/25">
         <div className="min-w-0">
           <p className="text-[10px] uppercase tracking-[0.2em] text-trading-gold">ATLAS AI Maintenance™</p>
-          <h1 className="mt-1.5 text-lg font-bold leading-tight tracking-tight sm:text-xl">{title}</h1>
-          <p className="exec-summary-text mt-2 max-w-3xl text-xs text-muted-foreground">{subtitle}</p>
+          <h1 className="exec-head-title mt-2 text-lg font-bold sm:text-xl">{title}</h1>
+          <p className="exec-head-sub mt-2.5 text-xs text-muted-foreground">{subtitle}</p>
         </div>
         <div className="flex shrink-0 items-center gap-2 pt-1">{actions}</div>
       </header>
