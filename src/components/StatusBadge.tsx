@@ -58,14 +58,15 @@ export function StatusBadge({ variant, label, size = 'sm', className, showIcon =
     <Badge
       variant="outline"
       className={cn(
-        'gap-1 font-medium',
-        size === 'sm' ? 'text-[10px] px-1.5 py-0.5' : 'text-xs px-2 py-1',
+        'exec-badge',
+        size === 'md' && 'text-[11px] px-2.5 py-1',
         cfg.className,
         className,
       )}
     >
-      {showIcon && <Icon className={size === 'sm' ? 'h-3 w-3' : 'h-3.5 w-3.5'} />}
+      {showIcon && <Icon className={size === 'sm' ? 'h-3 w-3' : 'h-3.5 w-3.5'} aria-hidden="true" />}
       {displayLabel}
     </Badge>
+
   );
 }
