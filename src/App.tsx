@@ -90,6 +90,7 @@ const InstitutionQueue = lazy(() => import("./pages/InstitutionQueue"));
 const InstitutionAnalytics = lazy(() => import("./pages/InstitutionAnalytics"));
 const InstitutionScore = lazy(() => import("./pages/InstitutionScore"));
 const InstitutionHistory = lazy(() => import("./pages/InstitutionHistory"));
+const InstitutionMemory = lazy(() => import("./pages/InstitutionMemory"));
 const InstitutionMuseum = lazy(() => import("./pages/InstitutionMuseum"));
 const InstitutionObservatory = lazy(() => import("./pages/InstitutionObservatory"));
 const InstitutionCycle = lazy(() => import("./pages/InstitutionCycle"));
