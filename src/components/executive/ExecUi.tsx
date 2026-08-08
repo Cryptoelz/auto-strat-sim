@@ -65,18 +65,13 @@ export function ExecStatusPill({
   status, label, className,
 }: { status: ExecStatus; label?: string; className?: string }) {
   return (
-    <span
-      className={cn(
-        'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.12em]',
-        STATUS_CLASS[status],
-        className,
-      )}
-    >
+    <span className={cn('exec-badge shrink-0', STATUS_CLASS[status], className)}>
       <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
       {label ?? EXEC_STATUS_LABEL[status]}
     </span>
   );
 }
+
 
 /**
  * Executive card shell. Identical radius, border, padding, shadow and hover
@@ -161,7 +156,7 @@ export function ExecMetric({
     size === 'lg' ? 'text-3xl sm:text-4xl' : size === 'sm' ? 'text-lg' : 'text-2xl sm:text-[1.75rem]';
 
   return (
-    <div className={cn('exec-card exec-metric flex h-full flex-col justify-between gap-2', className)}>
+    <div className={cn('exec-card exec-metric flex h-full flex-col justify-between', className)}>
       <div className="flex items-start justify-between gap-2">
         <p className="text-[10px] font-medium uppercase leading-tight tracking-[0.16em] text-muted-foreground">
           {label}
@@ -170,14 +165,14 @@ export function ExecMetric({
       </div>
       <p
         className={cn(
-          'font-mono font-semibold leading-none tabular-nums tracking-tight',
+          'exec-metric-value font-mono font-semibold leading-none tabular-nums tracking-tight',
           valueSize,
           status ? STATUS_TEXT[status] : 'text-trading-gold',
         )}
       >
         {prefix}{shown}{suffix}
       </p>
-      <p className="min-h-[1rem] text-[11px] leading-snug text-muted-foreground">
+      <p className="min-h-[1rem] text-[11px] leading-relaxed text-muted-foreground">
         {trend && (
           <span
             aria-hidden="true"
@@ -243,5 +238,98 @@ export function ExecGovernanceFooter({
         </span>
       ))}
     </footer>
+  );
+}
+
+/* ── Sprint 3 ────────────────────────────────────────────────
+   Executive empty states and skeleton loaders. Presentation only. */
+
+/**
+ * Executive empty state. Never a dead end: icon, primary explanation,
+ * secondary explanation and a recommended next action.
+ */
+export function ExecEmptyState({
+  icon: Icon, title, description, secondary, actions, className,
+}: {
+  icon?: LucideIcon;
+  title: string;
+  description: string;
+  secondary?: string;
+  actions?: { label: string; to: string }[];
+  className?: string;
+}) {
+  return (
+    <div className={cn('exec-empty', className)} role="status">
+      {Icon && (
+        <span className="exec-empty-icon" aria-hidden="true">
+          <Icon className="h-6 w-6" />
+        </span>
+      )}
+      <h3 className="text-[13px] font-semibold tracking-tight text-foreground">{title}</h3>
+      <p className="exec-measure text-[12px] leading-relaxed text-muted-foreground">{description}</p>
+      {secondary && <p className="exec-measure text-[11px] leading-relaxed text-muted-foreground/80">{secondary}</p>}
+      {actions && actions.length > 0 && (
+        <nav aria-label="Recommended next steps" className="mt-1 flex flex-wrap items-center justify-center gap-1.5">
+          {actions.map((a) => (
+            <Link
+              key={a.to + a.label}
+              to={a.to}
+              className="exec-chip border border-trading-gold/35 bg-trading-gold/5 text-[11px] font-medium uppercase tracking-[0.12em] text-trading-gold"
+            >
+              {a.label}
+            </Link>
+          ))}
+        </nav>
+      )}
+    </div>
+  );
+}
+
+/** Semantic loading block. Matches the shape of the content it replaces. */
+export function ExecSkeleton({ className }: { className?: string }) {
+  return <div className={cn('exec-skel', className)} aria-hidden="true" />;
+}
+
+/** Skeleton that mirrors an ExecMetric card exactly, so nothing jumps on load. */
+export function ExecMetricSkeleton() {
+  return (
+    <div className="exec-skel-card exec-metric flex h-full flex-col justify-between" aria-hidden="true">
+      <ExecSkeleton className="h-2.5 w-2/3" />
+      <ExecSkeleton className="h-7 w-1/2" />
+      <ExecSkeleton className="h-2.5 w-4/5" />
+    </div>
+  );
+}
+
+/** Skeleton that mirrors an executive table. */
+export function ExecTableSkeleton({ rows = 6, cols = 5 }: { rows?: number; cols?: number }) {
+  return (
+    <div className="exec-skel-card space-y-2.5" role="status" aria-label="Loading table">
+      <div className="flex gap-3">
+        {Array.from({ length: cols }).map((_, i) => <ExecSkeleton key={i} className="h-2.5 flex-1" />)}
+      </div>
+      {Array.from({ length: rows }).map((_, r) => (
+        <div key={r} className="flex gap-3">
+          {Array.from({ length: cols }).map((_, i) => <ExecSkeleton key={i} className="h-4 flex-1" />)}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Full-page executive skeleton: header, KPI row, content block. */
+export function ExecPageSkeleton({ metrics = 4 }: { metrics?: number }) {
+  return (
+    <div className="space-y-6 exec-rise" role="status" aria-label="Loading">
+      <div className="space-y-3">
+        <ExecSkeleton className="h-2.5 w-40" />
+        <ExecSkeleton className="h-7 w-72" />
+        <ExecSkeleton className="h-3 w-[46ch]" />
+      </div>
+      <ExecMetricGrid cols={4}>
+        {Array.from({ length: metrics }).map((_, i) => <ExecMetricSkeleton key={i} />)}
+      </ExecMetricGrid>
+      <ExecTableSkeleton />
+    </div>
   );
 }

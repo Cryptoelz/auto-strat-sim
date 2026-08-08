@@ -23,18 +23,19 @@ export function OsPage({
   return (
     <div className="min-h-full bg-gradient-to-b from-background via-background to-card/40">
       <div className="mx-auto max-w-[1500px] space-y-6 p-4 sm:space-y-8 sm:p-8">
-        <header className="space-y-4 border-b border-trading-gold/20 pb-6">
+        <header className="exec-head border-b border-trading-gold/20">
           {breadcrumbs && <ExecBreadcrumbs trail={breadcrumbs} />}
           <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="min-w-0 space-y-2">
+            <div className="min-w-0 space-y-2.5">
               {department && (
-                <Badge variant="outline" className="border-trading-gold/40 bg-trading-gold/10 text-[10px] uppercase tracking-[0.22em] text-trading-gold">
+                <Badge variant="outline" className="exec-badge border-trading-gold/40 bg-trading-gold/10 tracking-[0.18em] text-trading-gold">
                   {department}
                 </Badge>
               )}
-              <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">{title}</h1>
-              <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">{subtitle}</p>
+              <h1 className="exec-head-title text-2xl font-semibold text-foreground sm:text-3xl">{title}</h1>
+              <p className="exec-head-sub text-sm text-muted-foreground">{subtitle}</p>
             </div>
+
 
             <nav aria-label="Global institutional shortcuts" className="flex flex-wrap items-center gap-1.5">
               {actions}
@@ -45,7 +46,7 @@ export function OsPage({
             </nav>
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[11px] text-muted-foreground">
+          <div className="exec-strip flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[11px] text-muted-foreground">
             <span className="flex items-center gap-1.5 text-foreground">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-trading-gold" aria-hidden="true" />{ctx.status}
             </span>
@@ -74,9 +75,10 @@ export function OsPage({
                 </div>
               ))}
             </div>
-            <p className="mt-3 border-t border-trading-gold/15 pt-2.5 text-[11px] leading-relaxed text-muted-foreground">
+            <p className="exec-measure mt-3 border-t border-trading-gold/15 pt-2.5 text-[11px] leading-[1.65] text-muted-foreground">
               <span className="uppercase tracking-[0.2em] text-trading-gold/80">Executive summary · </span>{gi.summary}
             </p>
+
           </section>
 
           <nav aria-label="Institutional module links" className="flex flex-wrap gap-1.5">
