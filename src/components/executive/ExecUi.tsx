@@ -65,18 +65,13 @@ export function ExecStatusPill({
   status, label, className,
 }: { status: ExecStatus; label?: string; className?: string }) {
   return (
-    <span
-      className={cn(
-        'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.12em]',
-        STATUS_CLASS[status],
-        className,
-      )}
-    >
+    <span className={cn('exec-badge shrink-0', STATUS_CLASS[status], className)}>
       <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
       {label ?? EXEC_STATUS_LABEL[status]}
     </span>
   );
 }
+
 
 /**
  * Executive card shell. Identical radius, border, padding, shadow and hover
