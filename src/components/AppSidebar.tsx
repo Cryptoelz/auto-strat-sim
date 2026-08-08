@@ -59,6 +59,7 @@ const NAV_SECTIONS = [
     label: 'Enterprise',
     items: [
       { title: 'Executive Home', url: '/home', icon: Crown },
+      { title: 'Executive Demonstration™', url: '/demonstration', icon: Presentation },
       { title: 'Presentation Mode', url: '/presentation', icon: Sparkles },
       { title: 'Documentation Centre', url: '/docs', icon: BookOpen },
       { title: 'Performance Centre', url: '/performance', icon: Gauge },

@@ -63,6 +63,9 @@ export default function PresentationMode() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <Button asChild size="sm" variant="outline" className="h-9 gap-1.5 border-trading-gold/40 text-[11px] text-trading-gold">
+              <Link to="/demonstration"><Presentation className="h-3.5 w-3.5" aria-hidden="true" /> Executive Demonstration™</Link>
+            </Button>
             <Button
               size="sm"
               variant="outline"
