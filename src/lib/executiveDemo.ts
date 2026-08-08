@@ -153,7 +153,7 @@ export function demoChapters(): DemoChapter[] {
         'Rejections are first-class knowledge — the institution cannot repeat a failed line of enquiry.',
       ],
       chart: seriesFor('evidence-growth'),
-      links: [{ label: 'Research Journal', to: '/research-journal' }, { label: 'Forward Validation', to: '/forward-validation' }],
+      links: [{ label: 'Experiments', to: '/experiments' }, { label: 'Forward Validation', to: '/forward-validation' }],
     },
     {
       id: 'analytics',
@@ -270,7 +270,7 @@ export function demoChapters(): DemoChapter[] {
         `Coverage ${tests.coverage}% across the certified module set.`,
         'Documentation, architecture and accessibility are certified alongside functionality.',
       ],
-      links: [{ label: 'Certification Centre', to: '/institution/certification' }, { label: 'Validation Centre', to: '/validation-centre' }],
+      links: [{ label: 'Certification Centre', to: '/certification' }, { label: 'Validation Centre', to: '/validation-centre' }],
     },
     {
       id: 'roadmap',
@@ -294,7 +294,7 @@ export function demoChapters(): DemoChapter[] {
         'Current — self-review, narrative reporting and predictive forecasting under human approval.',
         'Future vision — an institution that proposes its own research agenda and defends it with evidence.',
       ],
-      links: [{ label: 'Future Roadmap', to: '/future-roadmap' }, { label: 'Institution Evolution', to: '/institution/evolution' }],
+      links: [{ label: 'Future Roadmap', to: '/roadmap' }, { label: 'Institution Evolution', to: '/institution/evolution' }],
     },
   ];
 }

@@ -272,7 +272,7 @@ export default function ExecutiveDemonstration() {
               <Link to="/institution/memory"><Brain className="h-4 w-4" aria-hidden="true" /> Open Institution Memory</Link>
             </Button>
             <Button asChild variant="outline" className="gap-2">
-              <Link to="/institution/certification"><ShieldCheck className="h-4 w-4" aria-hidden="true" /> Open Certification</Link>
+              <Link to="/certification"><ShieldCheck className="h-4 w-4" aria-hidden="true" /> Open Certification</Link>
             </Button>
             <Button variant="outline" className="gap-2" onClick={() => window.print()}>
               <FileDown className="h-4 w-4" aria-hidden="true" /> Export Executive Report
