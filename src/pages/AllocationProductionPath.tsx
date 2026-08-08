@@ -241,7 +241,7 @@ export default function AllocationProductionPath() {
                 <CardDescription>All gates must read pass simultaneously on the final trial day.</CardDescription>
               </CardHeader>
               <CardContent>
-                <Table>
+                <Table containerClassName="rsch-table-wrap">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Gate</TableHead>
@@ -379,7 +379,7 @@ export default function AllocationProductionPath() {
               <CardDescription>Each rung holds a minimum period and can only step down, never skip up.</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
+              <Table containerClassName="rsch-table-wrap">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Rung</TableHead>
@@ -417,7 +417,7 @@ export default function AllocationProductionPath() {
               <CardDescription>Automatic responses once the allocator holds paper capital.</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
+              <Table containerClassName="rsch-table-wrap">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Guardrail</TableHead>

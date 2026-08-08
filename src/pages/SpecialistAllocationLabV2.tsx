@@ -137,7 +137,7 @@ export default function SpecialistAllocationLabV2() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
+              <Table containerClassName="rsch-table-wrap">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Regime</TableHead>
@@ -175,7 +175,7 @@ export default function SpecialistAllocationLabV2() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
+              <Table containerClassName="rsch-table-wrap">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Specialist</TableHead>
@@ -223,7 +223,7 @@ export default function SpecialistAllocationLabV2() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
+              <Table containerClassName="rsch-table-wrap">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Regime</TableHead>
@@ -269,7 +269,7 @@ export default function SpecialistAllocationLabV2() {
               <CardDescription>Dynamic Allocation v1 is the current baseline (highlighted).</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
+              <Table containerClassName="rsch-table-wrap">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Portfolio</TableHead>
@@ -312,7 +312,7 @@ export default function SpecialistAllocationLabV2() {
               <CardDescription>Robustness of each allocation engine across all five regimes.</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
+              <Table containerClassName="rsch-table-wrap">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Regime</TableHead>
@@ -377,7 +377,7 @@ export default function SpecialistAllocationLabV2() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
+              <Table containerClassName="rsch-table-wrap">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Candidate</TableHead>

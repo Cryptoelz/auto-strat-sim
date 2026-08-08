@@ -160,7 +160,7 @@ export default function SpecialistAllocationLab() {
               <CardDescription className="text-xs">Standalone performance per specialist, with Router v2 and Router v2.1 as control rows.</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
+              <Table containerClassName="rsch-table-wrap">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Strategy</TableHead>
@@ -205,7 +205,7 @@ export default function SpecialistAllocationLab() {
               <CardDescription className="text-xs">Bold cell = the regime where the specialist dominates. "—" means the specialist is gated off in that regime.</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
+              <Table containerClassName="rsch-table-wrap">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Specialist</TableHead>
@@ -245,7 +245,7 @@ export default function SpecialistAllocationLab() {
               <CardDescription className="text-xs">Derived directly from regime dominance. Drives Regime Weight and Dynamic Allocation portfolios.</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
+              <Table containerClassName="rsch-table-wrap">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Regime</TableHead>
@@ -283,7 +283,7 @@ export default function SpecialistAllocationLab() {
               <CardDescription className="text-xs">Drawdown ceiling = 3.0%. Rows breaching the ceiling are flagged.</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
+              <Table containerClassName="rsch-table-wrap">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Combination</TableHead>
@@ -337,7 +337,7 @@ export default function SpecialistAllocationLab() {
               <CardDescription className="text-xs">Measured on the {RECOMMENDATION.primary} portfolio against Router v2 control.</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
+              <Table containerClassName="rsch-table-wrap">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Criterion</TableHead>

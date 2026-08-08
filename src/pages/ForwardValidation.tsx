@@ -201,7 +201,7 @@ export default function ForwardValidation() {
               <CardDescription>WARNING: PF &lt; 1.50 or DD &gt; 3% · CRITICAL: PF &lt; 1.40 or DD &gt; 4%</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
+              <Table containerClassName="rsch-table-wrap">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Strategy</TableHead>
@@ -303,7 +303,7 @@ export default function ForwardValidation() {
               <CardDescription>Ranked by Profit Factor. Weekly leadership rotations tracked in timeline.</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
+              <Table containerClassName="rsch-table-wrap">
                 <TableHeader>
                   <TableRow>
                     <TableHead>#</TableHead>
@@ -373,7 +373,7 @@ export default function ForwardValidation() {
               <CardDescription>All 4 gates must remain satisfied for 60 consecutive days to trigger a Promotion Board recommendation.</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
+              <Table containerClassName="rsch-table-wrap">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Criterion</TableHead>

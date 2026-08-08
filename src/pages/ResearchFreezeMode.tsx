@@ -141,7 +141,7 @@ export default function ResearchFreezeMode() {
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <Table>
+            <Table containerClassName="rsch-table-wrap">
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
                   <TableHead>Strategy</TableHead>

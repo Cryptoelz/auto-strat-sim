@@ -45,8 +45,8 @@ export function DrawdownChart({ data, maxDrawdown }: DrawdownChartProps) {
             <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="drawdownGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(0, 84%, 60%)" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="hsl(0, 84%, 60%)" stopOpacity={0.05} />
+                  <stop offset="5%" stopColor="hsl(var(--trading-loss))" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="hsl(var(--trading-loss))" stopOpacity={0.05} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
@@ -81,20 +81,20 @@ export function DrawdownChart({ data, maxDrawdown }: DrawdownChartProps) {
               />
               <ReferenceLine 
                 y={-maxDrawdown} 
-                stroke="hsl(0, 84%, 50%)" 
+                stroke="hsl(var(--trading-loss))" 
                 strokeDasharray="5 5"
                 strokeOpacity={0.7}
                 label={{ 
                   value: 'Max DD', 
                   position: 'right', 
-                  fill: 'hsl(0, 84%, 60%)', 
+                  fill: 'hsl(var(--trading-loss))', 
                   fontSize: 10 
                 }}
               />
               <Area
                 type="monotone"
                 dataKey="drawdownNegative"
-                stroke="hsl(0, 84%, 60%)"
+                stroke="hsl(var(--trading-loss))"
                 strokeWidth={1.5}
                 fill="url(#drawdownGradient)"
               />
