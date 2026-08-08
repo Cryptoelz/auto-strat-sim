@@ -156,7 +156,7 @@ export function ExecMetric({
     size === 'lg' ? 'text-3xl sm:text-4xl' : size === 'sm' ? 'text-lg' : 'text-2xl sm:text-[1.75rem]';
 
   return (
-    <div className={cn('exec-card exec-metric flex h-full flex-col justify-between gap-2', className)}>
+    <div className={cn('exec-card exec-metric flex h-full flex-col justify-between', className)}>
       <div className="flex items-start justify-between gap-2">
         <p className="text-[10px] font-medium uppercase leading-tight tracking-[0.16em] text-muted-foreground">
           {label}
@@ -165,14 +165,14 @@ export function ExecMetric({
       </div>
       <p
         className={cn(
-          'font-mono font-semibold leading-none tabular-nums tracking-tight',
+          'exec-metric-value font-mono font-semibold leading-none tabular-nums tracking-tight',
           valueSize,
           status ? STATUS_TEXT[status] : 'text-trading-gold',
         )}
       >
         {prefix}{shown}{suffix}
       </p>
-      <p className="min-h-[1rem] text-[11px] leading-snug text-muted-foreground">
+      <p className="min-h-[1rem] text-[11px] leading-relaxed text-muted-foreground">
         {trend && (
           <span
             aria-hidden="true"
