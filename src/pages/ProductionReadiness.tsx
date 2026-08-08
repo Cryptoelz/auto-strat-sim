@@ -115,7 +115,7 @@ export default function ProductionReadiness() {
                   Is ATLAS authorised to trade real capital today?
                 </h2>
                 <p className="mt-1.5 max-w-[68ch] text-sm leading-relaxed text-muted-foreground">
-                  No. {gatesPassed} of {snap.gates.length} governance gates are satisfied and the human executive
+                  Not yet. Only {gatesPassed} of {snap.gates.length} governance gates are satisfied, and the human executive
                   signature at Gate 9 is outstanding. ATLAS withholds production authorisation until every governance
                   requirement carries evidence and a countersignature.
                 </p>
