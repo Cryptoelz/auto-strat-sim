@@ -205,6 +205,8 @@ const App = () => (
               <Route path="/institution/analytics" element={<InstitutionAnalytics />} />
               <Route path="/institution/score" element={<InstitutionScore />} />
               <Route path="/institution/history" element={<InstitutionHistory />} />
+              <Route path="/institution/memory" element={<InstitutionMemory />} />
+
               <Route path="/institution/museum" element={<InstitutionMuseum />} />
               <Route path="/observatory" element={<InstitutionObservatory />} />
               <Route path="/institution/cycle" element={<InstitutionCycle />} />
