@@ -1,4 +1,4 @@
-import { ExecCard, ExecCardHeader, ExecStatusBadge } from '@/components/executive/ExecUi';
+import { ExecCard, ExecCardHeader, ExecStatusPill } from '@/components/executive/ExecUi';
 import { Milestone } from 'lucide-react';
 
 type Phase = 'completed' | 'current' | 'planned';
@@ -28,7 +28,7 @@ export function InstitutionEvolutionStrip() {
                 <span className="mr-1.5 font-mono text-[10px] text-muted-foreground">{String(i + 1).padStart(2, '0')}</span>
                 {m.label}
               </p>
-              <ExecStatusBadge status={m.phase} />
+              <ExecStatusPill status={m.phase} />
             </div>
             <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">{m.note}</p>
           </li>
