@@ -682,3 +682,64 @@ html.atlas-presentation .rsch-metric { min-height: 8rem; }
 @media (prefers-reduced-motion: reduce) {
   .exec-skel, .exec-rise, .exec-card, .exec-chip { animation: none !important; transition: none !important; }
 }
+
+/* ══════════════════════════════════════════════════════════
+   ATLAS OS™ — Sprint 5: Executive Experience Polish
+   Presentation tokens only. No behaviour, no logic.
+   ══════════════════════════════════════════════════════════ */
+
+/* 1 — Executive hero: generous white space, heavier title, measured subtitle. */
+.exec-hero { padding-top: 0.5rem; padding-bottom: 0.25rem; }
+.exec-hero-title { font-weight: 650; letter-spacing: -0.025em; line-height: 1.08; }
+.exec-hero-kicker { letter-spacing: 0.24em; text-transform: uppercase; }
+.exec-hero-quote {
+  max-width: var(--exec-measure);
+  line-height: 1.75;
+  border-left: 2px solid hsl(var(--trading-gold) / 0.45);
+  padding-left: 1rem;
+}
+
+/* 2 — Executive status ribbon: equal columns, gold separators, one baseline. */
+.exec-ribbon {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  border: 1px solid hsl(var(--trading-gold) / 0.22);
+  border-radius: var(--exec-radius);
+  background: hsl(var(--trading-gold) / 0.14);
+  overflow: hidden;
+}
+@media (min-width: 640px) { .exec-ribbon { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 1280px) { .exec-ribbon { grid-template-columns: repeat(8, minmax(0, 1fr)); } }
+.exec-ribbon-item {
+  display: flex; flex-direction: column; justify-content: flex-start; gap: 0.375rem;
+  background: hsl(var(--card) / 0.72);
+  padding: 0.875rem 1rem;
+  min-height: 5.5rem;
+}
+.exec-ribbon-label { font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: hsl(var(--muted-foreground)); line-height: 1.2; }
+.exec-ribbon-value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 1.0625rem; font-weight: 600; line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: hsl(var(--trading-gold));
+}
+.exec-ribbon-note { font-size: 10.5px; line-height: 1.5; color: hsl(var(--muted-foreground) / 0.85); }
+
+/* 3 — Institution Pulse row: equal cards on one rhythm. */
+.exec-pulse-row { display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: 0.75rem; }
+@media (min-width: 640px) { .exec-pulse-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .exec-pulse-row { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 1440px) { .exec-pulse-row { grid-template-columns: repeat(7, minmax(0, 1fr)); } }
+.exec-pulse-card { display: flex; flex-direction: column; padding: 0.875rem; }
+
+/* 4 — Executive page rhythm: consistent 64–96px section gutters. */
+.exec-stack > * + * { margin-top: 4rem; }
+@media (min-width: 1024px) { .exec-stack > * + * { margin-top: 5rem; } }
+
+/* 5 — Typography rhythm: readable measure, calmer heading spacing. */
+.exec-stack p { max-width: var(--exec-measure); }
+.exec-stack h2 { letter-spacing: -0.015em; }
+
+/* 6 — Icon system: one weight, one size, one colour treatment. */
+.exec-card svg { stroke-width: 1.75; }

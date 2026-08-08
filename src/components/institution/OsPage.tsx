@@ -32,8 +32,9 @@ export function OsPage({
                   {department}
                 </Badge>
               )}
-              <h1 className="exec-head-title text-2xl font-semibold text-foreground sm:text-3xl">{title}</h1>
-              <p className="exec-head-sub text-sm text-muted-foreground">{subtitle}</p>
+              <h1 className="exec-head-title exec-hero-title text-[1.75rem] text-foreground sm:text-[2.15rem]">{title}</h1>
+              <p className="exec-head-sub text-[13.5px] text-muted-foreground sm:text-sm">{subtitle}</p>
+
             </div>
 
 
