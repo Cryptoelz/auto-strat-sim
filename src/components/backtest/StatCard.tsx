@@ -17,13 +17,13 @@ export function StatCard({
   className 
 }: StatCardProps) {
   return (
-    <Card className={cn("border-border/50 bg-card/50 backdrop-blur", className)}>
-      <CardContent className="p-4">
+    <Card className={cn("exec-card h-full !p-0 backdrop-blur", className)}>
+      <CardContent className="p-[var(--exec-card-pad)]">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs text-muted-foreground">{title}</p>
             <p className={cn(
-              "text-lg font-bold mt-1",
+              "text-xl font-bold leading-none mt-2 tabular-nums",
               trend === 'up' && "text-trading-profit",
               trend === 'down' && "text-trading-loss"
             )}>
