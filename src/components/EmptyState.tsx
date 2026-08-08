@@ -18,7 +18,7 @@ const DEFAULT_SUGGESTIONS = [
   { label: 'Run Backtest', to: '/backtest' },
   { label: 'Open Paper Trading', to: '/paper-trading' },
   { label: 'Open Research', to: '/research' },
-  { label: 'View Documentation', to: '/documentation' },
+  { label: 'View Documentation', to: '/docs' },
 ];
 
 export function EmptyState({
