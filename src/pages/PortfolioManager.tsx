@@ -201,7 +201,7 @@ export default function PortfolioManager() {
               </div>
 
               <div className="overflow-x-auto mt-4">
-                <Table>
+                <Table containerClassName="rsch-table-wrap">
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">
                       <TableHead>Strategy</TableHead>
@@ -300,7 +300,7 @@ export default function PortfolioManager() {
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
-                <Table>
+                <Table containerClassName="rsch-table-wrap">
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">
                       <TableHead>Configuration</TableHead>

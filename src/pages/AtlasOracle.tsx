@@ -145,7 +145,7 @@ export default function AtlasOracle() {
   };
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8 p-4 md:p-6">
+    <div className="rsch-page mx-auto max-w-7xl space-y-8 p-4 md:p-6">
       {/* Hero */}
       <header className="relative overflow-hidden rounded-2xl border border-trading-gold/25 bg-gradient-to-br from-background via-card/60 to-background p-6 md:p-8">
         <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-trading-gold/10 blur-3xl" />
@@ -225,12 +225,12 @@ export default function AtlasOracle() {
       </section>
 
       {current && (
-        <div ref={answerRef} className="space-y-8">
+        <div ref={answerRef} className="rsch-fade space-y-8">
           <Separator className="bg-trading-gold/20" />
           <div className="space-y-1">
             <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Oracle answer · {current.auditId}</p>
-            <h2 className="text-xl font-semibold tracking-tight">{current.resolvedQuestion}</h2>
-            <p className="text-[11px] text-muted-foreground">{current.interpretation}</p>
+            <h2 className="text-xl font-semibold tracking-tight leading-snug">{current.resolvedQuestion}</h2>
+            <p className="max-w-3xl text-[11px] leading-relaxed text-muted-foreground">{current.interpretation}</p>
           </div>
 
           {!current.found ? (
@@ -251,7 +251,7 @@ export default function AtlasOracle() {
                 <Glass>
                   <CardContent className="space-y-3 p-5">
                     {current.summary.map((p, i) => (
-                      <p key={i} className="text-sm leading-relaxed text-foreground/90">{p}</p>
+                      <p key={i} className="text-sm leading-7 text-foreground/90">{p}</p>
                     ))}
                     {current.confidence.caveat && (
                       <p className="rounded-md border border-trading-warning/30 bg-trading-warning/10 px-3 py-2 text-xs text-trading-warning">

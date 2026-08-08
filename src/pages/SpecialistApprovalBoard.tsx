@@ -162,7 +162,7 @@ export default function SpecialistApprovalBoard() {
               <CardDescription>Full performance card for each approved specialist.</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
+              <Table containerClassName="rsch-table-wrap">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Specialist</TableHead>
@@ -221,7 +221,7 @@ export default function SpecialistApprovalBoard() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
+              <Table containerClassName="rsch-table-wrap">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Specialist</TableHead>
