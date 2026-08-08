@@ -144,7 +144,154 @@ const RouteFallback = () => (
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-        <div>hi</div>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Suspense fallback={<RouteFallback />}>
+          <Routes>
+            <Route element={<AppLayout />}>
+              <Route path="/" element={<Overview />} />
+              <Route path="/atlas" element={<Atlas />} />
+              <Route path="/knowledge-graph" element={<KnowledgeGraph />} />
+              <Route path="/explorer" element={<IntelligenceExplorer />} />
+              <Route path="/explorer/:objectId" element={<IntelligenceExplorer />} />
+              <Route path="/oracle" element={<AtlasOracle />} />
+              <Route path="/home" element={<ExecutiveHome />} />
+              <Route path="/performance" element={<PerformanceCentre />} />
+              <Route path="/settings" element={<EnterpriseSettings />} />
+              <Route path="/docs" element={<DocumentationCentre />} />
+              <Route path="/metrics-api" element={<MetricsApi />} />
+              <Route path="/presentation" element={<PresentationMode />} />
+              <Route path="/launch" element={<LaunchChecklist />} />
+              <Route path="/extensions" element={<ExtensionManager />} />
+              <Route path="/marketplace" element={<AppMarketplace />} />
+              <Route path="/plugin-sdk" element={<PluginSdk />} />
+              <Route path="/themes" element={<ThemeEngine />} />
+              <Route path="/templates" element={<InstitutionTemplates />} />
+              <Route path="/workflows" element={<WorkflowDesigner />} />
+              <Route path="/package" element={<InstitutionPackagePage />} />
+              <Route path="/developer" element={<DeveloperCentre />} />
+              <Route path="/certification" element={<InstitutionCertification />} />
+              <Route path="/roadmap" element={<FutureRoadmap />} />
+              <Route path="/validation-centre" element={<TestValidationCentre />} />
+              <Route path="/acceptance" element={<AcceptanceProgramme />} />
+              <Route path="/release-candidate" element={<ReleaseCandidateCentre />} />
+
+              <Route path="/maintenance" element={<MaintenanceExecutive />} />
+              <Route path="/maintenance/health" element={<MaintenanceInstitutionHealth />} />
+              <Route path="/maintenance/modules" element={<MaintenanceModules />} />
+              <Route path="/maintenance/workflows" element={<MaintenanceWorkflows />} />
+              <Route path="/maintenance/governance" element={<MaintenanceGovernanceAuditor />} />
+              <Route path="/maintenance/database" element={<MaintenanceDatabase />} />
+              <Route path="/maintenance/knowledge" element={<MaintenanceKnowledge />} />
+              <Route path="/maintenance/performance" element={<MaintenancePerformanceCentre />} />
+              <Route path="/maintenance/repairs" element={<MaintenanceAutoRepair />} />
+              <Route path="/maintenance/predictive" element={<MaintenancePredictive />} />
+              <Route path="/maintenance/reports" element={<MaintenanceReportsPage />} />
+              <Route path="/maintenance/settings" element={<MaintenanceSettingsPage />} />
+
+              <Route path="/boardroom" element={<ExecutiveBoardroom />} />
+              <Route path="/digital-twin" element={<DigitalTwin />} />
+
+              <Route path="/institution" element={<Institution />} />
+              <Route path="/institution/departments" element={<InstitutionDepartments />} />
+              <Route path="/institution/departments/:dept" element={<InstitutionDepartment />} />
+              <Route path="/institution/collaboration" element={<InstitutionCollaboration />} />
+              <Route path="/calendar" element={<InstitutionCalendar />} />
+              <Route path="/institution/queue" element={<InstitutionQueue />} />
+              <Route path="/institution/analytics" element={<InstitutionAnalytics />} />
+              <Route path="/institution/score" element={<InstitutionScore />} />
+              <Route path="/institution/history" element={<InstitutionHistory />} />
+              <Route path="/institution/museum" element={<InstitutionMuseum />} />
+              <Route path="/observatory" element={<InstitutionObservatory />} />
+              <Route path="/institution/cycle" element={<InstitutionCycle />} />
+              <Route path="/institution/conversations" element={<InstitutionConversationsLive />} />
+              <Route path="/institution/decisions" element={<InstitutionDecisions />} />
+              <Route path="/institution/evolution" element={<InstitutionEvolution />} />
+              <Route path="/institution/forecast" element={<InstitutionForecast />} />
+              <Route path="/briefing-room" element={<BriefingRoom />} />
+              <Route path="/institution/genome" element={<InstitutionGenome />} />
+              <Route path="/institution/health" element={<InstitutionHealth />} />
+              <Route path="/self-review" element={<SelfReview />} />
+              <Route path="/institution/learning" element={<InstitutionLearning />} />
+              <Route path="/institution/recommendations" element={<InstitutionRecommendations />} />
+              <Route path="/institution/quality" element={<InstitutionQuality />} />
+              <Route path="/institution/explain" element={<InstitutionExplain />} />
+              <Route path="/institution/explain/:objectId" element={<InstitutionExplain />} />
+              <Route path="/institution/benchmark" element={<InstitutionBenchmark />} />
+              <Route path="/executive-simulator" element={<ExecutiveSimulator />} />
+              <Route path="/institution/risk-radar" element={<InstitutionRiskRadar />} />
+              <Route path="/institution/iq" element={<InstitutionIQ />} />
+              <Route path="/institution/evolution-timeline" element={<InstitutionEvolutionTimeline />} />
+
+
+
+              <Route path="/intelligence-network" element={<IntelligenceNetwork />} />
+              <Route path="/research-brain" element={<ResearchBrain />} />
+              <Route path="/trading" element={<Trading />} />
+
+              <Route path="/backtest" element={<Backtest />} />
+              <Route path="/paper-trading" element={<PaperTrading />} />
+              <Route path="/dual-paper" element={<DualPaperTrading />} />
+              <Route path="/championship" element={<ChampionshipArena />} />
+              <Route path="/promotion-board" element={<PromotionReviewBoard />} />
+              <Route path="/freeze" element={<ResearchFreezeMode />} />
+              <Route path="/portfolio-manager" element={<PortfolioManager />} />
+              <Route path="/committee" element={<InvestmentCommittee />} />
+              <Route path="/journal" element={<ResearchJournal />} />
+              <Route path="/executive" element={<ExecutiveDashboard />} />
+              <Route path="/monthly-report" element={<MonthlyResearchReport />} />
+              <Route path="/move-capture" element={<MarketMoveCapture />} />
+              <Route path="/momentum-scalper" element={<MomentumScalper />} />
+              <Route path="/momentum-scalper-v2" element={<MomentumScalperV2 />} />
+              <Route path="/vcb-v1" element={<VolatilityCompressionBreakout />} />
+              <Route path="/allocation-lab" element={<SpecialistAllocationLab />} />
+              <Route path="/allocation-lab-v2" element={<SpecialistAllocationLabV2 />} />
+              <Route path="/forward-validation" element={<ForwardValidation />} />
+              <Route path="/champion-trial" element={<ChampionTrial />} />
+              <Route path="/specialist-championship" element={<SpecialistChampionship />} />
+              <Route path="/specialist-discovery-v2" element={<SpecialistDiscoveryLabV2 />} />
+              <Route path="/low-vol-coiler-v1" element={<LowVolCoilerV1 />} />
+              <Route path="/low-vol-coiler-v2" element={<LowVolCoilerV2 />} />
+              <Route path="/specialist-approval-board" element={<SpecialistApprovalBoard />} />
+              <Route path="/portfolio-architecture-review" element={<PortfolioArchitectureReview />} />
+              <Route path="/executive-program-status" element={<ExecutiveProgramStatus />} />
+              <Route path="/observation-center" element={<ObservationCenter />} />
+              <Route path="/allocation-production-path" element={<AllocationProductionPath />} />
+              <Route path="/trade-frequency" element={<TradeFrequencyAudit />} />
+              <Route path="/router-v21" element={<RouterV21 />} />
+              <Route path="/portfolio-ai-director" element={<PortfolioAIDirector />} />
+              <Route path="/mission-control" element={<MissionControl />} />
+              <Route path="/research-assistant" element={<ResearchAssistant />} />
+              <Route path="/cio" element={<ChiefInvestmentOfficer />} />
+              <Route path="/autonomous-research" element={<AutonomousResearch />} />
+              <Route path="/quant-scientist" element={<QuantScientist />} />
+              <Route path="/strategies" element={<Strategies />} />
+              <Route path="/portfolio" element={<Portfolio />} />
+              <Route path="/governance" element={<Governance />} />
+              <Route path="/operator" element={<OperatorControls />} />
+              <Route path="/alerts" element={<Alerts />} />
+              <Route path="/experiments" element={<Experiments />} />
+              <Route path="/research" element={<Research />} />
+              <Route path="/readiness" element={<Readiness />} />
+              <Route path="/promotion" element={<Promotion />} />
+              <Route path="/system-health" element={<SystemHealth />} />
+              <Route path="/session-analytics" element={<SessionAnalytics />} />
+              <Route path="/analytics-hub" element={<AnalyticsHub />} />
+              <Route path="/weekly-review" element={<WeeklyReview />} />
+              <Route path="/command-center" element={<CommandCenter />} />
+              <Route path="/baseline-validation" element={<BaselineValidation />} />
+              <Route path="/participation" element={<ParticipationController />} />
+            </Route>
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
