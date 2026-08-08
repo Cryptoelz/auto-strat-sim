@@ -90,6 +90,7 @@ const InstitutionQueue = lazy(() => import("./pages/InstitutionQueue"));
 const InstitutionAnalytics = lazy(() => import("./pages/InstitutionAnalytics"));
 const InstitutionScore = lazy(() => import("./pages/InstitutionScore"));
 const InstitutionHistory = lazy(() => import("./pages/InstitutionHistory"));
+const InstitutionMemory = lazy(() => import("./pages/InstitutionMemory"));
 const InstitutionMuseum = lazy(() => import("./pages/InstitutionMuseum"));
 const InstitutionObservatory = lazy(() => import("./pages/InstitutionObservatory"));
 const InstitutionCycle = lazy(() => import("./pages/InstitutionCycle"));
@@ -204,6 +205,8 @@ const App = () => (
               <Route path="/institution/analytics" element={<InstitutionAnalytics />} />
               <Route path="/institution/score" element={<InstitutionScore />} />
               <Route path="/institution/history" element={<InstitutionHistory />} />
+              <Route path="/institution/memory" element={<InstitutionMemory />} />
+
               <Route path="/institution/museum" element={<InstitutionMuseum />} />
               <Route path="/observatory" element={<InstitutionObservatory />} />
               <Route path="/institution/cycle" element={<InstitutionCycle />} />

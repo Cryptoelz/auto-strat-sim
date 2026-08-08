@@ -83,6 +83,7 @@ const NAV_SECTIONS = [
       { title: 'Institution Score™', url: '/institution/score', icon: Gauge },
       { title: 'History™', url: '/institution/history', icon: BookOpen },
       { title: 'Museum™', url: '/institution/museum', icon: Landmark },
+      { title: 'Institutional Memory™', url: '/institution/memory', icon: Landmark },
     ],
   },
   {
