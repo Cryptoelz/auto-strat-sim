@@ -126,7 +126,7 @@ export function readinessChecklist(): ChecklistItem[] {
   const tests = testSummary();
   const db = getDatabaseChecks();
 
-  const dbHealthy = db.filter((c) => c.status === 'healthy').length;
+  const dbHealthy = db.filter((c) => c.severity === 'info').length;
   const govPass = gov.filter((g) => g.state === 'pass').length;
 
   const mk = (
@@ -174,7 +174,7 @@ export function readinessChecklist(): ChecklistItem[] {
       `Oracle reasoning reproduces prior answers; institution IQ ${iq.total} (${iq.grade}).`,
       { label: 'ATLAS Oracle', to: '/oracle' }, 'ATLAS Oracle', 1),
     mk('certification', 'Executive Certification', clamp(cert.overall),
-      `Certification ${cert.overall} (${cert.grade}, ${cert.level}); test suite ${tests.passed}/${tests.total} passing; institution score ${score.total}.`,
+      `Certification ${cert.overall} (${cert.grade}, ${cert.level}); test suite ${tests.passed}/${tests.checks} passing; institution score ${score.total}.`,
       { label: 'Certification Centre', to: '/certification' }, 'Executive Board', 2),
   ];
 }
