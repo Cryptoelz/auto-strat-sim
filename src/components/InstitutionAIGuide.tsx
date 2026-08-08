@@ -17,9 +17,25 @@ export function InstitutionAIGuide() {
 
   const ask = (text: string) => {
     if (!text.trim()) return;
+    const a = guideAnswer(text);
     setQ(text);
-    setAnswer(guideAnswer(text));
+    setAnswer(a);
+    // Every executive conversation becomes permanent institutional memory.
+    recordMemory({
+      kind: 'question',
+      title: text.trim(),
+      body: a.body,
+      department: 'Executive Office',
+      reasoning: `Answered from Knowledge Graph evidence only: ${a.title}. Retained so the same question, its answer and its citations remain reviewable later.`,
+      citations: a.links
+        .filter((l) => l.to.includes('/explorer/') || l.to.includes('/explain/'))
+        .map((l) => {
+          const id = l.to.split('/').pop() ?? l.to;
+          return { id, label: l.label, note: 'Cited by the Executive AI Assistant' };
+        }),
+    });
   };
+
 
   return (
     <>
