@@ -135,7 +135,7 @@ export function KnowledgeGraphCanvas({ selectedId, highlightIds, onSelect }: Pro
         onPointerUp={endDrag}
         onPointerLeave={endDrag}
       >
-        <svg className="h-full w-full" style={{ background: 'radial-gradient(circle at 30% 20%, hsl(var(--muted)/0.35), transparent 60%)' }}>
+        <svg className="rsch-graph h-full w-full" role="application" aria-label="Institution knowledge graph" style={{ background: 'radial-gradient(circle at 30% 20%, hsl(var(--muted)/0.35), transparent 60%)' }}>
           <defs>
             <pattern id="kg-grid" width="40" height="40" patternUnits="userSpaceOnUse">
               <path d="M40 0H0V40" fill="none" stroke="hsl(var(--border))" strokeWidth="0.5" opacity="0.35" />
@@ -158,8 +158,8 @@ export function KnowledgeGraphCanvas({ selectedId, highlightIds, onSelect }: Pro
                   stroke={`hsl(${meta.color})`}
                   strokeWidth={s.width}
                   strokeLinecap="round"
-                  opacity={dim ? 0.08 : 0.75}
-                  className={dim ? '' : 'kg-edge-animated'}
+                  opacity={dim ? 0.06 : 0.8}
+                  className={`kg-edge ${dim ? '' : 'kg-edge-animated'}`}
                   onPointerEnter={(ev) => setHover({
                     label: `${e.from} → ${e.to} · ${meta.label} · ${s.label} · ${e.confidence}% — ${e.note}`,
                     x: ev.clientX, y: ev.clientY,
@@ -187,6 +187,9 @@ export function KnowledgeGraphCanvas({ selectedId, highlightIds, onSelect }: Pro
                   onPointerEnter={(ev) => setHover({ label: `${node.id} · ${node.title} (${meta.label})`, x: ev.clientX, y: ev.clientY })}
                   onPointerLeave={() => setHover(null)}
                 >
+                  {sel && (
+                    <circle r={R + 15} fill="hsl(var(--trading-gold) / 0.08)" stroke="hsl(var(--trading-gold) / 0.55)" strokeWidth={1.5} />
+                  )}
                   <circle r={R + 6} fill="none" stroke="hsl(var(--border))" strokeWidth={3} opacity={0.5} />
                   <circle
                     r={R + 6} fill="none" stroke="hsl(var(--primary))" strokeWidth={3}
@@ -208,7 +211,7 @@ export function KnowledgeGraphCanvas({ selectedId, highlightIds, onSelect }: Pro
                     }
                     stroke="hsl(var(--background))" strokeWidth={1.5}
                   />
-                  <text textAnchor="middle" y={R + 20} fontSize="11" fill="hsl(var(--foreground))" opacity={0.85}>
+                  <text textAnchor="middle" y={R + 23} fontSize="11.5" fontWeight={sel ? 600 : 400} fill="hsl(var(--foreground))" opacity={0.92}>
                     {node.title.length > 30 ? `${node.title.slice(0, 29)}…` : node.title}
                   </text>
                 </g>
