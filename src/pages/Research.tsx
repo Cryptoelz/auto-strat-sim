@@ -1,12 +1,16 @@
 import { PerformanceResearchDashboard } from '@/components/trading/PerformanceResearchDashboard';
+import { ResearchHeader } from '@/components/research/ResearchUi';
 
 export default function Research() {
   return (
-    <div className="container mx-auto p-4 sm:p-6 space-y-6">
-      <div>
-        <h1 className="text-lg font-bold sm:text-xl">Performance Research</h1>
-        <p className="text-xs text-muted-foreground">Evaluate strategy performance, detect failure patterns, and identify evidence-based improvements.</p>
-      </div>
+    <div className="rsch-page container mx-auto p-4 sm:p-6">
+      <ResearchHeader
+        eyebrow="Research Layer"
+        title="Performance Research"
+        subtitle="Evaluate strategy performance, detect failure patterns, and identify evidence-based improvements."
+        flow
+        activeStep="Analysis"
+      />
       <PerformanceResearchDashboard />
     </div>
   );
