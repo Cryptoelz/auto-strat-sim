@@ -144,7 +144,6 @@ const RouteFallback = () => (
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
         <BrowserRouter>
           <Suspense fallback={<RouteFallback />}>
           <Routes>
@@ -287,7 +286,6 @@ const App = () => (
           </Routes>
           </Suspense>
         </BrowserRouter>
-    </ThemeProvider>
   </QueryClientProvider>
 );
 
