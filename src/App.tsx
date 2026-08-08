@@ -131,6 +131,7 @@ const InstitutionCertification = lazy(() => import("./pages/InstitutionCertifica
 const FutureRoadmap = lazy(() => import("./pages/FutureRoadmap"));
 const TestValidationCentre = lazy(() => import("./pages/TestValidationCentre"));
 const AcceptanceProgramme = lazy(() => import("./pages/AcceptanceProgramme"));
+const ProductionReadiness = lazy(() => import("./pages/ProductionReadiness"));
 const ReleaseCandidateCentre = lazy(() => import("./pages/ReleaseCandidateCentre"));
 import NotFound from "./pages/NotFound";
 
@@ -180,6 +181,7 @@ const App = () => (
               <Route path="/roadmap" element={<FutureRoadmap />} />
               <Route path="/validation-centre" element={<TestValidationCentre />} />
               <Route path="/acceptance" element={<AcceptanceProgramme />} />
+              <Route path="/production-readiness" element={<ProductionReadiness />} />
               <Route path="/release-candidate" element={<ReleaseCandidateCentre />} />
 
               <Route path="/maintenance" element={<MaintenanceExecutive />} />
