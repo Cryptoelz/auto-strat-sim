@@ -63,9 +63,14 @@ export default function ExecutiveHome() {
       department="Executive Layer"
       breadcrumbs={[{ label: 'ATLAS OS', to: '/atlas' }, { label: 'Executive Layer' }, { label: 'Executive Home' }]}
       actions={
-        <Button asChild size="sm" variant="outline" className="h-7 gap-1.5 text-[11px]">
-          <Link to="/presentation"><Sparkles className="h-3.5 w-3.5" aria-hidden="true" /> Boardroom Mode</Link>
-        </Button>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <Button asChild size="sm" variant="outline" className="h-7 gap-1.5 border-trading-gold/40 text-[11px] text-trading-gold">
+            <Link to="/demonstration"><Sparkles className="h-3.5 w-3.5" aria-hidden="true" /> Executive Demonstration™</Link>
+          </Button>
+          <Button asChild size="sm" variant="outline" className="h-7 gap-1.5 text-[11px]">
+            <Link to="/presentation"><Sparkles className="h-3.5 w-3.5" aria-hidden="true" /> Boardroom Mode</Link>
+          </Button>
+        </div>
       }
     >
       {/* Headline metrics — readable across a meeting room. */}

@@ -117,6 +117,7 @@ const EnterpriseSettings = lazy(() => import("./pages/EnterpriseSettings"));
 const DocumentationCentre = lazy(() => import("./pages/DocumentationCentre"));
 const MetricsApi = lazy(() => import("./pages/MetricsApi"));
 const PresentationMode = lazy(() => import("./pages/PresentationMode"));
+const ExecutiveDemonstration = lazy(() => import("./pages/ExecutiveDemonstration"));
 const LaunchChecklist = lazy(() => import("./pages/LaunchChecklist"));
 const ExtensionManager = lazy(() => import("./pages/ExtensionManager"));
 const AppMarketplace = lazy(() => import("./pages/AppMarketplace"));
@@ -165,6 +166,7 @@ const App = () => (
               <Route path="/docs" element={<DocumentationCentre />} />
               <Route path="/metrics-api" element={<MetricsApi />} />
               <Route path="/presentation" element={<PresentationMode />} />
+              <Route path="/demonstration" element={<ExecutiveDemonstration />} />
               <Route path="/launch" element={<LaunchChecklist />} />
               <Route path="/extensions" element={<ExtensionManager />} />
               <Route path="/marketplace" element={<AppMarketplace />} />

@@ -6,13 +6,14 @@ import { ExecutiveStatusRibbon } from '@/components/institution/ExecutiveStatusR
 import { ExecutiveSnapshot } from '@/components/institution/ExecutiveSnapshot';
 import { InstitutionEvolutionStrip } from '@/components/institution/InstitutionEvolutionStrip';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Progress } from '@/components/ui/progress';
 import { ExecCard, ExecCardHeader, ExecGovernanceFooter } from '@/components/executive/ExecUi';
 import { institutionMetrics, activityFeed, institutionScore, allDepartmentStats, slug } from '@/lib/institutionOS';
 import { NODE_TYPE_META } from '@/lib/knowledgeGraph';
-import { ArrowUpRight, Activity, Building2 } from 'lucide-react';
+import { ArrowUpRight, Activity, Building2, Presentation } from 'lucide-react';
 
 function Clock() {
   const [now, setNow] = useState(new Date());
@@ -39,7 +40,14 @@ export default function Institution() {
       title="ATLAS OS™"
       subtitle="Institutional Intelligence Operating System"
       department="Institution Dashboard™"
-      actions={<Clock />}
+      actions={
+        <div className="flex flex-wrap items-center gap-2">
+          <Button asChild size="sm" variant="outline" className="h-7 gap-1.5 border-trading-gold/40 text-[11px] text-trading-gold">
+            <Link to="/demonstration"><Presentation className="h-3.5 w-3.5" aria-hidden="true" /> Executive Demonstration™</Link>
+          </Button>
+          <Clock />
+        </div>
+      }
     >
       <div className="exec-stack">
         <section aria-label="Institutional welcome" className="exec-hero exec-rise">
