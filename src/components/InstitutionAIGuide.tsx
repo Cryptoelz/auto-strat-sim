@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { guideAnswer, GUIDE_PROMPTS, GuideAnswer } from '@/lib/institutionOS';
+import { recordMemory } from '@/lib/institutionalMemory';
 import { Bot, X, CornerDownLeft } from 'lucide-react';
 
 /** Floating institutional AI guide — summarises, explains and compares using knowledge-graph evidence only. */
