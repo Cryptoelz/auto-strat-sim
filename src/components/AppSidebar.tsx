@@ -68,6 +68,7 @@ const NAV_SECTIONS = [
       { title: 'Test & Validation Centre™', url: '/validation-centre', icon: TestTube2 },
       { title: 'Acceptance Programme™', url: '/acceptance', icon: BadgeCheck },
       { title: 'Executive Decision Centre™', url: '/decision-centre', icon: ShieldCheck },
+      { title: 'Institution Daily™', url: '/institution-daily', icon: CalendarDays },
       { title: 'Trade Review Centre™', url: '/trade-review', icon: ClipboardCheck },
       { title: 'Portfolio Evolution™', url: '/portfolio-evolution', icon: Activity },
       { title: 'Production Readiness Centre™', url: '/production-readiness', icon: ShieldCheck },
