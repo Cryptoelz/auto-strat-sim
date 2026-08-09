@@ -284,6 +284,7 @@ const App = () => (
               <Route path="/observation-center" element={<ObservationCenter />} />
               <Route path="/allocation-production-path" element={<AllocationProductionPath />} />
               <Route path="/trade-frequency" element={<TradeFrequencyAudit />} />
+              <Route path="/trading-diagnostics" element={<TradingDiagnostics />} />
               <Route path="/router-v21" element={<RouterV21 />} />
               <Route path="/portfolio-ai-director" element={<PortfolioAIDirector />} />
               <Route path="/mission-control" element={<MissionControl />} />
