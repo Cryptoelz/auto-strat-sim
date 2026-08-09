@@ -53,6 +53,7 @@ const TradeFrequencyAudit = lazy(() => import("./pages/TradeFrequencyAudit"));
 const RouterV21 = lazy(() => import("./pages/RouterV21"));
 const PortfolioAIDirector = lazy(() => import("./pages/PortfolioAIDirector"));
 const MissionControl = lazy(() => import("./pages/MissionControl"));
+const AuditVault = lazy(() => import("./pages/AuditVault"));
 const ResearchAssistant = lazy(() => import("./pages/ResearchAssistant"));
 const ChiefInvestmentOfficer = lazy(() => import("./pages/ChiefInvestmentOfficer"));
 const AutonomousResearch = lazy(() => import("./pages/AutonomousResearch"));
