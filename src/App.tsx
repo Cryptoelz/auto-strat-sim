@@ -50,6 +50,7 @@ const ExecutiveProgramStatus = lazy(() => import("./pages/ExecutiveProgramStatus
 const ObservationCenter = lazy(() => import("./pages/ObservationCenter"));
 const AllocationProductionPath = lazy(() => import("./pages/AllocationProductionPath"));
 const TradeFrequencyAudit = lazy(() => import("./pages/TradeFrequencyAudit"));
+const TradingDiagnostics = lazy(() => import("./pages/TradingDiagnostics"));
 const RouterV21 = lazy(() => import("./pages/RouterV21"));
 const PortfolioAIDirector = lazy(() => import("./pages/PortfolioAIDirector"));
 const MissionControl = lazy(() => import("./pages/MissionControl"));
