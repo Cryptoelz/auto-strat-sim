@@ -50,6 +50,7 @@ const ExecutiveProgramStatus = lazy(() => import("./pages/ExecutiveProgramStatus
 const ObservationCenter = lazy(() => import("./pages/ObservationCenter"));
 const AllocationProductionPath = lazy(() => import("./pages/AllocationProductionPath"));
 const OpportunityAnalysis = lazy(() => import("./pages/OpportunityAnalysis"));
+const PerformanceAttribution = lazy(() => import("./pages/PerformanceAttribution"));
 const TradeFrequencyAudit = lazy(() => import("./pages/TradeFrequencyAudit"));
 const TradingDiagnostics = lazy(() => import("./pages/TradingDiagnostics"));
 const RouterV21 = lazy(() => import("./pages/RouterV21"));
@@ -285,6 +286,7 @@ const App = () => (
               <Route path="/observation-center" element={<ObservationCenter />} />
               <Route path="/allocation-production-path" element={<AllocationProductionPath />} />
               <Route path="/opportunity-analysis" element={<OpportunityAnalysis />} />
+              <Route path="/performance-attribution" element={<PerformanceAttribution />} />
               <Route path="/trade-frequency" element={<TradeFrequencyAudit />} />
               <Route path="/trading-diagnostics" element={<TradingDiagnostics />} />
               <Route path="/router-v21" element={<RouterV21 />} />

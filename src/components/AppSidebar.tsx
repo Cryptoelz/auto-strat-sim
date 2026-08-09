@@ -183,6 +183,7 @@ const NAV_SECTIONS = [
       { title: 'Trade Frequency Audit', url: '/trade-frequency', icon: Activity },
       { title: 'Trading Diagnostics', url: '/trading-diagnostics', icon: Stethoscope },
       { title: 'Opportunity Analysis', url: '/opportunity-analysis', icon: Binoculars },
+      { title: 'Performance Attribution™', url: '/performance-attribution', icon: Landmark },
       { title: 'Router v2.1 (fork)', url: '/router-v21', icon: GitFork },
       { title: 'Command Center', url: '/command-center', icon: Sparkles },
       { title: 'Baseline Validation', url: '/baseline-validation', icon: Scale },
