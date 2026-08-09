@@ -311,7 +311,7 @@ export function executiveWatchlist(day = TOTAL_VALIDATION_DAYS): WatchItem[] {
   const t = (a: number, b: number): 'up' | 'down' | 'flat' => (a - b > 0.5 ? 'up' : b - a > 0.5 ? 'down' : 'flat');
   const countAlerts = (dept: string) => alerts.filter((a) => a.department.toLowerCase().includes(dept)).length;
 
-  const rows: Omit<WatchItem, 'tone'>[] = [
+  const base: Omit<WatchItem, 'tone'>[] = [
     { key: 'research', label: 'Research', health: clamp(score.components[0]?.score ?? 78), confidence: clamp(m.research), trend: t(m.research, prev.research), alerts: countAlerts('research'), note: 'Research pipeline confidence and validated output.', route: '/research' },
     { key: 'portfolio', label: 'Portfolio', health: clamp(fwd.profitFactor * 45), confidence: clamp(m.stability), trend: t(m.stability, prev.stability), alerts: 0, note: `PF ${fwd.profitFactor.toFixed(2)} · drawdown ${fwd.maxDrawdown.toFixed(1)}%.`, route: '/portfolio-manager' },
     { key: 'forward', label: 'Forward Validation', health: clamp((fwd.daysElapsed / fwd.daysRequired) * 100 + 25), confidence: clamp(55 + (fwd.trades / fwd.tradesRequired) * 40), trend: 'up', alerts: countAlerts('forward'), note: `Day ${fwd.daysElapsed} of ${fwd.daysRequired}.`, route: '/forward-validation' },
@@ -321,9 +321,9 @@ export function executiveWatchlist(day = TOTAL_VALIDATION_DAYS): WatchItem[] {
     { key: 'governance', label: 'Governance', health: clamp(pulse.signals.find((s) => s.key === 'governance')?.score ?? 92), confidence: clamp(summary.governanceHealth), trend: t(m.governance, prev.governance), alerts: countAlerts('decision'), note: `${summary.open} open decision(s) · human approval required.`, route: '/governance' },
     { key: 'trade-review', label: 'Trade Review', health: clamp(88), confidence: clamp(m.confidence), trend: t(m.confidence, prev.confidence), alerts: 0, note: `${m.tradeReviews} simulated trades fully audited.`, route: '/trade-review' },
     { key: 'daily', label: 'Institution Daily', health: clamp(snap.score + 12), confidence: clamp(m.readiness), trend: t(m.readiness, prev.readiness), alerts: 0, note: `Validation day ${day} briefing sealed as evidence.`, route: '/institution-daily' },
-  ].map((r) => ({ ...r, tone: toneFor(r.health) }));
+  ];
 
-  return rows;
+  return base.map((r) => ({ ...r, tone: toneFor(r.health) }));
 }
 
 /* ── Institution pulse (animated) ───────────────────────────────── */
