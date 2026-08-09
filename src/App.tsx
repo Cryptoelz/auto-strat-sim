@@ -188,7 +188,8 @@ const App = () => (
               <Route path="/validation-centre" element={<TestValidationCentre />} />
               <Route path="/acceptance" element={<AcceptanceProgramme />} />
               <Route path="/production-readiness" element={<ProductionReadiness />} />
-              <Route path="/decision-centre" element={<ExecutiveDecisionCentre />} />
+              <Route path="/decision-centre" element={<ExecutiveDecisionQueue />} />
+              <Route path="/decision-centre/candidate" element={<ExecutiveDecisionCentre />} />
               <Route path="/trade-review" element={<TradeReviewCentre />} />
               <Route path="/portfolio-evolution" element={<PortfolioEvolutionCentre />} />
               <Route path="/institution-daily" element={<InstitutionDaily />} />
