@@ -70,6 +70,7 @@ const NAV_SECTIONS = [
       { title: 'Executive Decision Centre™', url: '/decision-centre', icon: ShieldCheck },
       { title: 'Institution Daily™', url: '/institution-daily', icon: CalendarDays },
       { title: "Founder's Office™", url: '/founders-office', icon: Crown },
+      { title: 'Executive Intelligence™', url: '/executive-intelligence', icon: BrainCircuit },
       { title: 'Trade Review Centre™', url: '/trade-review', icon: ClipboardCheck },
       { title: 'Portfolio Evolution™', url: '/portfolio-evolution', icon: Activity },
       { title: 'Production Readiness Centre™', url: '/production-readiness', icon: ShieldCheck },
