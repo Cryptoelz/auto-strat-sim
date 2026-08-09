@@ -383,7 +383,7 @@ export function globalSearch(query: string, day = TOTAL_VALIDATION_DAYS): Search
 
 export const MISSION_QUICK_ACTIONS = [
   { label: 'Institution Dashboard™', to: '/institution' },
-  { label: 'Executive Home™', to: '/executive-home' },
+  { label: 'Executive Home™', to: '/home' },
   { label: 'Founder Office™', to: '/founders-office' },
   { label: 'Institution Daily™', to: '/institution-daily' },
   { label: 'Executive Decisions™', to: '/decision-centre' },
