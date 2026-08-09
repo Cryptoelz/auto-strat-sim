@@ -91,7 +91,7 @@ export function morningBriefing(day = TOTAL_VALIDATION_DAYS): MorningBriefing {
     date: new Date(today.date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
     day,
     readings,
-    recommendation: rec.headline ?? 'Continue the validation programme unchanged.',
+    recommendation: `${rec.kind} — ${rec.next}`,
     attention:
       snap.blockers.length > 0
         ? `If today ended now, ${snap.blockers[0].title.toLowerCase()} is what deserves your attention.`
@@ -264,9 +264,9 @@ export interface DecisionGroup {
 
 const GROUPS: { key: string; label: string; statuses: QueueStatus[] }[] = [
   { key: 'attention', label: 'Needs attention', statuses: ['needs-evidence'] },
-  { key: 'waiting', label: 'Waiting', statuses: ['waiting', 'deferred'] },
+  { key: 'waiting', label: 'Waiting', statuses: ['waiting'] },
   { key: 'ready', label: 'Ready', statuses: ['ready', 'approved'] },
-  { key: 'blocked', label: 'Blocked', statuses: ['blocked'] as QueueStatus[] },
+  { key: 'blocked', label: 'Blocked', statuses: ['deferred'] },
   { key: 'declined', label: 'Declined', statuses: ['declined'] },
 ];
 
@@ -311,7 +311,7 @@ export function executiveWatchlist(day = TOTAL_VALIDATION_DAYS): WatchItem[] {
   const t = (a: number, b: number): 'up' | 'down' | 'flat' => (a - b > 0.5 ? 'up' : b - a > 0.5 ? 'down' : 'flat');
   const countAlerts = (dept: string) => alerts.filter((a) => a.department.toLowerCase().includes(dept)).length;
 
-  const rows: WatchItem[] = [
+  const rows: Omit<WatchItem, 'tone'>[] = [
     { key: 'research', label: 'Research', health: clamp(score.components[0]?.score ?? 78), confidence: clamp(m.research), trend: t(m.research, prev.research), alerts: countAlerts('research'), note: 'Research pipeline confidence and validated output.', route: '/research' },
     { key: 'portfolio', label: 'Portfolio', health: clamp(fwd.profitFactor * 45), confidence: clamp(m.stability), trend: t(m.stability, prev.stability), alerts: 0, note: `PF ${fwd.profitFactor.toFixed(2)} · drawdown ${fwd.maxDrawdown.toFixed(1)}%.`, route: '/portfolio-manager' },
     { key: 'forward', label: 'Forward Validation', health: clamp((fwd.daysElapsed / fwd.daysRequired) * 100 + 25), confidence: clamp(55 + (fwd.trades / fwd.tradesRequired) * 40), trend: 'up', alerts: countAlerts('forward'), note: `Day ${fwd.daysElapsed} of ${fwd.daysRequired}.`, route: '/forward-validation' },
