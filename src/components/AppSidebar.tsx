@@ -181,6 +181,7 @@ const NAV_SECTIONS = [
       { title: 'Observation Center', url: '/observation-center', icon: Eye },
       { title: 'Allocation Production Path', url: '/allocation-production-path', icon: Rocket },
       { title: 'Trade Frequency Audit', url: '/trade-frequency', icon: Activity },
+      { title: 'Trading Diagnostics', url: '/trading-diagnostics', icon: Stethoscope },
       { title: 'Router v2.1 (fork)', url: '/router-v21', icon: GitFork },
       { title: 'Command Center', url: '/command-center', icon: Sparkles },
       { title: 'Baseline Validation', url: '/baseline-validation', icon: Scale },
