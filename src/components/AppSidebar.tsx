@@ -136,7 +136,7 @@ const NAV_SECTIONS = [
       { title: 'Intelligence Network', url: '/intelligence-network', icon: Network },
       { title: 'Mission Control', url: '/mission-control', icon: Rocket },
       { title: 'Audit Vault™', url: '/audit-vault', icon: Archive },
-      { title: 'Performance Archive™', url: '/performance-archive', icon: History },
+      { title: 'Performance Archive™', url: '/performance-archive', icon: HistoryIcon },
       { title: 'AI Research Assistant', url: '/research-assistant', icon: BrainCircuit },
       { title: 'AI Chief Investment Officer', url: '/cio', icon: Landmark },
       { title: 'Autonomous Research Engine', url: '/autonomous-research', icon: Bot },
