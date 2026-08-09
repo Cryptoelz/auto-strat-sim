@@ -539,7 +539,8 @@ export default function PerformanceAttribution() {
         </TabsContent>
       </Tabs>
 
-      <ExecGovernanceFooter text={GOVERNANCE_TEXT} />
+      <p className="max-w-[80ch] text-[11px] leading-relaxed text-muted-foreground">{GOVERNANCE_TEXT}</p>
+      <ExecGovernanceFooter />
     </div>
   );
 }
