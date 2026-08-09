@@ -135,6 +135,7 @@ const ProductionReadiness = lazy(() => import("./pages/ProductionReadiness"));
 const ExecutiveDecisionCentre = lazy(() => import("./pages/ExecutiveDecisionCentre"));
 const TradeReviewCentre = lazy(() => import("./pages/TradeReviewCentre"));
 const PortfolioEvolutionCentre = lazy(() => import("./pages/PortfolioEvolutionCentre"));
+const InstitutionDaily = lazy(() => import("./pages/InstitutionDaily"));
 const ReleaseCandidateCentre = lazy(() => import("./pages/ReleaseCandidateCentre"));
 import NotFound from "./pages/NotFound";
 
@@ -188,6 +189,7 @@ const App = () => (
               <Route path="/decision-centre" element={<ExecutiveDecisionCentre />} />
               <Route path="/trade-review" element={<TradeReviewCentre />} />
               <Route path="/portfolio-evolution" element={<PortfolioEvolutionCentre />} />
+              <Route path="/institution-daily" element={<InstitutionDaily />} />
               <Route path="/release-candidate" element={<ReleaseCandidateCentre />} />
 
               <Route path="/maintenance" element={<MaintenanceExecutive />} />
