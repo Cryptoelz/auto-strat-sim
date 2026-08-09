@@ -183,7 +183,7 @@ export function tradeLibrary(): TradeRecord[] {
       timeline: [
         { stage: 'Research', at: stamp(0), summary: `${specialist} produced a ${decision.toUpperCase()} hypothesis on ${asset}.`, route: '/research', state: 'pass' },
         { stage: 'Oracle', at: stamp(1), summary: `Oracle verdict ${oracleVerdict.toLowerCase()} at ${confidence}% confidence.`, route: '/oracle', state: 'pass' },
-        { stage: 'Portfolio Director', at: stamp(2), summary: portfolioVerdict, route: '/portfolio-director', state: 'pass' },
+        { stage: 'Portfolio Director', at: stamp(2), summary: portfolioVerdict, route: '/portfolio-ai-director', state: 'pass' },
         { stage: 'Risk Review', at: stamp(3), summary: `Risk budget ${risk}% of equity, drawdown ceiling respected.`, route: '/governance', state: 'pass' },
         { stage: 'Execution Simulation', at: stamp(4), summary: 'Simulated fill with fees 0.1% and slippage 0.075% on confirmed close.', route: '/paper-trading', state: 'pass' },
         { stage: 'Outcome', at: stamp(6), summary: `${outcome.toUpperCase()} · ${actualReturn > 0 ? '+' : ''}${actualReturn}% versus ${expectedReturn}% expected.`, route: '/performance', state: outcome === 'loss' ? 'blocked' : 'pass' },
