@@ -54,6 +54,7 @@ const RouterV21 = lazy(() => import("./pages/RouterV21"));
 const PortfolioAIDirector = lazy(() => import("./pages/PortfolioAIDirector"));
 const MissionControl = lazy(() => import("./pages/MissionControl"));
 const AuditVault = lazy(() => import("./pages/AuditVault"));
+const PerformanceArchive = lazy(() => import("./pages/PerformanceArchive"));
 const ExecutiveIntelligence = lazy(() => import("./pages/ExecutiveIntelligence"));
 const ResearchAssistant = lazy(() => import("./pages/ResearchAssistant"));
 const ChiefInvestmentOfficer = lazy(() => import("./pages/ChiefInvestmentOfficer"));
@@ -286,6 +287,7 @@ const App = () => (
               <Route path="/portfolio-ai-director" element={<PortfolioAIDirector />} />
               <Route path="/mission-control" element={<MissionControl />} />
               <Route path="/audit-vault" element={<AuditVault />} />
+              <Route path="/performance-archive" element={<PerformanceArchive />} />
               <Route path="/executive-intelligence" element={<ExecutiveIntelligence />} />
               <Route path="/research-assistant" element={<ResearchAssistant />} />
               <Route path="/cio" element={<ChiefInvestmentOfficer />} />
