@@ -1,5 +1,5 @@
 import {
-  Landmark,
+  Landmark, Stethoscope,
   LayoutDashboard, LineChart, FlaskConical, Layers, PieChart,
   Shield, UserCog, Bell, Beaker, ClipboardCheck, Activity,
   Radio, Microscope, ArrowUpCircle, BarChart3, Gauge, FileText, Sparkles, Scale, SlidersHorizontal, GitCompare, Trophy, Gavel, Snowflake, Briefcase, Users, BookOpen, Crown, CalendarDays, Target, Zap, GitFork, Compass, Eye, Building2, Rocket, Brain, BrainCircuit, Bot, Atom, Network, Globe2, Share2, Gem, GraduationCap, Lightbulb, BadgeCheck, ScrollText, Radar, History as HistoryIcon, Wand2, Puzzle, Store, Code2, Palette, Workflow, Package, Terminal, Award, Map, TestTube2, HeartPulse, Database, Wrench, Presentation, ShieldCheck, Archive } from 'lucide-react';
@@ -181,6 +181,7 @@ const NAV_SECTIONS = [
       { title: 'Observation Center', url: '/observation-center', icon: Eye },
       { title: 'Allocation Production Path', url: '/allocation-production-path', icon: Rocket },
       { title: 'Trade Frequency Audit', url: '/trade-frequency', icon: Activity },
+      { title: 'Trading Diagnostics', url: '/trading-diagnostics', icon: Stethoscope },
       { title: 'Router v2.1 (fork)', url: '/router-v21', icon: GitFork },
       { title: 'Command Center', url: '/command-center', icon: Sparkles },
       { title: 'Baseline Validation', url: '/baseline-validation', icon: Scale },
