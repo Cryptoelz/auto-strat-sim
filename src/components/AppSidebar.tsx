@@ -2,7 +2,7 @@ import {
   Landmark,
   LayoutDashboard, LineChart, FlaskConical, Layers, PieChart,
   Shield, UserCog, Bell, Beaker, ClipboardCheck, Activity,
-  Radio, Microscope, ArrowUpCircle, BarChart3, Gauge, FileText, Sparkles, Scale, SlidersHorizontal, GitCompare, Trophy, Gavel, Snowflake, Briefcase, Users, BookOpen, Crown, CalendarDays, Target, Zap, GitFork, Compass, Eye, Building2, Rocket, Brain, BrainCircuit, Bot, Atom, Network, Globe2, Share2, Gem, GraduationCap, Lightbulb, BadgeCheck, ScrollText, Radar, History as HistoryIcon, Wand2, Puzzle, Store, Code2, Palette, Workflow, Package, Terminal, Award, Map, TestTube2, HeartPulse, Database, Wrench, Presentation, ShieldCheck } from 'lucide-react';
+  Radio, Microscope, ArrowUpCircle, BarChart3, Gauge, FileText, Sparkles, Scale, SlidersHorizontal, GitCompare, Trophy, Gavel, Snowflake, Briefcase, Users, BookOpen, Crown, CalendarDays, Target, Zap, GitFork, Compass, Eye, Building2, Rocket, Brain, BrainCircuit, Bot, Atom, Network, Globe2, Share2, Gem, GraduationCap, Lightbulb, BadgeCheck, ScrollText, Radar, History as HistoryIcon, Wand2, Puzzle, Store, Code2, Palette, Workflow, Package, Terminal, Award, Map, TestTube2, HeartPulse, Database, Wrench, Presentation, ShieldCheck, Archive } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
@@ -134,6 +134,7 @@ const NAV_SECTIONS = [
       { title: 'AI Research Brain', url: '/research-brain', icon: BrainCircuit },
       { title: 'Intelligence Network', url: '/intelligence-network', icon: Network },
       { title: 'Mission Control', url: '/mission-control', icon: Rocket },
+      { title: 'Audit Vault™', url: '/audit-vault', icon: Archive },
       { title: 'AI Research Assistant', url: '/research-assistant', icon: BrainCircuit },
       { title: 'AI Chief Investment Officer', url: '/cio', icon: Landmark },
       { title: 'Autonomous Research Engine', url: '/autonomous-research', icon: Bot },
