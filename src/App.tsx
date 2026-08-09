@@ -284,6 +284,7 @@ const App = () => (
               <Route path="/router-v21" element={<RouterV21 />} />
               <Route path="/portfolio-ai-director" element={<PortfolioAIDirector />} />
               <Route path="/mission-control" element={<MissionControl />} />
+              <Route path="/audit-vault" element={<AuditVault />} />
               <Route path="/research-assistant" element={<ResearchAssistant />} />
               <Route path="/cio" element={<ChiefInvestmentOfficer />} />
               <Route path="/autonomous-research" element={<AutonomousResearch />} />
