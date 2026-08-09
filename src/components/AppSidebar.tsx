@@ -1,5 +1,5 @@
 import {
-  Landmark,
+  Landmark, Stethoscope,
   LayoutDashboard, LineChart, FlaskConical, Layers, PieChart,
   Shield, UserCog, Bell, Beaker, ClipboardCheck, Activity,
   Radio, Microscope, ArrowUpCircle, BarChart3, Gauge, FileText, Sparkles, Scale, SlidersHorizontal, GitCompare, Trophy, Gavel, Snowflake, Briefcase, Users, BookOpen, Crown, CalendarDays, Target, Zap, GitFork, Compass, Eye, Building2, Rocket, Brain, BrainCircuit, Bot, Atom, Network, Globe2, Share2, Gem, GraduationCap, Lightbulb, BadgeCheck, ScrollText, Radar, History as HistoryIcon, Wand2, Puzzle, Store, Code2, Palette, Workflow, Package, Terminal, Award, Map, TestTube2, HeartPulse, Database, Wrench, Presentation, ShieldCheck, Archive } from 'lucide-react';
