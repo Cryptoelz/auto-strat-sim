@@ -69,6 +69,7 @@ const NAV_SECTIONS = [
       { title: 'Acceptance Programme™', url: '/acceptance', icon: BadgeCheck },
       { title: 'Executive Decision Centre™', url: '/decision-centre', icon: ShieldCheck },
       { title: 'Trade Review Centre™', url: '/trade-review', icon: ClipboardCheck },
+      { title: 'Portfolio Evolution™', url: '/portfolio-evolution', icon: Activity },
       { title: 'Production Readiness Centre™', url: '/production-readiness', icon: ShieldCheck },
       { title: 'Release Candidate Centre', url: '/release-candidate', icon: Rocket },
     ],
