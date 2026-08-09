@@ -122,7 +122,7 @@ export function evolutionMilestones(): Milestone[] {
     { date: '2026-04-21', title: 'Institutional Memory', description: 'Permanent citation-backed memory established; lessons stopped being lost between cycles.', evidence: 'Memory ledger with citations', module: 'Institutional Memory™', route: '/institution/memory', state: 'completed' },
     { date: '2026-05-04', title: 'Analytics Layer', description: 'Institution-wide analytics unified performance, regime and quality measurement.', evidence: 'Analytics hub dashboards', module: 'Institution Analytics™', route: '/institution/analytics', state: 'completed' },
     { date: '2026-05-19', title: 'Maintenance Engine', description: 'Self-healing operations, module health monitoring and predictive maintenance activated.', evidence: 'Maintenance reports and repair log', module: 'ATLAS AI Maintenance™', route: '/maintenance', state: 'completed' },
-    { date: '2026-06-02', title: 'Certification', description: 'Twelve certification categories and fifty-nine checks formalised institutional quality.', evidence: 'Certification centre results', module: 'Certification', route: '/institution/certification', state: 'completed' },
+    { date: '2026-06-02', title: 'Certification', description: 'Twelve certification categories and fifty-nine checks formalised institutional quality.', evidence: 'Certification centre results', module: 'Certification', route: '/certification', state: 'completed' },
     { date: '2026-06-20', title: 'Production Readiness', description: 'A single governance layer between research mode and real capital was introduced.', evidence: 'Readiness gauge, ten governance gates', module: 'Production Readiness Centre™', route: '/production-readiness', state: 'completed' },
     { date: '2026-07-08', title: 'Executive Demonstration', description: 'The institution learned to present itself to an executive audience unaided.', evidence: 'Nine-chapter guided tour', module: 'Executive Demonstration™', route: '/demonstration', state: 'completed' },
     { date: '2026-07-28', title: 'Trade Review Centre', description: 'Every simulated trade gained a complete audit trail from research to memory.', evidence: 'Trade library and audit timelines', module: 'Trade Review Centre™', route: '/trade-review', state: 'completed' },
@@ -264,7 +264,7 @@ export function specialistEvolution(): SpecialistEvolution[] {
     { name: 'Mean Reversion', confidence: 74, growth: 11, performance: 71, contribution: 11, route: '/strategies' },
     { name: 'Allocation', confidence: 86, growth: 34, performance: 89, contribution: 14, route: '/allocation-lab-v2' },
     { name: 'Risk', confidence: 91, growth: 12, performance: 93, contribution: 9, route: '/governance' },
-    { name: 'Portfolio Director', confidence: 83, growth: 19, performance: 85, contribution: 6, route: '/portfolio-director' },
+    { name: 'Portfolio Director', confidence: 83, growth: 19, performance: 85, contribution: 6, route: '/portfolio-ai-director' },
     { name: 'Oracle', confidence: 87, growth: 25, performance: 88, contribution: 4, route: '/oracle' },
   ];
   return rows
@@ -311,7 +311,7 @@ export function governanceEvolution(): GovernanceStep[] {
   return [
     { period: 'Feb 2026', label: 'Research Governance', detail: 'Simulation-only charter written; live execution forbidden at the architecture level.', maturity: 42, route: '/research' },
     { period: 'Mar 2026', label: 'Risk Governance', detail: 'Drawdown ceilings, consecutive-loss pauses and per-asset risk profiles enforced.', maturity: 58, route: '/governance' },
-    { period: 'May 2026', label: 'Certification', detail: 'Twelve categories and fifty-nine checks made quality measurable rather than asserted.', maturity: 71, route: '/institution/certification' },
+    { period: 'May 2026', label: 'Certification', detail: 'Twelve categories and fifty-nine checks made quality measurable rather than asserted.', maturity: 71, route: '/certification' },
     { period: 'Jun 2026', label: 'Promotion Ladder', detail: 'A single ordered path from research to candidate to approved, with no shortcuts.', maturity: 79, route: '/promotion' },
     { period: 'Jun 2026', label: 'Production Readiness', detail: 'Ten mandatory gates; gates nine and ten are permanently human-only by design.', maturity: 84, route: '/production-readiness' },
     { period: 'Aug 2026', label: 'Executive Approval', detail: 'Structured, weighted, evidence-backed board decision. ATLAS never approves itself.', maturity: 88, route: '/decision-centre' },
