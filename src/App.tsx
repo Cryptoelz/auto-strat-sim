@@ -133,6 +133,7 @@ const TestValidationCentre = lazy(() => import("./pages/TestValidationCentre"));
 const AcceptanceProgramme = lazy(() => import("./pages/AcceptanceProgramme"));
 const ProductionReadiness = lazy(() => import("./pages/ProductionReadiness"));
 const ExecutiveDecisionCentre = lazy(() => import("./pages/ExecutiveDecisionCentre"));
+const ExecutiveDecisionQueue = lazy(() => import("./pages/ExecutiveDecisionQueue"));
 const TradeReviewCentre = lazy(() => import("./pages/TradeReviewCentre"));
 const PortfolioEvolutionCentre = lazy(() => import("./pages/PortfolioEvolutionCentre"));
 const InstitutionDaily = lazy(() => import("./pages/InstitutionDaily"));
