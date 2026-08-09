@@ -165,7 +165,7 @@ export function archiveEvents(): ArchiveEvent[] {
           : h.kind === 'decision' ? 'governance'
             : h.kind === 'breakthrough' || h.kind === 'discovery' ? 'research' : 'certification';
     events.push({
-      id: `EV-H-${h.day}-${i}`, day: Math.max(1, Math.min(LATEST_DAY, h.day)), date: h.date, kind,
+      id: `EV-H-${h.day}-${i}`, day: dayOfDate(h.date), date: h.date, kind,
       title: h.title, detail: h.detail,
       route: h.objectId ? `/explorer/${h.objectId}` : '/institution/history',
       source: h.department ?? 'Institution History™',
