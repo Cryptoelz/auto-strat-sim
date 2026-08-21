@@ -11,6 +11,7 @@ import { selectChampion } from '@/lib/specialists/selector';
 import { SPECIALIST_IDS } from '@/lib/specialists/stats';
 import { conversionRate } from '@/lib/specialists/attribution';
 import { useSpecialistAttribution } from '@/hooks/useSpecialistAttribution';
+import { SpecialistActivityReport } from '@/components/trading/SpecialistActivityReport';
 import { SpecialistProposal } from '@/lib/specialists/types';
 import { Asset } from '@/types/trading';
 
@@ -218,6 +219,8 @@ export default function SpecialistBoard() {
                 </div>
               </CardContent>
             </Card>
+
+            <SpecialistActivityReport funnels={funnels} />
 
             <div className="grid gap-3 md:grid-cols-2">
               {SPECIALIST_IDS.map((id) => {
