@@ -182,6 +182,7 @@ const NAV_SECTIONS = [
       { title: 'Allocation Production Path', url: '/allocation-production-path', icon: Rocket },
       { title: 'Trade Frequency Audit', url: '/trade-frequency', icon: Activity },
       { title: 'Trading Diagnostics', url: '/trading-diagnostics', icon: Stethoscope },
+      { title: 'Specialist Board', url: '/specialist-board', icon: Crown },
       { title: 'Opportunity Analysis', url: '/opportunity-analysis', icon: Binoculars },
       { title: 'Performance Attribution™', url: '/performance-attribution', icon: Landmark },
       { title: 'Router v2.1 (fork)', url: '/router-v21', icon: GitFork },
