@@ -1,7 +1,8 @@
 import { Asset } from '@/types/trading';
 import { SpecialistId } from './types';
-import { FunnelMap, emptyFunnelMap, emptyFunnel } from './attribution';
+import { FunnelMap, emptyFunnelMap, emptyFunnel, AttemptRecord } from './attribution';
 import { SPECIALIST_IDS } from './stats';
+
 
 /**
  * Persistence layer for the institutional attribution funnel.
