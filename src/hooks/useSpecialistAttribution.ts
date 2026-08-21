@@ -1,11 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTradingContext } from '@/contexts/TradingContext';
 import { buildMarketContext, runAllSpecialists } from '@/lib/specialists/registry';
 import { selectChampion } from '@/lib/specialists/selector';
 import { deriveStats, loadLedger, appendLedger, LedgerEntry } from '@/lib/specialists/stats';
 import {
-  FunnelMap, emptyFunnelMap, recordRound, recordExecutionAttempt, recordTradeOutcome,
+  FunnelMap, recordRound, recordExecutionAttempt, recordTradeOutcome,
 } from '@/lib/specialists/attribution';
+import {
+  loadFunnelState, saveFunnelState, clearFunnelState, emptyPersistedState,
+} from '@/lib/specialists/funnelStore';
 import { SpecialistId, SpecialistProposal } from '@/lib/specialists/types';
 import { Asset } from '@/types/trading';
 
@@ -13,21 +16,58 @@ import { Asset } from '@/types/trading';
  * Attribution is driven by the LIVE engine:
  *  - one comparison round per asset per candle the engine actually evaluated
  *  - approved/rejected/executed resolved from the engine's ExecutionAttempt log
- * Read-only: nothing here influences execution.
+ *
+ * State is persisted (see funnelStore) so counts survive navigation and
+ * refresh, and de-duplication keys are persisted alongside so nothing is
+ * counted twice. Read-only: nothing here influences execution.
  */
 export function useSpecialistAttribution() {
   const { candles, executionAttempts, state } = useTradingContext();
-  const [funnels, setFunnels] = useState<FunnelMap>(() => emptyFunnelMap());
+
+  const initialRef = useRef(loadFunnelState());
+  const [funnels, setFunnels] = useState<FunnelMap>(() => initialRef.current.funnels);
   const [ledger, setLedger] = useState<LedgerEntry[]>(() => loadLedger());
-  const [championByAsset, setChampionByAsset] = useState<Partial<Record<Asset, SpecialistId>>>({});
+  const [championByAsset, setChampionByAsset] = useState<Partial<Record<Asset, SpecialistId>>>(
+    () => initialRef.current.championByAsset,
+  );
   const [latest, setLatest] = useState<Record<string, SpecialistProposal[]>>({});
-  const seenCandleRef = useRef<Partial<Record<Asset, number>>>({});
-  const seenAttemptRef = useRef<Set<string>>(new Set());
-  const seenTradeRef = useRef<Set<string>>(new Set());
+
+  const seenCandleRef = useRef<Partial<Record<Asset, number>>>({ ...initialRef.current.seenCandles });
+  const seenAttemptRef = useRef<Set<string>>(new Set(initialRef.current.seenAttempts));
+  const seenTradeRef = useRef<Set<string>>(new Set(initialRef.current.seenTrades));
 
   const stats = useMemo(() => deriveStats(ledger), [ledger]);
   const statsRef = useRef(stats);
   statsRef.current = stats;
+
+  // ── Persistence: single writer, mirrors the current institutional state ──
+  const championRef = useRef(championByAsset);
+  championRef.current = championByAsset;
+  const persist = useCallback((map: FunnelMap) => {
+    saveFunnelState({
+      funnels: map,
+      championByAsset: championRef.current,
+      seenCandles: seenCandleRef.current,
+      seenAttempts: [...seenAttemptRef.current],
+      seenTrades: [...seenTradeRef.current],
+    });
+  }, []);
+
+  const commit = useCallback((map: FunnelMap) => {
+    setFunnels(map);
+    persist(map);
+  }, [persist]);
+
+  /** Wipes the persisted attribution ledger (used by the dashboard reset). */
+  const resetAttribution = useCallback(() => {
+    clearFunnelState();
+    const fresh = emptyPersistedState();
+    seenCandleRef.current = {};
+    seenAttemptRef.current = new Set();
+    seenTradeRef.current = new Set();
+    setChampionByAsset({});
+    setFunnels(fresh.funnels);
+  }, []);
 
   // ── Round recording: one per newly closed candle per asset ──
   useEffect(() => {
@@ -62,13 +102,16 @@ export function useSpecialistAttribution() {
       });
     });
 
-    if (nextFunnels) setFunnels(nextFunnels);
-    if (Object.keys(championUpdates).length) setChampionByAsset((prev) => ({ ...prev, ...championUpdates }));
+    if (Object.keys(championUpdates).length) {
+      championRef.current = { ...championRef.current, ...championUpdates };
+      setChampionByAsset((prev) => ({ ...prev, ...championUpdates }));
+    }
+    if (nextFunnels) commit(nextFunnels);
     if (Object.keys(proposalUpdates).length) setLatest((prev) => ({ ...prev, ...proposalUpdates }));
     if (ledgerChanged) setLedger(ledgerChanged);
     // `funnels` intentionally excluded — chained through nextFunnels within the pass.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [candles]);
+  }, [candles, commit]);
 
   // ── Live gate resolution from the engine's own execution attempts ──
   useEffect(() => {
@@ -79,9 +122,9 @@ export function useSpecialistAttribution() {
       seenAttemptRef.current.add(a.id);
       next = recordExecutionAttempt(next ?? funnels, a, championByAsset);
     });
-    if (next) setFunnels(next);
+    if (next) commit(next);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [executionAttempts, championByAsset]);
+  }, [executionAttempts, championByAsset, commit]);
 
   // ── Outcome resolution: closed trades complete the funnel (won / lessons) ──
   useEffect(() => {
@@ -91,9 +134,13 @@ export function useSpecialistAttribution() {
       seenTradeRef.current.add(t.id);
       next = recordTradeOutcome(next ?? funnels, t, championByAsset);
     });
-    if (next) setFunnels(next);
+    if (next) commit(next);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.trades, championByAsset]);
+  }, [state.trades, championByAsset, commit]);
 
-  return { funnels, stats, ledger, championByAsset, latestProposals: latest };
+  return {
+    funnels, stats, ledger, championByAsset, latestProposals: latest,
+    resetAttribution,
+    lastPersistedAt: initialRef.current.updatedAt,
+  };
 }
