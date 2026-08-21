@@ -17,12 +17,45 @@ export interface SpecialistFunnel {
   executed: number;   // live engine actually opened/flipped a position
   rejections: Record<string, number>;
   lastReason: string | null;
+  /** Markets this specialist examined, with the number of snapshots per market. */
+  markets: Record<string, number>;
+  /** Rejections grouped into the institutional reason categories. */
+  categories: Record<RejectCategory, number>;
+}
+
+export const REJECT_CATEGORIES = [
+  'HTF Conflict',
+  'ATR too low',
+  'Distance filter',
+  'Risk',
+  'Governance',
+  'Portfolio',
+  'Champion selection',
+  'Other',
+] as const;
+export type RejectCategory = typeof REJECT_CATEGORIES[number];
+
+const emptyCategories = (): Record<RejectCategory, number> =>
+  REJECT_CATEGORIES.reduce((a, c) => { a[c] = 0; return a; }, {} as Record<RejectCategory, number>);
+
+/** Maps a free-text rejection reason onto an institutional category. */
+export function categoriseReason(reason: string): RejectCategory {
+  const r = reason.toLowerCase();
+  if (r.includes('htf') || r.includes('higher timeframe') || r.includes('trend conflict')) return 'HTF Conflict';
+  if (r.includes('atr') || r.includes('volatility too low')) return 'ATR too low';
+  if (r.includes('distance')) return 'Distance filter';
+  if (r.includes('risk') || r.includes('balance') || r.includes('position size')) return 'Risk';
+  if (r.includes('governance') || r.includes('paused') || r.includes('participation')) return 'Governance';
+  if (r.includes('allocation') || r.includes('exposure') || r.includes('max open') || r.includes('portfolio')) return 'Portfolio';
+  if (r.includes('champion') || r.includes('selection')) return 'Champion selection';
+  return 'Other';
 }
 
 export type FunnelMap = Record<SpecialistId, SpecialistFunnel>;
 
 export const emptyFunnel = (): SpecialistFunnel => ({
   seen: 0, proposed: 0, approved: 0, rejected: 0, executed: 0, rejections: {}, lastReason: null,
+  markets: {}, categories: emptyCategories(),
 });
 
 export const emptyFunnelMap = (): FunnelMap =>
@@ -30,13 +63,20 @@ export const emptyFunnelMap = (): FunnelMap =>
 
 const clone = (m: FunnelMap): FunnelMap =>
   SPECIALIST_IDS.reduce((acc, id) => {
-    acc[id] = { ...m[id], rejections: { ...m[id].rejections } };
+    acc[id] = {
+      ...m[id],
+      rejections: { ...m[id].rejections },
+      markets: { ...(m[id].markets ?? {}) },
+      categories: { ...emptyCategories(), ...(m[id].categories ?? {}) },
+    };
     return acc;
   }, {} as FunnelMap);
 
 const reject = (f: SpecialistFunnel, reason: string) => {
   f.rejected += 1;
   f.rejections[reason] = (f.rejections[reason] ?? 0) + 1;
+  const cat = categoriseReason(reason);
+  f.categories[cat] = (f.categories[cat] ?? 0) + 1;
   f.lastReason = reason;
 };
 
@@ -63,12 +103,14 @@ export function recordRound(
   proposals: SpecialistProposal[],
   championId: SpecialistId | null,
   championActionable: boolean,
+  asset?: Asset,
 ): FunnelMap {
   const next = clone(map);
   proposals.forEach((p) => {
     const f = next[p.specialistId];
     if (!f) return;
     f.seen += 1;
+    if (asset) f.markets[asset] = (f.markets[asset] ?? 0) + 1;
     if (p.signal === 'WAIT') return;
     f.proposed += 1;
     if (p.specialistId !== championId) {
@@ -99,9 +141,21 @@ export function recordExecutionAttempt(
     f.executed += 1;
     f.lastReason = OUTCOME_LABELS[attempt.outcome];
   } else {
-    reject(f, OUTCOME_LABELS[attempt.outcome] ?? attempt.outcome);
+    reject(f, gateReason(attempt));
   }
   return next;
+}
+
+/** Precise blocking reason for a live attempt, using the engine's own gate log. */
+function gateReason(a: ExecutionAttempt): string {
+  const gate = (g: { passed: boolean; reason?: string } | undefined) => (g && !g.passed ? g.reason : undefined);
+  return gate(a.governance) ? `Governance — ${gate(a.governance)}`
+    : gate(a.mpc) ? `Governance — ${gate(a.mpc)}`
+    : gate(a.risk) ? `Risk — ${gate(a.risk)}`
+    : gate(a.allocation) ? `Portfolio allocation — ${gate(a.allocation)}`
+    : gate(a.exposure) ? `Portfolio exposure — ${gate(a.exposure)}`
+    : gate(a.maxPositions) ? `Portfolio — ${gate(a.maxPositions)}`
+    : (OUTCOME_LABELS[a.outcome] ?? a.outcome) + (a.outcomeDetail ? ` — ${a.outcomeDetail}` : '');
 }
 
 export const conversionRate = (f: SpecialistFunnel) =>
