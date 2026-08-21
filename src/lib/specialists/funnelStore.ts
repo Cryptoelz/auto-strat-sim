@@ -78,6 +78,7 @@ export function loadFunnelState(): PersistedFunnelState {
       seenCandles: parsed.seenCandles ?? {},
       seenAttempts: Array.isArray(parsed.seenAttempts) ? parsed.seenAttempts.slice(-MAX_KEYS) : [],
       seenTrades: Array.isArray(parsed.seenTrades) ? parsed.seenTrades.slice(-MAX_KEYS) : [],
+      attemptLog: Array.isArray(parsed.attemptLog) ? parsed.attemptLog.slice(-MAX_LOG) : [],
       updatedAt: parsed.updatedAt ?? Date.now(),
     };
   } catch {
@@ -94,6 +95,7 @@ export function saveFunnelState(state: Omit<PersistedFunnelState, 'version' | 'u
       seenCandles: state.seenCandles,
       seenAttempts: state.seenAttempts.slice(-MAX_KEYS),
       seenTrades: state.seenTrades.slice(-MAX_KEYS),
+      attemptLog: state.attemptLog.slice(-MAX_LOG),
       updatedAt: Date.now(),
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
@@ -101,6 +103,7 @@ export function saveFunnelState(state: Omit<PersistedFunnelState, 'version' | 'u
     // Storage full or unavailable — attribution degrades to in-memory only.
   }
 }
+
 
 export function clearFunnelState(): void {
   try { localStorage.removeItem(STORAGE_KEY); } catch {}
