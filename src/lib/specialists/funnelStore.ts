@@ -29,6 +29,8 @@ export interface PersistedFunnelState {
   seenAttempts: string[];
   /** Closed trade ids already attributed. */
   seenTrades: string[];
+  /** Complete audit trail of every execution attempt observed, attributed or not. */
+  attemptLog: AttemptRecord[];
   updatedAt: number;
 }
 
@@ -39,8 +41,10 @@ export const emptyPersistedState = (): PersistedFunnelState => ({
   seenCandles: {},
   seenAttempts: [],
   seenTrades: [],
+  attemptLog: [],
   updatedAt: Date.now(),
 });
+
 
 /** Normalises a possibly-partial stored funnel map onto the current shape. */
 function normaliseFunnels(raw: unknown): FunnelMap {
