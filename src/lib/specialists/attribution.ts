@@ -137,17 +137,57 @@ export function recordRound(
 }
 
 /**
+ * Immutable audit record of one live execution attempt. Written for EVERY
+ * attempt the engine emits — including attempts that arrive before champion
+ * selection has resolved for that asset, which used to be silently discarded.
+ */
+export interface AttemptRecord {
+  id: string;
+  asset: Asset;
+  timestamp: number;
+  outcome: ExecutionOutcome;
+  executed: boolean;
+  reason: string;
+  /** Champion at resolution time, or null while still unattributed. */
+  specialistId: SpecialistId | null;
+  attributed: boolean;
+}
+
+export function describeAttempt(
+  a: ExecutionAttempt,
+  specialistId: SpecialistId | null,
+): AttemptRecord {
+  const executed = isExecutedOutcome(a.outcome);
+  return {
+    id: a.id,
+    asset: a.asset,
+    timestamp: a.timestamp ?? Date.now(),
+    outcome: a.outcome,
+    executed,
+    reason: executed ? OUTCOME_LABELS[a.outcome] : gateReason(a),
+    specialistId,
+    attributed: specialistId !== null,
+  };
+}
+
+/**
  * Resolves the live engine's execution attempt against the specialist that was
  * champion for that asset at the time. Approved = the proposal reached the
  * engine's gate stack; executed = the engine actually traded it.
+ *
+ * Race-safe: when no champion has been resolved yet the attempt is NOT
+ * discarded — it is returned as `deferred` with a full audit record so the
+ * caller can retry it once champion selection commits.
  */
 export function recordExecutionAttempt(
   map: FunnelMap,
   attempt: ExecutionAttempt,
   championByAsset: Partial<Record<Asset, SpecialistId>>,
-): FunnelMap {
+): { map: FunnelMap; record: AttemptRecord; deferred: boolean } {
   const id = championByAsset[attempt.asset];
-  if (!id || !map[id]) return map;
+  if (!id || !map[id]) {
+    return { map, record: describeAttempt(attempt, null), deferred: true };
+  }
   const next = clone(map);
   const f = next[id];
   f.approved += 1;
@@ -157,8 +197,9 @@ export function recordExecutionAttempt(
   } else {
     reject(f, gateReason(attempt));
   }
-  return next;
+  return { map: next, record: describeAttempt(attempt, id), deferred: false };
 }
+
 
 /** Precise blocking reason for a live attempt, using the engine's own gate log. */
 function gateReason(a: ExecutionAttempt): string {
