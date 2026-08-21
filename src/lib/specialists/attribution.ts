@@ -21,6 +21,12 @@ export interface SpecialistFunnel {
   markets: Record<string, number>;
   /** Rejections grouped into the institutional reason categories. */
   categories: Record<RejectCategory, number>;
+  /** Closed trades attributed to this specialist that finished in profit. */
+  won: number;
+  /** Closed trades attributed to this specialist that finished in loss. */
+  lost: number;
+  /** Distinct institutional lessons observed (rejections + trade outcomes). */
+  lessons: string[];
 }
 
 export const REJECT_CATEGORIES = [
@@ -55,7 +61,7 @@ export type FunnelMap = Record<SpecialistId, SpecialistFunnel>;
 
 export const emptyFunnel = (): SpecialistFunnel => ({
   seen: 0, proposed: 0, approved: 0, rejected: 0, executed: 0, rejections: {}, lastReason: null,
-  markets: {}, categories: emptyCategories(),
+  markets: {}, categories: emptyCategories(), won: 0, lost: 0, lessons: [],
 });
 
 export const emptyFunnelMap = (): FunnelMap =>
@@ -68,9 +74,16 @@ const clone = (m: FunnelMap): FunnelMap =>
       rejections: { ...m[id].rejections },
       markets: { ...(m[id].markets ?? {}) },
       categories: { ...emptyCategories(), ...(m[id].categories ?? {}) },
+      won: m[id].won ?? 0,
+      lost: m[id].lost ?? 0,
+      lessons: [...(m[id].lessons ?? [])],
     };
     return acc;
   }, {} as FunnelMap);
+
+const learn = (f: SpecialistFunnel, lesson: string) => {
+  if (!f.lessons.includes(lesson)) f.lessons.push(lesson);
+};
 
 const reject = (f: SpecialistFunnel, reason: string) => {
   f.rejected += 1;
@@ -78,6 +91,7 @@ const reject = (f: SpecialistFunnel, reason: string) => {
   const cat = categoriseReason(reason);
   f.categories[cat] = (f.categories[cat] ?? 0) + 1;
   f.lastReason = reason;
+  learn(f, `${cat}: proposals are being blocked at this gate — ${reason}`);
 };
 
 /** Human label for an engine gate outcome. */
@@ -156,6 +170,74 @@ function gateReason(a: ExecutionAttempt): string {
     : gate(a.exposure) ? `Portfolio exposure — ${gate(a.exposure)}`
     : gate(a.maxPositions) ? `Portfolio — ${gate(a.maxPositions)}`
     : (OUTCOME_LABELS[a.outcome] ?? a.outcome) + (a.outcomeDetail ? ` — ${a.outcomeDetail}` : '');
+}
+
+/**
+ * Attributes a closed trade to the specialist that was champion for that asset,
+ * completing the institutional funnel (Executed -> Won -> Lessons learned).
+ */
+export function recordTradeOutcome(
+  map: FunnelMap,
+  trade: { asset: Asset; type: 'win' | 'loss'; pnlPercent: number; exitReason: string },
+  championByAsset: Partial<Record<Asset, SpecialistId>>,
+): FunnelMap {
+  const id = championByAsset[trade.asset];
+  if (!id || !map[id]) return map;
+  const next = clone(map);
+  const f = next[id];
+  if (trade.type === 'win') {
+    f.won += 1;
+    learn(f, `Winning exit on ${trade.asset} via ${trade.exitReason} (${trade.pnlPercent.toFixed(2)}%)`);
+  } else {
+    f.lost += 1;
+    learn(f, `Losing exit on ${trade.asset} via ${trade.exitReason} (${trade.pnlPercent.toFixed(2)}%)`);
+  }
+  return next;
+}
+
+/** The eight institutional funnel stages, in order. */
+export const FUNNEL_STAGES = [
+  'Markets Examined',
+  'Markets Evaluated',
+  'Signals Generated',
+  'Signals Proposed',
+  'Signals Approved',
+  'Trades Executed',
+  'Trades Won',
+  'Lessons Learned',
+] as const;
+export type FunnelStage = typeof FUNNEL_STAGES[number];
+
+/** Stage counts for one specialist funnel. */
+export function stageCounts(f: SpecialistFunnel): Record<FunnelStage, number> {
+  return {
+    'Markets Examined': Object.keys(f.markets ?? {}).length,
+    'Markets Evaluated': f.seen,
+    'Signals Generated': f.proposed,
+    'Signals Proposed': Math.max(0, f.proposed - (f.categories?.['Champion selection'] ?? 0)),
+    'Signals Approved': f.approved,
+    'Trades Executed': f.executed,
+    'Trades Won': f.won ?? 0,
+    'Lessons Learned': (f.lessons ?? []).length,
+  };
+}
+
+/** Institution-wide stage counts across every specialist. */
+export function institutionStages(map: FunnelMap): Record<FunnelStage, number> {
+  const markets = new Set<string>();
+  const lessons = new Set<string>();
+  const totals = FUNNEL_STAGES.reduce((a, s) => { a[s] = 0; return a; }, {} as Record<FunnelStage, number>);
+  SPECIALIST_IDS.forEach((id) => {
+    const f = map[id];
+    if (!f) return;
+    Object.keys(f.markets ?? {}).forEach((m) => markets.add(m));
+    (f.lessons ?? []).forEach((l) => lessons.add(l));
+    const c = stageCounts(f);
+    FUNNEL_STAGES.forEach((s) => { totals[s] += c[s]; });
+  });
+  totals['Markets Examined'] = markets.size;
+  totals['Lessons Learned'] = lessons.size;
+  return totals;
 }
 
 export const conversionRate = (f: SpecialistFunnel) =>
