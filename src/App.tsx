@@ -54,6 +54,7 @@ const PerformanceAttribution = lazy(() => import("./pages/PerformanceAttribution
 const TradeFrequencyAudit = lazy(() => import("./pages/TradeFrequencyAudit"));
 const TradingDiagnostics = lazy(() => import("./pages/TradingDiagnostics"));
 const SpecialistBoard = lazy(() => import("./pages/SpecialistBoard"));
+const SpecialistIndependence = lazy(() => import("./pages/SpecialistIndependence"));
 const RouterV21 = lazy(() => import("./pages/RouterV21"));
 const PortfolioAIDirector = lazy(() => import("./pages/PortfolioAIDirector"));
 const MissionControl = lazy(() => import("./pages/MissionControl"));
@@ -291,6 +292,7 @@ const App = () => (
               <Route path="/trade-frequency" element={<TradeFrequencyAudit />} />
               <Route path="/trading-diagnostics" element={<TradingDiagnostics />} />
               <Route path="/specialist-board" element={<SpecialistBoard />} />
+              <Route path="/specialist-independence" element={<SpecialistIndependence />} />
               <Route path="/router-v21" element={<RouterV21 />} />
               <Route path="/portfolio-ai-director" element={<PortfolioAIDirector />} />
               <Route path="/mission-control" element={<MissionControl />} />

@@ -2,7 +2,7 @@ import {
   Landmark, Stethoscope, Binoculars,
   LayoutDashboard, LineChart, FlaskConical, Layers, PieChart,
   Shield, UserCog, Bell, Beaker, ClipboardCheck, Activity,
-  Radio, Microscope, ArrowUpCircle, BarChart3, Gauge, FileText, Sparkles, Scale, SlidersHorizontal, GitCompare, Trophy, Gavel, Snowflake, Briefcase, Users, BookOpen, Crown, CalendarDays, Target, Zap, GitFork, Compass, Eye, Building2, Rocket, Brain, BrainCircuit, Bot, Atom, Network, Globe2, Share2, Gem, GraduationCap, Lightbulb, BadgeCheck, ScrollText, Radar, History as HistoryIcon, Wand2, Puzzle, Store, Code2, Palette, Workflow, Package, Terminal, Award, Map, TestTube2, HeartPulse, Database, Wrench, Presentation, ShieldCheck, Archive } from 'lucide-react';
+  Radio, Microscope, ArrowUpCircle, BarChart3, Gauge, FileText, Sparkles, Scale, SlidersHorizontal, GitCompare, Trophy, Gavel, Snowflake, Briefcase, Users, BookOpen, Crown, CalendarDays, Target, Zap, GitFork, Compass, Eye, Building2, Rocket, Brain, BrainCircuit, Bot, Atom, Network, Globe2, Share2, Gem, GraduationCap, Lightbulb, BadgeCheck, ScrollText, Radar, History as HistoryIcon, Wand2, Puzzle, Store, Code2, Palette, Workflow, Package, Terminal, Award, Map, TestTube2, HeartPulse, Database, Wrench, Presentation, ShieldCheck, Archive, Fingerprint } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
@@ -159,6 +159,7 @@ const NAV_SECTIONS = [
       { title: 'Investment Committee', url: '/committee', icon: Users },
       { title: 'Research Journal', url: '/journal', icon: BookOpen },
       { title: 'Research', url: '/research', icon: Microscope },
+      { title: 'Specialist Independence™', url: '/specialist-independence', icon: Fingerprint },
       { title: 'Session Analytics', url: '/session-analytics', icon: BarChart3 },
       { title: 'Analytics Hub', url: '/analytics-hub', icon: Gauge },
       { title: 'Weekly Review', url: '/weekly-review', icon: FileText },
