@@ -18,6 +18,8 @@ import { SPECIALIST_IDS } from './stats';
 
 const STORAGE_KEY = 'atlas_specialist_funnel_v1';
 const MAX_KEYS = 500;
+const MAX_LOG = 200;
+
 
 export interface PersistedFunnelState {
   version: 1;
