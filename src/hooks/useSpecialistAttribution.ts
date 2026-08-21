@@ -4,7 +4,7 @@ import { buildMarketContext, runAllSpecialists } from '@/lib/specialists/registr
 import { selectChampion } from '@/lib/specialists/selector';
 import { deriveStats, loadLedger, appendLedger, LedgerEntry } from '@/lib/specialists/stats';
 import {
-  FunnelMap, emptyFunnelMap, recordRound, recordExecutionAttempt,
+  FunnelMap, emptyFunnelMap, recordRound, recordExecutionAttempt, recordTradeOutcome,
 } from '@/lib/specialists/attribution';
 import { SpecialistId, SpecialistProposal } from '@/lib/specialists/types';
 import { Asset } from '@/types/trading';
@@ -16,13 +16,14 @@ import { Asset } from '@/types/trading';
  * Read-only: nothing here influences execution.
  */
 export function useSpecialistAttribution() {
-  const { candles, executionAttempts } = useTradingContext();
+  const { candles, executionAttempts, state } = useTradingContext();
   const [funnels, setFunnels] = useState<FunnelMap>(() => emptyFunnelMap());
   const [ledger, setLedger] = useState<LedgerEntry[]>(() => loadLedger());
   const [championByAsset, setChampionByAsset] = useState<Partial<Record<Asset, SpecialistId>>>({});
   const [latest, setLatest] = useState<Record<string, SpecialistProposal[]>>({});
   const seenCandleRef = useRef<Partial<Record<Asset, number>>>({});
   const seenAttemptRef = useRef<Set<string>>(new Set());
+  const seenTradeRef = useRef<Set<string>>(new Set());
 
   const stats = useMemo(() => deriveStats(ledger), [ledger]);
   const statsRef = useRef(stats);
@@ -81,6 +82,18 @@ export function useSpecialistAttribution() {
     if (next) setFunnels(next);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [executionAttempts, championByAsset]);
+
+  // ── Outcome resolution: closed trades complete the funnel (won / lessons) ──
+  useEffect(() => {
+    let next: FunnelMap | null = null;
+    (state.trades ?? []).forEach((t) => {
+      if (seenTradeRef.current.has(t.id)) return;
+      seenTradeRef.current.add(t.id);
+      next = recordTradeOutcome(next ?? funnels, t, championByAsset);
+    });
+    if (next) setFunnels(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.trades, championByAsset]);
 
   return { funnels, stats, ledger, championByAsset, latestProposals: latest };
 }
