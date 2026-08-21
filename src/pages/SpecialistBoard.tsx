@@ -178,6 +178,73 @@ export default function SpecialistBoard() {
             </Card>
           </TabsContent>
 
+          <TabsContent value="attribution" className="space-y-3">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2"><Filter className="h-4 w-4" /> Signal Funnel — Live Execution Path</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="max-w-[68ch] text-[11px] text-muted-foreground">
+                  Seen and Proposed come from specialists running on the exact candles the live engine evaluated.
+                  Approved, Rejected and Executed are resolved from the engine's own execution-attempt records
+                  ({executionAttempts.length} attempts observed, {ledger.length} comparison rounds).
+                </p>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[640px] text-[11px]">
+                    <thead className="text-muted-foreground">
+                      <tr className="border-b border-border">
+                        {['Specialist', 'Signals Seen', 'Proposed', 'Approved', 'Rejected', 'Executed', 'Proposal → Execution'].map((h) => (
+                          <th key={h} className="px-2 py-1 text-left font-medium">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {SPECIALIST_IDS.map((id) => {
+                        const f = funnels[id];
+                        return (
+                          <tr key={id} className="border-b border-border/50">
+                            <td className="px-2 py-1 font-medium">{nameOf(id)}</td>
+                            <td className="px-2 py-1 font-mono">{f.seen}</td>
+                            <td className="px-2 py-1 font-mono">{f.proposed}</td>
+                            <td className="px-2 py-1 font-mono text-success">{f.approved}</td>
+                            <td className="px-2 py-1 font-mono text-muted-foreground">{f.rejected}</td>
+                            <td className="px-2 py-1 font-mono">{f.executed}</td>
+                            <td className="px-2 py-1 font-mono">{conversionRate(f)}%</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="grid gap-3 md:grid-cols-2">
+              {SPECIALIST_IDS.map((id) => {
+                const f = funnels[id];
+                const reasons = Object.entries(f.rejections).sort((a, b) => b[1] - a[1]);
+                return (
+                  <Card key={id}>
+                    <CardHeader className="pb-2"><CardTitle className="text-xs">{nameOf(id)} — Rejection Reasons</CardTitle></CardHeader>
+                    <CardContent className="space-y-1">
+                      {reasons.length === 0 ? (
+                        <p className="text-[11px] text-muted-foreground">No rejections recorded yet.</p>
+                      ) : reasons.map(([reason, count]) => (
+                        <div key={reason} className="flex items-center justify-between rounded border border-border/60 px-2 py-1 text-[11px]">
+                          <span className="text-muted-foreground">{reason}</span>
+                          <span className="font-mono">{count}</span>
+                        </div>
+                      ))}
+                      {f.lastReason && <p className="pt-1 text-[10px] text-muted-foreground">Most recent outcome: {f.lastReason}</p>}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </TabsContent>
+
+
+
           <TabsContent value="performance" className="space-y-3">
             <Card>
               <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Gauge className="h-4 w-4" /> Independent Specialist Statistics</CardTitle></CardHeader>
