@@ -148,7 +148,7 @@ export function recordExecutionAttempt(
 
 /** Precise blocking reason for a live attempt, using the engine's own gate log. */
 function gateReason(a: ExecutionAttempt): string {
-  const gate = (g: { passed: boolean; reason?: string } | undefined) => (g && !g.passed ? g.reason : undefined);
+  const gate = (g?: { pass: boolean; detail: string }) => (g && !g.pass ? g.detail : undefined);
   return gate(a.governance) ? `Governance — ${gate(a.governance)}`
     : gate(a.mpc) ? `Governance — ${gate(a.mpc)}`
     : gate(a.risk) ? `Risk — ${gate(a.risk)}`

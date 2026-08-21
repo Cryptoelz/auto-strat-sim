@@ -49,7 +49,7 @@ export function useSpecialistAttribution() {
       const result = selectChampion(proposals, statsRef.current);
       const championId = result.champion?.specialistId ?? null;
 
-      nextFunnels = recordRound(nextFunnels ?? funnels, proposals, championId, result.decision === 'PROPOSE');
+      nextFunnels = recordRound(nextFunnels ?? funnels, proposals, championId, result.decision === 'PROPOSE', asset);
       if (championId) championUpdates[asset] = championId;
       proposalUpdates[asset] = proposals;
       ledgerChanged = appendLedger({
