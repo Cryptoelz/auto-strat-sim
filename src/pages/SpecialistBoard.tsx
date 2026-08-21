@@ -92,7 +92,9 @@ export default function SpecialistBoard() {
           <TabsList>
             <TabsTrigger value="comparison" className="text-xs">Comparison</TabsTrigger>
             <TabsTrigger value="champion" className="text-xs">Champion Selection</TabsTrigger>
+            <TabsTrigger value="attribution" className="text-xs">Attribution</TabsTrigger>
             <TabsTrigger value="performance" className="text-xs">Performance</TabsTrigger>
+
             <TabsTrigger value="board" className="text-xs">Executive Board</TabsTrigger>
           </TabsList>
 
