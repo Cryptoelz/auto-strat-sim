@@ -1,14 +1,16 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTradingContext } from '@/contexts/TradingContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Eye, Crown, ShieldAlert, TrendingUp, Gauge, Scale } from 'lucide-react';
+import { Eye, Crown, ShieldAlert, TrendingUp, Gauge, Scale, Filter } from 'lucide-react';
 import { buildMarketContext, runAllSpecialists } from '@/lib/specialists/registry';
 import { selectChampion } from '@/lib/specialists/selector';
-import { appendLedger, deriveStats, loadLedger, LedgerEntry, SPECIALIST_IDS } from '@/lib/specialists/stats';
+import { SPECIALIST_IDS } from '@/lib/specialists/stats';
+import { conversionRate } from '@/lib/specialists/attribution';
+import { useSpecialistAttribution } from '@/hooks/useSpecialistAttribution';
 import { SpecialistProposal } from '@/lib/specialists/types';
 import { Asset } from '@/types/trading';
 
@@ -18,12 +20,10 @@ const signalTone = (s: string) =>
   : 'bg-muted text-muted-foreground border-border';
 
 export default function SpecialistBoard() {
-  const { candles, strategyConfig } = useTradingContext();
+  const { candles, strategyConfig, executionAttempts } = useTradingContext();
   const assets = strategyConfig.enabledAssets;
   const [selectedAsset, setSelectedAsset] = useState<Asset>(assets[0]);
-  const [ledger, setLedger] = useState<LedgerEntry[]>(() => loadLedger());
-
-  const stats = useMemo(() => deriveStats(ledger), [ledger]);
+  const { funnels, stats, ledger } = useSpecialistAttribution();
 
   const perAsset = useMemo(() => {
     return assets.map((asset) => {
@@ -37,22 +37,6 @@ export default function SpecialistBoard() {
 
   const current = perAsset.find((a) => a.asset === selectedAsset) ?? perAsset[0];
 
-  // Shadow mode: record every comparison round. Nothing is ever executed here.
-  useEffect(() => {
-    if (!current?.result || current.proposals.length === 0) return;
-    const ts = current.proposals[0].timestamp;
-    const already = ledger[0];
-    if (already && already.asset === current.asset && already.timestamp === ts) return;
-    setLedger(
-      appendLedger({
-        timestamp: ts,
-        asset: current.asset,
-        proposals: current.proposals,
-        championId: current.result.champion?.specialistId ?? null,
-        decision: current.result.decision,
-      }),
-    );
-  }, [current, ledger]);
 
   const superlatives = useMemo(() => {
     const entries = SPECIALIST_IDS.map((id) => ({ id, s: stats[id] }));
