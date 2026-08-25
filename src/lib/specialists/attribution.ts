@@ -27,6 +27,8 @@ export interface SpecialistFunnel {
   lost: number;
   /** Distinct institutional lessons observed (rejections + trade outcomes). */
   lessons: string[];
+  /** Rounds where the specialist decided to HOLD (an institutional decision). */
+  holds: number;
 }
 
 export const REJECT_CATEGORIES = [
@@ -61,7 +63,7 @@ export type FunnelMap = Record<SpecialistId, SpecialistFunnel>;
 
 export const emptyFunnel = (): SpecialistFunnel => ({
   seen: 0, proposed: 0, approved: 0, rejected: 0, executed: 0, rejections: {}, lastReason: null,
-  markets: {}, categories: emptyCategories(), won: 0, lost: 0, lessons: [],
+  markets: {}, categories: emptyCategories(), won: 0, lost: 0, lessons: [], holds: 0,
 });
 
 export const emptyFunnelMap = (): FunnelMap =>
@@ -77,6 +79,7 @@ const clone = (m: FunnelMap): FunnelMap =>
       won: m[id].won ?? 0,
       lost: m[id].lost ?? 0,
       lessons: [...(m[id].lessons ?? [])],
+      holds: m[id].holds ?? 0,
     };
     return acc;
   }, {} as FunnelMap);
@@ -294,6 +297,7 @@ export const FUNNEL_STAGES = [
   'Markets Examined',
   'Markets Evaluated',
   'Signals Generated',
+  'HOLD Decisions',
   'Signals Proposed',
   'Signals Approved',
   'Trades Executed',
@@ -308,6 +312,7 @@ export function stageCounts(f: SpecialistFunnel): Record<FunnelStage, number> {
     'Markets Examined': Object.keys(f.markets ?? {}).length,
     'Markets Evaluated': f.seen,
     'Signals Generated': f.proposed,
+    'HOLD Decisions': f.holds ?? 0,
     'Signals Proposed': Math.max(0, f.proposed - (f.categories?.['Champion selection'] ?? 0)),
     'Signals Approved': f.approved,
     'Trades Executed': f.executed,
