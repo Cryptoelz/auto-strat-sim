@@ -37,6 +37,12 @@ export function useSpecialistAttribution() {
   const seenAttemptRef = useRef<Set<string>>(new Set(initialRef.current.seenAttempts));
   const seenTradeRef = useRef<Set<string>>(new Set(initialRef.current.seenTrades));
 
+  // Attempts / outcomes awaiting champion resolution — retried, never discarded.
+  const pendingAttemptsRef = useRef<ExecutionAttempt[]>([]);
+  const pendingTradesRef = useRef<Trade[]>([]);
+  const attemptLogRef = useRef<AttemptRecord[]>(initialRef.current.attemptLog);
+  const [attemptLog, setAttemptLog] = useState<AttemptRecord[]>(() => initialRef.current.attemptLog);
+
   const stats = useMemo(() => deriveStats(ledger), [ledger]);
   const statsRef = useRef(stats);
   statsRef.current = stats;
@@ -51,8 +57,10 @@ export function useSpecialistAttribution() {
       seenCandles: seenCandleRef.current,
       seenAttempts: [...seenAttemptRef.current],
       seenTrades: [...seenTradeRef.current],
+      attemptLog: attemptLogRef.current,
     });
   }, []);
+
 
   const commit = useCallback((map: FunnelMap) => {
     setFunnels(map);
