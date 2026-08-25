@@ -74,8 +74,13 @@ export function useSpecialistAttribution() {
     seenCandleRef.current = {};
     seenAttemptRef.current = new Set();
     seenTradeRef.current = new Set();
+    pendingAttemptsRef.current = [];
+    pendingTradesRef.current = [];
+    attemptLogRef.current = [];
+    setAttemptLog([]);
     setChampionByAsset({});
     setFunnels(fresh.funnels);
+
   }, []);
 
   // ── Round recording: one per newly closed candle per asset ──
