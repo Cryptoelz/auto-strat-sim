@@ -68,7 +68,7 @@ export function MarketDataStatusPanel() {
           </div>
         </div>
 
-        {m.message && <p className="text-warning">{m.message}</p>}
+        {m.message && <p className="text-trading-warning">{m.message}</p>}
       </CardContent>
     </Card>
   );
