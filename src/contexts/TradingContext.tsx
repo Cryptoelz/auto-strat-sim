@@ -35,6 +35,7 @@ interface TradingContextType {
   dailyPnl: number;
   // Paper-mode controls (always available, active when on paper page)
   connectionStatus: ConnectionStatus;
+  marketDataStatus: ReturnType<typeof useUnifiedTradingEngine>['marketDataStatus'];
   statusMessages: StatusMessage[];
   enabledAssets: Record<Asset, boolean>;
   emergencyStop: boolean;
@@ -190,6 +191,7 @@ export function TradingProvider({ children }: { children: ReactNode }) {
     dailyPnl: engine.dailyPnl,
     // Paper-mode controls
     connectionStatus: engine.connectionStatus,
+    marketDataStatus: engine.marketDataStatus,
     statusMessages: engine.statusMessages,
     enabledAssets: engine.enabledAssets,
     emergencyStop: engine.emergencyStop,
