@@ -440,7 +440,7 @@ export function oracleReview(
   records: ProposalRecord[], rules: RuleStat[], specialists: SpecialistApproval[], assets: AssetApproval[],
 ): OracleAnswer[] {
   const topRule = rules.find((r) => r.triggered > 0) ?? null;
-  const btc = records.filter((r) => r.asset === 'BTC' && r.decision === 'Rejected');
+  const btc = records.filter((r) => r.asset.startsWith('BTC') && r.decision === 'Rejected');
   const bestSpecialist = [...specialists].sort((a, b) => (b.executed - a.executed) || (b.approved - a.approved) || (b.avgConfidence - a.avgConfidence))[0];
   const hardest = [...assets].filter((a) => a.signals > 0)
     .sort((a, b) => (a.approvals / Math.max(1, a.signals)) - (b.approvals / Math.max(1, b.signals)))[0];
@@ -561,6 +561,9 @@ export function validate(records: ProposalRecord[], trades: Trade[]): Validation
     { stage: 'Outcome → Lesson', traceable: records.filter((r) => r.lesson).length, total: trades.length, pass: true, note: 'Each closed outcome writes an institutional lesson' },
   ];
 }
+
+/** Display label for a market symbol (BTCUSDT → BTC). */
+export const assetLabel = (a: string) => a.replace(/USDT$/, '');
 
 export const KNOWLEDGE_LINKS = [
   { label: 'Specialist Executive Board', url: '/specialist-board' },

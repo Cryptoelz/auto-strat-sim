@@ -11,7 +11,7 @@ import { useTradingContext } from '@/contexts/TradingContext';
 import { useSpecialistAttribution } from '@/hooks/useSpecialistAttribution';
 import {
   buildProposals, rejectionLeaderboard, summarise, approvalFunnel, perSpecialist, perAsset,
-  counterfactuals, oracleReview, recommendations, validate, KNOWLEDGE_LINKS,
+  counterfactuals, oracleReview, recommendations, validate, KNOWLEDGE_LINKS, assetLabel,
   ProposalRecord,
 } from '@/lib/specialists/approvalAnalysis';
 import {
@@ -151,7 +151,7 @@ export default function ApprovalAnalysis() {
                       {timeline.map((r) => (
                         <tr key={r.id} onClick={() => setSelected(r)} className="cursor-pointer border-b border-border/30 hover:bg-muted/30">
                           <td className="whitespace-nowrap px-3 py-2 font-mono text-muted-foreground">{fmtTime(r.timestamp)}</td>
-                          <td className="px-3 py-2 font-medium">{r.asset}</td>
+                          <td className="px-3 py-2 font-medium">{assetLabel(r.asset)}</td>
                           <td className="px-3 py-2">{r.specialistName}</td>
                           <td className="px-3 py-2">{r.direction}</td>
                           <td className="px-3 py-2 text-right font-mono tabular-nums">{r.confidence}</td>
@@ -274,7 +274,7 @@ export default function ApprovalAnalysis() {
                   <tbody>
                     {assets.map((a) => (
                       <tr key={a.asset} className="border-b border-border/30">
-                        <td className="px-3 py-2 font-medium">{a.asset}</td>
+                        <td className="px-3 py-2 font-medium">{assetLabel(a.asset)}</td>
                         <td className="px-3 py-2 text-right font-mono tabular-nums">{a.signals}</td>
                         <td className="px-3 py-2 text-right font-mono tabular-nums">{a.approvals}</td>
                         <td className="px-3 py-2 text-right font-mono tabular-nums">{a.executions}</td>
@@ -430,7 +430,7 @@ export default function ApprovalAnalysis() {
           {selected && (
             <div className="space-y-3 text-[12.5px]">
               <div className="grid grid-cols-2 gap-2">
-                <Metric label="Asset" value={selected.asset} />
+                <Metric label="Asset" value={assetLabel(selected.asset)} />
                 <Metric label="Specialist" value={selected.specialistName} />
                 <Metric label="Direction" value={selected.direction} />
                 <Metric label="Confidence" value={selected.confidence} />
