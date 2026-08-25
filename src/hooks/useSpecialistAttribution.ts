@@ -4,7 +4,7 @@ import { buildMarketContext, runAllSpecialists } from '@/lib/specialists/registr
 import { selectChampion } from '@/lib/specialists/selector';
 import { deriveStats, loadLedger, appendLedger, LedgerEntry } from '@/lib/specialists/stats';
 import {
-  FunnelMap, AttemptRecord, recordRound, recordExecutionAttempt, recordTradeOutcome,
+  FunnelMap, AttemptRecord, HoldDecision, recordRound, recordExecutionAttempt, recordTradeOutcome,
 } from '@/lib/specialists/attribution';
 import {
   loadFunnelState, saveFunnelState, clearFunnelState, emptyPersistedState,
@@ -42,6 +42,8 @@ export function useSpecialistAttribution() {
   const pendingTradesRef = useRef<Trade[]>([]);
   const attemptLogRef = useRef<AttemptRecord[]>(initialRef.current.attemptLog);
   const [attemptLog, setAttemptLog] = useState<AttemptRecord[]>(() => initialRef.current.attemptLog);
+  const holdLogRef = useRef<HoldDecision[]>(initialRef.current.holdLog);
+  const [holdLog, setHoldLog] = useState<HoldDecision[]>(() => initialRef.current.holdLog);
 
   const stats = useMemo(() => deriveStats(ledger), [ledger]);
   const statsRef = useRef(stats);
@@ -58,6 +60,7 @@ export function useSpecialistAttribution() {
       seenAttempts: [...seenAttemptRef.current],
       seenTrades: [...seenTradeRef.current],
       attemptLog: attemptLogRef.current,
+      holdLog: holdLogRef.current,
     });
   }, []);
 
@@ -78,6 +81,8 @@ export function useSpecialistAttribution() {
     pendingTradesRef.current = [];
     attemptLogRef.current = [];
     setAttemptLog([]);
+    holdLogRef.current = [];
+    setHoldLog([]);
     setChampionByAsset({});
     setFunnels(fresh.funnels);
 
@@ -90,6 +95,7 @@ export function useSpecialistAttribution() {
     const championUpdates: Partial<Record<Asset, SpecialistId>> = {};
     const proposalUpdates: Record<string, SpecialistProposal[]> = {};
     let ledgerChanged: LedgerEntry[] | null = null;
+    let holdsChanged = false;
 
     assets.forEach((asset) => {
       const arr = candles[asset] ?? [];
@@ -104,7 +110,14 @@ export function useSpecialistAttribution() {
       const result = selectChampion(proposals, statsRef.current);
       const championId = result.champion?.specialistId ?? null;
 
-      nextFunnels = recordRound(nextFunnels ?? funnels, proposals, championId, result.decision === 'PROPOSE', asset);
+      const round = recordRound(
+        nextFunnels ?? funnels, proposals, championId, result.decision === 'PROPOSE', asset, lastTs,
+      );
+      nextFunnels = round.map;
+      if (round.hold && !holdLogRef.current.some((h) => h.id === round.hold!.id)) {
+        holdLogRef.current = [...holdLogRef.current, round.hold].slice(-200);
+        holdsChanged = true;
+      }
       if (championId) championUpdates[asset] = championId;
       proposalUpdates[asset] = proposals;
       ledgerChanged = appendLedger({
@@ -120,6 +133,7 @@ export function useSpecialistAttribution() {
       championRef.current = { ...championRef.current, ...championUpdates };
       setChampionByAsset((prev) => ({ ...prev, ...championUpdates }));
     }
+    if (holdsChanged) setHoldLog(holdLogRef.current);
     if (nextFunnels) commit(nextFunnels);
     if (Object.keys(proposalUpdates).length) setLatest((prev) => ({ ...prev, ...proposalUpdates }));
     if (ledgerChanged) setLedger(ledgerChanged);
@@ -199,6 +213,7 @@ export function useSpecialistAttribution() {
   return {
     funnels, stats, ledger, championByAsset, latestProposals: latest,
     attemptLog,
+    holdLog,
     pendingAttempts: pendingAttemptsRef.current.length,
     resetAttribution,
     lastPersistedAt: initialRef.current.updatedAt,
