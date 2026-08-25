@@ -14,6 +14,7 @@ import { useSpecialistAttribution } from '@/hooks/useSpecialistAttribution';
 import { SpecialistActivityReport } from '@/components/trading/SpecialistActivityReport';
 import { InstitutionalFunnel } from '@/components/trading/InstitutionalFunnel';
 import { HoldDecisionLog } from '@/components/trading/HoldDecisionLog';
+import { MarketDataStatusPanel } from '@/components/trading/MarketDataStatusPanel';
 import { SpecialistProposal } from '@/lib/specialists/types';
 import { Asset } from '@/types/trading';
 
@@ -222,6 +223,7 @@ export default function SpecialistBoard() {
               </CardContent>
             </Card>
 
+            <MarketDataStatusPanel />
             <InstitutionalFunnel funnels={funnels} />
             <SpecialistActivityReport funnels={funnels} />
             <HoldDecisionLog holds={holdLog} attempts={attemptLog} />

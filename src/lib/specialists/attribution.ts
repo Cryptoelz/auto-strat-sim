@@ -142,6 +142,8 @@ export function recordRound(
   championActionable: boolean,
   asset?: Asset,
   timestamp?: number,
+  /** False when the engine cannot execute (session stopped) — still a decision. */
+  executionEnabled = true,
 ): { map: FunnelMap; hold: HoldDecision | null } {
   const next = clone(map);
   proposals.forEach((p) => {
@@ -164,7 +166,7 @@ export function recordRound(
 
   let hold: HoldDecision | null = null;
   const anySignal = proposals.some((p) => p.signal !== 'WAIT');
-  if (asset && !championActionable) {
+  if (asset && (!championActionable || !executionEnabled)) {
     const lead = proposals.find((p) => p.specialistId === championId)
       ?? [...proposals].sort((a, b) => b.confidence - a.confidence)[0]
       ?? null;
@@ -175,9 +177,13 @@ export function recordRound(
       asset,
       decision: 'HOLD',
       specialistId: lead?.specialistId ?? null,
-      reason: anySignal
-        ? 'Signal generated but conviction below the institution action bar'
-        : (lead?.reasoning?.[0] ?? 'No specialist found an actionable setup'),
+      reason: !executionEnabled
+        ? (anySignal
+          ? 'Signal generated but the session is not running — recorded as HOLD, not executed'
+          : 'Session not running and no actionable setup — market analysed, decision HOLD')
+        : anySignal
+          ? 'Signal generated but conviction below the institution action bar'
+          : (lead?.reasoning?.[0] ?? 'No specialist found an actionable setup'),
       evidence: lead?.reasoning?.slice(0, 3) ?? [],
       confidence: lead?.confidence ?? 0,
       signalGenerated: anySignal,

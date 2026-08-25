@@ -45,6 +45,9 @@ export function useSpecialistAttribution() {
   const holdLogRef = useRef<HoldDecision[]>(initialRef.current.holdLog);
   const [holdLog, setHoldLog] = useState<HoldDecision[]>(() => initialRef.current.holdLog);
 
+  const isRunningRef = useRef(state.isRunning);
+  isRunningRef.current = state.isRunning;
+
   const stats = useMemo(() => deriveStats(ledger), [ledger]);
   const statsRef = useRef(stats);
   statsRef.current = stats;
@@ -111,7 +114,7 @@ export function useSpecialistAttribution() {
       const championId = result.champion?.specialistId ?? null;
 
       const round = recordRound(
-        nextFunnels ?? funnels, proposals, championId, result.decision === 'PROPOSE', asset, lastTs,
+        nextFunnels ?? funnels, proposals, championId, result.decision === 'PROPOSE', asset, lastTs, isRunningRef.current,
       );
       nextFunnels = round.map;
       if (round.hold && !holdLogRef.current.some((h) => h.id === round.hold!.id)) {
