@@ -4,13 +4,14 @@ import { buildMarketContext, runAllSpecialists } from '@/lib/specialists/registr
 import { selectChampion } from '@/lib/specialists/selector';
 import { deriveStats, loadLedger, appendLedger, LedgerEntry } from '@/lib/specialists/stats';
 import {
-  FunnelMap, recordRound, recordExecutionAttempt, recordTradeOutcome,
+  FunnelMap, AttemptRecord, recordRound, recordExecutionAttempt, recordTradeOutcome,
 } from '@/lib/specialists/attribution';
 import {
   loadFunnelState, saveFunnelState, clearFunnelState, emptyPersistedState,
 } from '@/lib/specialists/funnelStore';
 import { SpecialistId, SpecialistProposal } from '@/lib/specialists/types';
-import { Asset } from '@/types/trading';
+import { Asset, ExecutionAttempt, Trade } from '@/types/trading';
+
 
 /**
  * Attribution is driven by the LIVE engine:
