@@ -13,6 +13,7 @@ import { conversionRate } from '@/lib/specialists/attribution';
 import { useSpecialistAttribution } from '@/hooks/useSpecialistAttribution';
 import { SpecialistActivityReport } from '@/components/trading/SpecialistActivityReport';
 import { InstitutionalFunnel } from '@/components/trading/InstitutionalFunnel';
+import { HoldDecisionLog } from '@/components/trading/HoldDecisionLog';
 import { SpecialistProposal } from '@/lib/specialists/types';
 import { Asset } from '@/types/trading';
 
@@ -25,7 +26,7 @@ export default function SpecialistBoard() {
   const { candles, strategyConfig, executionAttempts } = useTradingContext();
   const assets = strategyConfig.enabledAssets;
   const [selectedAsset, setSelectedAsset] = useState<Asset>(assets[0]);
-  const { funnels, stats, ledger } = useSpecialistAttribution();
+  const { funnels, stats, ledger, holdLog, attemptLog } = useSpecialistAttribution();
 
   const perAsset = useMemo(() => {
     return assets.map((asset) => {
@@ -223,6 +224,7 @@ export default function SpecialistBoard() {
 
             <InstitutionalFunnel funnels={funnels} />
             <SpecialistActivityReport funnels={funnels} />
+            <HoldDecisionLog holds={holdLog} attempts={attemptLog} />
 
             <div className="grid gap-3 md:grid-cols-2">
               {SPECIALIST_IDS.map((id) => {
