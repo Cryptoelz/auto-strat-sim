@@ -11,6 +11,7 @@ const STAGE_NOTE: Record<FunnelStage, string> = {
   'Markets Examined': 'Distinct markets the specialist analysed',
   'Markets Evaluated': 'Candle snapshots evaluated across those markets',
   'Signals Generated': 'Snapshots that produced a BUY or SELL view',
+  'HOLD Decisions': 'Rounds the institution actively decided to hold — analysed, no trade',
   'Signals Proposed': 'Signals that survived champion selection',
   'Signals Approved': 'Proposals that reached the live engine gate stack',
   'Trades Executed': 'Positions the live engine actually opened or flipped',
