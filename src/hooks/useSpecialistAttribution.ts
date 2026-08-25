@@ -153,8 +153,11 @@ export function useSpecialistAttribution() {
     });
 
     if (next) commit(next);
-    else if (logChanged) { setAttemptLog(attemptLogRef.current); persist(funnels); }
-    if (logChanged) setAttemptLog(attemptLogRef.current);
+    if (logChanged) {
+      setAttemptLog(attemptLogRef.current);
+      if (!next) persist(funnels);
+    }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [executionAttempts, championByAsset, commit, persist]);
 
