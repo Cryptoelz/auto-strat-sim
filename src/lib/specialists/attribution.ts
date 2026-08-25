@@ -27,6 +27,8 @@ export interface SpecialistFunnel {
   lost: number;
   /** Distinct institutional lessons observed (rejections + trade outcomes). */
   lessons: string[];
+  /** Rounds where the specialist decided to HOLD (an institutional decision). */
+  holds: number;
 }
 
 export const REJECT_CATEGORIES = [
@@ -61,7 +63,7 @@ export type FunnelMap = Record<SpecialistId, SpecialistFunnel>;
 
 export const emptyFunnel = (): SpecialistFunnel => ({
   seen: 0, proposed: 0, approved: 0, rejected: 0, executed: 0, rejections: {}, lastReason: null,
-  markets: {}, categories: emptyCategories(), won: 0, lost: 0, lessons: [],
+  markets: {}, categories: emptyCategories(), won: 0, lost: 0, lessons: [], holds: 0,
 });
 
 export const emptyFunnelMap = (): FunnelMap =>
@@ -77,6 +79,7 @@ const clone = (m: FunnelMap): FunnelMap =>
       won: m[id].won ?? 0,
       lost: m[id].lost ?? 0,
       lessons: [...(m[id].lessons ?? [])],
+      holds: m[id].holds ?? 0,
     };
     return acc;
   }, {} as FunnelMap);
@@ -111,6 +114,26 @@ export const OUTCOME_LABELS: Record<ExecutionOutcome, string> = {
 
 export const isExecutedOutcome = (o: ExecutionOutcome) => o === 'executed_open' || o === 'executed_flip';
 
+/**
+ * A HOLD is an institutional decision, not an absence of activity.
+ * Every evaluated market that produced no actionable proposal is recorded here
+ * with its reason, specialist, evidence and confidence, so the funnel can prove
+ * the institution analysed the market even when it did not trade.
+ */
+export interface HoldDecision {
+  id: string;
+  timestamp: number;
+  asset: Asset;
+  decision: 'HOLD';
+  /** Specialist whose view best represented the institution for this round. */
+  specialistId: SpecialistId | null;
+  reason: string;
+  evidence: string[];
+  confidence: number;
+  /** True when at least one specialist generated a directional signal. */
+  signalGenerated: boolean;
+}
+
 /** Record one comparison round: every specialist saw the candle, some proposed. */
 export function recordRound(
   map: FunnelMap,
@@ -118,14 +141,19 @@ export function recordRound(
   championId: SpecialistId | null,
   championActionable: boolean,
   asset?: Asset,
-): FunnelMap {
+  timestamp?: number,
+): { map: FunnelMap; hold: HoldDecision | null } {
   const next = clone(map);
   proposals.forEach((p) => {
     const f = next[p.specialistId];
     if (!f) return;
     f.seen += 1;
     if (asset) f.markets[asset] = (f.markets[asset] ?? 0) + 1;
-    if (p.signal === 'WAIT') return;
+    if (p.signal === 'WAIT') {
+      f.holds = (f.holds ?? 0) + 1;
+      f.lastReason = p.reasoning?.[0] ?? 'HOLD — no actionable setup';
+      return;
+    }
     f.proposed += 1;
     if (p.specialistId !== championId) {
       reject(f, 'Lost champion selection');
@@ -133,8 +161,34 @@ export function recordRound(
       reject(f, 'Champion score below institution action bar');
     }
   });
-  return next;
+
+  let hold: HoldDecision | null = null;
+  const anySignal = proposals.some((p) => p.signal !== 'WAIT');
+  if (asset && !championActionable) {
+    const lead = proposals.find((p) => p.specialistId === championId)
+      ?? [...proposals].sort((a, b) => b.confidence - a.confidence)[0]
+      ?? null;
+    const ts = timestamp ?? Date.now();
+    hold = {
+      id: `${asset}-${ts}`,
+      timestamp: ts,
+      asset,
+      decision: 'HOLD',
+      specialistId: lead?.specialistId ?? null,
+      reason: anySignal
+        ? 'Signal generated but conviction below the institution action bar'
+        : (lead?.reasoning?.[0] ?? 'No specialist found an actionable setup'),
+      evidence: lead?.reasoning?.slice(0, 3) ?? [],
+      confidence: lead?.confidence ?? 0,
+      signalGenerated: anySignal,
+    };
+    if (lead && next[lead.specialistId]) {
+      learn(next[lead.specialistId], `HOLD on ${asset}: ${hold.reason}`);
+    }
+  }
+  return { map: next, hold };
 }
+
 
 /**
  * Immutable audit record of one live execution attempt. Written for EVERY
@@ -243,6 +297,7 @@ export const FUNNEL_STAGES = [
   'Markets Examined',
   'Markets Evaluated',
   'Signals Generated',
+  'HOLD Decisions',
   'Signals Proposed',
   'Signals Approved',
   'Trades Executed',
@@ -257,6 +312,7 @@ export function stageCounts(f: SpecialistFunnel): Record<FunnelStage, number> {
     'Markets Examined': Object.keys(f.markets ?? {}).length,
     'Markets Evaluated': f.seen,
     'Signals Generated': f.proposed,
+    'HOLD Decisions': f.holds ?? 0,
     'Signals Proposed': Math.max(0, f.proposed - (f.categories?.['Champion selection'] ?? 0)),
     'Signals Approved': f.approved,
     'Trades Executed': f.executed,

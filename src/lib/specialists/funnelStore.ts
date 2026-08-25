@@ -1,6 +1,6 @@
 import { Asset } from '@/types/trading';
 import { SpecialistId } from './types';
-import { FunnelMap, emptyFunnelMap, emptyFunnel, AttemptRecord } from './attribution';
+import { FunnelMap, emptyFunnelMap, emptyFunnel, AttemptRecord, HoldDecision } from './attribution';
 import { SPECIALIST_IDS } from './stats';
 
 
@@ -33,6 +33,8 @@ export interface PersistedFunnelState {
   seenTrades: string[];
   /** Complete audit trail of every execution attempt observed, attributed or not. */
   attemptLog: AttemptRecord[];
+  /** Institutional HOLD decisions — proves activity in zero-trade sessions. */
+  holdLog: HoldDecision[];
   updatedAt: number;
 }
 
@@ -44,6 +46,7 @@ export const emptyPersistedState = (): PersistedFunnelState => ({
   seenAttempts: [],
   seenTrades: [],
   attemptLog: [],
+  holdLog: [],
   updatedAt: Date.now(),
 });
 
@@ -81,6 +84,7 @@ export function loadFunnelState(): PersistedFunnelState {
       seenAttempts: Array.isArray(parsed.seenAttempts) ? parsed.seenAttempts.slice(-MAX_KEYS) : [],
       seenTrades: Array.isArray(parsed.seenTrades) ? parsed.seenTrades.slice(-MAX_KEYS) : [],
       attemptLog: Array.isArray(parsed.attemptLog) ? parsed.attemptLog.slice(-MAX_LOG) : [],
+      holdLog: Array.isArray(parsed.holdLog) ? parsed.holdLog.slice(-MAX_LOG) : [],
       updatedAt: parsed.updatedAt ?? Date.now(),
     };
   } catch {
@@ -98,6 +102,7 @@ export function saveFunnelState(state: Omit<PersistedFunnelState, 'version' | 'u
       seenAttempts: state.seenAttempts.slice(-MAX_KEYS),
       seenTrades: state.seenTrades.slice(-MAX_KEYS),
       attemptLog: state.attemptLog.slice(-MAX_LOG),
+      holdLog: state.holdLog.slice(-MAX_LOG),
       updatedAt: Date.now(),
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
