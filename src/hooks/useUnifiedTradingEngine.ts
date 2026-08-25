@@ -132,6 +132,24 @@ export interface UnifiedEngineResult {
   executionAttempts: ExecutionAttempt[];
   /** Live engine activity — proves the engine is detecting new candles. */
   liveActivity: LiveActivity;
+  /** REST/WebSocket market-data health — never silently degrade to [] candles. */
+  marketDataStatus: MarketDataStatus;
+}
+
+/** Health of the market-data feed powering the engine. */
+export interface MarketDataStatus {
+  /** ok = fresh REST candles, degraded = serving cache, down = no candles at all. */
+  restStatus: 'ok' | 'degraded' | 'down';
+  websocketStatus: 'connected' | 'reconnecting' | 'disconnected';
+  /** Assets whose latest REST fetch returned no candles. */
+  emptyAssets: Asset[];
+  /** Assets currently served from the last-known-good cache. */
+  cachedAssets: Asset[];
+  lastSuccessfulCandleTs: number | null;
+  lastSuccessfulFetchTs: number | null;
+  lastAttemptTs: number | null;
+  retries: number;
+  message: string | null;
 }
 
 
@@ -204,6 +222,13 @@ export function useUnifiedTradingEngine({
   const [signals, setSignals] = useState<Record<Asset, Signal | null>>(EMPTY_SIGNALS);
   const [analytics, setAnalytics] = useState<Record<Asset, AssetAnalytics>>(EMPTY_ANALYTICS);
   const [isLoading, setIsLoading] = useState(true);
+  const [marketDataStatus, setMarketDataStatus] = useState<MarketDataStatus>({
+    restStatus: 'ok', websocketStatus: 'disconnected', emptyAssets: [], cachedAssets: [],
+    lastSuccessfulCandleTs: null, lastSuccessfulFetchTs: null, lastAttemptTs: null,
+    retries: 0, message: null,
+  });
+  /** Last-known-good candles per asset, used when REST returns []. */
+  const candleCacheRef = useRef<Partial<Record<Asset, Candle[]>>>({});
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
   // ── Paper-mode state ──
@@ -333,16 +358,51 @@ export function useUnifiedTradingEngine({
       const htfPromises = config.assets.map(a => fetchHTFCandles(a, config.filters.higherTimeframe));
       const pricePromise = fetchAllPrices(config.assets);
 
-      const [candleResults, htfResults, currentPrices] = await Promise.all([
+      let [candleResults, htfResults, currentPrices] = await Promise.all([
         Promise.all(candlePromises), Promise.all(htfPromises), pricePromise,
       ]);
 
+      // ── Candle feed reliability: never silently continue with [] candles ──
+      let retries = 0;
+      let emptyIdx = candleResults
+        .map((c, i) => (c && c.length ? -1 : i))
+        .filter(i => i >= 0);
+      if (emptyIdx.length) {
+        retries = 1;
+        addStatus('warning', `Market data degraded — REST returned no candles for ${emptyIdx.map(i => config.assets[i]).join(', ')}. Retrying.`);
+        console.warn('[engine] empty REST klines, retrying', emptyIdx.map(i => config.assets[i]));
+        const retried = await Promise.all(
+          emptyIdx.map(i => fetchCandles(config.assets[i], config.timeframe)),
+        );
+        emptyIdx.forEach((idx, k) => { if (retried[k]?.length) candleResults[idx] = retried[k]; });
+        emptyIdx = candleResults.map((c, i) => (c && c.length ? -1 : i)).filter(i => i >= 0);
+      }
+
       const allCandles: Record<Asset, Candle[]> = EMPTY_CANDLES();
       const allHTF: Record<Asset, Candle[]> = EMPTY_CANDLES();
+      const cachedAssets: Asset[] = [];
+      const emptyAssets: Asset[] = [];
       config.assets.forEach((asset, i) => {
-        allCandles[asset] = candleResults[i];
+        const fresh = candleResults[i];
+        if (fresh && fresh.length) {
+          candleCacheRef.current[asset] = fresh;
+          allCandles[asset] = fresh;
+        } else {
+          emptyAssets.push(asset);
+          const cached = candleCacheRef.current[asset] ?? [];
+          if (cached.length) cachedAssets.push(asset);
+          allCandles[asset] = cached;
+        }
         allHTF[asset] = htfResults[i];
       });
+
+      if (emptyAssets.length) {
+        const degraded = cachedAssets.length === emptyAssets.length;
+        addStatus(degraded ? 'warning' : 'error',
+          degraded
+            ? `Degraded mode — serving cached candles for ${cachedAssets.join(', ')}`
+            : `Market data unavailable for ${emptyAssets.filter(a => !cachedAssets.includes(a)).join(', ')} — no candles and no cache`);
+      }
 
       setCandles(allCandles);
       setHtfCandles(allHTF);
@@ -431,12 +491,34 @@ export function useUnifiedTradingEngine({
         if (last && (!latestTs || last > latestTs)) latestTs = last;
       }
       if (latestTs) setLiveActivity(prev => ({ ...prev, lastCandleProcessedTs: latestTs }));
-      addStatus('info', 'Market data loaded successfully');
+
+      const anyFresh = config.assets.some(a => !emptyAssets.includes(a));
+      setMarketDataStatus(prev => ({
+        ...prev,
+        restStatus: emptyAssets.length === 0 ? 'ok'
+          : (cachedAssets.length === emptyAssets.length && anyFresh) || cachedAssets.length ? 'degraded'
+          : 'down',
+        emptyAssets,
+        cachedAssets,
+        lastSuccessfulCandleTs: latestTs ?? prev.lastSuccessfulCandleTs,
+        lastSuccessfulFetchTs: anyFresh ? Date.now() : prev.lastSuccessfulFetchTs,
+        lastAttemptTs: Date.now(),
+        retries: prev.retries + retries,
+        message: emptyAssets.length === 0 ? null
+          : `REST returned no candles for ${emptyAssets.join(', ')}${cachedAssets.length ? ` — serving cache for ${cachedAssets.join(', ')}` : ''}`,
+      }));
+      if (emptyAssets.length === 0) addStatus('info', 'Market data loaded successfully');
 
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Failed to fetch market data');
       addStatus('error', 'Failed to fetch market data');
+      setMarketDataStatus(prev => ({
+        ...prev,
+        restStatus: Object.keys(candleCacheRef.current).length ? 'degraded' : 'down',
+        lastAttemptTs: Date.now(),
+        message: error instanceof Error ? error.message : 'REST market data request failed',
+      }));
       setIsLoading(false);
     }
   }, [config, computeAnalytics, addStatus]);
@@ -1001,6 +1083,11 @@ export function useUnifiedTradingEngine({
     signalConfirmStats,
     executionAttempts,
     liveActivity,
+    marketDataStatus: {
+      ...marketDataStatus,
+      websocketStatus: connectionStatus.connected ? 'connected'
+        : connectionStatus.reconnecting ? 'reconnecting' : 'disconnected',
+    },
 
   };
 }
