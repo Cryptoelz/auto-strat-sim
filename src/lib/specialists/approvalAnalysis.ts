@@ -3,7 +3,7 @@ import { SpecialistId } from './types';
 import { SPECIALIST_IDS } from './stats';
 import { LedgerEntry } from './stats';
 import {
-  FunnelMap, AttemptRecord, HoldDecision, REJECT_CATEGORIES, RejectCategory,
+  FunnelMap, AttemptRecord, HoldDecision, RejectCategory,
   categoriseReason, institutionStages, FUNNEL_STAGES,
 } from './attribution';
 
@@ -204,7 +204,7 @@ export interface RuleStat {
 }
 
 /** Ranks every institutional rule by how often it blocked a proposal. */
-export function rejectionLeaderboard(records: ProposalRecord[], funnels: FunnelMap): RuleStat[] {
+export function rejectionLeaderboard(records: ProposalRecord[]): RuleStat[] {
   const blocked = records.filter((r) => r.decision === 'Rejected' && r.direction !== 'HOLD');
   const total = blocked.length;
   const base = RULE_BOOK.map((rule) => {
@@ -218,18 +218,6 @@ export function rejectionLeaderboard(records: ProposalRecord[], funnels: FunnelM
       avgConfidenceLost: Number(conf.toFixed(1)),
       opportunityCost: Number((ev * 0.5).toFixed(2)),
     };
-  });
-
-  // Fold in the engine's own categorised gate counts so rules that fired in
-  // earlier sessions (outside the retained ledger window) stay visible.
-  SPECIALIST_IDS.forEach((id) => {
-    const cats = funnels[id]?.categories;
-    if (!cats) return;
-    REJECT_CATEGORIES.forEach((c) => {
-      const rule = ruleForReason(c);
-      const row = base.find((b) => b.rule === rule);
-      if (row) row.triggered = Math.max(row.triggered, row.triggered + 0);
-    });
   });
 
   return base.sort((a, b) => b.triggered - a.triggered);
