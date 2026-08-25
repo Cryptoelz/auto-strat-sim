@@ -114,25 +114,66 @@ export function useSpecialistAttribution() {
   }, [candles, commit]);
 
   // ── Live gate resolution from the engine's own execution attempts ──
+  // Race-safe: an attempt that arrives before champion selection has committed
+  // is queued (never dropped) and retried on every subsequent pass, while its
+  // audit record is written to the attempt log immediately.
   useEffect(() => {
     let next: FunnelMap | null = null;
+    let logChanged = false;
+    const queue: ExecutionAttempt[] = [];
+
     // oldest first so counts accumulate chronologically
     [...executionAttempts].reverse().forEach((a) => {
-      if (seenAttemptRef.current.has(a.id)) return;
-      seenAttemptRef.current.add(a.id);
-      next = recordExecutionAttempt(next ?? funnels, a, championByAsset);
+      if (seenAttemptRef.current.has(a.id) || pendingAttemptsRef.current.some((p) => p.id === a.id)) return;
+      queue.push(a);
     });
+    // retry anything still awaiting champion resolution
+    const retry = pendingAttemptsRef.current;
+    pendingAttemptsRef.current = [];
+    const all = [...retry, ...queue];
+
+    all.forEach((a) => {
+      const res = recordExecutionAttempt(next ?? funnels, a, championByAsset);
+      if (res.deferred) {
+        pendingAttemptsRef.current.push(a);
+        // Record the audit entry once, even while unattributed.
+        if (!attemptLogRef.current.some((r) => r.id === a.id)) {
+          attemptLogRef.current = [...attemptLogRef.current, res.record].slice(-200);
+          logChanged = true;
+        }
+        return;
+      }
+      seenAttemptRef.current.add(a.id);
+      next = res.map;
+      const idx = attemptLogRef.current.findIndex((r) => r.id === a.id);
+      attemptLogRef.current = idx >= 0
+        ? attemptLogRef.current.map((r, i) => (i === idx ? res.record : r))
+        : [...attemptLogRef.current, res.record].slice(-200);
+      logChanged = true;
+    });
+
     if (next) commit(next);
+    else if (logChanged) { setAttemptLog(attemptLogRef.current); persist(funnels); }
+    if (logChanged) setAttemptLog(attemptLogRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [executionAttempts, championByAsset, commit]);
+  }, [executionAttempts, championByAsset, commit, persist]);
 
   // ── Outcome resolution: closed trades complete the funnel (won / lessons) ──
   useEffect(() => {
     let next: FunnelMap | null = null;
-    (state.trades ?? []).forEach((t) => {
-      if (seenTradeRef.current.has(t.id)) return;
+    const trades = state.trades ?? [];
+    const retry = pendingTradesRef.current;
+    pendingTradesRef.current = [];
+    const all = [
+      ...retry,
+      ...trades.filter((t) => !seenTradeRef.current.has(t.id) && !retry.some((r) => r.id === t.id)),
+    ];
+
+    all.forEach((t) => {
+      const res = recordTradeOutcome(next ?? funnels, t, championByAsset);
+      if (res.deferred) { pendingTradesRef.current.push(t); return; }
       seenTradeRef.current.add(t.id);
-      next = recordTradeOutcome(next ?? funnels, t, championByAsset);
+      next = res.map;
     });
     if (next) commit(next);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -140,7 +181,10 @@ export function useSpecialistAttribution() {
 
   return {
     funnels, stats, ledger, championByAsset, latestProposals: latest,
+    attemptLog,
+    pendingAttempts: pendingAttemptsRef.current.length,
     resetAttribution,
     lastPersistedAt: initialRef.current.updatedAt,
   };
 }
+
