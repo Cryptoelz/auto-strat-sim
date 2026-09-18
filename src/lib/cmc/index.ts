@@ -4,4 +4,7 @@ export * from './types';
 export * from './adapter';
 export * from './intelligence';
 export * from './cache';
+export * from './decisionContext';
+export * from './contextStore';
+export * from './isolationCheck';
 export { callCmc } from './client';
