@@ -19,8 +19,17 @@ import {
   SidebarFooter,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { CMC_ENABLED } from '@/lib/cmc/config';
 
 const NAV_SECTIONS = [
+  ...(CMC_ENABLED
+    ? [
+        {
+          label: 'CMC Hackathon',
+          items: [{ title: 'CMC Market Intelligence', url: '/cmc/market-intelligence', icon: Globe2 }],
+        },
+      ]
+    : []),
   {
     label: 'Platform',
     items: [
