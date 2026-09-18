@@ -163,3 +163,99 @@ read-only guarantee, Binance separation, and that seeded/research data is never 
 - Trading and simulation logic is unchanged: no protected file was modified in Stage 2.
 - Regression: 79/79 pre-existing tests pass (84 total with the 5 new CMC tests); production build passes;
   no API key appears in source or bundle.
+
+---
+
+## Stage 3B — CMC Decision Context™ (Option A)
+
+Auditable capture of the CoinMarketCap market environment surrounding decisions the
+existing CryptoTrader engine produces **independently**. CMC is context, never cause.
+
+### A. Architecture (observer pattern)
+
+```
+Trading Engine (unmodified)
+      ↓
+TradingContext.executionAttempts   ← existing public decision/event stream
+      ↓
+useCmcDecisionContext              ← read-only observer, CMC-owned
+      ↓
+atlas_cmc_context_v1               ← CMC-owned localStorage store
+```
+
+There is no dependency from any trading module back into CMC — asserted at runtime on the
+page and by an automated test that greps the protected modules for CMC imports.
+
+### B. Files created
+
+| File | Purpose |
+| --- | --- |
+| `src/lib/cmc/decisionContext.ts` | Snapshot capture + pure record construction, data-state resolution, diagnostics |
+| `src/lib/cmc/contextStore.ts` | `atlas_cmc_context_v1` persistence, de-duplication by event ID, 500-record cap |
+| `src/lib/cmc/isolationCheck.ts` | Runtime isolation checks behind the ISOLATION VERIFIED badge |
+| `src/hooks/useCmcDecisionContext.ts` | Read-only observer of `executionAttempts` |
+| `src/components/cmc/CmcExplainabilityPanel.tsx` | Context-never-cause statement |
+| `src/components/cmc/CmcJudgeEvidencePanel.tsx` | HACKATHON EVIDENCE panel |
+| `src/components/cmc/CmcContextDiagnosticsPanel.tsx` | Capture/cache/stale/unavailable/extra-call counters |
+| `src/components/cmc/CmcDecisionContextTable.tsx` | Timeline table + per-record provenance dialog |
+| `src/pages/cmc/CmcDecisionContext.tsx` | `/cmc/decision-context` page |
+| `src/test/cmcDecisionContext.test.ts` | 11 Stage 3B tests |
+
+### C. Existing files modified (minimal wiring only)
+
+- `src/App.tsx` — one lazy import, one `CMC_ENABLED`-guarded route.
+- `src/components/AppSidebar.tsx` — one nav item inside the existing CMC Hackathon section.
+- `src/lib/cmc/index.ts` — three re-exports (inside the CMC boundary).
+- `HACKATHON.md` — this section.
+
+No protected trading/simulation/specialist/risk/governance/backtest file was touched.
+ApprovalAnalysis was not modified.
+
+### D. Snapshot schema
+
+Event: context ID, event ID, timestamp, asset, decision type, decision outcome, engine detail.
+CMC context: total market cap, market-cap 24h change, total 24h volume, volume 24h change,
+BTC dominance, ETH dominance, Fear & Greed value + classification, tracked-asset breadth
+1h/24h/7d, asset CMC rank, asset 1h/24h/7d change.
+Provenance: `source = CoinMarketCap`, `purpose = research context`, `causalInfluence = false`,
+`fetchedAt`, `snapshotAgeMs`, `cacheStatus`, `stale`, `unavailableReason`.
+Any missing value is stored as `null` and displayed as unavailable — never fabricated.
+
+### E. API / cache behaviour
+
+`captureContextSnapshot()` calls the adapters with `force: false`, so a valid 120s cache is
+reused and **zero** network requests are made. Network calls performed during capture are
+measured (not assumed) by diffing `getCmcRequestStats().networkRequests` and are surfaced as
+"Additional API calls from Decision Context". Refresh throttling, 429 handling and
+last-known-good behaviour from Stage 2 are untouched. One snapshot is taken per batch of new
+events, not per event.
+
+### F. Failure behaviour
+
+CMC failure records `CONTEXT UNAVAILABLE`, or the last known snapshot explicitly marked
+`STALE`. Capture runs in a try/catch inside an effect that only reads already-published engine
+output, so CMC cannot block signal generation, specialist evaluation, risk, governance, paper
+execution or the simulation. With `CMC_ENABLED = false` there is no route, no nav item, no
+capture and no network activity.
+
+### G. Evidence produced
+
+Timeline joining each engine decision to the CMC conditions at that instant, per-record
+provenance dialog, diagnostics counters, runtime isolation checks, and the HACKATHON EVIDENCE
+panel (contexts recorded, CMC source, API calls saved by caching, stale/unavailable counts,
+trading engine modified: NO, CMC causal influence: NONE, simulation only).
+
+### H. Test results
+
+- Baseline before Stage 3B: 84/84 pass.
+- After Stage 3B: **95/95 pass** (84 unchanged + 11 new CMC tests). No existing test modified.
+- `tsgo --noEmit` clean; production build passes; no API key in source or bundle.
+
+### I. Rollback
+
+Set `CMC_ENABLED = false` in `src/lib/cmc/config.ts`, or delete
+`src/lib/cmc/{decisionContext,contextStore,isolationCheck}.ts`,
+`src/hooks/useCmcDecisionContext.ts`, the Stage 3B components, `src/pages/cmc/CmcDecisionContext.tsx`
+and `src/test/cmcDecisionContext.test.ts`, then revert the two lines in `App.tsx` and the one
+nav entry in `AppSidebar.tsx`. Stored records can be cleared with the page's "Clear context log"
+button or by removing the `atlas_cmc_context_v1` key.
