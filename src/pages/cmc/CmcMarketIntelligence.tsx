@@ -18,7 +18,7 @@ const fmtUsd = (value: number) =>
       : `$${value.toLocaleString(undefined, { maximumFractionDigits: 4 })}`;
 
 const pctClass = (value: number) =>
-  value > 0 ? 'text-success' : value < 0 ? 'text-destructive' : 'text-muted-foreground';
+  value > 0 ? 'text-trading-profit' : value < 0 ? 'text-destructive' : 'text-muted-foreground';
 
 export default function CmcMarketIntelligence() {
   const { quotes, global, fearGreed, loading, error, lastFetched, refresh } = useCmcMarketData();
