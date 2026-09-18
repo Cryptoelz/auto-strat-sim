@@ -54,12 +54,17 @@ export default function ApprovalAnalysis() {
 
   const [selected, setSelected] = useState<ProposalRecord | null>(null);
   const [stageFilter, setStageFilter] = useState<string | null>(null);
+  const [tab, setTab] = useState('timeline');
 
   const timeline = useMemo(() => {
     if (!stageFilter) return records.slice(0, 120);
     if (stageFilter === 'Approved') return records.filter((r) => r.decision === 'Approved');
     if (stageFilter === 'Executed') return records.filter((r) => r.executed);
-    if (stageFilter === 'Proposals') return records.filter((r) => r.direction !== 'HOLD');
+    if (stageFilter === 'Proposals' || stageFilter === 'Signals Generated') return records.filter((r) => r.direction !== 'HOLD');
+    if (stageFilter === 'Closed') return records.filter((r) => r.outcome !== null);
+    if (stageFilter === 'Winning Trades') return records.filter((r) => r.outcome === 'win');
+    if (stageFilter === 'Losing Trades') return records.filter((r) => r.outcome === 'loss');
+    // Markets Examined / Markets Evaluated have no per-record representation — show everything.
     return records.slice(0, 120);
   }, [records, stageFilter]);
 
