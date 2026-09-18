@@ -55,6 +55,9 @@ export function useCmcDecisionContext(): CmcDecisionContextState {
     CMC_ENABLED ? loadContextState() : { records: [], extraApiCalls: 0 },
   );
   const [capturing, setCapturing] = useState(false);
+  // Bumped whenever a capture finishes, so any events that arrived mid-flight
+  // are picked up immediately instead of waiting for the next engine event.
+  const [tick, setTick] = useState(0);
 
   const stateRef = useRef(state);
   stateRef.current = state;
@@ -66,7 +69,6 @@ export function useCmcDecisionContext(): CmcDecisionContextState {
     const pending = (executionAttempts ?? []).filter((a) => a && !seenRef.current.has(a.id));
     if (!pending.length || busyRef.current) return;
 
-    let cancelled = false;
     busyRef.current = true;
     setCapturing(true);
 
@@ -74,7 +76,6 @@ export function useCmcDecisionContext(): CmcDecisionContextState {
       try {
         // One snapshot per batch — reuses the 120s cache, normally zero API calls.
         const snapshot = await captureContextSnapshot();
-        if (cancelled) return;
         const records = pending.map((attempt) =>
           buildDecisionContextRecord(toObservedEvent(attempt), snapshot),
         );
@@ -85,15 +86,12 @@ export function useCmcDecisionContext(): CmcDecisionContextState {
       } catch {
         // CMC failure must never affect the platform — record nothing, keep going.
       } finally {
-        if (!cancelled) setCapturing(false);
         busyRef.current = false;
+        setCapturing(false);
+        setTick((t) => t + 1);
       }
     })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [executionAttempts]);
+  }, [executionAttempts, tick]);
 
   const clear = useCallback(() => {
     clearContextState();
