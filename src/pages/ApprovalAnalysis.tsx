@@ -204,7 +204,8 @@ export default function ApprovalAnalysis() {
             <CardHeader className="pb-3"><CardTitle className="text-base">Approval Funnel</CardTitle></CardHeader>
             <CardContent className="space-y-2">
               {funnel.map((f) => (
-                <button key={f.stage} onClick={() => setStageFilter(f.stage)}
+                 <button key={f.stage}
+                  onClick={() => { setStageFilter(f.stage); setTab('timeline'); }}
                   className="w-full rounded-lg border border-border/60 bg-card/50 p-3 text-left transition-colors hover:border-trading-gold/40 hover:bg-trading-gold/[0.05]">
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-[13px] font-medium">{f.stage}</span>
