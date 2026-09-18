@@ -19,6 +19,7 @@ import {
   SidebarFooter,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { CMC_ENABLED } from '@/lib/cmc/config';
 
 const NAV_SECTIONS = [
   ...(CMC_ENABLED
