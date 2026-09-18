@@ -1,10 +1,14 @@
-# CMC Hackathon — Stage 1: Safe Isolated Foundation
+# CMC Hackathon — CoinMarketCap Enrichment Module
 
 Option 1 (Parallel CMC Enrichment Adapter). CoinMarketCap data is **read-only enrichment**. It does
 not generate trades, alter signals, specialist decisions, risk, allocation, backtests, or replace
 Binance candles.
 
-## 1. Files created
+---
+
+## Stage 1 — Safe Isolated Foundation
+
+### 1. Files created
 
 | File | Purpose |
 | --- | --- |
@@ -21,7 +25,7 @@ Binance candles.
 | `src/pages/cmc/CmcMarketIntelligence.tsx` | `/cmc/market-intelligence` dashboard. |
 | `HACKATHON.md` | This document. |
 
-## 2. Existing files modified
+### 2. Existing files modified
 
 | File | Change |
 | --- | --- |
@@ -29,7 +33,7 @@ Binance candles.
 | `src/components/AppSidebar.tsx` | Added one flag-guarded "CMC Hackathon" nav section with a single entry. |
 | `package.json` / `supabase/config.toml` / `src/integrations/supabase/*` | Generated automatically when the backend was enabled to provide the server function runtime. |
 
-## 3. Backend / security architecture
+### 3. Backend / security architecture
 
 - The CoinMarketCap key is stored only as the backend secret `CMC_API_KEY`.
 - Browser code never sees the key: it calls the `cmc-proxy` server function, which injects the
@@ -39,7 +43,7 @@ Binance candles.
 - Errors return a sanitised message and code; upstream headers and key material are never echoed or
   logged.
 
-## 4. CMC endpoints prepared
+### 4. CMC endpoints prepared
 
 | Alias | CMC path |
 | --- | --- |
@@ -49,7 +53,7 @@ Binance candles.
 | `info` | `/v2/cryptocurrency/info` |
 | `fearGreed` | `/v3/fear-and-greed/latest` |
 
-## 5. Feature-flag behaviour
+### 5. Feature-flag behaviour
 
 `CMC_ENABLED` in `src/lib/cmc/config.ts`:
 
@@ -57,19 +61,105 @@ Binance candles.
   without any network call, and the hook performs no work. No other module changes behaviour.
 - `true` → the module is active.
 
-## 6. Isolation boundary
+### 6. Isolation boundary
 
-```
-CMC proxy (server) -> src/lib/cmc/* -> useCmcMarketData -> src/pages/cmc/*
+```text
+CMC proxy (server) -> src/lib/cmc/* -> useCmcMarketData -> src/pages/cmc/* + src/components/cmc/*
 ```
 
 Nothing flows in the other direction. No trading, signal, specialist, risk, portfolio, governance,
-attribution, approval-analysis, backtest, Binance market-data, or test file imports `src/lib/cmc/*`.
+attribution, approval-analysis, backtest, Binance market-data, or existing test file imports
+`src/lib/cmc/*`.
 
-## 7. Rollback procedure
+### 7. Rollback procedure
 
 1. Set `CMC_ENABLED = false` in `src/lib/cmc/config.ts` (instant, zero-risk disable), or
 2. Full removal: delete `src/lib/cmc/`, `src/components/cmc/`, `src/pages/cmc/`,
-   `src/hooks/useCmcMarketData.ts`, `supabase/functions/cmc-proxy/`, then revert the three added
-   lines in `src/App.tsx` and the nav block plus import in `src/components/AppSidebar.tsx`.
+   `src/hooks/useCmcMarketData.ts`, `src/test/cmcIntelligence.test.ts`,
+   `supabase/functions/cmc-proxy/`, then revert the three added lines in `src/App.tsx` and the nav
+   block plus import in `src/components/AppSidebar.tsx`.
 3. Delete the `CMC_API_KEY` secret.
+
+---
+
+## Stage 2 — Market Intelligence Layer
+
+Analysis and visualisation only. No CMC value enters signal generation, trade approval, allocation,
+risk, execution or backtesting.
+
+### A. Files created
+
+| File | Purpose |
+| --- | --- |
+| `src/lib/cmc/cache.ts` | TTL cache, refresh-spacing guard, 429 detection, request/credit statistics. |
+| `src/lib/cmc/intelligence.ts` | Deterministic breadth and snapshot calculations. |
+| `src/lib/cmc/format.ts` | Display formatting helpers (USD, supply, percent, tone class). |
+| `src/components/cmc/MarketRegimePanel.tsx` | CMC Market Regime panel (factual global conditions). |
+| `src/components/cmc/MarketBreadthPanel.tsx` | CMC Market Breadth panel (1h / 24h / 7d, strongest / weakest). |
+| `src/components/cmc/IntelligenceSnapshotPanel.tsx` | Deterministic CMC Intelligence Snapshot. |
+| `src/components/cmc/CmcDiagnosticsPanel.tsx` | API usage diagnostics and per-endpoint status. |
+| `src/components/cmc/CmcProvenanceNote.tsx` | Data provenance / methodology statement. |
+| `src/test/cmcIntelligence.test.ts` | 5 unit tests for breadth and snapshot arithmetic. |
+
+### B. Files modified
+
+| File | Change |
+| --- | --- |
+| `src/lib/cmc/client.ts` | Cache-aware `callCmc` with `force`, TTL, throttle guard, 429 flag, stale fallback. |
+| `src/lib/cmc/adapter.ts` | Added CMC numeric ID, circulating supply, 24h volume change; forwards cache/stale metadata. |
+| `src/lib/cmc/types.ts` | Added `cmcId`, `circulatingSupply`, `volumeChange24h`, `fromCache`, `stale`. |
+| `src/lib/cmc/index.ts` | Exports the new intelligence and cache modules. |
+| `src/hooks/useCmcMarketData.ts` | Per-endpoint status, stale flag, rate-limit flag, refresh cooldown, request stats. |
+| `src/pages/cmc/CmcMarketIntelligence.tsx` | Composed the Stage 2 panels and expanded the tracked-asset table. |
+
+No file outside `src/lib/cmc`, `src/components/cmc`, `src/pages/cmc`, `src/hooks/useCmcMarketData.ts`
+and the new test was modified in Stage 2.
+
+### C. Endpoints used
+
+`quotes` (`/v1/cryptocurrency/quotes/latest`), `global` (`/v1/global-metrics/quotes/latest`),
+`fearGreed` (`/v3/fear-and-greed/latest`). Breadth reuses the existing quotes payload — no extra call.
+
+### D. Calculations introduced
+
+- **Breadth per window (1h / 24h / 7d):** positive = `change > 0`, negative = `change < 0`,
+  flat = remainder; `positivePct = positive / total * 100`.
+- **Strongest / weakest:** max / min of `percentChange24h` across tracked quotes.
+- **Snapshot:** sentiment (`classification (value/100)`), participation (`positive of total`),
+  dominance (BTC / ETH %), breadth (% positive / % negative), top and weakest performer,
+  total market-cap and volume change. All string formatting of already displayed numbers — no model
+  generated commentary, no recommendation, no BUY/SELL/LONG/SHORT language.
+
+### E. Caching / rate protection
+
+- Responses cached per endpoint+params for `CMC_TTL_MS` = 120 s; renders and remounts reuse the cache.
+- Network calls per key spaced at least `CMC_MIN_REFRESH_MS` = 15 s; manual refresh inside that window
+  serves the cache and shows a "Refresh throttled" notice.
+- Concurrent loads are suppressed by an in-flight guard.
+- HTTP 429 (or any "rate limit" message) is detected and surfaced as a distinct banner.
+- Diagnostics panel exposes proxy requests, cache hits, throttled refreshes, errors, 429 count, TTL,
+  spacing and last request time. No key material is exposed.
+
+### F. Failure behaviour
+
+| Scenario | Behaviour |
+| --- | --- |
+| CMC API unavailable | Last known good snapshot kept, `STALE DATA` badge, error banner. No substitution. |
+| Invalid response | Proxy returns a sanitised error; the adapter returns `data: null` and the UI reports it. |
+| 429 rate limit | Dedicated rate-limit banner, cached snapshot retained, counter incremented. |
+| One endpoint fails | Other panels keep their live values; only the failing endpoint shows FAILED / STALE. |
+| Feature flag off | Route and nav entry disappear; the page renders the disabled notice; no network calls. |
+| Any CMC failure | Contained in the CMC module — the rest of CryptoTrader is unaffected. |
+
+### G. Data provenance rules
+
+Every panel carries the `LIVE CMC DATA` badge and the page shows `Last retrieved <timestamp>` plus the
+last known good time when stale. The Provenance & Methodology card states the source, the proxy, the
+read-only guarantee, Binance separation, and that seeded/research data is never mixed in.
+
+### H. Confirmation
+
+- CMC remains strictly read-only enrichment; `CMC_READ_ONLY = true`.
+- Trading and simulation logic is unchanged: no protected file was modified in Stage 2.
+- Regression: 79/79 pre-existing tests pass (84 total with the 5 new CMC tests); production build passes;
+  no API key appears in source or bundle.
