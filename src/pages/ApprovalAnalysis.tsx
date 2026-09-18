@@ -54,12 +54,17 @@ export default function ApprovalAnalysis() {
 
   const [selected, setSelected] = useState<ProposalRecord | null>(null);
   const [stageFilter, setStageFilter] = useState<string | null>(null);
+  const [tab, setTab] = useState('timeline');
 
   const timeline = useMemo(() => {
     if (!stageFilter) return records.slice(0, 120);
     if (stageFilter === 'Approved') return records.filter((r) => r.decision === 'Approved');
     if (stageFilter === 'Executed') return records.filter((r) => r.executed);
-    if (stageFilter === 'Proposals') return records.filter((r) => r.direction !== 'HOLD');
+    if (stageFilter === 'Proposals' || stageFilter === 'Signals Generated') return records.filter((r) => r.direction !== 'HOLD');
+    if (stageFilter === 'Closed') return records.filter((r) => r.outcome !== null);
+    if (stageFilter === 'Winning Trades') return records.filter((r) => r.outcome === 'win');
+    if (stageFilter === 'Losing Trades') return records.filter((r) => r.outcome === 'loss');
+    // Markets Examined / Markets Evaluated have no per-record representation — show everything.
     return records.slice(0, 120);
   }, [records, stageFilter]);
 
@@ -110,7 +115,7 @@ export default function ApprovalAnalysis() {
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="timeline">
+      <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="flex flex-wrap">
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
           <TabsTrigger value="rules">Rejection Leaderboard</TabsTrigger>
@@ -199,7 +204,8 @@ export default function ApprovalAnalysis() {
             <CardHeader className="pb-3"><CardTitle className="text-base">Approval Funnel</CardTitle></CardHeader>
             <CardContent className="space-y-2">
               {funnel.map((f) => (
-                <button key={f.stage} onClick={() => setStageFilter(f.stage)}
+                 <button key={f.stage}
+                  onClick={() => { setStageFilter(f.stage); setTab('timeline'); }}
                   className="w-full rounded-lg border border-border/60 bg-card/50 p-3 text-left transition-colors hover:border-trading-gold/40 hover:bg-trading-gold/[0.05]">
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-[13px] font-medium">{f.stage}</span>
