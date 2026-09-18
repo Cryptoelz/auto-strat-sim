@@ -26,7 +26,10 @@ const NAV_SECTIONS = [
     ? [
         {
           label: 'CMC Hackathon',
-          items: [{ title: 'CMC Market Intelligence', url: '/cmc/market-intelligence', icon: Globe2 }],
+          items: [
+            { title: 'CMC Market Intelligence', url: '/cmc/market-intelligence', icon: Globe2 },
+            { title: 'CMC Decision Context', url: '/cmc/decision-context', icon: Globe2 },
+          ],
         },
       ]
     : []),

@@ -61,6 +61,7 @@ const ApprovalAnalysis = lazyWithRetry(() => import("./pages/ApprovalAnalysis"))
 const RouterV21 = lazyWithRetry(() => import("./pages/RouterV21"));
 // CMC Hackathon — isolated module (guarded by CMC_ENABLED)
 const CmcMarketIntelligence = lazyWithRetry(() => import("./pages/cmc/CmcMarketIntelligence"));
+const CmcDecisionContext = lazyWithRetry(() => import("./pages/cmc/CmcDecisionContext"));
 const PortfolioAIDirector = lazyWithRetry(() => import("./pages/PortfolioAIDirector"));
 const MissionControl = lazyWithRetry(() => import("./pages/MissionControl"));
 const AuditVault = lazyWithRetry(() => import("./pages/AuditVault"));
@@ -327,6 +328,7 @@ const App = () => (
               <Route path="/participation" element={<ParticipationController />} />
               {/* CMC Hackathon namespace */}
               {CMC_ENABLED && <Route path="/cmc/market-intelligence" element={<CmcMarketIntelligence />} />}
+              {CMC_ENABLED && <Route path="/cmc/decision-context" element={<CmcDecisionContext />} />}
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
