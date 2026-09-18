@@ -115,7 +115,7 @@ export default function ApprovalAnalysis() {
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="timeline">
+      <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="flex flex-wrap">
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
           <TabsTrigger value="rules">Rejection Leaderboard</TabsTrigger>
