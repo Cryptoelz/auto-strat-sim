@@ -1,17 +1,20 @@
 /**
- * CMC Hackathon — Stage 3B observer hook.
+ * CMC Hackathon — Stage 3C observer hook.
  *
- * Subscribes READ-ONLY to the engine's already-public execution-attempt stream
- * on TradingContext. It never calls into, configures, blocks or delays the
- * trading engine; it only reads what the engine has already published and
- * attaches the surrounding CoinMarketCap context.
+ * Its primary event source is now the persisted Engine Audit Ledger
+ * (atlas_engine_audit_v1). CMC context is attached STRICTLY AFTER a genuine
+ * engine event has already been produced by the engine, published by the
+ * logger and persisted by the audit observer.
  *
- * Dependency direction: engine -> public stream -> this observer -> CMC store.
+ * Order: engine -> logger -> audit ledger -> CMC context.
+ * CMC never participates in the first three steps and never feeds back.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useTradingContext } from '@/contexts/TradingContext';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { CMC_ENABLED } from '@/lib/cmc/config';
+import { AUDIT_ENABLED } from '@/lib/audit/config';
+import { getAuditEvents, subscribeToAudit } from '@/lib/audit/auditLedger';
+import type { EngineAuditEvent } from '@/lib/audit/types';
 import {
   buildDecisionContextRecord,
   captureContextSnapshot,
@@ -27,16 +30,16 @@ import {
   saveContextState,
   type CmcContextPersistedState,
 } from '@/lib/cmc/contextStore';
-import type { ExecutionAttempt } from '@/types/trading';
 
-export function toObservedEvent(attempt: ExecutionAttempt): CmcObservedEvent {
+/** Maps a persisted genuine audit event onto the observed-event shape. */
+export function toObservedEvent(event: EngineAuditEvent): CmcObservedEvent {
   return {
-    eventId: attempt.id,
-    timestamp: attempt.timestamp,
-    asset: attempt.asset,
-    decisionType: `${attempt.side} entry attempt`,
-    decisionOutcome: attempt.outcome,
-    detail: attempt.outcomeDetail,
+    eventId: event.eventId,
+    timestamp: event.timestamp,
+    asset: event.asset,
+    decisionType: event.eventType,
+    decisionOutcome: event.signal ?? event.eventType,
+    detail: event.explanation,
   };
 }
 
@@ -45,11 +48,12 @@ export interface CmcDecisionContextState {
   diagnostics: ContextDiagnostics;
   capturing: boolean;
   enabled: boolean;
+  auditEnabled: boolean;
   clear: () => void;
 }
 
 export function useCmcDecisionContext(): CmcDecisionContextState {
-  const { executionAttempts } = useTradingContext();
+  const auditEvents = useSyncExternalStore(subscribeToAudit, getAuditEvents, getAuditEvents);
 
   const [state, setState] = useState<CmcContextPersistedState>(() =>
     CMC_ENABLED ? loadContextState() : { records: [], extraApiCalls: 0 },
@@ -65,8 +69,9 @@ export function useCmcDecisionContext(): CmcDecisionContextState {
   const busyRef = useRef(false);
 
   useEffect(() => {
-    if (!CMC_ENABLED) return;
-    const pending = (executionAttempts ?? []).filter((a) => a && !seenRef.current.has(a.id));
+    // CMC fails safe when the audit ledger is disabled: no source, no capture.
+    if (!CMC_ENABLED || !AUDIT_ENABLED) return;
+    const pending = (auditEvents ?? []).filter((e) => e && !seenRef.current.has(e.eventId));
     if (!pending.length || busyRef.current) return;
 
     busyRef.current = true;
@@ -76,22 +81,22 @@ export function useCmcDecisionContext(): CmcDecisionContextState {
       try {
         // One snapshot per batch — reuses the 120s cache, normally zero API calls.
         const snapshot = await captureContextSnapshot();
-        const records = pending.map((attempt) =>
-          buildDecisionContextRecord(toObservedEvent(attempt), snapshot),
+        const records = pending.map((event) =>
+          buildDecisionContextRecord(toObservedEvent(event), snapshot),
         );
-        pending.forEach((a) => seenRef.current.add(a.id));
+        pending.forEach((e) => seenRef.current.add(e.eventId));
         const next = appendContextRecords(stateRef.current, records, snapshot.networkCalls);
         saveContextState(next);
         setState(next);
       } catch {
-        // CMC failure must never affect the platform — record nothing, keep going.
+        // CMC failure must never affect the platform or the audit record.
       } finally {
         busyRef.current = false;
         setCapturing(false);
         setTick((t) => t + 1);
       }
     })();
-  }, [executionAttempts, tick]);
+  }, [auditEvents, tick]);
 
   const clear = useCallback(() => {
     clearContextState();
@@ -109,5 +114,5 @@ export function useCmcDecisionContext(): CmcDecisionContextState {
     [state.records],
   );
 
-  return { records, diagnostics, capturing, enabled: CMC_ENABLED, clear };
+  return { records, diagnostics, capturing, enabled: CMC_ENABLED, auditEnabled: AUDIT_ENABLED, clear };
 }
