@@ -174,6 +174,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        {AUDIT_ENABLED && <EngineAuditObserver />}
         <BrowserRouter>
           <Suspense fallback={<RouteFallback />}>
           <Routes>
