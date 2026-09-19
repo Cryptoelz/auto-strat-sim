@@ -259,3 +259,118 @@ Set `CMC_ENABLED = false` in `src/lib/cmc/config.ts`, or delete
 and `src/test/cmcDecisionContext.test.ts`, then revert the two lines in `App.tsx` and the one
 nav entry in `AppSidebar.tsx`. Stored records can be cleared with the page's "Clear context log"
 button or by removing the `atlas_cmc_context_v1` key.
+
+---
+
+## Stage 3C — Persistent Engine Audit Ledger (minimum safe version)
+
+### A. One-way architecture
+
+```
+TRADING ENGINE — UNMODIFIED
+        ↓  logDecision()
+src/lib/logger.ts  (existing public subscribeToLog / getLogEntries)
+        ↓  passive subscription
+AUDIT OBSERVER  (useEngineAuditObserver, mounted once in App)
+        ↓
+atlas_engine_audit_v1  (localStorage ledger)
+        ↓  read-only
+CMC DECISION CONTEXT  (atlas_cmc_context_v1)
+```
+
+There is no dependency in the opposite direction: no trading, signal, specialist, risk,
+governance, allocation, execution or backtest module imports `src/lib/audit/**` or
+`src/lib/cmc/**` (asserted by test).
+
+### B. Genuine event source
+
+`src/lib/logger.ts` only — the engine's existing decision log. Captured event types are those
+the engine already emits: `blocked`, `risk_pause`, `opened_long`, `opened_short`, `closed_long`,
+`closed_short`, `flipped`. Execution attempts, specialist HOLD and the specialist ledger are
+deliberately NOT wired in at this stage.
+
+### C. Files created
+
+- `src/lib/audit/config.ts` — `AUDIT_ENABLED`, `atlas_engine_audit_v1`, 1000-event cap.
+- `src/lib/audit/types.ts` — `EngineAuditEvent`, `AuditSummary`, `AuditStorageStatus`.
+- `src/lib/audit/auditLedger.ts` — `toAuditEvent`, `dedupeAppend`, `summariseAudit`,
+  persisted observable store (`getAuditEvents`, `subscribeToAudit`, `recordLoggerEntries`,
+  `clearAuditLedger`, `resetAuditCache`, `getAuditStorageStatus`, `exportAuditJson`).
+- `src/hooks/useEngineAuditLedger.ts` — `useEngineAuditObserver` (capture) and
+  `useEngineAuditLedger` (read-only view).
+- `src/components/audit/EngineAuditObserver.tsx` — renders nothing; app-level mount point.
+- `src/components/audit/EngineAuditTable.tsx` — evidence table.
+- `src/pages/audit/EngineDecisionAudit.tsx` — ENGINE DECISION AUDIT™ page.
+- `src/test/engineAudit.test.ts` — 12 tests.
+
+### D. Files modified
+
+- `src/App.tsx` — one flag import, one component import, one lazy page import, one mounted
+  `<EngineAuditObserver />`, one guarded route.
+- `src/components/AppSidebar.tsx` — one flag import, one nav item.
+- `src/hooks/useCmcDecisionContext.ts` — CMC-owned; event source switched from
+  `executionAttempts` to the persisted audit ledger.
+- `HACKATHON.md` — this section.
+
+### E. Schema
+
+`eventId`, `timestamp`, `asset`, `eventType`, `signal`, `explanation`, `regime`,
+`filterBlocked`, `sourceModule: 'logger'`, `capturedAt`,
+`provenance: { engineModified: false, observerOnly: true }`. Fields the engine did not supply
+are recorded as `null` — never inferred, never fabricated.
+
+### F. Persistence, deduplication, retention
+
+`localStorage` key `atlas_engine_audit_v1`, `{ version, events, updatedAt }`. Deduplication by
+the immutable logger event id; retention bounded at 1000 events (oldest dropped). Reads and
+writes are wrapped in try/catch: corrupt JSON yields an empty ledger, a quota error flags
+storage unavailable, and neither throws.
+
+### G. Failure isolation
+
+Capture runs in an effect after the logger has already published. Every capture path is
+try/catch-guarded, listener errors are swallowed, and no audit code path calls into the engine.
+Audit failure therefore cannot block signal generation, specialist evaluation, risk, governance
+or paper execution. CMC failure leaves the genuine audit record intact and only produces
+`CONTEXT UNAVAILABLE`.
+
+### H. CMC attachment order
+
+1. Engine creates the decision → 2. logger publishes it → 3. audit observer persists it →
+4. the CMC observer sees the persisted audit event → 5. CMC context is attached afterwards and
+joined by `eventId`, with `causalInfluence = false`. When `AUDIT_ENABLED` is false the CMC
+observer has no source and captures nothing (fails safe).
+
+### I. Tests
+
+12 new tests: genuine capture without inference, survives store reload, duplicate rejection,
+1000-event retention, corrupt storage, storage-write failure not affecting the logger, disabled
+observer writes nothing, export contains only genuine records, CMC derives from a persisted
+audit event, CMC unavailable leaves the audit event intact, no protected trading module imports
+audit/CMC, no specialist module imports audit/CMC.
+
+Result: **107/107 pass** (95 baseline unchanged + 12 new). `tsgo --noEmit` clean, production
+build passes.
+
+### J. Protected files
+
+Byte-identical: `useUnifiedTradingEngine.ts`, `logger.ts`, `TradingContext.tsx`,
+`signalEngine.ts`, `filters.ts`, `indicators.ts`, `executionSimulator.ts`, `riskManager.ts`,
+`portfolioManager.ts`, `governanceEngine.ts`, `src/lib/specialists/*`, `funnelStore.ts`,
+`attribution.ts`, `approvalAnalysis.ts`, `backtest-engine.ts`, `liveMarketData.ts`,
+`marketData.ts`.
+
+### K. Rollback
+
+Set `AUDIT_ENABLED = false` in `src/lib/audit/config.ts` — no capture, no storage writes, no
+route, no nav entry, engine unchanged. Full removal: delete `src/lib/audit/**`,
+`src/hooks/useEngineAuditLedger.ts`, `src/components/audit/**`, `src/pages/audit/**` and
+`src/test/engineAudit.test.ts`; revert the four lines in `App.tsx`, the two in `AppSidebar.tsx`
+and the event source in `useCmcDecisionContext.ts`. Removing the `atlas_engine_audit_v1` key
+deletes all audit data with zero effect on CryptoTrader.
+
+### L. Evidence methodology
+
+Evidence is only ever the engine's own events: the observer copies logger entries verbatim and
+persists them. Nothing is inserted manually, no threshold is loosened, and the JSON export
+contains exactly the persisted genuine records. Page: `/audit/engine-decisions`.
