@@ -106,6 +106,28 @@ describe('Stage 3C — genuine event capture', () => {
     expect(getAuditEvents()).toEqual([]);
   });
 
+  it('stays cleared — the logger buffer replay can never resurrect cleared events', () => {
+    // Simulate the live flow: logger holds a buffer, observer ingests it.
+    logDecision({ asset: 'BTCUSDT' as DecisionLogEntry['asset'], action: 'blocked', explanation: 'old decision 1' });
+    logDecision({ asset: 'ETHUSDT' as DecisionLogEntry['asset'], action: 'blocked', explanation: 'old decision 2' });
+    expect(recordLoggerEntries(getLogEntries())).toBe(2);
+
+    clearAuditLedger();
+    expect(getAuditEvents()).toEqual([]);
+
+    // Next logger notification: observer re-submits the full in-memory buffer.
+    logDecision({ asset: 'SOLUSDT' as DecisionLogEntry['asset'], action: 'blocked', explanation: 'new decision' });
+    expect(recordLoggerEntries(getLogEntries())).toBe(1);
+    const kept = getAuditEvents();
+    expect(kept).toHaveLength(1);
+    expect(kept[0].explanation).toBe('new decision');
+
+    // Tombstones survive a simulated page reload too.
+    resetAuditCache();
+    expect(recordLoggerEntries(getLogEntries())).toBe(0);
+    expect(getAuditEvents()).toHaveLength(1);
+  });
+
   it('summarises and exports only genuine persisted records', () => {
     recordLoggerEntries([entry(), entry({ id: 'evt-2', action: 'opened_long' })]);
     const summary = summariseAudit(getAuditEvents());
