@@ -11,6 +11,9 @@ export const AUDIT_ENABLED = true;
 
 export const AUDIT_STORAGE_KEY = 'atlas_engine_audit_v1';
 
+/** Tombstone of event ids cleared by the user — they must never be re-ingested. */
+export const AUDIT_CLEARED_KEY = 'atlas_engine_audit_cleared_v1';
+
 /** Bounded retention — oldest events are dropped beyond this cap. */
 export const AUDIT_MAX_EVENTS = 1000;
 
