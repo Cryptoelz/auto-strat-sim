@@ -12,7 +12,7 @@
  */
 
 import type { DecisionLogEntry } from '@/types/trading';
-import { AUDIT_MAX_EVENTS, AUDIT_SOURCE_MODULE, AUDIT_STORAGE_KEY } from './config';
+import { AUDIT_CLEARED_KEY, AUDIT_MAX_EVENTS, AUDIT_SOURCE_MODULE, AUDIT_STORAGE_KEY } from './config';
 import type { AuditStorageStatus, AuditSummary, EngineAuditEvent } from './types';
 
 /** Pure: maps a genuine logger entry onto an immutable audit record. */
@@ -65,9 +65,35 @@ export function summariseAudit(events: EngineAuditEvent[]): AuditSummary {
 // ── persisted, observable store ───────────────────────────────────────────
 
 let events: EngineAuditEvent[] | null = null;
+let clearedIds: Set<string> | null = null;
 let listeners: Array<() => void> = [];
 let lastError: string | null = null;
 let storageAvailable = true;
+
+function readClearedIds(): Set<string> {
+  try {
+    const raw = localStorage.getItem(AUDIT_CLEARED_KEY);
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw) as { ids?: unknown };
+    const ids = Array.isArray(parsed?.ids) ? parsed.ids.filter((i): i is string => typeof i === 'string') : [];
+    return new Set(ids.slice(-AUDIT_MAX_EVENTS));
+  } catch {
+    return new Set();
+  }
+}
+
+function writeClearedIds(ids: Set<string>): void {
+  try {
+    localStorage.setItem(AUDIT_CLEARED_KEY, JSON.stringify({ version: 1, ids: [...ids].slice(-AUDIT_MAX_EVENTS) }));
+  } catch {
+    /* tombstone persistence failure degrades only the clear guarantee */
+  }
+}
+
+function ensureClearedIds(): Set<string> {
+  if (clearedIds === null) clearedIds = readClearedIds();
+  return clearedIds;
+}
 
 function readStorage(): EngineAuditEvent[] {
   try {
@@ -133,8 +159,11 @@ export function subscribeToAudit(listener: () => void): () => void {
  */
 export function recordLoggerEntries(entries: DecisionLogEntry[], now: number = Date.now()): number {
   try {
+    const tombstones = ensureClearedIds();
+    const fresh = tombstones.size ? entries.filter((e) => !tombstones.has(e.id)) : entries;
+    if (!fresh.length) return 0;
     const current = ensureLoaded();
-    const next = dedupeAppend(current, entries.map((e) => toAuditEvent(e, now)));
+    const next = dedupeAppend(current, fresh.map((e) => toAuditEvent(e, now)));
     if (next === current) return 0;
     events = next;
     writeStorage(next);
@@ -147,6 +176,13 @@ export function recordLoggerEntries(entries: DecisionLogEntry[], now: number = D
 }
 
 export function clearAuditLedger(): void {
+  // Tombstone every id we know about (persisted events plus the logger's
+  // in-memory buffer replayed by the observer) so cleared events can never
+  // be re-ingested on the next logger notification.
+  const tombstones = ensureClearedIds();
+  for (const e of ensureLoaded()) tombstones.add(e.eventId);
+  clearedIds = new Set([...tombstones].slice(-AUDIT_MAX_EVENTS));
+  writeClearedIds(clearedIds);
   events = [];
   try {
     localStorage.removeItem(AUDIT_STORAGE_KEY);
@@ -159,6 +195,7 @@ export function clearAuditLedger(): void {
 /** Test/runtime helper — drops the in-memory copy so storage is re-read. */
 export function resetAuditCache(): void {
   events = null;
+  clearedIds = null;
   lastError = null;
   storageAvailable = true;
   emit();
