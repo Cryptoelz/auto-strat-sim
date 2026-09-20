@@ -12,7 +12,7 @@
  */
 
 import type { DecisionLogEntry } from '@/types/trading';
-import { AUDIT_MAX_EVENTS, AUDIT_SOURCE_MODULE, AUDIT_STORAGE_KEY } from './config';
+import { AUDIT_CLEARED_KEY, AUDIT_MAX_EVENTS, AUDIT_SOURCE_MODULE, AUDIT_STORAGE_KEY } from './config';
 import type { AuditStorageStatus, AuditSummary, EngineAuditEvent } from './types';
 
 /** Pure: maps a genuine logger entry onto an immutable audit record. */
