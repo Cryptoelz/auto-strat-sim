@@ -65,9 +65,35 @@ export function summariseAudit(events: EngineAuditEvent[]): AuditSummary {
 // ── persisted, observable store ───────────────────────────────────────────
 
 let events: EngineAuditEvent[] | null = null;
+let clearedIds: Set<string> | null = null;
 let listeners: Array<() => void> = [];
 let lastError: string | null = null;
 let storageAvailable = true;
+
+function readClearedIds(): Set<string> {
+  try {
+    const raw = localStorage.getItem(AUDIT_CLEARED_KEY);
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw) as { ids?: unknown };
+    const ids = Array.isArray(parsed?.ids) ? parsed.ids.filter((i): i is string => typeof i === 'string') : [];
+    return new Set(ids.slice(-AUDIT_MAX_EVENTS));
+  } catch {
+    return new Set();
+  }
+}
+
+function writeClearedIds(ids: Set<string>): void {
+  try {
+    localStorage.setItem(AUDIT_CLEARED_KEY, JSON.stringify({ version: 1, ids: [...ids].slice(-AUDIT_MAX_EVENTS) }));
+  } catch {
+    /* tombstone persistence failure degrades only the clear guarantee */
+  }
+}
+
+function ensureClearedIds(): Set<string> {
+  if (clearedIds === null) clearedIds = readClearedIds();
+  return clearedIds;
+}
 
 function readStorage(): EngineAuditEvent[] {
   try {
