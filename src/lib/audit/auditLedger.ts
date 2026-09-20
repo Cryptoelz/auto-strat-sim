@@ -11,7 +11,7 @@
  * can never propagate into the engine.
  */
 
-import type { DecisionLogEntry } from '@/types/trading';
+import type { DecisionLogEntry, Trade } from '@/types/trading';
 import { AUDIT_CLEARED_KEY, AUDIT_MAX_EVENTS, AUDIT_SOURCE_MODULE, AUDIT_STORAGE_KEY } from './config';
 import type { AuditStorageStatus, AuditSummary, EngineAuditEvent } from './types';
 
@@ -27,6 +27,39 @@ export function toAuditEvent(entry: DecisionLogEntry, capturedAt: number = Date.
     regime: entry.regime ?? null,
     filterBlocked: entry.filterBlocked ?? null,
     sourceModule: AUDIT_SOURCE_MODULE,
+    backfilled: false,
+    contextContemporaneous: true,
+    capturedAt,
+    provenance: { engineModified: false, observerOnly: true },
+  };
+}
+
+/** Stable, immutable audit id derived from the engine's own trade id. */
+export function tradeEventId(tradeId: string): string {
+  return `trade:${tradeId}`;
+}
+
+/**
+ * Pure: maps a genuine COMPLETED simulated trade onto an audit record.
+ *
+ * The trade is read back from the engine's already-public, already-persisted
+ * trade history, so observation happens strictly AFTER execution. Such records
+ * are therefore always marked backfilled and non-contemporaneous: no CMC
+ * snapshot may ever be attached to them.
+ */
+export function toTradeAuditEvent(trade: Trade, capturedAt: number = Date.now()): EngineAuditEvent {
+  return {
+    eventId: tradeEventId(trade.id),
+    timestamp: trade.exitTime,
+    asset: trade.asset,
+    eventType: trade.direction === 'short' ? 'closed_short' : 'closed_long',
+    signal: trade.direction,
+    explanation: `Completed simulated trade — exit reason: ${trade.exitReason}`,
+    regime: trade.exitRegime ?? trade.entryRegime ?? null,
+    filterBlocked: null,
+    sourceModule: 'trades',
+    backfilled: true,
+    contextContemporaneous: false,
     capturedAt,
     provenance: { engineModified: false, observerOnly: true },
   };
@@ -54,12 +87,16 @@ export function summariseAudit(events: EngineAuditEvent[]): AuditSummary {
   const byType: Record<string, number> = {};
   const assets = new Set<string>();
   let latest: number | null = null;
+  let live = 0;
+  let backfilled = 0;
   for (const e of events) {
+    if (e.backfilled) backfilled += 1;
+    else live += 1;
     byType[e.eventType] = (byType[e.eventType] ?? 0) + 1;
     assets.add(e.asset);
     if (latest === null || e.timestamp > latest) latest = e.timestamp;
   }
-  return { total: events.length, byType, assets: [...assets].sort(), latestTimestamp: latest };
+  return { total: events.length, live, backfilled, byType, assets: [...assets].sort(), latestTimestamp: latest };
 }
 
 // ── persisted, observable store ───────────────────────────────────────────
@@ -101,11 +138,20 @@ function readStorage(): EngineAuditEvent[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw) as { events?: unknown };
     const list = Array.isArray(parsed?.events) ? parsed.events : [];
-    return list.filter(
-      (e): e is EngineAuditEvent =>
-        !!e && typeof (e as EngineAuditEvent).eventId === 'string' &&
-        typeof (e as EngineAuditEvent).timestamp === 'number',
-    ).slice(-AUDIT_MAX_EVENTS);
+    return list
+      .filter(
+        (e): e is EngineAuditEvent =>
+          !!e && typeof (e as EngineAuditEvent).eventId === 'string' &&
+          typeof (e as EngineAuditEvent).timestamp === 'number',
+      )
+      .map((e) => ({
+        // Records written before the trade source existed are live logger events.
+        ...e,
+        sourceModule: e.sourceModule ?? AUDIT_SOURCE_MODULE,
+        backfilled: e.backfilled ?? false,
+        contextContemporaneous: e.contextContemporaneous ?? true,
+      }))
+      .slice(-AUDIT_MAX_EVENTS);
   } catch (err) {
     lastError = err instanceof Error ? err.message : 'corrupt audit storage';
     return [];
@@ -171,6 +217,34 @@ export function recordLoggerEntries(entries: DecisionLogEntry[], now: number = D
     return next.length - current.length;
   } catch (err) {
     lastError = err instanceof Error ? err.message : 'audit capture failed';
+    return 0;
+  }
+}
+
+/**
+ * Persists genuine COMPLETED simulated trades read from the engine's public
+ * trade history. Deduplicated by the engine's immutable trade id, so reloads,
+ * re-renders and observer remounts can never create duplicates.
+ * Never throws — audit capture failure must not affect CryptoTrader.
+ */
+export function recordCompletedTrades(trades: Trade[], now: number = Date.now()): number {
+  try {
+    if (!Array.isArray(trades) || !trades.length) return 0;
+    const tombstones = ensureClearedIds();
+    const mapped = trades
+      .filter((t) => t && typeof t.id === 'string')
+      .map((t) => toTradeAuditEvent(t, now))
+      .filter((e) => !tombstones.has(e.eventId));
+    if (!mapped.length) return 0;
+    const current = ensureLoaded();
+    const next = dedupeAppend(current, mapped);
+    if (next === current) return 0;
+    events = next;
+    writeStorage(next);
+    emit();
+    return next.length - current.length;
+  } catch (err) {
+    lastError = err instanceof Error ? err.message : 'audit trade capture failed';
     return 0;
   }
 }
