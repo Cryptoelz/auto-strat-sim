@@ -195,6 +195,7 @@ export function clearAuditLedger(): void {
 /** Test/runtime helper — drops the in-memory copy so storage is re-read. */
 export function resetAuditCache(): void {
   events = null;
+  clearedIds = null;
   lastError = null;
   storageAvailable = true;
   emit();
