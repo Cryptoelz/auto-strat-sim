@@ -71,7 +71,12 @@ export function useCmcDecisionContext(): CmcDecisionContextState {
   useEffect(() => {
     // CMC fails safe when the audit ledger is disabled: no source, no capture.
     if (!CMC_ENABLED || !AUDIT_ENABLED) return;
-    const pending = (auditEvents ?? []).filter((e) => e && !seenRef.current.has(e.eventId));
+    // Backfilled / non-contemporaneous records (completed trades observed after
+    // execution) are NEVER given a CMC snapshot — today's market environment is
+    // not the environment that existed at decision time.
+    const pending = (auditEvents ?? []).filter(
+      (e) => e && e.contextContemporaneous !== false && !seenRef.current.has(e.eventId),
+    );
     if (!pending.length || busyRef.current) return;
 
     busyRef.current = true;
