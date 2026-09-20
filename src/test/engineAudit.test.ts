@@ -12,6 +12,7 @@ import {
   exportAuditJson,
   getAuditEvents,
   getAuditStorageStatus,
+  recordCompletedTrades,
   recordLoggerEntries,
   resetAuditCache,
   summariseAudit,
@@ -21,7 +22,7 @@ import { AUDIT_MAX_EVENTS, AUDIT_STORAGE_KEY } from '@/lib/audit/config';
 import { logDecision, getLogEntries, clearLog } from '@/lib/logger';
 import { toObservedEvent } from '@/hooks/useCmcDecisionContext';
 import { buildDecisionContextRecord, type CmcContextSnapshot } from '@/lib/cmc/decisionContext';
-import type { DecisionLogEntry } from '@/types/trading';
+import type { DecisionLogEntry, Trade } from '@/types/trading';
 
 const entry = (over: Partial<DecisionLogEntry> = {}): DecisionLogEntry => ({
   id: 'evt-1',
@@ -196,5 +197,91 @@ describe('Stage 3C — one-way dependency', () => {
       const src = fs.readFileSync(path.join(dir, f), 'utf8');
       expect(src, `${f} must not import audit/cmc`).not.toMatch(/lib\/(audit|cmc)\//);
     }
+  });
+});
+
+// ── Stage 3C repair — completed trades as a second, backfilled source ──────
+
+describe('Engine Audit Ledger — completed trade source', () => {
+  const trade = (over: Partial<Trade> = {}): Trade => ({
+    id: 't-1',
+    asset: 'BTCUSDT' as Trade['asset'],
+    direction: 'long',
+    entryPrice: 100,
+    exitPrice: 110,
+    entryTime: 1_700_000_000_000,
+    exitTime: 1_700_000_060_000,
+    size: 1,
+    pnl: 10,
+    pnlPercent: 10,
+    fees: 0.1,
+    type: 'win',
+    exitReason: 'take_profit' as Trade['exitReason'],
+    ...over,
+  });
+
+  it('A. imports existing historical trades exactly once', () => {
+    const added = recordCompletedTrades([trade(), trade({ id: 't-2' })]);
+    expect(added).toBe(2);
+    expect(getAuditEvents()).toHaveLength(2);
+  });
+
+  it('B. re-reading persisted storage after a reload creates no duplicates', () => {
+    recordCompletedTrades([trade(), trade({ id: 't-2' })]);
+    resetAuditCache(); // simulates a page reload re-reading localStorage
+    expect(recordCompletedTrades([trade(), trade({ id: 't-2' })])).toBe(0);
+    expect(getAuditEvents()).toHaveLength(2);
+  });
+
+  it('C. repeated observer runs (remount / rerender) create no duplicates', () => {
+    recordCompletedTrades([trade()]);
+    recordCompletedTrades([trade()]);
+    recordCompletedTrades([trade(), trade({ id: 't-3' })]);
+    expect(getAuditEvents().map((e) => e.eventId)).toEqual(['trade:t-1', 'trade:t-3']);
+  });
+
+  it('D/E. trade records are backfilled, non-contemporaneous and CMC-ineligible', () => {
+    recordCompletedTrades([trade()]);
+    const [rec] = getAuditEvents();
+    expect(rec.sourceModule).toBe('trades');
+    expect(rec.backfilled).toBe(true);
+    expect(rec.contextContemporaneous).toBe(false);
+    expect(rec.provenance).toEqual({ engineModified: false, observerOnly: true });
+    // The CMC observer must skip it entirely — no current snapshot is attached.
+    const eligible = getAuditEvents().filter((e) => e.contextContemporaneous !== false);
+    expect(eligible).toHaveLength(0);
+  });
+
+  it('F. live logger events still enter the ledger as contemporaneous records', () => {
+    recordCompletedTrades([trade()]);
+    recordLoggerEntries([entry({ id: 'evt-live' })]);
+    const live = getAuditEvents().filter((e) => !e.backfilled);
+    expect(live).toHaveLength(1);
+    expect(live[0].sourceModule).toBe('logger');
+    expect(live[0].contextContemporaneous).toBe(true);
+  });
+
+  it('G/H. capture never throws when storage is unavailable', () => {
+    const spy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('quota exceeded');
+    });
+    expect(() => recordCompletedTrades([trade({ id: 't-fail' })])).not.toThrow();
+    spy.mockRestore();
+  });
+
+  it('summary separates live and backfilled counts', () => {
+    recordCompletedTrades([trade(), trade({ id: 't-2' })]);
+    recordLoggerEntries([entry({ id: 'evt-live' })]);
+    const s = summariseAudit(getAuditEvents());
+    expect(s.backfilled).toBe(2);
+    expect(s.live).toBe(1);
+    expect(s.total).toBe(3);
+  });
+
+  it('cleared trade records stay cleared', () => {
+    recordCompletedTrades([trade()]);
+    clearAuditLedger();
+    expect(recordCompletedTrades([trade()])).toBe(0);
+    expect(getAuditEvents()).toHaveLength(0);
   });
 });
