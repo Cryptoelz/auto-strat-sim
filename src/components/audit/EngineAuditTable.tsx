@@ -37,12 +37,14 @@ export function EngineAuditTable({ events }: { events: EngineAuditEvent[] }) {
               <TableHeader>
                 <TableRow>
                   <TableHead className="text-xs">Time</TableHead>
+                  <TableHead className="text-xs">Source</TableHead>
                   <TableHead className="text-xs">Asset</TableHead>
                   <TableHead className="text-xs">Event type</TableHead>
                   <TableHead className="text-xs">Decision / signal</TableHead>
                   <TableHead className="text-xs">Reason</TableHead>
                   <TableHead className="text-xs">Regime</TableHead>
                   <TableHead className="text-xs">Filter</TableHead>
+                  <TableHead className="text-xs">CMC context</TableHead>
                   <TableHead className="text-xs">Event ID</TableHead>
                   <TableHead className="text-xs">Provenance</TableHead>
                 </TableRow>
@@ -52,6 +54,17 @@ export function EngineAuditTable({ events }: { events: EngineAuditEvent[] }) {
                   <TableRow key={e.eventId}>
                     <TableCell className="whitespace-nowrap text-xs">
                       {new Date(e.timestamp).toLocaleTimeString()}
+                    </TableCell>
+                    <TableCell>
+                      {e.backfilled ? (
+                        <Badge variant="outline" className="border-muted-foreground/40 bg-muted/30 text-[10px] text-muted-foreground">
+                          BACKFILLED COMPLETED TRADE
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="border-primary/50 bg-primary/10 text-[10px] text-primary">
+                          LIVE LOGGER EVENT
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell className="text-xs font-medium">{e.asset}</TableCell>
                     <TableCell>
@@ -63,9 +76,15 @@ export function EngineAuditTable({ events }: { events: EngineAuditEvent[] }) {
                     <TableCell className="max-w-[360px] text-xs text-muted-foreground">{e.explanation}</TableCell>
                     <TableCell className="text-xs">{e.regime ?? dash}</TableCell>
                     <TableCell className="text-xs">{e.filterBlocked ?? dash}</TableCell>
+                    <TableCell className="text-[10px] text-muted-foreground">
+                      {e.contextContemporaneous === false
+                        ? 'CMC CONTEXT: UNAVAILABLE — RETROSPECTIVE'
+                        : 'Eligible — contemporaneous'}
+                    </TableCell>
                     <TableCell className="font-mono text-[10px] text-muted-foreground">{e.eventId}</TableCell>
                     <TableCell className="text-[10px] text-muted-foreground">
-                      {e.sourceModule} · observer only · engine modified: NO
+                      {e.sourceModule} · observer only · engine modified: NO · backfilled:{' '}
+                      {e.backfilled ? 'YES' : 'NO'}
                     </TableCell>
                   </TableRow>
                 ))}

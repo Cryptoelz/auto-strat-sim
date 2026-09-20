@@ -374,3 +374,30 @@ deletes all audit data with zero effect on CryptoTrader.
 Evidence is only ever the engine's own events: the observer copies logger entries verbatim and
 persists them. Nothing is inserted manually, no threshold is loosened, and the JSON export
 contains exactly the persisted genuine records. Page: `/audit/engine-decisions`.
+
+## Stage 3C repair — audit persistence asymmetry
+
+The logger's buffer is in-memory (200 entries, lost on reload) while completed simulated trades
+are persisted by the engine. The audit ledger therefore showed 0 events while Paper Trading held
+43 genuine trades. Repair: a SECOND, clearly-labelled audit source.
+
+- Primary live source unchanged: `subscribeToLog` / `getLogEntries` (contemporaneous).
+- Secondary source: `TradingContext.state.trades` — the engine's already-public, already-persisted
+  completed-trade history, read-only, deduplicated by the engine's immutable trade id
+  (`trade:<id>`). Reload, rerender and observer remount cannot create duplicates.
+- Trade-sourced records are always `sourceModule: 'trades'`, `backfilled: true`,
+  `contextContemporaneous: false` — observed strictly AFTER execution.
+- CMC context is NEVER attached to non-contemporaneous records; the UI shows
+  `CMC CONTEXT: UNAVAILABLE — RETROSPECTIVE`. No historical snapshot is reconstructed or faked.
+- Provenance preserved: `engineModified: false`, `observerOnly: true`, `causalInfluence: false`.
+
+Files modified: `src/lib/audit/types.ts`, `src/lib/audit/auditLedger.ts`
+(`recordCompletedTrades`, `toTradeAuditEvent`, `tradeEventId`, legacy-record normalisation),
+`src/hooks/useEngineAuditLedger.ts` (`useCompletedTradeAuditObserver`),
+`src/components/audit/EngineAuditObserver.tsx`, `src/components/audit/EngineAuditTable.tsx`
+(Source + CMC context columns), `src/pages/audit/EngineDecisionAudit.tsx` (live vs backfilled
+counters), `src/hooks/useCmcDecisionContext.ts` (skips non-contemporaneous records),
+`src/App.tsx` (observer mount removed), `src/components/AppLayout.tsx` (observer mounted inside
+`TradingProvider`), `src/test/engineAudit.test.ts` (+8 tests).
+
+No protected trading file was modified. Tests: 108 -> 116 passing.

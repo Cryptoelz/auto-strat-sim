@@ -10,7 +10,6 @@ import { AppLayout } from "@/components/AppLayout";
 import { ExecPageSkeleton } from "@/components/executive/ExecUi";
 import { CMC_ENABLED } from "@/lib/cmc/config";
 import { AUDIT_ENABLED } from "@/lib/audit/config";
-import { EngineAuditObserver } from "@/components/audit/EngineAuditObserver";
 const MaintenanceExecutive = lazyWithRetry(() => import("./pages/maintenance/MaintenanceExecutive"));
 const MaintenanceInstitutionHealth = lazyWithRetry(() => import("./pages/maintenance/MaintenanceInstitutionHealth"));
 const MaintenanceModules = lazyWithRetry(() => import("./pages/maintenance/MaintenanceModules"));
@@ -174,7 +173,6 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        {AUDIT_ENABLED && <EngineAuditObserver />}
         <BrowserRouter>
           <Suspense fallback={<RouteFallback />}>
           <Routes>

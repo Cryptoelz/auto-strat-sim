@@ -15,11 +15,13 @@ import {
   exportAuditJson,
   getAuditEvents,
   getAuditStorageStatus,
+  recordCompletedTrades,
   recordLoggerEntries,
   subscribeToAudit,
   summariseAudit,
 } from '@/lib/audit/auditLedger';
 import type { AuditSummary, EngineAuditEvent } from '@/lib/audit/types';
+import { useTradingContext } from '@/contexts/TradingContext';
 
 /** Passive app-level observer. Renders nothing, returns nothing. */
 export function useEngineAuditObserver(): void {
@@ -35,6 +37,27 @@ export function useEngineAuditObserver(): void {
     capture();
     return subscribeToLog(capture);
   }, []);
+}
+
+/**
+ * Passive observer of the engine's already-public COMPLETED trade history.
+ * Reads `state.trades` from TradingContext — it never writes engine state,
+ * never calls the engine and never influences execution. Records are always
+ * labelled backfilled / non-contemporaneous because the trade is observed
+ * strictly after it was executed and persisted by the engine.
+ */
+export function useCompletedTradeAuditObserver(): void {
+  const { state } = useTradingContext();
+  const trades = state?.trades;
+
+  useEffect(() => {
+    if (!AUDIT_ENABLED) return;
+    try {
+      recordCompletedTrades(trades ?? []);
+    } catch {
+      /* audit capture must never affect the engine */
+    }
+  }, [trades]);
 }
 
 export interface EngineAuditLedgerState {

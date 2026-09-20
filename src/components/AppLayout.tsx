@@ -6,6 +6,8 @@ import { VolumeControl } from '@/components/VolumeControl';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TradingProvider } from '@/contexts/TradingContext';
+import { AUDIT_ENABLED } from '@/lib/audit/config';
+import { EngineAuditObserver } from '@/components/audit/EngineAuditObserver';
 import { CommandPalette, useCommandPalette } from '@/components/CommandPalette';
 import { InstitutionalToolbar } from '@/components/InstitutionalToolbar';
 import { InstitutionAIGuide } from '@/components/InstitutionAIGuide';
@@ -19,6 +21,7 @@ export function AppLayout() {
 
   return (
     <TradingProvider>
+      {AUDIT_ENABLED && <EngineAuditObserver />}
       <SidebarProvider>
         <div className="min-h-screen flex w-full">
           <AppSidebar />

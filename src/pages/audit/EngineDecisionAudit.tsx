@@ -84,7 +84,9 @@ export default function EngineDecisionAudit() {
           <Stat label="Storage" value={`${storage.available ? 'OK' : 'UNAVAILABLE'} · ${storage.persisted}/${AUDIT_MAX_EVENTS}`} />
           <Stat label="Observer" value="ACTIVE · passive subscriber" />
           <Stat label="Engine modified" value="NO" />
-          <Stat label="Source module" value="logger (existing public API)" />
+          <Stat label="Source modules" value="logger (live) + completed trades (backfilled)" />
+          <Stat label="Live logger events" value={String(summary.live)} />
+          <Stat label="Backfilled completed trades" value={String(summary.backfilled)} />
           <Stat label="Event counts by type" value={types.length ? types.map((t) => `${t}: ${summary.byType[t]}`).join(' · ') : '—'} />
         </CardContent>
       </Card>
