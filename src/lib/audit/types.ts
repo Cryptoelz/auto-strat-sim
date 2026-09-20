@@ -10,6 +10,14 @@ import type { DecisionLogEntry } from '@/types/trading';
 
 export type EngineAuditEventType = DecisionLogEntry['action'];
 
+/**
+ * Where an audit record came from.
+ *  - 'logger' : live, contemporaneous decision published by the engine logger.
+ *  - 'trades' : completed simulated trade read back from the persisted
+ *               TradingContext trade history (observed AFTER execution).
+ */
+export type EngineAuditSource = 'logger' | 'trades';
+
 export interface EngineAuditProvenance {
   engineModified: false;
   observerOnly: true;
@@ -28,7 +36,15 @@ export interface EngineAuditEvent {
   explanation: string;
   regime: string | null;
   filterBlocked: string | null;
-  sourceModule: 'logger';
+  sourceModule: EngineAuditSource;
+  /** True when the record was reconstructed from persisted trade history. */
+  backfilled: boolean;
+  /**
+   * False when the record was observed after the fact — such records must
+   * NEVER be given a current CMC snapshot (it would not be the environment
+   * that existed at decision time).
+   */
+  contextContemporaneous: boolean;
   /** When the observer persisted the event (observation time, not decision time). */
   capturedAt: number;
   provenance: EngineAuditProvenance;
@@ -36,6 +52,8 @@ export interface EngineAuditEvent {
 
 export interface AuditSummary {
   total: number;
+  live: number;
+  backfilled: number;
   byType: Record<string, number>;
   assets: string[];
   latestTimestamp: number | null;
