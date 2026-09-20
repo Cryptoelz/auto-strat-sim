@@ -176,6 +176,13 @@ export function recordLoggerEntries(entries: DecisionLogEntry[], now: number = D
 }
 
 export function clearAuditLedger(): void {
+  // Tombstone every id we know about (persisted events plus the logger's
+  // in-memory buffer replayed by the observer) so cleared events can never
+  // be re-ingested on the next logger notification.
+  const tombstones = ensureClearedIds();
+  for (const e of ensureLoaded()) tombstones.add(e.eventId);
+  clearedIds = new Set([...tombstones].slice(-AUDIT_MAX_EVENTS));
+  writeClearedIds(clearedIds);
   events = [];
   try {
     localStorage.removeItem(AUDIT_STORAGE_KEY);
