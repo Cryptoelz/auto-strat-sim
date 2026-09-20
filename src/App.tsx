@@ -9,6 +9,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { AppLayout } from "@/components/AppLayout";
 import { ExecPageSkeleton } from "@/components/executive/ExecUi";
 import { CMC_ENABLED } from "@/lib/cmc/config";
+import { CMC_EVIDENCE_ENABLED } from "@/lib/cmc/evidenceConfig";
 import { AUDIT_ENABLED } from "@/lib/audit/config";
 const MaintenanceExecutive = lazyWithRetry(() => import("./pages/maintenance/MaintenanceExecutive"));
 const MaintenanceInstitutionHealth = lazyWithRetry(() => import("./pages/maintenance/MaintenanceInstitutionHealth"));
@@ -63,6 +64,7 @@ const RouterV21 = lazyWithRetry(() => import("./pages/RouterV21"));
 // CMC Hackathon — isolated module (guarded by CMC_ENABLED)
 const CmcMarketIntelligence = lazyWithRetry(() => import("./pages/cmc/CmcMarketIntelligence"));
 const CmcDecisionContext = lazyWithRetry(() => import("./pages/cmc/CmcDecisionContext"));
+const CmcEvidence = lazyWithRetry(() => import("./pages/cmc/CmcEvidence"));
 const EngineDecisionAudit = lazyWithRetry(() => import("./pages/audit/EngineDecisionAudit"));
 const PortfolioAIDirector = lazyWithRetry(() => import("./pages/PortfolioAIDirector"));
 const MissionControl = lazyWithRetry(() => import("./pages/MissionControl"));
@@ -331,6 +333,7 @@ const App = () => (
               {/* CMC Hackathon namespace */}
               {CMC_ENABLED && <Route path="/cmc/market-intelligence" element={<CmcMarketIntelligence />} />}
               {CMC_ENABLED && <Route path="/cmc/decision-context" element={<CmcDecisionContext />} />}
+              {CMC_ENABLED && CMC_EVIDENCE_ENABLED && <Route path="/cmc/evidence" element={<CmcEvidence />} />}
               {AUDIT_ENABLED && <Route path="/audit/engine-decisions" element={<EngineDecisionAudit />} />}
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -7,4 +7,6 @@ export * from './cache';
 export * from './decisionContext';
 export * from './contextStore';
 export * from './isolationCheck';
+export * from './evidenceConfig';
+export * from './evidence';
 export { callCmc } from './client';
