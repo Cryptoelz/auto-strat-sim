@@ -401,3 +401,36 @@ counters), `src/hooks/useCmcDecisionContext.ts` (skips non-contemporaneous recor
 `TradingProvider`), `src/test/engineAudit.test.ts` (+8 tests).
 
 No protected trading file was modified. Tests: 108 -> 116 passing.
+
+## Stage 3D — CMC Evidence Summary + Export (lean, judge-facing)
+
+A single read-only page that explains the CMC integration and shows the genuine
+evidence behind it. No new CMC endpoint, no new API call, no trading change.
+
+### Files created
+- `src/lib/cmc/evidenceConfig.ts` — `CMC_EVIDENCE_ENABLED` feature flag.
+- `src/lib/cmc/evidence.ts` — pure aggregation over already-persisted data
+  (audit ledger + CMC context store + in-memory cache statistics) and the
+  judge evidence bundle. No network access, no secrets, no performance maths.
+- `src/hooks/useCmcEvidence.ts` — read-only reader (zero CMC API calls).
+- `src/components/cmc/EvidenceStatusCards.tsx` — six top-level status cards.
+- `src/pages/cmc/CmcEvidence.tsx` — the page (`/cmc/evidence`), six sections.
+- `src/test/cmcEvidence.test.ts` — 11 Stage 3D tests.
+
+### Pre-existing lines touched
+- `src/App.tsx` — one import, one lazy import, one flag-guarded route.
+- `src/components/AppSidebar.tsx` — one import, one nav entry.
+- `src/lib/cmc/index.ts` — two re-exports.
+- `HACKATHON.md` — this section.
+
+### Guarantees
+- READ ONLY · PASSIVE · NON-CAUSAL · FLAG-GATED · SIMULATION ONLY.
+- Zero additional CMC API calls; page renders entirely from existing stores.
+- Backfilled completed trades always render `CMC CONTEXT UNAVAILABLE — RETROSPECTIVE`;
+  historical CMC context is never reconstructed.
+- The export bundle contains no API key, secret or credential (asserted by test).
+- No win-rate, profitability, significance or predictive-advantage claim is computed.
+
+### Verification
+- Tests 116 → 127 passing (11 files). Typecheck clean. Production build PASS.
+- Protected trading modules unchanged; import-boundary tests still pass.
