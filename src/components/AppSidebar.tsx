@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/sidebar';
 import { CMC_ENABLED } from '@/lib/cmc/config';
 import { AUDIT_ENABLED } from '@/lib/audit/config';
+import { CMC_EVIDENCE_ENABLED } from '@/lib/cmc/evidenceConfig';
 
 const NAV_SECTIONS = [
   ...(CMC_ENABLED
@@ -30,6 +31,9 @@ const NAV_SECTIONS = [
           items: [
             { title: 'CMC Market Intelligence', url: '/cmc/market-intelligence', icon: Globe2 },
             { title: 'CMC Decision Context', url: '/cmc/decision-context', icon: Globe2 },
+            ...(CMC_EVIDENCE_ENABLED
+              ? [{ title: 'CMC Evidence Summary', url: '/cmc/evidence', icon: Globe2 }]
+              : []),
             ...(AUDIT_ENABLED
               ? [{ title: 'Engine Decision Audit™', url: '/audit/engine-decisions', icon: Globe2 }]
               : []),
