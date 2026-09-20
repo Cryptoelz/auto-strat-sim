@@ -159,8 +159,11 @@ export function subscribeToAudit(listener: () => void): () => void {
  */
 export function recordLoggerEntries(entries: DecisionLogEntry[], now: number = Date.now()): number {
   try {
+    const tombstones = ensureClearedIds();
+    const fresh = tombstones.size ? entries.filter((e) => !tombstones.has(e.id)) : entries;
+    if (!fresh.length) return 0;
     const current = ensureLoaded();
-    const next = dedupeAppend(current, entries.map((e) => toAuditEvent(e, now)));
+    const next = dedupeAppend(current, fresh.map((e) => toAuditEvent(e, now)));
     if (next === current) return 0;
     events = next;
     writeStorage(next);
