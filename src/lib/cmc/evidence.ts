@@ -77,7 +77,7 @@ export interface EvidenceTotals {
 }
 
 export interface EvidenceIntegrity {
-  apiKeyLocation: 'server-side proxy only';
+  keyHandling: 'server-side proxy only — key never present in browser code';
   proxyFunction: string;
   cacheTtlMs: number;
   throttleMs: number;
@@ -199,7 +199,7 @@ export function computeEvidenceTotals(
 
 export function buildIntegrityEvidence(): EvidenceIntegrity {
   return {
-    apiKeyLocation: 'server-side proxy only',
+    keyHandling: 'server-side proxy only — key never present in browser code',
     proxyFunction: CMC_PROXY_FUNCTION,
     cacheTtlMs: CMC_TTL_MS,
     throttleMs: CMC_MIN_REFRESH_MS,
