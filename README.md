@@ -1,245 +1,132 @@
-# Crypto SMA Trader
+# ATLAS OS™
 
-Lovable System Prompt
+## Build with CMC: API Hackathon
 
-Project Name: Automated Crypto Trading Workflow – SMA Crossover (Simulation Only)
+### What is ATLAS OS?
 
-1. Purpose & Safety
+ATLAS OS is a **simulation-only crypto trading research platform**. It runs a paper-trading
+engine end to end — market data in, signals and risk checks applied, simulated orders filled,
+results recorded — so every decision can be inspected after the fact.
 
-You are building a fully automated crypto trading system using a Simple Moving Average (SMA) crossover strategy for Bitcoin (BTC) and Ripple (XRP) on Binance.
+**No live orders are ever placed.** There is no real exchange account, no leverage and no
+private exchange key anywhere in the system.
 
-⚠️ Critical Safety Rules
+CoinMarketCap data is used as an **independent market-context and explainability layer**. It
+describes the environment a decision was made in. It **cannot** alter trading signals, filters,
+position sizing or execution — there is no code path from CoinMarketCap back into the engine,
+and that boundary is asserted by automated tests.
 
-This system must operate in SIMULATION / PAPER TRADING MODE ONLY
+---
 
-DO NOT place real trades
+### Live Demo
 
-DO NOT require trading API keys
+**Application:** https://auto-strat-sim.lovable.app
 
-This is not financial advice
+> **Judge evidence page (start here):** https://auto-strat-sim.lovable.app/cmc/evidence
+> — one-screen explanation of the CMC integration, the genuine evidence behind it, and a
+> one-click JSON evidence export.
 
-Assume no guaranteed profitability
+| Page | Path | What it shows |
+| --- | --- | --- |
+| CMC Evidence Summary | [`/cmc/evidence`](https://auto-strat-sim.lovable.app/cmc/evidence) | Integration explanation, verified evidence totals, integrity checks, JSON export |
+| CMC Market Intelligence | [`/cmc/market-intelligence`](https://auto-strat-sim.lovable.app/cmc/market-intelligence) | Live CMC market regime, breadth and deterministic snapshot |
+| CMC Decision Context | [`/cmc/decision-context`](https://auto-strat-sim.lovable.app/cmc/decision-context) | Engine decisions joined to the CMC conditions captured at that instant |
+| Engine Decision Audit | [`/audit/engine-decisions`](https://auto-strat-sim.lovable.app/audit/engine-decisions) | Persistent audit ledger of genuine engine events and completed simulated trades |
 
-2. Trading Universe
-Assets
+Audit and CMC evidence are stored per browser (local storage), so a judge opening the app starts
+from an empty ledger — the exported evidence file is the portable record.
 
-BTCUSDT
+---
 
-XRPUSDT
+### CoinMarketCap Integration
 
-Market Data
+Three CoinMarketCap endpoints are used, nothing else:
 
-Source: Binance public market data
+| Endpoint | What it provides |
+| --- | --- |
+| `cryptocurrency/quotes/latest` | Tracked-asset context: price, market cap, 24h volume, 1h/24h/7d change, CMC rank |
+| `global-metrics/quotes/latest` | Market regime context: total market cap, total 24h volume, BTC and ETH dominance |
+| `fear-and-greed/latest` | Sentiment context: fear & greed value and classification |
 
-Data type: OHLCV candlesticks
+Tracked assets: BTC, ETH, SOL, XRP, FET, XLM.
 
-Default timeframe: 15-minute candles
-
-Use only closed candles for all calculations and decisions
-
-Handle missing data, reconnects, and API rate limits safely
-
-3. Strategy Definition
-Indicators
-
-Fast SMA: 20 periods (configurable)
-
-Slow SMA: 50 periods (configurable)
-
-Signal Rules
-
-BUY
-
-Trigger only when fast SMA crosses above slow SMA
-
-Confirm on candle close
-
-SELL
-
-Trigger only when fast SMA crosses below slow SMA
-
-Confirm on candle close
-
-HOLD
-
-When no valid crossover occurs
-
-Signal Constraints
-
-Only one open position per asset
-
-Prevent duplicate or repeated signals
-
-Ignore signals while a position is already open
-
-4. Trade & Risk Management (Simulation)
-
-Trading mode: Spot only (no leverage)
-
-Fixed position size: 5% of simulated balance
-
-Stop-loss: 2% (configurable)
-
-Take-profit: 4% (configurable)
-
-Cooldown after trade close: 3 candles
-
-Max open positions per asset: 1
-
-Include simulated trading fees
-
-5. Execution Logic
-
-Simulate market orders only
-
-Execute trades immediately after confirmed signal
-
-Track:
-
-Entry price
-
-Exit price
-
-Position size
-
-Fees
-
-Realized P&L
-
-6. System Architecture (Required)
-
-Design the system as clear, isolated modules:
-
-Market Data Module
-
-Fetch and validate candle data
-
-Ensure time-ordered integrity
-
-Indicator Module
-
-Compute SMAs efficiently
-
-Cache values where appropriate
-
-Signal Engine
-
-Detect confirmed crossovers
-
-Output BUY / SELL / HOLD
-
-Risk Manager
-
-Enforce position sizing
-
-Apply stop-loss / take-profit
-
-Enforce cooldown rules
-
-Execution Simulator
-
-Simulate trades and balances
-
-Apply fees and slippage assumptions
-
-State Manager
-
-Persist open positions
-
-Track last signal and last trade time
-
-Logger & Metrics
-
-Full audit trail of decisions and trades
-
-7. Logging & Analytics
-
-Log every step of the workflow:
-
-Candle timestamp and prices
-
-SMA values
-
-Signal decisions
-
-Trade execution details
-
-Balance updates
-
-Performance Metrics
-
-Total trades
-
-Winning vs losing trades
-
-Win rate
-
-Net P&L
-
-Max drawdown
-
-Equity curve data
-
-8. Configuration (Editable Defaults)
-mode: simulation
-timeframe: 15m
-
-assets:
-  - BTCUSDT
-  - XRPUSDT
-
-indicators:
-  fast_sma: 20
-  slow_sma: 50
-
-risk:
-  position_size_percent: 5
-  stop_loss_percent: 2
-  take_profit_percent: 4
-  cooldown_candles: 3
-
-9. Output Expectations
-
-Generate:
-
-Clean, readable, well-documented code
-
-Deterministic behavior (same input = same output)
-
-Clear separation of concerns
-
-Easy extensibility for:
-
-More assets
-
-Additional indicators
-
-Live trading (disabled by default)
-
-10. Final Instruction
-
-Prioritize correctness, clarity, safety, and extensibility over complexity.
-If uncertain, choose the simplest correct implementation.
-
-This project was built with [Lovable](https://lovable.dev).
-
-**Live app**: https://auto-strat-sim.lovable.app
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/15d3c0b3-6fdd-437c-8660-4e39fd717d26).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+```text
+CMC_READ_ONLY   = true
+causalInfluence = false
 ```
+
+Every CMC request goes through the **server-side `cmc-proxy`** function. The proxy injects the
+`X-CMC_PRO_API_KEY` header server-side, accepts only an allow-listed set of endpoint aliases
+(no arbitrary URL passthrough), and returns sanitised errors. **The CMC API key is never present
+in browser code, source, bundles or exports.**
+
+Requests are cached per endpoint for 120s with a 15s minimum spacing, a concurrent-load guard,
+explicit HTTP 429 detection and last-known-good retention, so repeated renders cost no credits.
+
+---
+
+### Architecture
+
+The relationship between the engine and CoinMarketCap is strictly one-way:
+
+```text
+Trading Engine (unmodified)
+      ↓
+Logger / Trade History  (existing engine output)
+      ↓
+Engine Audit Ledger     (atlas_engine_audit_v1)
+      ↓
+CMC Context Observer    (read-only, attaches context afterwards)
+      ↓
+CMC Evidence
+```
+
+CMC data is attached **after** an engine decision has already been produced and persisted.
+**CMC cannot feed back into or modify the trading engine** — no trading, signal, specialist,
+risk, portfolio, governance, execution or backtest module imports the CMC or audit modules,
+which is verified by an import-boundary test and re-checked at runtime on the evidence page.
+
+---
+
+### Evidence & Integrity
+
+- **CMC integration:** ACTIVE (feature-flag gated)
+- **Engine influence from CMC:** NONE (`causalInfluence = false`)
+- **Simulation:** PAPER ONLY — no live orders
+- **Audit ledger:** VERIFIED — persistent, deduplicated by the engine's own immutable event /
+  trade ids, bounded at 1000 records
+- **API key:** SERVER-SIDE ONLY (`cmc-proxy`)
+- **Evidence export:** one JSON bundle from the CMC Evidence Summary (totals, classifications,
+  captured context records, integrity and cache statistics, isolation checks, limitations)
+- **Context states:** every record is labelled `LIVE` / `CACHED` / `STALE` / `UNAVAILABLE`
+- **Missing data is never fabricated** — unavailable values stay `null` and render as
+  `UNAVAILABLE`; stale data is kept and labelled, never silently replaced
+- **Historical / backfilled trades** are labelled `BACKFILLED COMPLETED TRADE` and shown as
+  `CMC CONTEXT UNAVAILABLE — RETROSPECTIVE`; past snapshots are never reconstructed
+- **Automated evidence:** 127 tests passing, typecheck clean, production build passing;
+  protected trading modules unchanged
+
+Detailed technical and stage-by-stage documentation lives in
+[`HACKATHON.md`](HACKATHON.md).
+
+---
+
+### Limitations
+
+- Simulation only — no live orders are placed against any exchange.
+- No leverage, no margin, no private exchange keys.
+- CMC is **context, never cause**: it cannot change a signal, filter, position size or execution.
+- Backfilled completed trades are observed after execution and can never carry contemporaneous
+  CMC context.
+- The free CMC tier provides current snapshots, not historical OHLCV, so past context cannot be
+  reconstructed.
+- The genuine event sample is small; the figures shown are **descriptive integration evidence,
+  not a claim of trading performance**. No win-rate, profitability, statistical-significance or
+  predictive-advantage claim is computed anywhere in this project.
+
+---
+
+### Repository
+
+This is the public source repository for the **ATLAS OS** submission to the
+**Build with CMC: API Hackathon**.
